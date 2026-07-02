@@ -1,14 +1,14 @@
 # dialog
 
-Dialog-/Modalsystem mit Öffnen/Schließen-Triggern.
+Dialog/modal system with open/close triggers.
 
-## Zum Kopieren benötigt
-- `dialog.html` – Markup
-- `dialog.scss` – Styles (Quelle; wird zu `dist/css/dialog.min.css` kompiliert)
-- `dialogs.js` – Verhalten
+## Files needed to copy
+- `dialog.html` – markup
+- `dialog.scss` – styles (source; compiled to `dist/css/dialog.min.css`)
+- `dialogs.js` – behavior
 
-## Einbindung
-Das Dialog-System ist global und wird von `boot.js` automatisch initialisiert – es ist kein `data-js-module` nötig. Verknüpft wird über Attribute: Der Öffnen-Trigger trägt `data-open-dialog="<id>"` sowie `data-target="<id>"`, das Dialog-Element ist ein `<dialog>` mit passender `id`, dem Attribut `data-dialog` und optional `data-type="modal"` für den modalen Modus. Schließen erfolgt über einen Button mit `data-close-dialog`, per Klick auf den Hintergrund oder mit Escape.
+## Usage
+The dialog system is global and is initialized automatically by `boot.js` – no `data-js-module` is required. Wiring is done via attributes: the open trigger carries `data-open-dialog="<id>"` as well as `data-target="<id>"`, the dialog element is a `<dialog>` with a matching `id`, the `data-dialog` attribute, and optionally `data-type="modal"` for modal mode. Closing happens via a button with `data-close-dialog`, by clicking the backdrop, or with Escape.
 
 ## Demo
-`demo.html` im Browser öffnen (setzt einen vorherigen `gulp build` voraus).
+Open `demo.html` in the browser (requires a previous `gulp build`).

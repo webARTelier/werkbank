@@ -4,9 +4,9 @@
  * based on viewport and device density.
  */
 
-// Copy-Paste-Hinweis: benötigt _shared/js/debounce.js (im Zielprojekt mitkopieren)
+// Copy-paste note: requires _shared/js/debounce.js (copy it along into the target project)
 import { debounceThenExecute } from "./debounce.js"
-// Copy-Paste-Hinweis: benötigt _shared/js/getCssCustomProperty.js (im Zielprojekt mitkopieren)
+// Copy-paste note: requires _shared/js/getCssCustomProperty.js (copy it along into the target project)
 import { getCssCustomProperty } from "./getCssCustomProperty.js"
 
 
@@ -69,8 +69,9 @@ function resolveIcons(videoElement) {
 
 class ResponsiveVideo {
 
-  constructor(video, config) {
+  constructor(video, config, reporter) {
     this.video = video;
+    this.reporter = reporter;
     this.viewportMap = config.viewportMap;
     this.getCssCustomProperty = config.getCssCustomProperty;
     this.debounceThenExecute = config.debounceThenExecute;
@@ -349,43 +350,44 @@ class ResponsiveVideo {
 
 
   handleMissingSourceElement = () => {
-    console.warn("[responsivevideo] missing <source> element inside video.", this.video)
+    this.reporter?.report("responsivevideo", "missing <source> element inside video.", this.video)
   }
 
 
 
   handleMissingSources = () => {
-    console.warn("[responsivevideo] video data missing (data-srcs).", this.video)
-    console.warn("[responsivevideo] module was not initialized.")
+    this.reporter?.report("responsivevideo", "video data missing (data-srcs).", this.video)
+    this.reporter?.report("responsivevideo", "module was not initialized.")
   }
 
 
 
   // warns when source data cannot be parsed.
   handleInvalidJSON = () => {
-    console.warn("[responsivevideo] invalid JSON in data-srcs.", this.video)
-    console.warn("[responsivevideo] module was not initialized.")
+    this.reporter?.report("responsivevideo", "invalid JSON in data-srcs.", this.video)
+    this.reporter?.report("responsivevideo", "module was not initialized.")
   }
 
 
 
   handleMissingVersions = () => {
-    console.warn("[responsivevideo] no valid video sources found.", this.video)
-    console.warn("[responsivevideo] module was not initialized.")
+    this.reporter?.report("responsivevideo", "no valid video sources found.", this.video)
+    this.reporter?.report("responsivevideo", "module was not initialized.")
   }
 
 
 
   handleMissingFile = (srcKey) => {
-    console.warn(`[responsivevideo] no source found for key "${srcKey}".`, this.video)
+    this.reporter?.report("responsivevideo", `no source found for key "${srcKey}".`, this.video)
   }
 
 
 
   // warns when CSS reports a viewport key outside the configured map.
   handleUnknownViewport = (viewport) => {
-    console.warn(
-      `[responsivevideo] unknown viewport "${viewport}". Check --viewportName and viewportMap.`
+    this.reporter?.report(
+      "responsivevideo",
+      `unknown viewport "${viewport}". Check --viewportName and viewportMap.`
     )
   }
 
@@ -393,17 +395,18 @@ class ResponsiveVideo {
 
   // warns when browser autoplay restrictions block playback.
   handleFailedPlay = () => {
-    console.warn("[responsivevideo] failed auto-play. Video might not be muted.")
+    this.reporter?.report("responsivevideo", "failed auto-play. Video might not be muted.")
   }
 }
 
 
 
-// loader-compatible entry point (boot.js -> mod.init(el)).
-export function init(el) {
-  
+// loader-compatible entry point (boot.js -> mod.init(el, services)).
+export function init(el, services = {}) {
+  const reporter = services.reporter
+
   if (!(el instanceof HTMLVideoElement)) {
-    console.warn("[responsivevideo] module must be initialized on a <video> element.", el)
+    reporter?.report("responsivevideo", "module must be initialized on a <video> element.", el)
     return
   }
 
@@ -419,5 +422,5 @@ export function init(el) {
     icons: resolveIcons(el),
   }
 
-  new ResponsiveVideo(el, config)
+  new ResponsiveVideo(el, config, reporter)
 }

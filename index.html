@@ -1,203 +1,79 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>UI Components Overview</title>
-    <style>
-      :root {
-        color-scheme: dark;
-        --bg: #060816;
-        --panel: rgba(15, 23, 42, 0.84);
-        --panel-strong: rgba(17, 24, 39, 0.95);
-        --text: #f8fafc;
-        --muted: #94a3b8;
-        --accent: #7c3aed;
-        --accent-2: #38bdf8;
-        --border: rgba(255, 255, 255, 0.12);
-        --shadow: 0 24px 60px rgba(2, 6, 23, 0.45);
-      }
 
-      * { box-sizing: border-box; }
-
-      body {
-        margin: 0;
-        min-height: 100vh;
-        font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
-        color: var(--text);
-        background:
-          radial-gradient(circle at top left, rgba(56, 189, 248, 0.16), transparent 26%),
-          radial-gradient(circle at bottom right, rgba(124, 58, 237, 0.2), transparent 30%),
-          var(--bg);
-        display: grid;
-        place-items: center;
-        padding: 32px 20px;
-      }
-
-      .shell {
-        width: min(100%, 1100px);
-        background: linear-gradient(145deg, rgba(15, 23, 42, 0.9), rgba(2, 8, 23, 0.95));
-        border: 1px solid var(--border);
-        box-shadow: var(--shadow);
-        border-radius: 24px;
-        padding: 36px;
-        backdrop-filter: blur(20px);
-      }
-
-      .hero {
-        display: flex;
-        justify-content: space-between;
-        align-items: end;
-        gap: 16px;
-        margin-bottom: 24px;
-        padding-bottom: 18px;
-        border-bottom: 1px solid rgba(255,255,255,0.08);
-      }
-
-      .hero h1 {
-        margin: 0;
-        font-size: clamp(1.6rem, 2.2vw, 2.4rem);
-        letter-spacing: -0.02em;
-      }
-
-      .hero p {
-        margin: 6px 0 0;
-        color: var(--muted);
-        max-width: 680px;
-        line-height: 1.5;
-      }
-
-      .badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        flex-shrink: 0;
-        padding: 10px 14px;
-        border-radius: 999px;
-        background: rgba(255,255,255,0.06);
-        color: #cbd5e1;
-        font-size: 0.95rem;
-        border: 1px solid rgba(255,255,255,0.08);
-      }
-
-      .grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 16px;
-      }
-
-      .card {
-        display: block;
-        padding: 18px 18px 16px;
-        border-radius: 18px;
-        background: linear-gradient(135deg, rgba(30,41,59,0.9), rgba(15,23,42,0.95));
-        border: 1px solid rgba(255,255,255,0.08);
-        text-decoration: none;
-        color: inherit;
-        transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
-      }
-
-      .card:hover,
-      .card:focus-visible {
-        transform: translateY(-3px);
-        border-color: rgba(56, 189, 248, 0.45);
-        box-shadow: 0 16px 32px rgba(8, 15, 31, 0.35);
-        outline: none;
-      }
-
-      .card .name {
-        display: block;
-        font-weight: 600;
-        color: #f8fafc;
-        margin-bottom: 6px;
-      }
-
-      .card .meta {
-        color: var(--muted);
-        font-size: 0.95rem;
-        line-height: 1.45;
-      }
-
-      .card .arrow {
-        display: inline-block;
-        margin-top: 12px;
-        color: var(--accent-2);
-        font-weight: 600;
-      }
-
-      @media (max-width: 680px) {
-        .shell { padding: 24px; }
-        .hero { flex-direction: column; align-items: start; }
-      }
-    </style>
+    <!-- shared demo chrome incl. gallery styles (see _shared/scss/_demo.scss) -->
+    <link rel="stylesheet" href="dist/css/shared.min.css" />
   </head>
   <body>
-    <main class="shell">
+    <main class="shell gallery">
       <section class="hero">
         <div>
           <h1>UI Components</h1>
-          <p>Übersicht der verfügbaren Komponenten-Ordner.</p>
+          <p>Overview of the available component folders.</p>
         </div>
-        <div class="badge">Projekt-Index</div>
+        <div class="badge">Project index</div>
       </section>
 
-      <section class="grid" aria-label="Komponentenordner">
+      <section class="grid" aria-label="Component folders">
         <a class="card" href="src/components/accordion/demo.html">
           <span class="name">accordion</span>
-          <span class="meta">Accordion-Komponente mit Interaktionslogik.</span>
+          <span class="meta">Accordion component with interaction logic.</span>
         </a>
         <a class="card" href="src/components/adaptiveScrollFade/demo.html">
           <span class="name">adaptiveScrollFade</span>
-          <span class="meta">Adaptive Scroll-Fade-Effekte.</span>
+          <span class="meta">Adaptive scroll-fade effects.</span>
         </a>
         <a class="card" href="src/components/countdown/demo.html">
           <span class="name">countdown</span>
-          <span class="meta">Countown- und Zeit-UI-Komponente.</span>
+          <span class="meta">Countdown and time UI component.</span>
         </a>
         <a class="card" href="src/components/dateInputFormat/demo.html">
           <span class="name">dateInputFormat</span>
-          <span class="meta">Formatiertes Datums-Eingabeverhalten.</span>
+          <span class="meta">Formatted date-input behavior.</span>
         </a>
         <a class="card" href="src/components/dialog/demo.html">
           <span class="name">dialog</span>
-          <span class="meta">Dialog- und Modalsystem.</span>
+          <span class="meta">Dialog and modal system.</span>
         </a>
         <a class="card" href="src/components/flexNeighborMarker/demo.html">
           <span class="name">flexNeighborMarker</span>
-          <span class="meta">Marker für benachbarte Flex-Elemente.</span>
+          <span class="meta">Marker for neighboring flex elements.</span>
         </a>
         <a class="card" href="src/components/formValidation/demo.html">
           <span class="name">formValidation</span>
-          <span class="meta">Formularvalidierung und Meldungen.</span>
+          <span class="meta">Form validation and messages.</span>
         </a>
         <a class="card" href="src/components/inlineSVG/demo.html">
           <span class="name">inlineSVG</span>
-          <span class="meta">Inline-SVG-Integration.</span>
+          <span class="meta">Inline-SVG integration.</span>
         </a>
         <a class="card" href="src/components/inputCharCount/demo.html">
           <span class="name">inputCharCount</span>
-          <span class="meta">Zeichenanzahl-Anzeige für Eingabefelder.</span>
+          <span class="meta">Character-count display for input fields.</span>
         </a>
         <a class="card" href="src/components/marquee/demo.html">
           <span class="name">marquee</span>
-          <span class="meta">Scrolling-Text- und Laufzeitanimationen.</span>
+          <span class="meta">Scrolling-text and runtime animations.</span>
         </a>
         <a class="card" href="src/components/responsiveVideo/demo.html">
           <span class="name">responsiveVideo</span>
-          <span class="meta">Responsive Video-Komponenten.</span>
+          <span class="meta">Responsive video components.</span>
         </a>
         <a class="card" href="src/components/scaleSVG/demo.html">
           <span class="name">scaleSVG</span>
-          <span class="meta">Skalierbare SVG-Elemente.</span>
+          <span class="meta">Scalable SVG elements.</span>
         </a>
         <a class="card" href="src/components/stickyObserver/demo.html">
           <span class="name">stickyObserver</span>
-          <span class="meta">Sticky-Observer-Logik für Layout-Effekte.</span>
+          <span class="meta">Sticky-observer logic for layout effects.</span>
         </a>
         <a class="card" href="src/components/tabs/demo.html">
           <span class="name">tabs</span>
-          <span class="meta">Tabs-Komponente für Inhalte.</span>
+          <span class="meta">Tabs component for content.</span>
         </a>
       </section>
     </main>

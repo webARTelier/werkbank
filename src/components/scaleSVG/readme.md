@@ -1,14 +1,14 @@
 # scaleSVG
 
-Skaliert inline-SVG auf seinen Container.
+Scales an inline SVG to its container.
 
-## Zum Kopieren benötigt
-- `scaleSVG.html` – Markup
-- `scaleSVG.scss` – Styles (Quelle; wird zu `dist/css/scaleSVG.min.css` kompiliert)
-- `scaleSVG.js` – Verhalten
+## Files needed to copy
+- `scaleSVG.html` – markup
+- `scaleSVG.scss` – styles (source; compiled to `dist/css/scaleSVG.min.css`)
+- `scaleSVG.js` – behavior
 
-## Einbindung
-Das Fragment aus `scaleSVG.html` einfügen; `data-js-module="scaleSVG"` auf ein Element setzen, das ein inline-`<svg data-scale="…" viewBox="…">` enthält (oder selbst ein solches SVG ist). Beim Boot berechnet das Modul aus `viewBox` und `data-scale` die Zielgröße und setzt Breite/Höhe des SVG.
+## Usage
+Insert the fragment from `scaleSVG.html`; set `data-js-module="scaleSVG"` on an element that contains an inline `<svg data-scale="…" viewBox="…">` (or is such an SVG itself). On boot, the module computes the target size from `viewBox` and `data-scale` and sets the SVG's width/height.
 
 ## Demo
-`demo.html` im Browser öffnen (setzt einen vorherigen `gulp build` voraus).
+Open `demo.html` in the browser (requires a prior `gulp build`).

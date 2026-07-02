@@ -8,13 +8,13 @@ const defaults = {
 
 
 // scales one inline SVG using its viewBox and optional data-scale value.
-function scaleSvg(svg, defaultScale) {
+function scaleSvg(svg, defaultScale, reporter) {
   if (!(svg instanceof SVGElement)) return false
   if (svg.classList.contains('is-scaled')) return false
 
   const viewBox = svg.getAttribute('viewBox')
   if (!viewBox) {
-    console.warn('[scalesvg] scalable SVG has no viewBox.', svg)
+    reporter?.report('scalesvg', 'scalable SVG has no viewBox.', svg)
     return false
   }
 
@@ -41,7 +41,7 @@ function scaleSvg(svg, defaultScale) {
 
 
 // scales all matching inline SVG elements inside the current boot scope.
-function scaleInScope(el) {
+function scaleInScope(el, reporter) {
   let scaledCount = 0
   const candidates = new Set(el.querySelectorAll(defaults.selector))
 
@@ -50,7 +50,7 @@ function scaleInScope(el) {
   }
 
   candidates.forEach((svg) => {
-    if (scaleSvg(svg, defaults.defaultScale)) {
+    if (scaleSvg(svg, defaults.defaultScale, reporter)) {
       scaledCount += 1
     }
   })
@@ -61,13 +61,15 @@ function scaleInScope(el) {
 
 
 // scales inline SVGs now or observes pending inline conversion for a short time.
-export function init(el) {
+export function init(el, services = {}) {
+  const reporter = services.reporter
+
   if (!(el instanceof Element)) {
-    console.warn('[scalesvg] module was initialized on a non-element node.', el)
+    reporter?.report('scalesvg', 'module was initialized on a non-element node.', el)
     return
   }
 
-  const initialScaledCount = scaleInScope(el)
+  const initialScaledCount = scaleInScope(el, reporter)
   if (initialScaledCount > 0) return
 
   const hasScaleSource =
@@ -77,7 +79,7 @@ export function init(el) {
   if (!hasScaleSource) return
 
   const observer = new MutationObserver(() => {
-    const scaledCount = scaleInScope(el)
+    const scaledCount = scaleInScope(el, reporter)
     if (scaledCount > 0) {
       observer.disconnect()
     }

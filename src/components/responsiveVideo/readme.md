@@ -1,16 +1,16 @@
 # responsiveVideo
 
-Wechselt Video-/Audioquellen je nach Viewport.
+Switches video/audio sources depending on the viewport.
 
-## Zum Kopieren benötigt
-- `responsiveVideo.html` – Markup
-- `responsiveVideo.scss` – Styles (Quelle; wird zu `dist/css/responsiveVideo.min.css` kompiliert)
-- `responsiveVideo.js` – Verhalten
-- geteilt: `_shared/js/debounce.js` (im Zielprojekt mitkopieren)
-- geteilt: `_shared/js/getCssCustomProperty.js` (im Zielprojekt mitkopieren)
+## Files needed to copy
+- `responsiveVideo.html` – markup
+- `responsiveVideo.scss` – styles (source; compiled to `dist/css/responsiveVideo.min.css`)
+- `responsiveVideo.js` – behavior
+- shared: `_shared/js/debounce.js` (copy it along into the target project)
+- shared: `_shared/js/getCssCustomProperty.js` (copy it along into the target project)
 
-## Einbindung
-Das Fragment aus `responsiveVideo.html` einfügen; `data-js-module="responsiveVideo"` gehört auf das `<video>`-Element. Die Quellen pro Viewport werden als JSON in `data-srcs` hinterlegt (Schlüssel `mobile`/`tablet`/`desktop`, optional mit `Retina`-Suffix); beim Boot wählt das Modul anhand der CSS-Custom-Properties `--viewportName` und `--density` die passende Quelle.
+## Usage
+Insert the fragment from `responsiveVideo.html`; `data-js-module="responsiveVideo"` goes on the `<video>` element. The sources per viewport are stored as JSON in `data-srcs` (keys `mobile`/`tablet`/`desktop`, optionally with a `Retina` suffix); on boot the module selects the matching source based on the CSS custom properties `--viewportName` and `--density`.
 
 ## Demo
-`demo.html` im Browser öffnen (setzt einen vorherigen `gulp build` voraus).
+Open `demo.html` in the browser (requires a prior `gulp build`).

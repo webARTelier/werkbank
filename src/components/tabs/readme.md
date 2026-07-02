@@ -1,14 +1,14 @@
 # tabs
 
-Tab-Navigation mit umschaltbaren Inhalten.
+Tab navigation with switchable content.
 
-## Zum Kopieren benötigt
-- `tabs.html` – Markup
-- `tabs.scss` – Styles (Quelle; wird zu `dist/css/tabs.min.css` kompiliert)
-- `tabs.js` – Verhalten
+## Files needed to copy
+- `tabs.html` – markup
+- `tabs.scss` – styles (source; compiled to `dist/css/tabs.min.css`)
+- `tabs.js` – behavior
 
-## Einbindung
-Das umschließende Element erhält `data-js-module="tabs"`. Darin bekommt jeder Tab-Titel das Attribut `data-tab-title` samt `data-content="<id>"`, das auf ein Inhaltselement mit passender `id` und dem Attribut `data-tab-content` verweist. Der erste Tab wird automatisch geöffnet; per URL-Hash (`#<id>`) lässt sich ein bestimmter Tab direkt aktivieren.
+## Usage
+The wrapping element gets `data-js-module="tabs"`. Inside it, each tab title gets the `data-tab-title` attribute along with `data-content="<id>"`, which points to a content element with a matching `id` and the `data-tab-content` attribute. The first tab opens automatically; a specific tab can be activated directly via the URL hash (`#<id>`).
 
 ## Demo
-`demo.html` im Browser öffnen (setzt einen vorherigen `gulp build` voraus).
+Open `demo.html` in the browser (requires a prior `gulp build`).

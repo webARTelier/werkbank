@@ -5,7 +5,7 @@
 
 
 
-// Copy-Paste-Hinweis: benötigt _shared/js/debounce.js (im Zielprojekt mitkopieren)
+// Copy-paste note: requires _shared/js/debounce.js (copy along into the target project)
 import { debounceThenExecute } from "./debounce.js"
 
 
@@ -28,10 +28,11 @@ class FlexNeighborMarker {
 
 
   
-  constructor(module) {
+  constructor(module, reporter) {
     if (!(module instanceof HTMLElement)) return
 
     this.module = module
+    this.reporter = reporter
     this.selContainer = defaults.selContainer
     this.neighborClass = defaults.neighborClass
     this.tolerance = FlexNeighborMarker.parsePositiveFloat(
@@ -133,8 +134,9 @@ class FlexNeighborMarker {
 
   
   handleMissingContainer = () => {
-    console.warn(
-      `[markflexneighbors] missing container (selector: "${this.selContainer}").`,
+    this.reporter?.report(
+      "markflexneighbors",
+      `missing container (selector: "${this.selContainer}").`,
       this.module
     )
   }
@@ -142,12 +144,14 @@ class FlexNeighborMarker {
 
 
 
-// loader-compatible entry point (boot.js -> mod.init(el))
-export function init(el) {
+// loader-compatible entry point (boot.js -> mod.init(el, services))
+export function init(el, services = {}) {
+  const reporter = services.reporter
+
   if (!(el instanceof HTMLElement)) {
-    console.warn("[markflexneighbors] module was initialized on a non-element node.", el)
+    reporter?.report("markflexneighbors", "module was initialized on a non-element node.", el)
     return
   }
 
-  new FlexNeighborMarker(el)
+  new FlexNeighborMarker(el, reporter)
 }

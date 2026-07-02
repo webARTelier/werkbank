@@ -17,10 +17,11 @@ const defaults = {
 
 class StickyObserver {
   
-  constructor(observed, config) {
+  constructor(observed, config, reporter) {
     if (!(observed instanceof HTMLElement)) return
 
     this.observed = observed
+    this.reporter = reporter
     this.className = config.className
     this.selTarget = config.selTarget
     this.transitionDuration = config.transitionDuration
@@ -100,8 +101,9 @@ class StickyObserver {
 
 
   handleMissingTarget = () => {
-    console.warn(
-      `[stickyobserver] missing target element (selector: "${this.selTarget}").`
+    this.reporter?.report(
+      "stickyobserver",
+      `missing target element (selector: "${this.selTarget}").`
     )
   }
 }
@@ -110,11 +112,13 @@ class StickyObserver {
 
 // loader-compatible entry point 
 // (boot.js -> mod.init(el))
-export function init(el) {
+export function init(el, services = {}) {
+  const reporter = services.reporter
+
   if (!(el instanceof HTMLElement)) {
-    console.warn("[stickyobserver] module was initialized on a non-element node.", el)
+    reporter?.report("stickyobserver", "module was initialized on a non-element node.", el)
     return
   }
 
-  new StickyObserver(el, defaults)
+  new StickyObserver(el, defaults, reporter)
 }

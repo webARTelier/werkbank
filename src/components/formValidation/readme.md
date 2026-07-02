@@ -1,15 +1,15 @@
 # formValidation
 
-Formularvalidierung mit Fehlermeldungen.
+Form validation with error messages.
 
-## Zum Kopieren benötigt
-- `formValidation.html` – Markup
-- `formValidation.scss` – Styles (Quelle; wird zu `dist/css/formValidation.min.css` kompiliert)
-- `formValidation.js` – Verhalten
-- Externe Abhängigkeit: `pristine.js` (Vendor-Datei) muss neben `formValidation.js` liegen – die Komponente lädt sie via `import("./pristine.js")` und erwartet danach `window.Pristine`.
+## Files needed to copy
+- `formValidation.html` – markup
+- `formValidation.scss` – styles (source; compiled to `dist/css/formValidation.min.css`)
+- `formValidation.js` – behavior
+- External dependency: `pristine.js` (vendor file) must sit next to `formValidation.js` – the component loads it via `import("./pristine.js")` and then expects `window.Pristine`.
 
-## Einbindung
-Das `<form>`-Element selbst erhält `data-js-module="formValidation"`. Jedes Feld wird in einen Container mit der Klasse `c-form__item` gepackt (dient als `classTo`/`errorTextParent` für Fehlermeldungen). Validierungsregeln und Meldungen werden über native Attribute (`required`, `type="email"`, `minlength`) sowie `data-pristine-*-message`-Attribute gesetzt. Bei fehlgeschlagenem Submit wird `is-submitted` gesetzt, fehlerhafte Felder erhalten `.is-invalid` samt `aria-describedby`-Verknüpfung.
+## Usage
+The `<form>` element itself receives `data-js-module="formValidation"`. Each field is wrapped in a container with the class `c-form__item` (serves as `classTo`/`errorTextParent` for error messages). Validation rules and messages are set via native attributes (`required`, `type="email"`, `minlength`) as well as `data-pristine-*-message` attributes. On a failed submit, `is-submitted` is set, and invalid fields receive `.is-invalid` together with an `aria-describedby` link.
 
 ## Demo
-`demo.html` im Browser öffnen (setzt einen vorherigen `gulp build` voraus).
+Open `demo.html` in the browser (requires a previous `gulp build`).

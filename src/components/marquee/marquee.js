@@ -4,7 +4,7 @@
  * and resize-aware re-evaluation of animation state.
  */
 
-// Copy-Paste-Hinweis: benötigt _shared/js/debounce.js (im Zielprojekt mitkopieren)
+// Copy-paste note: requires _shared/js/debounce.js (copy it along into the target project)
 import { debounceThenExecute } from "./debounce.js"
 
 
@@ -31,11 +31,12 @@ class Marquee {
 
 
   
-  constructor(marquee, config) {
+  constructor(marquee, config, reporter) {
     if (!(marquee instanceof HTMLElement)) return
 
     this.marquee = marquee
     this.config = config
+    this.reporter = reporter
 
     if (this.marquee.classList.contains("is-initialized")) return
 
@@ -314,32 +315,34 @@ class Marquee {
 
 
   handleMissingElement = (name, selector) => {
-    console.warn(`[marquee] missing "${name}" element (selector: "${selector}").`)
+    this.reporter?.report("marquee", `missing "${name}" element (selector: "${selector}").`)
   }
 
 
 
   // warns when the configured animation direction is unsupported.
   handleUnknownMode = (currentMode) => {
-    console.warn(`[marquee] "${currentMode}" is not a valid mode (rtl|ltr).`)
+    this.reporter?.report("marquee", `"${currentMode}" is not a valid mode (rtl|ltr).`)
   }
 
 
 
   // warns when the configured start mode is unsupported.
   handleUnknownStartMode = (startMode) => {
-    console.warn(`[marquee] "${startMode}" is not a valid start mode (always|overflow).`)
+    this.reporter?.report("marquee", `"${startMode}" is not a valid start mode (always|overflow).`)
   }
 }
 
 
 
-// loader-compatible entry point (boot.js -> mod.init(el))
-export function init(el) {
+// loader-compatible entry point (boot.js -> mod.init(el, services))
+export function init(el, services = {}) {
+  const reporter = services.reporter
+
   if (!(el instanceof HTMLElement)) {
-    console.warn("[marquee] module was initialized on a non-element node.", el)
+    reporter?.report("marquee", "module was initialized on a non-element node.", el)
     return
   }
 
-  new Marquee(el, defaults)
+  new Marquee(el, defaults, reporter)
 }

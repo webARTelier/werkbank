@@ -1,14 +1,14 @@
 # dateInputFormat
 
-Formatiert Datumseingaben während der Eingabe.
+Formats date input while typing.
 
-## Zum Kopieren benötigt
-- `dateInputFormat.html` – Markup
-- `dateInputFormat.scss` – Styles (Quelle; wird zu `dist/css/dateInputFormat.min.css` kompiliert)
-- `dateInputFormat.js` – Verhalten
+## Files needed to copy
+- `dateInputFormat.html` – markup
+- `dateInputFormat.scss` – styles (source; compiled to `dist/css/dateInputFormat.min.css`)
+- `dateInputFormat.js` – behavior
 
-## Einbindung
-Das Markup-Fragment in die Seite kopieren. Das Root-Element trägt `data-js-module="dateInputFormat"`, das zu formatierende `<input>` das Attribut `data-dateinputformat`. Beim Tippen wird der Wert automatisch zu `TT.MM.JJJJ` formatiert.
+## Usage
+Copy the markup fragment into the page. The root element carries `data-js-module="dateInputFormat"`, and the `<input>` to be formatted carries the `data-dateinputformat` attribute. While typing, the value is automatically formatted to `DD.MM.YYYY`.
 
 ## Demo
-`demo.html` im Browser öffnen (setzt einen vorherigen `gulp build` voraus).
+Open `demo.html` in the browser (requires a prior `gulp build`).

@@ -146,10 +146,12 @@ class FormValidation {
 
 
 
-// loader-compatible entry point (boot.js -> mod.init(el))
-export async function init(el) {
+// loader-compatible entry point (boot.js -> mod.init(el, services))
+export async function init(el, services = {}) {
+  const reporter = services.reporter
+
   if (!(el instanceof HTMLFormElement)) {
-    console.warn("[formvalidation] module expects a <form> root element.", el)
+    reporter?.report("formvalidation", "module expects a <form> root element.", el)
     return
   }
 
@@ -163,6 +165,6 @@ export async function init(el) {
   }
 
   catch (error) {
-    console.warn("[formvalidation] failed to initialize pristine validation", error)
+    reporter?.report("formvalidation", "failed to initialize pristine validation", error)
   }
 }

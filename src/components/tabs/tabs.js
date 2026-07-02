@@ -13,8 +13,9 @@ class Tabs {
 
 
   
-  constructor(tabModule, params) {
+  constructor(tabModule, params, reporter) {
     this.module = tabModule;
+    this.reporter = reporter;
     this.selTabTitle = params.selTabTitle;
     this.selTabContent = params.selTabContent;
     this.itemsMap = {};
@@ -227,22 +228,24 @@ class Tabs {
   
   // warns about tab panels that are not referenced by any title.
   handleOrphanedContent = (id) =>
-    console.warn(`Orphaned tab content: '${id}'`);
+    this.reporter?.report("tabs", `orphaned tab content: '${id}'`);
 
 
-  
+
   handleMissingContentItem = (id) =>
-    console.warn(`Missing tab content: '${id}'`);
+    this.reporter?.report("tabs", `missing tab content: '${id}'`);
 }
 
 
 
-// loader-compatible entry point (boot.js -> mod.init(el))
-export function init(el) {
+// loader-compatible entry point (boot.js -> mod.init(el, services))
+export function init(el, services = {}) {
+  const reporter = services.reporter
+
   if (!(el instanceof HTMLElement)) {
-    console.warn("[tabs] module was initialized on a non-element node.", el)
+    reporter?.report("tabs", "module was initialized on a non-element node.", el)
     return
   }
 
-  new Tabs(el, defaults)
+  new Tabs(el, defaults, reporter)
 }

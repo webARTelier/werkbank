@@ -1,15 +1,15 @@
 # flexNeighborMarker
 
-Markiert benachbarte Elemente in einem Flex-Container.
+Marks neighboring elements in a flex container.
 
-## Zum Kopieren benötigt
-- `flexNeighborMarker.html` – Markup
-- `flexNeighborMarker.scss` – Styles (Quelle; wird zu `dist/css/flexNeighborMarker.min.css` kompiliert)
-- `flexNeighborMarker.js` – Verhalten
-- geteilt: `_shared/js/debounce.js` (im Zielprojekt mitkopieren)
+## Files needed to copy
+- `flexNeighborMarker.html` – markup
+- `flexNeighborMarker.scss` – styles (source; compiled to `dist/css/flexNeighborMarker.min.css`)
+- `flexNeighborMarker.js` – behavior
+- shared: `_shared/js/debounce.js` (copy along into the target project)
 
-## Einbindung
-Das Root-Element trägt `data-js-module="flexNeighborMarker"`; der Flex-Container (kann dasselbe Element sein) trägt `data-markflex-container`. Elemente, die in derselben visuellen Reihe einen nachfolgenden Nachbarn haben, erhalten automatisch die Klasse `has-neighbor`. Die Toleranz lässt sich optional über `data-markflex-tolerance` steuern.
+## Usage
+The root element carries `data-js-module="flexNeighborMarker"`; the flex container (can be the same element) carries `data-markflex-container`. Elements that have a following neighbor in the same visual row automatically receive the class `has-neighbor`. The tolerance can optionally be controlled via `data-markflex-tolerance`.
 
 ## Demo
-`demo.html` im Browser öffnen (setzt einen vorherigen `gulp build` voraus).
+Open `demo.html` in the browser (requires a previous `gulp build`).

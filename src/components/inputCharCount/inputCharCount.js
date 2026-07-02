@@ -51,8 +51,9 @@ function getInputsInScope(scope, selector) {
 
 class InputCharCount {
 
-  constructor(input, params = defaults) {
+  constructor(input, params = defaults, reporter) {
     this.input = input
+    this.reporter = reporter
     this.defaultLang = "en"
     this.maxChars = 0
     this.availableLabels = params.labels
@@ -175,24 +176,26 @@ class InputCharCount {
 
 
   handleMissingLabels = () => {
-    console.warn("[inputcharcount] missing labels in configuration data.")
-    console.warn("[inputcharcount] module was not initialized.", this.input)
+    this.reporter?.report("inputcharcount", "missing labels in configuration data.")
+    this.reporter?.report("inputcharcount", "module was not initialized.", this.input)
   }
 
 
 
   handleMissingLabelPart = (labelPart) => {
-    console.warn(`[inputcharcount] missing label "${labelPart}" in configuration data.`)
-    console.warn("[inputcharcount] module was not initialized.", this.input)
+    this.reporter?.report("inputcharcount", `missing label "${labelPart}" in configuration data.`)
+    this.reporter?.report("inputcharcount", "module was not initialized.", this.input)
   }
 }
 
 
 
-// loader-compatible entry point (boot.js -> mod.init(el))
-export function init(el) {
+// loader-compatible entry point (boot.js -> mod.init(el, services))
+export function init(el, services = {}) {
+  const reporter = services.reporter
+
   if (!(el instanceof HTMLElement)) {
-    console.warn("[inputcharcount] module was initialized on a non-element node.", el)
+    reporter?.report("inputcharcount", "module was initialized on a non-element node.", el)
     return
   }
 
@@ -201,5 +204,5 @@ export function init(el) {
   const allInputs = getInputsInScope(el, selector)
   if (!allInputs.length) return
 
-  allInputs.forEach((input) => new InputCharCount(input, defaults))
+  allInputs.forEach((input) => new InputCharCount(input, defaults, reporter))
 }

@@ -34,16 +34,17 @@ let dialogsInstance = null;
 class Dialogs {
 
   // initializes once if dialogs exist
-  static init = () => {
+  static init = (reporter) => {
     if (dialogsInstance) return dialogsInstance
 
-    dialogsInstance = new Dialogs(defaults)
+    dialogsInstance = new Dialogs(defaults, reporter)
     return dialogsInstance
   }
 
 
 
-  constructor(params) {
+  constructor(params, reporter) {
+    this.reporter = reporter;
     this.selDialog = params.selDialog;
     this.selTriggerOpen = params.selTriggerOpen;
     this.selTriggerClose = params.selTriggerClose;
@@ -175,7 +176,7 @@ class Dialogs {
     try {
       this.stopMedia(dialog);
     } catch (err) {
-      console.warn('[Dialogs] onClose hook failed:', err);
+      this.reporter?.report('Dialogs', 'onClose hook failed:', err);
     }
   }
 
@@ -205,7 +206,7 @@ class Dialogs {
 
 
 
-// loader-compatible and boot-compatible entry point
-export function init() {
-  return Dialogs.init()
+// loader-compatible and boot-compatible entry point (boot.js -> mod.init(services))
+export function init(services = {}) {
+  return Dialogs.init(services.reporter)
 }

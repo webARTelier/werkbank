@@ -1,14 +1,14 @@
 # adaptiveScrollFade
 
-Blendet Inhalte adaptiv beim Scrollen ein und aus.
+Adaptively fades content in and out while scrolling.
 
-## Zum Kopieren benötigt
-- `adaptiveScrollFade.html` – Markup
-- `adaptiveScrollFade.scss` – Styles (Quelle; wird zu `dist/css/adaptiveScrollFade.min.css` kompiliert)
-- `adaptiveScrollFade.js` – Verhalten
+## Files needed to copy
+- `adaptiveScrollFade.html` – markup
+- `adaptiveScrollFade.scss` – styles (source; compiled to `dist/css/adaptiveScrollFade.min.css`)
+- `adaptiveScrollFade.js` – behavior
 
-## Einbindung
-Der scrollbare Container erhält `data-js-module="adaptiveScrollFade"`. Er muss eine begrenzte Höhe und `overflow-y: auto` besitzen, damit sein Inhalt überläuft. Das Modul setzt beim Scrollen automatisch eine `mask-image`-Ausblendung an oberem und unterem Rand – jeweils nur dort, wo noch verdeckter Inhalt folgt.
+## Usage
+The scrollable container gets `data-js-module="adaptiveScrollFade"`. It must have a limited height and `overflow-y: auto` so that its content overflows. While scrolling, the module automatically applies a `mask-image` fade at the top and bottom edge – each only where hidden content still follows.
 
 ## Demo
-`demo.html` im Browser öffnen (setzt einen vorherigen `gulp build` voraus).
+Open `demo.html` in the browser (requires a prior `gulp build`).

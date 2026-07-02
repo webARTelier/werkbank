@@ -1,15 +1,15 @@
 # accordion
 
-Accordion-Komponente mit auf-/zuklappbaren Panels.
+Accordion component with expandable/collapsible panels.
 
-## Zum Kopieren benötigt
-- `accordion.html` – Markup
-- `accordion.scss` – Styles (Quelle; wird zu `dist/css/accordion.min.css` kompiliert)
-- `accordion.js` – Verhalten
-- geteilt: `_shared/js/getCssCustomProperty.js` (im Zielprojekt mitkopieren)
+## Files needed to copy
+- `accordion.html` – markup
+- `accordion.scss` – styles (source; compiled to `dist/css/accordion.min.css`)
+- `accordion.js` – behavior
+- shared: `_shared/js/getCssCustomProperty.js` (copy it into the target project as well)
 
-## Einbindung
-Das Root-Element erhält `data-js-module="accordion"`. Jeder Titel bekommt `data-nav-widget-title` und ein `data-content`, das per gleichem Wert auf die `id` des zugehörigen `data-nav-widget-content`-Panels verweist. Optional: `data-type="openSingle"` (nur ein Panel gleichzeitig offen) und `data-scroll-into-view`.
+## Usage
+The root element gets `data-js-module="accordion"`. Each title gets `data-nav-widget-title` and a `data-content` that references the `id` of the corresponding `data-nav-widget-content` panel via the same value. Optional: `data-type="openSingle"` (only one panel open at a time) and `data-scroll-into-view`.
 
 ## Demo
-`demo.html` im Browser öffnen (setzt einen vorherigen `gulp build` voraus).
+Open `demo.html` in the browser (requires a prior `gulp build`).

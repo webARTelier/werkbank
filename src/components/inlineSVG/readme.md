@@ -1,14 +1,14 @@
 # inlineSVG
 
-Ersetzt img-Referenzen durch inline eingebettetes SVG.
+Replaces img references with inline-embedded SVG.
 
-## Zum Kopieren benötigt
-- `inlineSVG.html` – Markup
-- `inlineSVG.scss` – Styles (Quelle; wird zu `dist/css/inlineSVG.min.css` kompiliert)
-- `inlineSVG.js` – Verhalten
+## Files needed to copy
+- `inlineSVG.html` – markup
+- `inlineSVG.scss` – styles (source; compiled to `dist/css/inlineSVG.min.css`)
+- `inlineSVG.js` – behavior
 
-## Einbindung
-`data-js-module="inlineSVG"` wird entweder direkt auf ein `<img>`-Element gesetzt oder auf einen Container, der ein oder mehrere `<img>`-Elemente enthält. Nur Bilder mit einer `.svg`-Quelle (`src`) werden per `fetch` geladen und durch ein echtes inline `<svg>` ersetzt. Vorhandene Attribute wie `id`, `class`, `aria-label`, `width`, `height` und `data-scale` werden übernommen; interne SVG-IDs werden automatisch mit einem eindeutigen Präfix versehen, um Kollisionen zu vermeiden. Der SVG-Abruf unterliegt der Same-Origin-Policy.
+## Usage
+`data-js-module="inlineSVG"` is set either directly on an `<img>` element or on a container that holds one or more `<img>` elements. Only images with an `.svg` source (`src`) are loaded via `fetch` and replaced with a real inline `<svg>`. Existing attributes such as `id`, `class`, `aria-label`, `width`, `height`, and `data-scale` are carried over; internal SVG IDs are automatically given a unique prefix to avoid collisions. The SVG fetch is subject to the same-origin policy.
 
 ## Demo
-`demo.html` im Browser öffnen (setzt einen vorherigen `gulp build` voraus).
+Open `demo.html` in the browser (requires a previous `gulp build`).

@@ -1,14 +1,14 @@
 # stickyObserver
 
-Beobachtet sticky-Elemente und markiert deren Zustand.
+Observes sticky elements and marks their state.
 
-## Zum Kopieren benötigt
-- `stickyObserver.html` – Markup
-- `stickyObserver.scss` – Styles (Quelle; wird zu `dist/css/stickyObserver.min.css` kompiliert)
-- `stickyObserver.js` – Verhalten
+## Files needed to copy
+- `stickyObserver.html` – markup
+- `stickyObserver.scss` – styles (source; compiled to `dist/css/stickyObserver.min.css`)
+- `stickyObserver.js` – behavior
 
-## Einbindung
-Das beobachtete Element (der „Wächter“) erhält `data-js-module="stickyObserver"`. Sobald es aus dem Viewport scrollt, wird auf dem separaten Ziel-Element mit dem Attribut `data-sticky-oberserver-target` die Klasse `is-fixed` gesetzt (und beim Zurückscrollen wieder entfernt).
+## Usage
+The observed element (the "sentinel") gets `data-js-module="stickyObserver"`. As soon as it scrolls out of the viewport, the `is-fixed` class is set on the separate target element carrying the `data-sticky-oberserver-target` attribute (and removed again when scrolling back).
 
 ## Demo
-`demo.html` im Browser öffnen (setzt einen vorherigen `gulp build` voraus).
+Open `demo.html` in the browser (requires a prior `gulp build`).

@@ -1,15 +1,15 @@
 # marquee
 
-Endlos laufender Lauftext (Marquee).
+Infinitely scrolling text (marquee).
 
-## Zum Kopieren benötigt
-- `marquee.html` – Markup
-- `marquee.scss` – Styles (Quelle; wird zu `dist/css/marquee.min.css` kompiliert)
-- `marquee.js` – Verhalten
-- geteilt: `_shared/js/debounce.js` (im Zielprojekt mitkopieren)
+## Files needed to copy
+- `marquee.html` – markup
+- `marquee.scss` – styles (source; compiled to `dist/css/marquee.min.css`)
+- `marquee.js` – behavior
+- shared: `_shared/js/debounce.js` (copy it along into the target project)
 
-## Einbindung
-Das Fragment aus `marquee.html` an die gewünschte Stelle kopieren. Der äußere Container trägt `data-js-module="marquee"` und enthält ein `[data-marquee-container]` mit dem laufenden `[data-marquee-animated]`-Element; die Animation wird beim Boot automatisch initialisiert.
+## Usage
+Copy the fragment from `marquee.html` to the desired location. The outer container carries `data-js-module="marquee"` and contains a `[data-marquee-container]` with the scrolling `[data-marquee-animated]` element; the animation is initialized automatically on boot.
 
 ## Demo
-`demo.html` im Browser öffnen (setzt einen vorherigen `gulp build` voraus).
+Open `demo.html` in the browser (requires a prior `gulp build`).

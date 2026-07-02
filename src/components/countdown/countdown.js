@@ -18,10 +18,11 @@ const defaults = {
 
 class Countdown {
 
-  constructor(module, defaults) {
+  constructor(module, defaults, reporter) {
     if (!(module instanceof HTMLElement)) return;
 
     this.module = module
+    this.reporter = reporter
     this.selDays = defaults.selDays
     this.selHours = defaults.selHours
     this.selMinutes = defaults.selMinutes
@@ -172,15 +173,16 @@ class Countdown {
 
 
   handleMissingElements = () => {
-    console.warn("[countdown] missing day/hour/minute element")
-    console.warn("[countdown] module was not initialized", this.module)
+    this.reporter?.report("countdown", "missing day/hour/minute element")
+    this.reporter?.report("countdown", "module was not initialized", this.module)
   }
 
 
 
   handleMissingDate = () => {
-    console.warn(
-      "[countdown] missing target date (data-countdown-date)",
+    this.reporter?.report(
+      "countdown",
+      "missing target date (data-countdown-date)",
       this.module
     )
   }
@@ -188,12 +190,14 @@ class Countdown {
 
 
 
-// loader-compatible entry point (boot.js -> mod.init(el))
-export function init(el) {
+// loader-compatible entry point (boot.js -> mod.init(el, services))
+export function init(el, services = {}) {
+  const reporter = services.reporter
+
   if (!(el instanceof HTMLElement)) {
-    console.warn("[countdown] module was initialized on a non-element node.", el)
+    reporter?.report("countdown", "module was initialized on a non-element node.", el)
     return
   }
 
-  new Countdown(el, defaults)
+  new Countdown(el, defaults, reporter)
 }

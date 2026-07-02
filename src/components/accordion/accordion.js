@@ -3,7 +3,7 @@
  * toggles accordion items (single-open or multi-open) and keeps aria/state classes in sync
  */
 
-// Copy-Paste-Hinweis: benötigt _shared/js/getCssCustomProperty.js (im Zielprojekt mitkopieren)
+// Copy-paste note: requires _shared/js/getCssCustomProperty.js (copy it into the target project as well)
 import { getCssCustomProperty } from "./getCssCustomProperty.js"
 
 
@@ -19,8 +19,9 @@ const defaults = {
 
 class Accordion {
   
-  constructor(accordion, params) {
+  constructor(accordion, params, reporter) {
     this.accordion = accordion;
+    this.reporter = reporter;
     this.selTitle = `[${params.selTitle}]`;
     this.selContent = `[${params.selContent}]`;
 
@@ -165,15 +166,16 @@ class Accordion {
 
 
 
-// loader-compatible entry point (boot.js -> mod.init(el))
-export function init(el) {
+// loader-compatible entry point (boot.js -> mod.init(el, services))
+export function init(el, services = {}) {
+  const reporter = services.reporter
 
   if (!(el instanceof HTMLElement)) {
-    console.warn("[accordion] module was initialized on a non-element node.", el)
+    reporter?.report("accordion", "module was initialized on a non-element node.", el)
     return
   }
 
   if (el.classList.contains("is-initialized")) return
 
-  new Accordion(el, defaults)
+  new Accordion(el, defaults, reporter)
 }

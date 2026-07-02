@@ -6,8 +6,8 @@ document.addEventListener('DOMContentLoaded', function () {
   const qrToggle = document.createElement('button');
   qrToggle.classList.add('devQrCodeToggle');
   qrToggle.type = 'button';
-  qrToggle.title = 'QR-Code zur aktuellen Seite anzeigen';
-  qrToggle.setAttribute('aria-label', 'QR-Code zur aktuellen Seite anzeigen');
+  qrToggle.title = 'Show QR code for the current page';
+  qrToggle.setAttribute('aria-label', 'Show QR code for the current page');
   qrToggle.setAttribute('aria-expanded', 'false');
   qrToggle.innerHTML = [
     '<svg aria-hidden="true" focusable="false" viewBox="0 0 20 20">',
@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function () {
   qrImage.decoding = 'async';
   qrImage.width = 220;
   qrImage.height = 220;
-  qrImage.alt = 'QR-Code zur aktuellen Seite';
+  qrImage.alt = 'QR code for the current page';
   qrImage.style.cssText = 'display: block; width: 220px; height: 220px; background: white';
 
   qrPanel.appendChild(qrImage);
@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     qrPanel.hidden = !isHidden;
     qrToggle.setAttribute('aria-expanded', String(isHidden));
-    qrToggle.title = isHidden ? 'QR-Code ausblenden' : 'QR-Code zur aktuellen Seite anzeigen';
+    qrToggle.title = isHidden ? 'Hide QR code' : 'Show QR code for the current page';
     qrToggle.setAttribute('aria-label', qrToggle.title);
   });
 });

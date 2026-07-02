@@ -5,7 +5,7 @@
 
 
 
-async function inlineSvg(img) {
+async function inlineSvg(img, reporter) {
   const src = img.getAttribute('src')
   if (!src || !/\.svg(\?|#|$)/i.test(src)) return
 
@@ -52,7 +52,7 @@ async function inlineSvg(img) {
   }
 
   catch {
-    console.warn(`failed to convert`, img)
+    reporter?.report('inlineSvg', 'failed to convert', img)
   }
 }
 
@@ -167,10 +167,13 @@ function collectTargetImages(el) {
 
 
 // --- loader-compatible entry point ---
-export async function init(el) {
+export async function init(el, services = {}) {
+  const reporter = services.reporter
+
   if (!(el instanceof Element)) {
-    console.warn(
-      '[inlineSvg] module was initialized on a non-element node:',
+    reporter?.report(
+      'inlineSvg',
+      'module was initialized on a non-element node:',
       el
     )
     return
@@ -180,6 +183,6 @@ export async function init(el) {
   if (!images.length) return
 
   for (const img of images) {
-    await inlineSvg(img)
+    await inlineSvg(img, reporter)
   }
 }

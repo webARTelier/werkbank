@@ -1,14 +1,14 @@
 # inputCharCount
 
-Zeigt die Zeichenanzahl eines Eingabefeldes an.
+Displays the character count of an input field.
 
-## Zum Kopieren benötigt
-- `inputCharCount.html` – Markup
-- `inputCharCount.scss` – Styles (Quelle; wird zu `dist/css/inputCharCount.min.css` kompiliert)
-- `inputCharCount.js` – Verhalten
+## Files needed to copy
+- `inputCharCount.html` – markup
+- `inputCharCount.scss` – styles (source; compiled to `dist/css/inputCharCount.min.css`)
+- `inputCharCount.js` – behavior
 
-## Einbindung
-`data-js-module="inputCharCount"` wird auf einen Container (oder direkt auf das Eingabefeld) gesetzt. Jedes zu zählende `<input>`/`<textarea>` bekommt das Attribut `data-inputcharcount`; ein `<div class="c-charCounter">` mit dem Zählerstand wird direkt nach dem Feld eingefügt. Optional: `maxlength` aktiviert die „x / n"-Anzeige, `data-countdown="true"` schaltet auf verbleibende Zeichen um, und `data-inputcharcount-selector` am Container überschreibt den Standard-Selektor.
+## Usage
+`data-js-module="inputCharCount"` is set on a container (or directly on the input field). Each `<input>`/`<textarea>` to be counted gets the `data-inputcharcount` attribute; a `<div class="c-charCounter">` with the current count is inserted directly after the field. Optional: `maxlength` enables the "x / n" display, `data-countdown="true"` switches to remaining characters, and `data-inputcharcount-selector` on the container overrides the default selector.
 
 ## Demo
-`demo.html` im Browser öffnen (setzt einen vorherigen `gulp build` voraus).
+Open `demo.html` in the browser (requires a prior `gulp build`).

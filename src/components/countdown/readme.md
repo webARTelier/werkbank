@@ -1,14 +1,14 @@
 # countdown
 
-Live-Countdown auf ein Zieldatum.
+Live countdown to a target date.
 
-## Zum Kopieren benötigt
-- `countdown.html` – Markup
-- `countdown.scss` – Styles (Quelle; wird zu `dist/css/countdown.min.css` kompiliert)
-- `countdown.js` – Verhalten
+## Files needed to copy
+- `countdown.html` – markup
+- `countdown.scss` – styles (source; compiled to `dist/css/countdown.min.css`)
+- `countdown.js` – behavior
 
-## Einbindung
-Das Root-Element erhält `data-js-module="countdown"` sowie `data-countdown-date` mit dem Zieldatum (z. B. `2026-12-31T23:59:59`, wahlweise auch an einem Kindelement). Darin liegen die Ausgabe-Elemente mit `data-countdown-days`, `data-countdown-hours`, `data-countdown-minutes` und optional `data-countdown-seconds`, die sekündlich aktualisiert werden.
+## Usage
+The root element gets `data-js-module="countdown"` as well as `data-countdown-date` with the target date (e.g. `2026-12-31T23:59:59`, optionally on a child element too). Inside it are the output elements with `data-countdown-days`, `data-countdown-hours`, `data-countdown-minutes` and optionally `data-countdown-seconds`, which are updated every second.
 
 ## Demo
-`demo.html` im Browser öffnen (setzt einen vorherigen `gulp build` voraus).
+Open `demo.html` in the browser (requires a prior `gulp build`).
