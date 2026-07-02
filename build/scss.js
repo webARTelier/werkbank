@@ -37,7 +37,7 @@ function makeLogger() {
 async function compileEntry(entry, { dev }) {
   const result = await sass.compileAsync(entry, {
     style: dev ? "expanded" : "compressed",
-    loadPaths: [path.dirname(entry), path.join(config.root, "_shared", "scss")],
+    loadPaths: [path.dirname(entry), path.join(config.root, "src", "_shared", "scss")],
     sourceMap: dev,
     sourceMapIncludeSources: dev,
     logger: makeLogger(),

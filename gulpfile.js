@@ -72,12 +72,12 @@ async function dev() {
 
   process.stdout.write(gray("watching for changes... (Ctrl+C to stop)\n"))
   gulp.watch(
-    ["_shared/scss/**/*.scss"],
+    ["src/**/*.scss"],
     { ignoreInitial: true },
     watched(() => scssRun(true))
   )
   gulp.watch(
-    ["**/*.js", "!node_modules/**", "!dist/**", "!gulpfile.js", "!build/**"],
+    ["src/**/*.js"],
     { ignoreInitial: true },
     watched(() => jsRun(true))
   )

@@ -24,14 +24,30 @@ module.exports = {
 
   scss: {
     // Non-partial entries compiled to dist/css/<name>.min.css.
-    // Add component/vendor stylesheets here as they appear.
     // Vendor files keep the .min suffix too (e.g. vendor/foo.scss -> foo.min.css).
     entries: [
-      p("_shared", "scss", "shared.scss"),
+      p("src", "_shared", "scss", "shared.scss"),
+
+      // component stylesheets — each compiles to dist/css/<name>.min.css and is
+      // loaded by that component's demo.html alongside shared.min.css.
+      p("src", "components", "accordion", "accordion.scss"),
+      p("src", "components", "adaptiveScrollFade", "adaptiveScrollFade.scss"),
+      p("src", "components", "countdown", "countdown.scss"),
+      p("src", "components", "dateInputFormat", "dateInputFormat.scss"),
+      p("src", "components", "dialog", "dialog.scss"),
+      p("src", "components", "flexNeighborMarker", "flexNeighborMarker.scss"),
+      p("src", "components", "formValidation", "formValidation.scss"),
+      p("src", "components", "inlineSVG", "inlineSVG.scss"),
+      p("src", "components", "inputCharCount", "inputCharCount.scss"),
+      p("src", "components", "marquee", "marquee.scss"),
+      p("src", "components", "responsiveVideo", "responsiveVideo.scss"),
+      p("src", "components", "scaleSVG", "scaleSVG.scss"),
+      p("src", "components", "stickyObserver", "stickyObserver.scss"),
+      p("src", "components", "tabs", "tabs.scss"),
     ],
     outDir: p("dist", "css"),
     // A .scss file counts as "vendor" if it lives under one of these folders.
-    vendorDirs: [p("_shared", "scss", "vendor")],
+    vendorDirs: [p("src", "_shared", "scss", "vendor")],
   },
 
   js: {
@@ -40,32 +56,32 @@ module.exports = {
     // "boot" is the page bootstrapper and lands at dist/js/boot.min.js;
     // everything else lands at dist/js/modules/<name>.min.js.
     entries: {
-      boot: p("_shared", "js", "boot.js"),
+      boot: p("src", "_shared", "js", "boot.js"),
 
       // component modules
-      accordion: p("accordion", "accordion.js"),
-      adaptiveScrollFade: p("adaptiveScrollFade", "adaptiveScrollFade.js"),
-      countdown: p("countdown", "countdown.js"),
-      dateInputFormat: p("dateInputFormat", "dateInputFormat.js"),
-      dialogs: p("dialog", "dialogs.js"),
-      flexNeighborMarker: p("flexNeighborMarker", "flexNeighborMarker.js"),
-      formValidation: p("formValidation", "formValidation.js"),
-      inlineSVG: p("inlineSVG", "inlineSVG.js"),
-      inputCharCount: p("inputCharCount", "inputCharCount.js"),
-      marquee: p("marquee", "marquee.js"),
-      responsiveVideo: p("responsiveVideo", "responsiveVideo.js"),
-      scaleSVG: p("scaleSVG", "scaleSVG.js"),
-      stickyObserver: p("stickyObserver", "stickyObserver.js"),
-      tabs: p("tabs", "tabs.js"),
+      accordion: p("src", "components", "accordion", "accordion.js"),
+      adaptiveScrollFade: p("src", "components", "adaptiveScrollFade", "adaptiveScrollFade.js"),
+      countdown: p("src", "components", "countdown", "countdown.js"),
+      dateInputFormat: p("src", "components", "dateInputFormat", "dateInputFormat.js"),
+      dialogs: p("src", "components", "dialog", "dialogs.js"),
+      flexNeighborMarker: p("src", "components", "flexNeighborMarker", "flexNeighborMarker.js"),
+      formValidation: p("src", "components", "formValidation", "formValidation.js"),
+      inlineSVG: p("src", "components", "inlineSVG", "inlineSVG.js"),
+      inputCharCount: p("src", "components", "inputCharCount", "inputCharCount.js"),
+      marquee: p("src", "components", "marquee", "marquee.js"),
+      responsiveVideo: p("src", "components", "responsiveVideo", "responsiveVideo.js"),
+      scaleSVG: p("src", "components", "scaleSVG", "scaleSVG.js"),
+      stickyObserver: p("src", "components", "stickyObserver", "stickyObserver.js"),
+      tabs: p("src", "components", "tabs", "tabs.js"),
 
       // shared helpers that are also lazily loadable modules
-      debounce: p("_shared", "js", "debounce.js"),
-      getCssCustomProperty: p("_shared", "js", "getCssCustomProperty.js"),
+      debounce: p("src", "_shared", "js", "debounce.js"),
+      getCssCustomProperty: p("src", "_shared", "js", "getCssCustomProperty.js"),
     },
 
     // Where component source files look up shared helpers imported as
     // flat siblings, e.g. `import { debounce } from "./debounce.js"`.
-    sharedDir: p("_shared", "js"),
+    sharedDir: p("src", "_shared", "js"),
 
     // Modules resolved at runtime, never bundled:
     // - ./registry.js  -> the generated registry (boot.js)
