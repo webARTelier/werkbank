@@ -1,0 +1,120 @@
+/**
+ * Observes the bootloader module element and toggles 
+ * a configurable CSS class on a separate target element 
+ * while the observed node is outside the viewport.
+ */
+
+
+
+const defaults = {
+  className: "is-fixed",
+  selTarget: "[data-sticky-oberserver-target]",
+  transitionDuration: 240,
+  transitionEasing: "ease-out",
+}
+
+
+
+class StickyObserver {
+  
+  constructor(observed, config) {
+    if (!(observed instanceof HTMLElement)) return
+
+    this.observed = observed
+    this.className = config.className
+    this.selTarget = config.selTarget
+    this.transitionDuration = config.transitionDuration
+    this.transitionEasing = config.transitionEasing
+    this.activeAnimation = null
+    this.target = document.querySelector(this.selTarget)
+
+    if (!(this.target instanceof HTMLElement)) {
+      this.handleMissingTarget()
+      return
+    }
+
+    this.observe()
+  }
+
+
+
+  // observes viewport intersection changes 
+  // for the configured source element.
+  observe = () => {
+    const observer = new IntersectionObserver((entries) => {
+      const [entry] = entries
+      if (!entry) return
+
+      const shouldFix = !entry.isIntersecting
+      this.animateClassToggle(shouldFix)
+    })
+
+    observer.observe(this.observed)
+  }
+
+
+
+  // toggles the sticky class with a 
+  // FLIP-style transition when possible.
+  animateClassToggle = (shouldFix) => {
+    const isFixed = this.target.classList.contains(this.className)
+    if (isFixed === shouldFix) return
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      this.target.classList.toggle(this.className, shouldFix)
+      return
+    }
+
+    const first = this.target.getBoundingClientRect()
+    this.target.classList.toggle(this.className, shouldFix)
+    const last = this.target.getBoundingClientRect()
+
+    const deltaX = first.left - last.left
+    const deltaY = first.top - last.top
+    if (Math.abs(deltaX) < 0.5 && Math.abs(deltaY) < 0.5) return
+
+    if (this.activeAnimation) {
+      this.activeAnimation.cancel()
+    }
+
+    this.activeAnimation = this.target.animate(
+      [
+        { transform: `translate(${deltaX}px, ${deltaY}px)` },
+        { transform: "translate(0, 0)" },
+      ],
+      {
+        duration: this.transitionDuration,
+        easing: this.transitionEasing,
+      }
+    )
+
+    this.activeAnimation.onfinish = () => {
+      this.activeAnimation = null
+    }
+
+    this.activeAnimation.oncancel = () => {
+      this.activeAnimation = null
+    }
+  }
+
+
+
+  handleMissingTarget = () => {
+    console.warn(
+      `[stickyobserver] missing target element (selector: "${this.selTarget}").`
+    )
+  }
+}
+
+
+
+// loader-compatible entry point 
+// (boot.js -> mod.init(el))
+export function init(el) {
+  if (!(el instanceof HTMLElement)) {
+    console.warn("[stickyobserver] module was initialized on a non-element node.", el)
+    return
+  }
+
+  new StickyObserver(el, defaults)
+}

@@ -1,0 +1,46 @@
+/**
+ * Provides two reusable debounce helpers: 
+ * one that delays execution until inputsettles, 
+ * and one that runs immediately once and then blocks until timeout.
+ */
+
+
+
+// suppresses repeated calls until the delay ends, then executes
+export const debounceThenExecute = (func, delay) => {
+  let timerId;
+
+  return function () {
+    const context = this;
+    const args = arguments;
+
+    clearTimeout(timerId);
+
+    timerId = setTimeout(function () {
+      func.apply(context, args);
+    }, delay)
+  }
+}
+
+
+
+// executes immediately, then suppresses repeated calls until the delay ends.
+export const executeThenDebounce = (func, delay) => {
+  let timerId;
+
+  return function () {
+    const context = this;
+    const args = arguments;
+
+    if (timerId) {
+      clearTimeout(timerId);
+      return;
+    }
+
+    func.apply(context, args);
+
+    timerId = setTimeout(function () {
+      timerId = null;
+    }, delay)
+  }
+}

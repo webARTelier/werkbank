@@ -1,0 +1,107 @@
+/**
+ * DateInputFormat
+ * auto-formats date inputs to DD.MM.YYYY while typing.
+ */
+
+const defaults = {
+  selInput: "[data-dateinputformat]"
+}
+
+
+
+// returns all matching date inputs inside the current boot scope.
+function getInputsInScope(scope, selector) {
+  if (scope instanceof HTMLInputElement) {
+    return scope.matches(selector) ? [scope] : []
+  }
+
+  if (!(scope instanceof HTMLElement)) {
+    return []
+  }
+
+  return [...scope.querySelectorAll(selector)]
+}
+
+
+
+// normalizes user input to a partial or complete DD.MM.YYYY value.
+function formatDateValue(value) {
+  const digitsOnly = value.replace(/\D/g, "").slice(0, 8)
+  const parts = []
+
+  if (digitsOnly.length > 0) parts.push(digitsOnly.slice(0, 2))
+  if (digitsOnly.length > 2) parts.push(digitsOnly.slice(2, 4))
+  if (digitsOnly.length > 4) parts.push(digitsOnly.slice(4, 8))
+
+  return parts.join(".")
+}
+
+
+
+class DateInputFormat {
+
+  constructor(input) {
+    this.input = input
+
+    this.markInitialized()
+    this.formatCurrentValue()
+    this.startListening()
+  }
+
+
+
+  // prevents double initialization.
+  markInitialized = () => {
+    this.input.classList.add("is-initialized")
+  }
+
+
+
+  // formats the current input value in place.
+  formatCurrentValue = () => {
+    this.input.value = formatDateValue(this.input.value)
+  }
+
+
+
+  // wires input and blur events for live formatting.
+  startListening = () => {
+    this.input.addEventListener("input", this.handleInput)
+    this.input.addEventListener("blur", this.handleBlur)
+  }
+
+
+
+  // reformats typed input while preserving intuitive backspace behavior.
+  handleInput = (event) => {
+    const isBackwardDelete = event.inputType === "deleteContentBackward"
+    const hadTrailingSeparator = this.input.value.endsWith(".")
+
+    this.formatCurrentValue()
+
+    // keeps backspace behavior intuitive around separators.
+    if (isBackwardDelete && hadTrailingSeparator) {
+      this.input.value = this.input.value.slice(0, -1)
+    }
+  }
+
+
+
+  // normalizes the final value when the field loses focus.
+  handleBlur = () => {
+    this.formatCurrentValue()
+  }
+}
+
+
+
+// loader-compatible entry point (boot.js -> mod.init(el))
+export function init(el) {
+  const allInputs = getInputsInScope(el, defaults.selInput)
+  if (!allInputs.length) return
+
+  allInputs.forEach((input) => {
+    if (input.classList.contains("is-initialized")) return
+    new DateInputFormat(input)
+  })
+}

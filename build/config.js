@@ -1,0 +1,90 @@
+"use strict"
+
+const path = require("path")
+
+const root = path.resolve(__dirname, "..")
+const p = (...parts) => path.join(root, ...parts)
+
+// -----------------------------------------------------------------------------
+// Central, explicit build configuration.
+// Entry points are listed explicitly (not auto-globbed) so the build stays
+// reproducible and every output name is fully under our control.
+// -----------------------------------------------------------------------------
+
+module.exports = {
+  root,
+  p,
+
+  dist: {
+    root: p("dist"),
+    css: p("dist", "css"),
+    js: p("dist", "js"),
+    jsModules: p("dist", "js", "modules"),
+  },
+
+  scss: {
+    // Non-partial entries compiled to dist/css/<name>.min.css.
+    // Add component/vendor stylesheets here as they appear.
+    // Vendor files keep the .min suffix too (e.g. vendor/foo.scss -> foo.min.css).
+    entries: [
+      p("_shared", "scss", "shared.scss"),
+    ],
+    outDir: p("dist", "css"),
+    // A .scss file counts as "vendor" if it lives under one of these folders.
+    vendorDirs: [p("_shared", "scss", "vendor")],
+  },
+
+  js: {
+    // Rollup input map: output-name -> source file.
+    // Component modules + shared helpers that the registry loads on demand.
+    // "boot" is the page bootstrapper and lands at dist/js/boot.min.js;
+    // everything else lands at dist/js/modules/<name>.min.js.
+    entries: {
+      boot: p("_shared", "js", "boot.js"),
+
+      // component modules
+      accordion: p("accordion", "accordion.js"),
+      adaptiveScrollFade: p("adaptiveScrollFade", "adaptiveScrollFade.js"),
+      countdown: p("countdown", "countdown.js"),
+      dateInputFormat: p("dateInputFormat", "dateInputFormat.js"),
+      dialogs: p("dialog", "dialogs.js"),
+      flexNeighborMarker: p("flexNeighborMarker", "flexNeighborMarker.js"),
+      formValidation: p("formValidation", "formValidation.js"),
+      inlineSVG: p("inlineSVG", "inlineSVG.js"),
+      inputCharCount: p("inputCharCount", "inputCharCount.js"),
+      marquee: p("marquee", "marquee.js"),
+      responsiveVideo: p("responsiveVideo", "responsiveVideo.js"),
+      scaleSVG: p("scaleSVG", "scaleSVG.js"),
+      stickyObserver: p("stickyObserver", "stickyObserver.js"),
+      tabs: p("tabs", "tabs.js"),
+
+      // shared helpers that are also lazily loadable modules
+      debounce: p("_shared", "js", "debounce.js"),
+      getCssCustomProperty: p("_shared", "js", "getCssCustomProperty.js"),
+    },
+
+    // Where component source files look up shared helpers imported as
+    // flat siblings, e.g. `import { debounce } from "./debounce.js"`.
+    sharedDir: p("_shared", "js"),
+
+    // Modules resolved at runtime, never bundled:
+    // - ./registry.js  -> the generated registry (boot.js)
+    // - ./pristine.js  -> vendor lib loaded for its side effect (formValidation)
+    // Kept external so Rollup neither inlines them nor tries to resolve their
+    // dynamic module imports.
+    runtimeExternals: ["./registry.js", "./pristine.js"],
+
+    outDir: p("dist", "js"),
+    bootName: "boot",
+  },
+
+  registry: {
+    // Written to dist/js/registry.js, generated from the files in dist/js/modules.
+    outFile: p("dist", "js", "registry.js"),
+    modulesDir: p("dist", "js", "modules"),
+    // Modules initialised once per page (boot.js -> globalRegistry).
+    globalModules: ["dialogs"],
+    // Built module basenames end with this suffix.
+    moduleSuffix: ".min.js",
+  },
+}

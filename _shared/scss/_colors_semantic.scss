@@ -1,0 +1,33 @@
+:root {
+
+  // Backgrounds (page -> most elevated surface)
+  --color-bg: var(--c-blue-black);
+  --color-bg-surface: var(--c-slate-900);
+  --color-bg-surface-strong: var(--c-gray-900);
+  --color-bg-elevated: var(--c-slate-800);
+  --color-bg-overlay: color-mix(in srgb, var(--c-white) 6%, transparent);
+
+  // Text
+  --color-text: var(--c-slate-50);
+  --color-text-light: var(--c-slate-50);
+  --color-text-dark: var(--c-slate-900);
+  --color-text-muted: var(--c-slate-400);
+  --color-text-secondary: var(--c-slate-300);
+  --color-text-on-accent: var(--c-white);
+
+  // Borders
+  --color-border: color-mix(in srgb, var(--c-white) 12%, transparent);
+  --color-border-subtle: color-mix(in srgb, var(--c-white) 8%, transparent);
+  --color-border-strong: color-mix(in srgb, var(--c-white) 20%, transparent);
+
+  // Accents
+  --color-accent: var(--c-violet-600);
+  --color-accent-secondary: var(--c-sky-400);
+
+  // Interactive states
+  --color-focus-ring: var(--c-sky-400);
+  --color-border-focus: color-mix(in srgb, var(--c-sky-400) 45%, transparent);
+
+  // Shadow
+  --color-shadow: color-mix(in srgb, var(--c-slate-950) 45%, transparent);
+}
