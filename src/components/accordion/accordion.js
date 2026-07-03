@@ -113,7 +113,7 @@ class AccordionEnhancer {
     if (!summary) return
 
     // Two nested elements:
-    //   wrapper -> the CSS grid that animates grid-template-rows 0fr<->1fr
+    //   wrapper -> the CSS grid that animates grid-template-rows 0fr <-> 1fr
     //   clip    -> the grid item (min-height:0, overflow:hidden, NO padding)
     // The clip MUST be padding-free: a grid item's border box cannot
     // shrink below its own padding, so padding on the collapsing item
@@ -150,13 +150,14 @@ class AccordionEnhancer {
       if (details.open) {
         record.isAnimating = true
         this.animateClose(details, wrapper, () => { record.isAnimating = false })
-      } else {
-        // Opening: animate-close any open sibling in the same group
-        // first (see class doc), then open this one. CSS animates the
-        // incoming panel 0fr -> 1fr while the sibling runs 1fr -> 0fr.
-        if (group) this.closeGroupSiblings(record)
-        details.open = true
+        return
       }
+
+      // Opening: animate-close any open sibling in the same group
+      // first (see class doc), then open this one. CSS animates the
+      // incoming panel 0fr -> 1fr while the sibling runs 1fr -> 0fr.
+      if (group) this.closeGroupSiblings(record)
+      details.open = true
     })
   }
 

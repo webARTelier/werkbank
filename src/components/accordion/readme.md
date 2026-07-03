@@ -16,5 +16,10 @@ The root element gets `data-js-module="accordion"`. It is built on native `<deta
 
 See `accordion.html` for a ready-to-copy snippet of both modes.
 
+## Integration
+The JS exports `init(el, services)` and does not self-initialize. It is loaded on demand by `boot.js` for every element carrying `data-js-module="accordion"`.
+
+`services.reporter` (dependency injection via `boot.js`) is **optional** — it is only used for warnings (e.g. empty container). Without it the module degrades silently and the animation still works.
+
 ## Demo
 Open `demo.html` in the browser.
