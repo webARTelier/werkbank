@@ -1,6 +1,9 @@
 /**
- * Marks flex items that have a sibling in the same visual row 
+ * flexNeighborMarker.js
+ * ----------------------------------------------------------------------------
+ * Marks flex items that have a sibling in the same visual row
  * so CSS can style row relationships without hardcoded layout assumptions.
+ * ----------------------------------------------------------------------------
  */
 
 

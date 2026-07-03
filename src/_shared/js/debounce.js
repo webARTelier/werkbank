@@ -1,7 +1,10 @@
 /**
- * Provides two reusable debounce helpers: 
- * one that delays execution until inputsettles, 
+ * debounce.js
+ * ----------------------------------------------------------------------------
+ * Provides two reusable debounce helpers:
+ * one that delays execution until input settles,
  * and one that runs immediately once and then blocks until timeout.
+ * ----------------------------------------------------------------------------
  */
 
 

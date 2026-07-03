@@ -1,7 +1,11 @@
 /**
- * FormValidation
- * initializes Pristine validation per form and keeps aria bindings in sync.
+ * formValidation.js
+ * ----------------------------------------------------------------------------
+ * Initializes Pristine validation per form and keeps aria bindings in sync.
+ * ----------------------------------------------------------------------------
  */
+
+
 
 const defaults = {
   availableLocales: ["de", "en"],

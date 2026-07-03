@@ -1,13 +1,16 @@
-// boot.js
-
 /**
- * minimal module loader:
+ * boot.js
+ * ----------------------------------------------------------------------------
+ * Minimal module loader:
  * - loads global modules on demand for every page
  * - loads page modules on demand based on data-js-module
  *
  * markup example:
  * <section data-js-module="accordion,slider"></section>
+ * ----------------------------------------------------------------------------
  */
+
+
 
 // module registries (lazy-loaded modules)
 import { globalRegistry, registry } from "./registry.js"

@@ -87,6 +87,22 @@ body {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
+// Secondary explanatory text placed above a live example. Kept visually
+// subordinate (smaller + muted) so the example itself reads as the primary
+// level in the hierarchy.
+.stage__intro {
+  margin: 0 0 var(--space-s);
+  max-width: 60ch;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--muted);
+
+  strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+}
+
 // -----------------------------------------------------------------------------
 // Gallery / overview (root index.html)
 // Extends the demo chrome with the component grid used on the landing page.

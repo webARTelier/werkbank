@@ -1,7 +1,10 @@
 /**
- * Renders a live countdown for one module instance 
- * and updates mapped day/hour/minute/second nodes 
+ * countdown.js
+ * ----------------------------------------------------------------------------
+ * Renders a live countdown for one module instance
+ * and updates mapped day/hour/minute/second nodes
  * from a target date provided in the module markup.
+ * ----------------------------------------------------------------------------
  */
 
 

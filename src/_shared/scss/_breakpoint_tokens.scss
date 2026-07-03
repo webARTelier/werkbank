@@ -1,0 +1,14 @@
+/* ==========================================================================
+   Core Settings: _breakpoint_tokens.scss
+   Defines styles for Breakpoint Tokens in the core layer.
+   ========================================================================== */
+
+@use "breakpoints" as *;
+
+:root {
+  @each $key, $value in $viewportScales {
+    --bp-#{$key}: #{$value};
+  }
+
+  --bp-navigation: #{$navBreakpoint};
+}

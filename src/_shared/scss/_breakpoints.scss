@@ -1,0 +1,18 @@
+/* ==========================================================================
+   Core Settings: _breakpoints.scss
+   Defines styles for Breakpoints in the core layer.
+   ========================================================================== */
+
+// viewport x starts at breakpoint x
+$viewportScales: (
+  'tiny':   0px,
+  'small':  575px,
+  'medium': 768px,
+  'large':  990px,
+  'xxl':    1200px
+);
+
+
+
+// collapsed/expanded navigation
+$navBreakpoint: 1250px;

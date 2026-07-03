@@ -1,8 +1,13 @@
 /**
- * Creates an infinitely scrolling marquee track with 
- * optional overflow-only start, clone management, 
+ * marquee.js
+ * ----------------------------------------------------------------------------
+ * Creates an infinitely scrolling marquee track with
+ * optional overflow-only start, clone management,
  * and resize-aware re-evaluation of animation state.
+ * ----------------------------------------------------------------------------
  */
+
+
 
 // Copy-paste note: requires _shared/js/debounce.js (copy it along into the target project)
 import { debounceThenExecute } from "./debounce.js"

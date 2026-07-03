@@ -1,3 +1,25 @@
+/**
+ * dev_qrCode.js
+ * ----------------------------------------------------------------------------
+ * Development-only QR code overlay for the current URL.
+ *
+ * Injects a small fixed toggle button (bottom-left). On click it opens a
+ * panel showing a QR code that encodes window.location.href, generated
+ * on demand via the external goqr.me API (api.qrserver.com). The QR image
+ * is only fetched the first time the panel is opened.
+ *
+ * Handy for quickly opening the page you are working on on a physical mobile
+ * device without typing the URL. The toggle keeps aria-expanded / aria-label
+ * in sync for basic accessibility.
+ *
+ * Development aid only, and note it makes an outbound request to a third-party
+ * service (the URL is sent to api.qrserver.com). Load as a module in dev
+ * builds exclusively.
+ * ----------------------------------------------------------------------------
+ */
+
+
+
 document.addEventListener('DOMContentLoaded', function () {
   function getQrApiUrl() {
     return `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=12&data=${encodeURIComponent(window.location.href)}`;
@@ -43,5 +65,5 @@ document.addEventListener('DOMContentLoaded', function () {
     qrToggle.setAttribute('aria-expanded', String(isHidden));
     qrToggle.title = isHidden ? 'Hide QR code' : 'Show QR code for the current page';
     qrToggle.setAttribute('aria-label', qrToggle.title);
-  });
-});
+  })
+})

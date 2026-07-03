@@ -1,14 +1,35 @@
 
+/**
+ * dev_pageInfo.js
+ * ----------------------------------------------------------------------------
+ * Development-only page/viewport diagnostics overlay.
+ *
+ * Adds a small fixed badge (bottom-right) that reflects the current
+ * environment as reported by CSS custom properties on <body>:
+ *   --viewportName | --navstate | --density | --input
+ * The badge updates live on window resize.
+ *
+ * On load — and again (debounced) on every resize — it also scans every
+ * element for horizontal overflow (offsetWidth wider than the document) and
+ * logs each offender plus the excess px to the console, which helps track
+ * down unwanted horizontal scrollbars. A focusin listener additionally logs
+ * the currently focused element to aid keyboard/focus debugging.
+ *
+ * Development aid only; it appends DOM and installs global handlers. Load as
+ * a module in dev builds exclusively.
+ * ----------------------------------------------------------------------------
+ */
 
 
-getCssCustomProperty = (scope, name) => {
+
+const getCssCustomProperty = (scope, name) => {
   const styles = getComputedStyle(scope);
   return styles.getPropertyValue(name).trim();
 }
 
 
 
-debounceThenExecute = (func, delay) => {
+const debounceThenExecute = (func, delay) => {
   let timerId;
 
   return function () {
@@ -62,13 +83,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
   checkWidth();
 
-document.addEventListener('focusin', (event) => {
-  console.log('Focused:', document.activeElement);
-})
+  document.addEventListener('focusin', (event) => {
+    console.log('Focused:', document.activeElement);
+  })
 
   const debouncedCheckWidth = debounceThenExecute(checkWidth, 300);
 
-  onresize = (e) => {
+  window.onresize = (e) => {
     devPageInfo.textContent = getInfos();
     debouncedCheckWidth();
   }

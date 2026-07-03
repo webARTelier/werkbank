@@ -1,1 +1,270 @@
-// accordion styles
+// =============================================================
+// Accordion — accessible, animated, works without JavaScript
+// =============================================================
+//
+// Animation strategy:
+// 1. Modern Chromium browsers: native animation via ::details-content
+//    + interpolate-size: allow-keywords.
+// 2. All other browsers (Firefox, Safari, older Chromium): fallback
+//    via a CSS grid trick (grid-template-rows: 0fr -> 1fr), driven by
+//    the small companion script (see accordion.js).
+//
+// Important: the base behaviour (open/close) works in every browser
+// even without JS and without animation — the CSS below only degrades
+// the visuals, never the function.
+//
+// The "m-accordion*" classes (BEM "m-" prefix) are used for styling only.
+// accordion.js does NOT hook onto them; it targets separate data attributes
+// in the markup ("data-accordion-item", "data-accordion-panel"). When the JS
+// fallback runs it also sets "data-js-enhanced" on the container and wraps
+// each panel in an element carrying "data-accordion-wrapper".
+
+
+
+:root {
+  // Animation maps to the shared animation tokens 
+  // (see _shared/scss/_foundations.scss).
+  --accordion-duration: var(--an-duration);
+  --accordion-easing: var(--an-ease);
+  --accordion-radius: var(--borderRadius);
+
+  // Spacing maps to the shared spacing scale 
+  // (see _shared/scss/_foundations.scss).
+  --accordion-gap: var(--space-2xs); // gap between items
+  --accordion-trigger-gap: var(--space-xs); // gap label <-> arrow
+  --accordion-padding-inline: var(--space-s);
+  --accordion-padding-block: var(--space-xs);
+
+  // Colors map to the shared semantic tokens
+  // (see _shared/scss/_colors_semantic.scss).
+  --accordion-border-color: var(--color-border);
+  --accordion-bg: var(--color-bg-surface);
+  --accordion-bg-hover: var(--color-bg-elevated);
+  --accordion-text-color: var(--color-text);
+  --accordion-focus-color: var(--color-focus-ring);
+}
+
+
+
+.m-accordion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--accordion-gap);
+
+  font-family: system-ui, sans-serif;
+
+  color: var(--accordion-text-color);
+}
+
+
+
+.m-accordion__item {
+  border: 1px solid var(--accordion-border-color);
+  border-radius: var(--accordion-radius);
+  overflow: hidden;
+
+  background: var(--accordion-bg);
+
+  // Visible focus ring instead of the removed default outline. The ring is
+  // placed on the item (not the trigger) so it surrounds the whole item and
+  // follows its rounded corners. An outline on the trigger would be clipped
+  // by this element's "overflow: hidden"; an element's own outline is not.
+  &:has(> .m-accordion__trigger:focus-visible) {
+    outline: 2px solid var(--accordion-focus-color);
+    outline-offset: 2px;
+  }
+}
+
+
+
+.m-accordion__trigger {
+  cursor: pointer;
+
+  padding: var(--accordion-padding-block) var(--accordion-padding-inline);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--accordion-trigger-gap);
+  font-weight: 600;
+
+  // remove the default marker (Firefox / modern browsers)
+  list-style: none;
+  user-select: none;
+
+  // Remove the default disclosure triangle (older WebKit/Safari).
+  // The marker is a pseudo-element of <summary>, so it belongs here.
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  // Custom arrow icon instead of the native marker
+  &::after {
+    flex-shrink: 0;
+
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+
+    width: 0.6rem;
+    height: 0.6rem;
+
+    content: "";
+
+    transform: rotate(-45deg);
+    transition: transform var(--accordion-duration) var(--accordion-easing);
+  }
+
+  &:hover {
+    background: var(--accordion-bg-hover);
+  }
+
+  // The focus ring is drawn on the parent ".m-accordion__item" (see there).
+  // Suppress the native UA outline on the <summary> itself — otherwise its
+  // bottom edge shows as a stray line at the trigger/panel boundary when open.
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+
+
+// The heading inside the <summary> carries the accessible section
+// title (so screen-reader users can navigate the panels by heading).
+.m-accordion__title {
+  margin: 0;
+  font: inherit;
+}
+
+
+
+.m-accordion__item[open]>.m-accordion__trigger::after {
+  transform: rotate(45deg);
+}
+
+
+
+// During the JS-driven close 'open' stays set until the transition ends,
+// so the arrow would only flip back once the panel is fully closed.
+// 'data-closing' rotates it back right away, in sync with the collapse.
+// (Higher specificity than the [open] rule above, so it wins.)
+.m-accordion__item[open][data-closing]>.m-accordion__trigger::after {
+  transform: rotate(-45deg);
+}
+
+
+
+.m-accordion__panel {
+  padding: 0 var(--accordion-padding-inline) var(--accordion-padding-inline);
+
+  p:first-child {
+    margin-block-start: 0;
+  }
+
+  p:last-child {
+    margin-block-end: 0;
+  }
+}
+
+
+
+// -------------------------------------------------------------
+// Fallback animation via CSS grid (for JS-driven browsers).
+// The JS sets the "data-js-enhanced" attribute on the container and
+// wraps each panel in an element carrying "data-accordion-wrapper".
+// -------------------------------------------------------------
+[data-js-enhanced] .m-accordion__item {
+
+  // The wrapper the JS inserts around the panel content
+  >[data-accordion-wrapper] {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows var(--accordion-duration) var(--accordion-easing);
+
+    // The clip is the grid item. It carries min-height:0 + overflow:hidden
+    // and stays padding-free so the track can collapse to a true 0.
+    // (Padding on the grid item itself would leave a residual gap, because
+    // a border box cannot shrink below its own padding.) The panel's
+    // padding lives inside the clip and is simply clipped away.
+    >[data-accordion-clip] {
+      min-height: 0;
+      overflow: hidden;
+    }
+  }
+
+
+
+  // Fully closed (the JS has removed 'open', no 'data-closing'): take the
+  // clipped content out of the tab order and the accessibility tree.
+  // Our "display: grid" wrapper overrides the native "closed <details> hides
+  // its content" behaviour, so without this the collapsed (0-height) panel's
+  // links/buttons would stay keyboard-focusable and reachable by AT. The row
+  // is already 0fr at this point, so there is no visible jump. During
+  // opening/closing 'open' is set (see rules below), so the content is
+  // visible and animates normally.
+  &:not([open])>[data-accordion-wrapper]>[data-accordion-clip] {
+    visibility: hidden;
+  }
+
+
+
+  &[open]>[data-accordion-wrapper] {
+    grid-template-rows: 1fr;
+  }
+
+
+
+  // Closing state set by accordion.js: forces the row back to 0fr while
+  // 'open' is still present, so the collapse (1fr -> 0fr) can animate.
+  // Higher specificity than the [open] rule above, so it always wins.
+  &[open][data-closing]>[data-accordion-wrapper] {
+    grid-template-rows: 0fr;
+  }
+}
+
+
+
+// -------------------------------------------------------------
+// Native animation for browsers that support ::details-content
+// (currently Chromium-only). Only active when the JS did NOT take
+// over (i.e. no "data-js-enhanced" attribute on the container) and the
+// browser supports the required properties.
+// -------------------------------------------------------------
+@supports (interpolate-size: allow-keywords) {
+  .m-accordion:not([data-js-enhanced]) {
+    
+    .m-accordion__item {
+      interpolate-size: allow-keywords;
+
+      &::details-content {
+        opacity: 0;
+
+        height: 0;
+        overflow: hidden;
+        
+        transition:
+          height var(--accordion-duration) var(--accordion-easing),
+          opacity var(--accordion-duration) var(--accordion-easing),
+          content-visibility var(--accordion-duration) allow-discrete;
+      }
+
+      &[open]::details-content {
+        height: auto;
+        opacity: 1;
+      }
+    }
+  }
+}
+
+
+
+// -------------------------------------------------------------
+// Respect reduced motion
+// -------------------------------------------------------------
+@media (prefers-reduced-motion: reduce) {
+
+  .m-accordion__trigger::after,
+  .m-accordion__item::details-content,
+  [data-js-enhanced] .m-accordion__item>[data-accordion-wrapper] {
+    transition-duration: 0.01ms !important;
+  }
+}

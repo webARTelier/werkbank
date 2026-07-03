@@ -1,8 +1,12 @@
 /**
- * ResponsiveVideo
- * handles responsive video source switching
+ * responsiveVideo.js
+ * ----------------------------------------------------------------------------
+ * Handles responsive video source switching
  * based on viewport and device density.
+ * ----------------------------------------------------------------------------
  */
+
+
 
 // Copy-paste note: requires _shared/js/debounce.js (copy it along into the target project)
 import { debounceThenExecute } from "./debounce.js"

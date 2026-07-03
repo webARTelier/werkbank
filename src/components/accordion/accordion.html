@@ -1,0 +1,45 @@
+<!-- Single-open: same name="" on all items -> only one open at a time -->
+<div class="m-accordion" data-js-module="accordion">
+
+  <details class="m-accordion__item" data-accordion-item name="accordion-single">
+    <summary class="m-accordion__trigger">
+      <h2 class="m-accordion__title">Trigger 1</h2>
+    </summary>
+    <div class="m-accordion__panel" data-accordion-panel>
+      <p>Panel content 1 …</p>
+    </div>
+  </details>
+
+  <details class="m-accordion__item" data-accordion-item name="accordion-single">
+    <summary class="m-accordion__trigger">
+      <h2 class="m-accordion__title">Trigger 2</h2>
+    </summary>
+    <div class="m-accordion__panel" data-accordion-panel>
+      <p>Panel content 2 …</p>
+    </div>
+  </details>
+
+</div>
+
+<!-- Multi-open: omit name -> panels toggle independently -->
+<div class="m-accordion" data-js-module="accordion">
+
+  <details class="m-accordion__item" data-accordion-item>
+    <summary class="m-accordion__trigger">
+      <h2 class="m-accordion__title">Trigger A</h2>
+    </summary>
+    <div class="m-accordion__panel" data-accordion-panel>
+      <p>Panel content A …</p>
+    </div>
+  </details>
+
+  <details class="m-accordion__item" data-accordion-item>
+    <summary class="m-accordion__trigger">
+      <h2 class="m-accordion__title">Trigger B</h2>
+    </summary>
+    <div class="m-accordion__panel" data-accordion-panel>
+      <p>Panel content B …</p>
+    </div>
+  </details>
+
+</div>

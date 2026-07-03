@@ -1,9 +1,13 @@
 /**
- * InputCharCount
- * renders a live character counter
+ * inputCharCount.js
+ * ----------------------------------------------------------------------------
+ * Renders a live character counter
  * next to a textarea/input and
- * supports optional countdown mode
+ * supports optional countdown mode.
+ * ----------------------------------------------------------------------------
  */
+
+
 
 const defaults = {
   selInput: "[data-inputcharcount]",

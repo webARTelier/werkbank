@@ -1,0 +1,169 @@
+/* ==========================================================================
+   Core Tools: _mediaqueries.scss
+   Defines styles for Media Queries in the core layer.
+   ========================================================================== */
+
+@use "sass:map";
+@use "sass:list";
+@use 'functions'as *;
+@use 'breakpoints'as *;
+
+
+
+// single viewport (named viewport)
+@mixin vp-only($viewport) {
+
+  @if not map.has-key($viewportScales, $viewport) {
+    @warn 'Unknown viewport: #{$viewport}';
+  }
+
+  @else {
+    $keys: map.keys($viewportScales);
+    $index: list.index($keys, $viewport);
+
+    $min: map.get($viewportScales, $viewport);
+    $has-next: $index < list.length($keys);
+
+    @if $has-next {
+      $next-viewport: list.nth($keys, $index + 1);
+      $max: map.get($viewportScales, $next-viewport);
+
+      @media (width >=#{$min}) and (width < #{$max}) {
+        @content;
+      }
+    }
+
+    @else {
+
+      // last viewport -> and up
+      @media (width >=#{$min}) {
+        @content;
+      }
+    }
+  }
+}
+
+
+
+// across multiple viewports (named ranges)
+@mixin vp-between($from, $to) {
+
+  @if not map.has-key($viewportScales, $from) {
+    @warn 'Unknown viewport (from): #{$from}';
+  }
+
+  @else if not map.has-key($viewportScales, $to) {
+    @warn 'Unknown viewport (to): #{$to}';
+  }
+
+  @else {
+    $keys: map.keys($viewportScales);
+    $from-index: list.index($keys, $from);
+    $to-index: list.index($keys, $to);
+
+    $min: map.get($viewportScales, $from);
+    $has-next: $to-index < list.length($keys);
+
+    @if $has-next {
+      $next-viewport: list.nth($keys, $to-index + 1);
+      $max: map.get($viewportScales, $next-viewport);
+
+      @media (width >=#{$min}) and (width < #{$max}) {
+        @content;
+      }
+    }
+
+    @else {
+      @media (width >=#{$min}) {
+        @content;
+      }
+    }
+  }
+}
+
+
+
+// viewport and up (named viewport)
+@mixin vp-up($viewport) {
+
+  @if not map.has-key($viewportScales, $viewport) {
+    @warn 'Unknown viewport: #{$viewport}';
+  }
+
+  @else {
+    $min: map.get($viewportScales, $viewport);
+
+    @media (width >=#{$min}) {
+      @content;
+    }
+  }
+}
+
+
+
+// collapsed navigation (below nav breakpoint)
+@mixin vp-nav-collapsed {
+  @media (width < #{$navBreakpoint}) {
+    @content;
+  }
+}
+
+
+
+// expanded navigation (from nav breakpoint and up)
+@mixin vp-nav-expanded {
+  @media (width >=#{$navBreakpoint}) {
+    @content;
+  }
+}
+
+
+
+// touch-first / coarse pointer (phones, tablets, some hybrids)
+@mixin input-touch {
+
+  @media (hover: none),
+  (pointer: coarse) {
+    @content;
+  }
+}
+
+
+
+// mouse/trackpad / fine pointer
+@mixin input-mouse {
+
+  @media (hover: hover),
+  (pointer: fine) {
+    @content;
+  }
+}
+
+
+
+// display density
+@mixin highdpi {
+  @media (min-resolution: 2dppx) {
+    @content;
+  }
+}
+
+
+
+// dark mode
+@mixin darkmode {
+
+  @media (prefers-color-scheme: dark) {
+    @content;
+  }
+}
+
+
+
+// safari on mac/ios
+@mixin safari-only {
+
+  @supports (-webkit-hyphens: none) {
+    @content;
+  }
+}

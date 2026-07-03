@@ -1,8 +1,12 @@
 /**
- * Tabs
- * provides accessible tab switching 
- * with hash activation and keyboard navigation
+ * tabs.js
+ * ----------------------------------------------------------------------------
+ * Provides accessible tab switching
+ * with hash activation and keyboard navigation.
+ * ----------------------------------------------------------------------------
  */
+
+
 
 const defaults = {
   selTabTitle: '[data-tab-title]',

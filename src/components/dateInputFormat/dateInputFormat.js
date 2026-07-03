@@ -1,7 +1,11 @@
 /**
- * DateInputFormat
- * auto-formats date inputs to DD.MM.YYYY while typing.
+ * dateInputFormat.js
+ * ----------------------------------------------------------------------------
+ * Auto-formats date inputs to DD.MM.YYYY while typing.
+ * ----------------------------------------------------------------------------
  */
+
+
 
 const defaults = {
   selInput: "[data-dateinputformat]"

@@ -1,0 +1,22 @@
+@use 'breakpoints' as *;
+@use 'sass:math';
+@use "sass:map";
+
+
+
+// this is used by media queries
+@function bp($bp) {
+  @return map.get($viewportScales, $bp);
+}
+
+
+
+@function strip-units($number) {
+  @return math.div($number, ($number * 0 + 1));
+}
+
+
+
+@function rem($px) {
+  @return math.div($px, 16) * 1rem;
+}

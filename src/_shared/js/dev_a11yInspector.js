@@ -1,3 +1,29 @@
+/**
+ * dev_a11yInspector.js
+ * ----------------------------------------------------------------------------
+ * Development-only accessibility inspector.
+ *
+ * Runs a shallow, heuristic accessibility audit of the current page after load
+ * and surfaces likely issues both visually and in the console. It scans for:
+ *   - layout tables without <th>/<caption>
+ *   - decorative/non-semantic <svg> lacking title/desc/role/aria-hidden
+ *   - <img> with missing or empty alt text
+ *   - icon elements (<i class="icon…">, div.c-icon) without aria-hidden/role
+ *   - form controls without an associated <label> or aria-label(ledby)
+ *   - buttons/links without an accessible name
+ *   - empty heading tags
+ *   - a missing <main> landmark
+ *   - elements using a positive tabindex
+ *
+ * Flagged elements get a red dotted outline plus a labelled ::after badge
+ * (via an injected <style>), and all findings are grouped in the console.
+ * This is a lightweight dev aid, NOT a substitute for a full audit (e.g. axe).
+ * Load it as a module only in development builds; it mutates the live DOM.
+ * ----------------------------------------------------------------------------
+ */
+
+
+
 document.addEventListener('DOMContentLoaded', () => {
 
   setTimeout(() => {

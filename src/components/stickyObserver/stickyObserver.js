@@ -1,7 +1,10 @@
 /**
- * Observes the bootloader module element and toggles 
- * a configurable CSS class on a separate target element 
+ * stickyObserver.js
+ * ----------------------------------------------------------------------------
+ * Observes the bootloader module element and toggles
+ * a configurable CSS class on a separate target element
  * while the observed node is outside the viewport.
+ * ----------------------------------------------------------------------------
  */
 
 

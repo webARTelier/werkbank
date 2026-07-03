@@ -1,0 +1,99 @@
+/* ==========================================================================
+   Core Settings: _foundations.scss
+   Defines styles for Foundations in the core layer.
+   ========================================================================== */
+
+@use 'functions'as *;
+@use 'mediaqueries'as *;
+
+
+
+:root {
+
+  // device
+  --viewportName: tiny;
+  --navstate: mobile;
+  --input: touch;
+  --density: normal;
+
+  // content
+  --contentInset: 8px;
+  --contentMaxWidth: 1620px;
+
+  --gridColumnGap: 10px;
+  --gridRowGap: 0;
+
+  --moduleInlineInset: 20px;
+  --moduleBlockInset: 30px;
+  --moduleSpacing-s: 10px;
+  --moduleSpacing-m: 40px;
+  --moduleSpacing-l: 80px;
+
+  // borders
+  --borderRadius: 10px;
+
+  // spacing
+  --space-3xs: 4px;
+  --space-2xs: 8px;
+  --space-xs: 12px;
+  --space-s: 16px;
+  --space-m: 24px;
+  --space-l: 32px;
+  --space-xl: 48px;
+  --space-2xl: 72px;
+  --space-3xl: 112px;
+
+  // offsets
+  --scrollOffset: 10vh;
+  --outlineOffset: 0.2em;
+
+  // animations
+  --an-duration: 0.5s;
+  --an-ease: cubic-bezier(0.25, 1, 0.5, 1);
+
+  // z-indexes
+  --zi-behindBackground: -1;
+  --zi-background: 0;
+  --zi-aboveBackground: 1;
+  --zi-content: 10;
+  --zi-aboveContent: 100;
+  --zi-navigation: 200;
+  --zi-toTop: 300;
+  --zi-overlay: 400;
+
+  @include vp-up(small) {
+    --viewportName: small;
+  }
+
+  @include vp-up(medium) {
+    --viewportName: medium;
+    --contentInset: 10px;
+    --gridColumnGap: 20px;
+    --moduleBlockInset: 50px 80px;
+    --moduleSpacing-m: 60px;
+    --moduleSpacing-l: 100px;
+  }
+
+  @include vp-up(large) {
+    --viewportName: large;
+    --moduleBlockInset: 120px 170px;
+    --moduleSpacing-m: 120px;
+    --moduleSpacing-l: 180px;
+  }
+
+  @include vp-up(xxl) {
+    --viewportName: xxl;
+  }
+
+  @include vp-nav-expanded {
+    --navstate: desktop;
+  }
+
+  @include input-mouse {
+    --input: mouse;
+  }
+
+  @include highdpi {
+    --density: high;
+  }
+}

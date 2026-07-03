@@ -1,7 +1,9 @@
 /**
- * Dialogs
- * lightweight <dialog> controller 
- * with delegated triggers and focus/scroll/aria handling
+ * dialogs.js
+ * ----------------------------------------------------------------------------
+ * Lightweight <dialog> controller
+ * with delegated triggers and focus/scroll/aria handling.
+ * ----------------------------------------------------------------------------
  */
 
 

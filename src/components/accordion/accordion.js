@@ -1,166 +1,200 @@
 /**
- * Accordion
- * toggles accordion items (single-open or multi-open) and keeps aria/state classes in sync
+ * accordion.js
+ * ----------------------------------------------------------------------------
+ * Progressive-enhancement script for animated <details> accordions.
+ *
+ * Note: the base functionality (open/close, aria-expanded, grouping
+ * via the name attribute) already works without this script. It only
+ * takes care of the smooth height animation in browsers that do not
+ * yet support ::details-content + interpolate-size (e.g. currently
+ * Firefox and Safari).
+ *
+ * Strategy:
+ * 1. Feature detection: does the browser support the modern native
+ *    solution? If so -> the script does nothing, CSS handles it fully.
+ * 2. If not -> the panel content is wrapped in an extra element and
+ *    animated via CSS Grid (grid-template-rows: 0fr <-> 1fr). The
+ *    click on <summary> is intercepted (preventDefault) so we fully
+ *    control the open/close:
+ *      - opening simply sets 'open'; CSS animates 0fr -> 1fr.
+ *      - closing sets a 'data-closing' state attribute, which is a
+ *        pure CSS state toggle (grid-template-rows -> 0fr) exactly like
+ *        toggling a class. 'open' stays set so the 1fr -> 0fr
+ *        transition can run, and is only removed once it ends.
+ *    We deliberately do NOT touch inline styles / requestAnimationFrame
+ *    for the animation (that caused a stutter) and do NOT listen to
+ *    'toggle' (modifying 'open' from there would create a feedback loop).
+ * 3. Grouping (single-open) is taken over by JS as well. Native
+ *    grouping via the 'name' attribute makes the browser close the
+ *    open sibling *instantly* by removing its 'open' attribute -> the
+ *    sibling's content is hidden at once and it snaps shut without any
+ *    animation (and is left in a broken state for later toggles).
+ *    Since the browser enforces exclusivity by removing 'open'
+ *    immediately, it is impossible to animate the outgoing panel while
+ *    the 'name' attribute is present. We therefore drop the native
+ *    'name' in the fallback and animate-close the open sibling(s)
+ *    ourselves. Both panels may then be 'open' at the same moment, so
+ *    the outgoing one collapses (1fr -> 0fr) while the incoming one
+ *    expands (0fr -> 1fr).
+ * ----------------------------------------------------------------------------
  */
-
-// Copy-paste note: requires _shared/js/getCssCustomProperty.js (copy it into the target project as well)
-import { getCssCustomProperty } from "./getCssCustomProperty.js"
 
 
 
 const defaults = {
-  selTitle: "data-nav-widget-title",
-  selContent: "data-nav-widget-content",
-  cssCustomPropertyName: "--an-duration",
-  getCssCustomProperty,
+  itemSelector: "[data-accordion-item]",
+  panelSelector: "[data-accordion-panel]",
+  wrapperAttr: "data-accordion-wrapper",
+  clipAttr: "data-accordion-clip",
+  enhancedAttr: "data-js-enhanced",
 }
 
 
 
-class Accordion {
-  
-  constructor(accordion, params, reporter) {
-    this.accordion = accordion;
-    this.reporter = reporter;
-    this.selTitle = `[${params.selTitle}]`;
-    this.selContent = `[${params.selContent}]`;
+/**
+ * Checks whether the browser already supports the modern native
+ * animation (::details-content + interpolate-size).
+ * @returns {boolean}
+ */
+function supportsNativeAnimation() {
+  return (
+    CSS.supports("interpolate-size", "allow-keywords") &&
+    CSS.supports("selector(::details-content)")
+  )
+}
 
-    // maps title elements to their corresponding content elements
-    this.itemsMap = new Map();
 
-    // helper to read css custom properties (used for scroll delay)
-    this.getCssCustomProperty = params.getCssCustomProperty;
-    this.cssCustomPropertyName = params.cssCustomPropertyName;
 
-    // open single mode: only one item may be open at a time
-    this.isOpenSingle = this.accordion.dataset.type === 'openSingle';
+class AccordionEnhancer {
 
-    this.animationDelay = 0;
-    this.scrollIntoView = this.accordion.hasAttribute("data-scroll-into-view");
+  constructor(container, params, reporter) {
+    this.container = container
+    this.reporter = reporter
+    this.itemSelector = params.itemSelector
+    this.panelSelector = params.panelSelector
+    this.wrapperAttr = params.wrapperAttr
+    this.clipAttr = params.clipAttr
+    this.enhancedAttr = params.enhancedAttr
 
-    this.markInitialized();
-    this.getAnimationDelay();
-    this.createItemsMap();
-    this.startListening();
-  }
-
-  
-
-  // prevents double initialization
-  markInitialized = () => {
-    this.accordion.classList.add('is-initialized');
+    this.enhance()
   }
 
 
-  
-  // reads the animation duration (seconds) and converts it to ms
-  getAnimationDelay = () => {
-    const scope = document.body;
-    const delay = this.getCssCustomProperty(scope, this.cssCustomPropertyName);
-    const delayUnitless = parseFloat(delay.replace('s', ''));
-    const delayInMs = delayUnitless * 1000;
 
-    this.animationDelay = delayInMs;
-  }
+  // wraps every item in the container so it can be animated
+  enhance = () => {
+    this.container.setAttribute(this.enhancedAttr, "")
 
+    // Per-item records, so we can coordinate grouped (single-open)
+    // behaviour ourselves instead of leaving it to the browser.
+    this.records = []
 
-  
-  // builds title -> content mapping via data-content
-  createItemsMap = () => {
-    const allTitles = this.accordion.querySelectorAll(this.selTitle);
-    const allContents = this.accordion.querySelectorAll(this.selContent);
-
-    allTitles.forEach(title => {
-      const contentID = title.dataset.content;
-      const content = [...allContents].find(item => item.id === contentID);
-      if (!content) return;
-      this.itemsMap.set(title, content);
-    })
-  }
-
-
-  
-  // uses event delegation for clicks and adds basic keyboard support
-  startListening = () => {
-
-    this.accordion.addEventListener('click', (e) => {
-      const clickedTitle =
-        [...this.itemsMap.keys()].find(title => title.contains(e.target));
-
-      if (clickedTitle) this.setItemState(clickedTitle);
-    })
-
-    this.accordion.addEventListener('keyup', this.checkKey);
-  }
-
-  
-
-  // applies open/close rules and optional scroll behavior
-  setItemState = (title) => {
-    if (!title || !this.itemsMap.has(title)) return;
-
-    const clickedOnActiveItem = title.classList.contains('is-active');
-    const doScroll = !clickedOnActiveItem && this.scrollIntoView;
-    const clickedOnActiveOpenSingleItem =
-      this.isOpenSingle && title.classList.contains('is-active');
-
-    // open single mode: clicking the active item only closes it
-    if (clickedOnActiveOpenSingleItem) {
-      this.toggleItem(title);
-      return;
+    const items = this.container.querySelectorAll(this.itemSelector)
+    if (!items.length) {
+      this.reporter?.report(
+        "accordion",
+        "no items found in container.", { el: this.container }
+      )
+      return
     }
 
-    // open single mode: close all items before opening the new one
-    if (this.isOpenSingle) this.closeAllItems();
-
-    this.toggleItem(title);
-
-    if (doScroll) this.scrollActiveItemIntoView(title);
+    items.forEach((item) => this.enhanceItem(item))
   }
 
 
-  
-  // toggles via keyboard (space)
-  checkKey = (e) => {
-    switch (e.key) {
-      case ' ':
-        e.preventDefault();
-        this.setItemState(e.target.closest(this.selTitle))
-        break;
-      default:
-        return;
-    }
-  }
 
+  // adds the animation wrapper to a single <details> element and
+  // intercepts the summary click to drive the animation manually
+  enhanceItem = (details) => {
+    const panel = details.querySelector(this.panelSelector)
+    if (!panel || panel.closest("[" + this.wrapperAttr + "]")) return
 
-  
-  // toggles aria-expanded and state classes for a single item
-  toggleItem = (title) => {
-    const content = this.itemsMap.get(title);
+    const summary = details.querySelector("summary")
+    if (!summary) return
 
-    const isExpanded = title.getAttribute('aria-expanded') === 'true';
-    title.setAttribute('aria-expanded', !isExpanded);
+    // Two nested elements:
+    //   wrapper -> the CSS grid that animates grid-template-rows 0fr<->1fr
+    //   clip    -> the grid item (min-height:0, overflow:hidden, NO padding)
+    // The clip MUST be padding-free: a grid item's border box cannot
+    // shrink below its own padding, so padding on the collapsing item
+    // would leave a residual "half line" at the end of the close. The
+    // panel keeps its padding safely inside the clip, where it is simply
+    // clipped away.
+    const wrapper = document.createElement("div")
+    wrapper.setAttribute(this.wrapperAttr, "")
+    const clip = document.createElement("div")
+    clip.setAttribute(this.clipAttr, "")
 
-    content.classList.toggle('is-open');
-    title.classList.toggle('is-active');
-  }
+    panel.parentNode.insertBefore(wrapper, panel)
+    wrapper.appendChild(clip)
+    clip.appendChild(panel)
 
+    // Take over grouping ourselves: remember the group name, then drop
+    // the native 'name' so the browser no longer closes siblings
+    // instantly (which would bypass our animation). We enforce
+    // single-open in JS below.
+    const group = details.getAttribute("name")
+    if (group) details.removeAttribute("name")
 
-  
-  // scrolls to the title after the open animation
-  scrollActiveItemIntoView = (title) => {
-    setTimeout(() => { title.scrollIntoView(); }, this.animationDelay);
-  }
+    const record = { details, wrapper, group, isAnimating: false }
+    this.records.push(record)
 
+    // We take over the native toggling entirely: preventDefault stops
+    // the browser from flipping 'open' itself, so no 'toggle' feedback
+    // loop can occur. Works for mouse and keyboard (Enter/Space on a
+    // <summary> dispatches a click).
+    summary.addEventListener("click", (event) => {
+      event.preventDefault()
+      if (record.isAnimating) return
 
-  
-  // closes all items and resets aria
-  closeAllItems = () => {
-    this.itemsMap.forEach((content, title) => {
-      title.setAttribute('aria-expanded', 'false');
-      title.classList.remove('is-active');
-      content.classList.remove('is-open');
+      if (details.open) {
+        record.isAnimating = true
+        this.animateClose(details, wrapper, () => { record.isAnimating = false })
+      } else {
+        // Opening: animate-close any open sibling in the same group
+        // first (see class doc), then open this one. CSS animates the
+        // incoming panel 0fr -> 1fr while the sibling runs 1fr -> 0fr.
+        if (group) this.closeGroupSiblings(record)
+        details.open = true
+      }
     })
+  }
+
+
+
+  // Animates the open sibling(s) of the given record closed. Only used
+  // for grouped (single-open) accordions, where we drive exclusivity
+  // ourselves after dropping the native 'name' attribute.
+  closeGroupSiblings = (record) => {
+    this.records.forEach((other) => {
+      if (other === record || other.group !== record.group) return
+      if (!other.details.open || other.isAnimating) return
+
+      other.isAnimating = true
+      this.animateClose(other.details, other.wrapper, () => {
+        other.isAnimating = false
+      })
+    })
+  }
+
+
+
+  // Closes an open item. Setting 'data-closing' is a pure CSS state
+  // toggle (see SCSS: it forces grid-template-rows back to 0fr while
+  // 'open' is still set), so the browser runs the 1fr -> 0fr transition
+  // just like a class toggle would. Only once the transition ends do we
+  // remove 'open'. No inline styles, no requestAnimationFrame.
+  animateClose = (details, wrapper, onDone) => {
+    const onTransitionEnd = (event) => {
+      if (event.propertyName !== "grid-template-rows") return
+      wrapper.removeEventListener("transitionend", onTransitionEnd)
+      details.removeAttribute("open")
+      details.removeAttribute("data-closing")
+      onDone()
+    }
+
+    wrapper.addEventListener("transitionend", onTransitionEnd)
+    details.setAttribute("data-closing", "")
   }
 }
 
@@ -171,11 +205,19 @@ export function init(el, services = {}) {
   const reporter = services.reporter
 
   if (!(el instanceof HTMLElement)) {
-    reporter?.report("accordion", "module was initialized on a non-element node.", el)
+    reporter?.report(
+      "accordion",
+      "module was initialized on a non-element node.", el
+    )
     return
   }
 
   if (el.classList.contains("is-initialized")) return
 
-  new Accordion(el, defaults, reporter)
+  // modern browsers animate natively -> nothing to enhance
+  if (supportsNativeAnimation()) return
+
+  el.classList.add("is-initialized")
+
+  new AccordionEnhancer(el, defaults, reporter)
 }

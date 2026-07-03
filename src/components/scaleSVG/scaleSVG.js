@@ -1,3 +1,13 @@
+/**
+ * scaleSVG.js
+ * ----------------------------------------------------------------------------
+ * Scales inline SVG elements using their viewBox and an optional data-scale
+ * value.
+ * ----------------------------------------------------------------------------
+ */
+
+
+
 const defaults = {
   selector: 'svg[data-scale]',
   sourceSelector: 'img[data-scale]',

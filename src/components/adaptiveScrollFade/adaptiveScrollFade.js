@@ -1,3 +1,13 @@
+/**
+ * adaptiveScrollFade.js
+ * ----------------------------------------------------------------------------
+ * Fades the edges of a scrollable container based on its scroll position,
+ * so overflowing content signals that more can be reached.
+ * ----------------------------------------------------------------------------
+ */
+
+
+
 class Ar25StageText {
 
   static init = (params) => {

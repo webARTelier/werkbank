@@ -1,22 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>accordion – Demo</title>
-    <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
-    <link rel="stylesheet" href="../../../dist/css/accordion.min.css" />
-  </head>
-  <body>
-    <main class="shell">
-      <section class="hero">
-        <a class="back" href="../../../index.html">← Overview</a>
-        <h1>accordion</h1>
-        <p>Accordion component with expandable/collapsible panels.</p>
-      </section>
-      <section class="stage" aria-label="Live demo">
-      </section>
-    </main>
-    <script type="module" src="../../../dist/js/boot.min.js"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>accordion – Demo</title>
+  <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
+  <link rel="stylesheet" href="../../../dist/css/accordion.min.css" />
+  <script type="module" src="../../../dist/js/boot.min.js"></script>
+
+  <!-- for development only -->
+  <script type="module" src="../../../src/_shared/js/dev_pageInfo.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_a11yInspector.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_qrCode.js"></script>
+  <!-- end for development only -->
+
+</head>
+
+<body>
+
+  <main class="shell">
+
+    <section class="hero">
+      <a class="back" href="../../../index.html">← Overview</a>
+      <h1>accordion</h1>
+      <p>Accordion component with expandable/collapsible panels.</p>
+    </section>
+
+    <section class="stage" aria-label="Live demo">
+      
+      <!--
+          Accessible accordion based on <details>/<summary>.
+
+          Single-open mode (only one panel open at a time):
+            Give every <details> element in a group the same name
+            attribute. This groups them natively like radio buttons ->
+            no JS needed.
+
+          Multi-open mode (several panels open at the same time):
+            Simply omit the name attribute.
+        -->
+
+      <!-- Example 1: only one panel open at a time -->
+      <p class="stage__intro">
+        <strong>Single-open mode:</strong> all panels share the same
+        <code>name</code> attribute, so only one panel can be open at a
+        time — opening one automatically closes the others.
+      </p>
+      <div class="m-accordion" data-js-module="accordion">
+
+        <details class="m-accordion__item" data-accordion-item name="accordion-single">
+          <summary class="m-accordion__trigger">
+            <h2 class="m-accordion__title">What is an accordion?</h2>
+          </summary>
+          <div class="m-accordion__panel" data-accordion-panel>
+            <p>
+              An accordion is a UI pattern that organizes content into
+              expandable and collapsible sections to save space and present
+              content in a focused way.
+            </p>
+          </div>
+        </details>
+
+        <details class="m-accordion__item" data-accordion-item name="accordion-single">
+          <summary class="m-accordion__trigger">
+            <h2 class="m-accordion__title">Does it need JavaScript?</h2>
+          </summary>
+          <div class="m-accordion__panel" data-accordion-panel>
+            <p>
+              No, the base functionality works entirely without JavaScript
+              via <code>&lt;details&gt;</code> and <code>&lt;summary&gt;</code>.
+              Only the smooth height animation in older browsers is added via
+              JS.
+            </p>
+          </div>
+        </details>
+
+        <details class="m-accordion__item" data-accordion-item name="accordion-single">
+          <summary class="m-accordion__trigger">
+            <h2 class="m-accordion__title">What about accessibility?</h2>
+          </summary>
+          <div class="m-accordion__panel" data-accordion-panel>
+            <p>
+              Browsers automatically derive the expanded state for screen
+              readers from the <code>open</code> attribute.
+              <code>aria-expanded</code> therefore does not need to be set
+              manually.
+            </p>
+          </div>
+        </details>
+
+      </div>
+
+      <!-- Example 2: several panels open at the same time (no name attribute) -->
+      <p class="stage__intro" style="margin-top: var(--space-xl);">
+        <strong>Multi-open mode:</strong> the <code>name</code> attribute is
+        omitted, so each panel toggles independently and several panels can
+        stay open at the same time.
+      </p>
+      <div class="m-accordion" data-js-module="accordion">
+        <details class="m-accordion__item" data-accordion-item>
+          <summary class="m-accordion__trigger">
+            <h2 class="m-accordion__title">Panel A</h2>
+          </summary>
+          <div class="m-accordion__panel" data-accordion-panel>
+            <p>Content of panel A. This panel can be open independently of the others.</p>
+          </div>
+        </details>
+
+        <details class="m-accordion__item" data-accordion-item>
+          <summary class="m-accordion__trigger">
+            <h2 class="m-accordion__title">Panel B</h2>
+          </summary>
+          <div class="m-accordion__panel" data-accordion-panel>
+            <p>Content of panel B.</p>
+          </div>
+        </details>
+
+      </div>
+    </section>
+
+  </main>
+
+</body>
+
 </html>

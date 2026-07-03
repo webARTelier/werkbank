@@ -1,6 +1,9 @@
 /**
+ * inlineSVG.js
+ * ----------------------------------------------------------------------------
  * Converts SVG <img> elements into inline <svg> nodes so styles and DOM updates
  * can target the SVG content directly while preserving relevant attributes.
+ * ----------------------------------------------------------------------------
  */
 
 

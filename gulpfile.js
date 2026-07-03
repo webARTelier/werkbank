@@ -16,20 +16,14 @@ const { gray } = colors
 // e.g. `Error: SCSS build failed` — Gulp then logs just that one line.
 
 async function scssRun(dev) {
-  const files = await buildScss({ dev })
-  files.forEach((f) => process.stdout.write(gray(`css   dist/css/${f}\n`)))
+  await buildScss({ dev })
 }
 
 // JS bundling + registry generation run as a pair: the registry is derived
 // from whatever landed in dist/js/modules.
 async function jsRun(dev) {
   await buildJs({ dev })
-  const { registry, globalRegistry } = await generateRegistry()
-  process.stdout.write(
-    gray(
-      `js    ${registry.length} modules + ${globalRegistry.length} global -> dist/js/registry.js\n`
-    )
-  )
+  await generateRegistry()
 }
 
 // Run scss + js together; surface the first failure after both have run so

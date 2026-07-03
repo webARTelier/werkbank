@@ -1,3 +1,13 @@
+/**
+ * createReporter.js
+ * ----------------------------------------------------------------------------
+ * Creates a reporter service that logs component messages at a configurable
+ * level (silent, error or warn).
+ * ----------------------------------------------------------------------------
+ */
+
+
+
 export function createReporter({ level = "warn" } = {}) {
   return {
     report(componentName, message, context) {
