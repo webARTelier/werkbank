@@ -68,7 +68,8 @@ function nextSvgIdPrefix() {
   return `inlinesvg-${inlineSvgIdCounter}`
 }
 
-// rewrites internal SVG ids and references to prevent document-level collisions.
+// rewrites internal SVG ids and references to prevent document-level
+// collisions.
 function prefixSvgIds(svg, prefix) {
   const idMap = new Map()
   const idNodes = svg.querySelectorAll('[id]')

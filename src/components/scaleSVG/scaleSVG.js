@@ -70,7 +70,8 @@ function scaleInScope(el, reporter) {
 
 
 
-// scales inline SVGs now or observes pending inline conversion for a short time.
+// scales inline SVGs now, or observes pending inline conversion for a short
+// time.
 export function init(el, services = {}) {
   const reporter = services.reporter
 

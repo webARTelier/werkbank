@@ -8,9 +8,11 @@
 
 
 
-// Copy-paste note: requires _shared/js/debounce.js (copy it along into the target project)
+// Copy-paste note: requires _shared/js/debounce.js
+// (copy it along into the target project)
 import { debounceThenExecute } from "./debounce.js"
-// Copy-paste note: requires _shared/js/getCssCustomProperty.js (copy it along into the target project)
+// Copy-paste note: requires _shared/js/getCssCustomProperty.js
+// (copy it along into the target project)
 import { getCssCustomProperty } from "./getCssCustomProperty.js"
 
 
@@ -97,7 +99,6 @@ class ResponsiveVideo {
       return
     }
 
-    this.markInitialized()
     this.configureUiMode()
 
     if (!this.getSrcs()) return
@@ -202,13 +203,6 @@ class ResponsiveVideo {
     this.toggleIcon.alt = isPaused ? "Play icon" : "Pause icon"
     this.toggleButton.setAttribute("aria-label", isPaused ? "Play video" : "Pause video")
     this.toggleButton.setAttribute("aria-pressed", isPaused ? "false" : "true")
-  }
-
-
-
-  // prevents double initialization.
-  markInitialized = () => {
-    this.video.classList.add("is-initialized")
   }
 
 
@@ -414,10 +408,8 @@ export function init(el, services = {}) {
     return
   }
 
-  if (el.classList.contains("is-initialized")) {
-    return
-  }
-
+  // Double-init is prevented by the loader (boot.js sets a per-element,
+  // per-module flag before calling init), so no extra guard is needed here.
   const config = {
     viewportMap: moduleConfig.viewportMap,
     getCssCustomProperty,

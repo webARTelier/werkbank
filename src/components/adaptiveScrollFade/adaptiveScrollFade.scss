@@ -1,1 +1,82 @@
-// adaptiveScrollFade styles
+// =============================================================
+// adaptiveScrollFade — fades the edges of a scrollable container
+// =============================================================
+//
+// The container fades out at the top and/or bottom edge while content is
+// hidden beyond it, so an overflowing box signals that more can be scrolled.
+//
+// The mask lives entirely in this file. The companion script
+// (adaptiveScrollFade.js) does NOT set any inline styles — it only toggles two
+// state attributes on the container:
+//   [data-fade-top]    -> content is hidden above the scroll position
+//   [data-fade-bottom] -> content is hidden below the scroll position
+// exactly like a class toggle. Without JS neither attribute is set, so the
+// mask stays fully opaque and the content is completely readable — the fade is
+// a pure progressive enhancement.
+//
+// The "m-scrollFade" class (BEM "m-" prefix) is used for styling only. The JS
+// hooks onto the element via data-js-module and sets the data attributes above.
+
+
+
+:root {
+  // Fade depth. Fixed px (not %) so the fade keeps the same visual size no
+  // matter how tall the container is. Maps to the shared spacing scale
+  // (see _shared/scss/_foundations.scss); override per instance via
+  // `style="--scrollFade-size: 24px"` or your own CSS.
+  --scrollFade-size: var(--space-xl);
+
+  // Inner spacing so the text does not butt up against the scrollbar (inline
+  // edge) or the inset focus ring (all edges). Override per instance via
+  // `style="--scrollFade-padding: 12px"` or your own CSS.
+  --scrollFade-padding: var(--space-s);
+}
+
+
+
+.m-scrollFade {
+  // Local edge state, flipped by adaptiveScrollFade.js. Default "black" means
+  // fully opaque = no fade. This is also the no-JS fallback: with both edges
+  // opaque the mask is a no-op and the content stays fully visible.
+  --scrollFade-top: black;
+  --scrollFade-bottom: black;
+
+  overflow-y: auto;
+
+  // Breathing room between the content and both the scrollbar and the focus
+  // ring. The vertical padding sits *inside* the fade zone, so the first/last
+  // line still fades cleanly at the edges.
+  padding: var(--scrollFade-padding);
+
+  // The mask gradient itself. Only the top/bottom stops are variable; the
+  // solid middle (black … black) keeps everything between the two fade zones
+  // fully opaque. When an edge state is "black" that side simply does not fade.
+  $mask: linear-gradient(
+    to bottom,
+    var(--scrollFade-top) 0%,
+    black var(--scrollFade-size),
+    black calc(100% - var(--scrollFade-size)),
+    var(--scrollFade-bottom) 100%
+  );
+  -webkit-mask-image: $mask;
+  mask-image: $mask;
+
+  &[data-fade-top] {
+    --scrollFade-top: transparent;
+  }
+
+  &[data-fade-bottom] {
+    --scrollFade-bottom: transparent;
+  }
+
+  // Visible focus ring for keyboard users. adaptiveScrollFade.js makes the box
+  // focusable (tabindex) while it overflows, so it must show where focus is.
+  // The ring is drawn *inset* (negative offset) on purpose: the mask-image
+  // above clips to the element's box, so an outset outline would be masked away
+  // and an inset one keeps its left/right edges fully visible even while the
+  // top/bottom fade zones are active.
+  &:focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: calc(-1 * var(--outlineOffset));
+  }
+}

@@ -1,0 +1,35 @@
+/**
+ * rafThrottle.js
+ * ----------------------------------------------------------------------------
+ * Wraps a function so it runs at most once per animation frame. Bursts of
+ * high-frequency events (scroll, resize, ResizeObserver, …) are collapsed
+ * into a single call, executed just before the next repaint.
+ *
+ * This is a throttle, not a debounce: the wrapped function keeps running while
+ * events keep coming (~once per frame), rather than waiting for them to stop.
+ * The latest call's `this`/arguments win for the frame that is scheduled.
+ * ----------------------------------------------------------------------------
+ */
+
+
+
+export const rafThrottle = (func) => {
+  let scheduled = false;
+  let lastArgs;
+  let lastContext;
+
+  return function () {
+    lastContext = this;
+    lastArgs = arguments;
+
+    // a frame is already queued -> drop this call, the queued one will use
+    // the latest context/args captured above
+    if (scheduled) return;
+    scheduled = true;
+
+    requestAnimationFrame(function () {
+      scheduled = false;
+      func.apply(lastContext, lastArgs);
+    });
+  }
+}

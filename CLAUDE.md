@@ -25,6 +25,26 @@ Folder and file names are written in **camelCase**.
 - Module IDs in `data-js-module="…"` in the markup correspond to the registry keys
   (= the camelCase module names).
 
+## Dependencies: DI vs. direct import
+
+Components receive dependencies through **two channels**, chosen by the *kind*
+of dependency — not by preference. Keep this split consistent:
+
+- **Configured singletons / collaborators with state or lifecycle → DI via
+  `services`.** Built once in `boot.js` and passed to `init(el, services)`.
+  Example: `reporter` (has a configured `level`, is optional/mockable). Use DI
+  when the thing must be shared, configured at the composition root, or swapped
+  (e.g. a no-op in tests).
+- **Pure, stateless utilities → direct import from `_shared/js/`.** Imported as
+  flat siblings (e.g. `import { rafThrottle } from "./rafThrottle.js"`), which
+  the build resolves from `_shared/js/` and bundles into that component's lazy
+  chunk. Examples: `debounce`, `rafThrottle`, `getCssCustomProperty`.
+
+Do **not** route pure utilities through `services`: `boot.js` loads eagerly on
+every page, so anything it imports for the `services` object lands in the
+always-loaded `boot.min.js` — defeating the per-component lazy loading. Utilities
+also have no config/shared state, so DI would add indirection without benefit.
+
 ## Still open / intentionally not changed
 
 These do not (yet) follow the camelCase convention, since they are not file/folder names

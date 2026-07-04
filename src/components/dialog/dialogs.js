@@ -208,7 +208,8 @@ class Dialogs {
 
 
 
-// loader-compatible and boot-compatible entry point (boot.js -> mod.init(services))
+// loader-compatible and boot-compatible entry point
+// (boot.js -> mod.init(services))
 export function init(services = {}) {
   return Dialogs.init(services.reporter)
 }

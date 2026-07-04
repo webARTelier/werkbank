@@ -9,7 +9,8 @@
 
 
 
-// Copy-paste note: requires _shared/js/debounce.js (copy it along into the target project)
+// Copy-paste note: requires _shared/js/debounce.js
+// (copy it along into the target project)
 import { debounceThenExecute } from "./debounce.js"
 
 
@@ -43,8 +44,8 @@ class Marquee {
     this.config = config
     this.reporter = reporter
 
-    if (this.marquee.classList.contains("is-initialized")) return
-
+    // Double-init is prevented by the loader (boot.js sets a per-element,
+    // per-module flag before calling init), so no extra guard is needed here.
     this.modes = new Set(["rtl", "ltr"])
     this.startModes = new Set(["always", "overflow"])
 
@@ -109,7 +110,6 @@ class Marquee {
 
   // initializes state and schedules the first layout measurement.
   start = () => {
-    this.markInitialized()
     this.setPauseOnHover()
     this.observeResize()
 
@@ -122,13 +122,6 @@ class Marquee {
     }
 
     window.addEventListener("load", this.recompute, { once: true })
-  }
-
-
-
-  // prevents double initialization.
-  markInitialized = () => {
-    this.marquee.classList.add("is-initialized")
   }
 
 

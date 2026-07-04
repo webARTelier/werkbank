@@ -1,0 +1,32 @@
+<!--
+  Basic: default fade depth (--space-xl).
+
+  A constrained height is REQUIRED: the box must overflow, because
+  that overflow is what the fade reacts to.
+
+  The inline max-block-size below only keeps this snippet
+  self-contained. In a real project the height usually comes from
+  the layout (a flex/grid track, a fixed panel, ...), so move it
+  into your CSS or drop it once the layout constrains the box.
+-->
+<div class="m-scrollFade" data-js-module="adaptiveScrollFade"
+     aria-label="Scrollable content" style="max-block-size: 12rem;">
+  <p>First paragraph …</p>
+  <p>More content that overflows the fixed height so the box becomes scrollable …</p>
+  <p>Last paragraph …</p>
+</div>
+
+
+
+<!--
+  Optional config:
+  - --scrollFade-size: fade depth. Set inline or in CSS. Default: --space-xl
+  - data-fade-threshold: px tolerance before an edge counts as reached. Default: 1
+-->
+<div class="m-scrollFade" data-js-module="adaptiveScrollFade"
+     aria-label="Scrollable content" data-fade-threshold="2"
+     style="max-block-size: 12rem; --scrollFade-size: 24px;">
+  <p>First paragraph …</p>
+  <p>More content that overflows the fixed height so the box becomes scrollable …</p>
+  <p>Last paragraph …</p>
+</div>

@@ -29,6 +29,55 @@
       </section>
 
       <section class="stage" aria-label="Live demo">
+
+        <p class="stage__intro">
+          The box below <strong>grows with your viewport</strong>. On a large
+          screen (Full-HD or taller) the whole text fits, so no fade appears at
+          all — the component only fades what is actually clipped. Make the
+          window shorter, or open this on a smaller screen, and the text starts
+          to overflow: the top and bottom edges then fade
+          <strong>adaptively</strong>, each only while content is hidden beyond
+          it.
+        </p>
+
+        <!--
+          Demo-only sizing: the box height tracks the viewport (max-block-size),
+          capped so a Full-HD monitor shows the whole text without scrolling.
+          On shorter viewports it overflows and the adaptive fade kicks in.
+        -->
+        <div class="m-scrollFade" data-js-module="adaptiveScrollFade"
+             aria-label="About this component"
+             style="max-block-size: min(32rem, calc(100dvh - 27rem));">
+          <p>
+            You are reading this inside a scrollable box whose height follows the
+            size of your browser window. If you can see every word below without
+            a scrollbar and without any fading edges, your viewport is tall
+            enough to hold the entire text at once — which is exactly when this
+            component stays completely out of the way.
+          </p>
+          <p>
+            Now shrink the window vertically. As soon as the text no longer fits,
+            the box becomes scrollable and its lower edge quietly fades out. That
+            fade is a visual hint that more text waits just below the fold, so
+            nobody mistakes a clipped paragraph for the end of the story.
+          </p>
+          <p>
+            Start scrolling and a matching fade appears at the top as well,
+            signalling that content has scrolled out of view above you. Each edge
+            fades <em>independently</em>, and only while there is actually
+            something hidden beyond it — scroll all the way up and the top fade
+            disappears, scroll to the very bottom and the lower one vanishes too.
+          </p>
+          <p>
+            None of this rewrites the text or the markup. The script only flips
+            two state attributes on this container while you scroll; the fade
+            itself is a pure CSS mask. Turn JavaScript off entirely and the box
+            still scrolls perfectly — it simply shows no fade, and every word
+            stays fully readable. The enhancement adds a helpful hint, never a
+            dependency.
+          </p>
+        </div>
+
       </section>
 
     </main>

@@ -105,19 +105,17 @@
 }
 
 :root {
-  --c-blue-black: #060816;
-  --c-slate-950: #020617;
-  --c-slate-950-alt: #020817;
-  --c-navy-900: #080f1f;
-  --c-slate-900: #0f172a;
-  --c-gray-900: #111827;
-  --c-slate-800: #1e293b;
-  --c-slate-50: #f8fafc;
-  --c-slate-300: #cbd5e1;
-  --c-slate-400: #94a3b8;
-  --c-violet-600: #7c3aed;
-  --c-sky-400: #38bdf8;
-  --c-white: #ffffff;
+  --c-white: oklch(100% 0 0);
+  --c-slate-50: oklch(98.4% 0.004 249);
+  --c-slate-300: oklch(86.9% 0.020 253);
+  --c-slate-400: oklch(71.1% 0.035 257);
+  --c-slate-800: oklch(28% 0.037 260);
+  --c-slate-900: oklch(20.8% 0.040 266);
+  --c-slate-950: oklch(12.9% 0.041 265);
+  --c-gray-900: oklch(21% 0.032 265);
+  --c-sky-400: oklch(75.4% 0.139 233);
+  --c-blue-black: oklch(14.1% 0.031 274);
+  --c-violet-600: oklch(54.1% 0.247 293);
 }
 
 :root {

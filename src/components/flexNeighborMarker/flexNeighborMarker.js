@@ -8,7 +8,8 @@
 
 
 
-// Copy-paste note: requires _shared/js/debounce.js (copy along into the target project)
+// Copy-paste note: requires _shared/js/debounce.js
+// (copy it along into the target project)
 import { debounceThenExecute } from "./debounce.js"
 
 
