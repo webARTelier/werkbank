@@ -1,1 +1,164 @@
-// countdown styles
+// =============================================================
+// Countdown — live countdown to a target date
+// =============================================================
+//
+// Layout: each unit (days / hours / minutes / seconds) is a column with
+// the numeric value on top and its label word underneath. The units sit
+// in a row, separated by a colon. The value uses a much larger font size
+// than the label so the numbers read as the primary content. The unit row
+// (.m-countdown__display) and the pause/resume control stack vertically in
+// the module root (.m-countdown).
+//
+// The "m-countdown*" classes (BEM "m-" prefix) are used for styling only.
+// countdown.js does NOT hook onto them; it targets the data attributes in
+// the markup ("data-countdown-days" / "-hours" / "-minutes" / "-seconds",
+// plus "-display" / "-units" / "-summary" for the accessibility wiring).
+// The colon separator is a decorative pseudo-element between the units, so
+// it works with or without the optional seconds unit.
+
+
+
+:root {
+  // Spacing maps to the shared spacing scale
+  // (see _shared/scss/_foundations.scss).
+  --countdown-gap: var(--space-s); // gap between the units
+  --countdown-value-label-gap: var(--space-3xs); // gap value <-> label
+
+  // Type scale
+  --countdown-value-size: clamp(2.5rem, 8vw, 4.5rem);
+  --countdown-label-size: var(--space-xs);
+
+  // Colors map to the shared semantic tokens
+  // (see _shared/scss/_colors_semantic.scss).
+  --countdown-value-color: var(--color-text);
+  --countdown-label-color: var(--color-text-muted);
+  --countdown-separator-color: var(--color-text-muted);
+}
+
+
+
+// Module root: stacks the unit display over the pause/resume control.
+.m-countdown {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--countdown-gap);
+
+  font-family: system-ui, sans-serif;
+}
+
+
+
+// The live-updating value display (role="timer"): the row of unit columns.
+.m-countdown__units {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--countdown-gap);
+}
+
+
+
+// Each unit stacks its value over its label in a single grid column. A
+// second column holds the colon separator, aligned to the value's row so
+// it sits between the numbers rather than being centered on the taller
+// value+label block.
+.m-countdown__unit {
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-rows: auto auto;
+  column-gap: var(--countdown-gap);
+  row-gap: var(--countdown-value-label-gap);
+  justify-items: center;
+
+  // Colon separator between units. Rendered only when a *visible* unit still
+  // follows, so it adapts whether or not the optional seconds unit is present
+  // and — crucially — when a unit is [hidden] under reduced motion. A purely
+  // structural :not(:last-child) would leave a dangling colon after the minutes
+  // when the trailing seconds unit is hidden (it stays the last child in the
+  // DOM), so we test for a following non-hidden sibling instead.
+  &:not([hidden]):has(~ .m-countdown__unit:not([hidden]))::after {
+    grid-column: 2;
+    grid-row: 1;
+
+    color: var(--countdown-separator-color);
+    font-size: var(--countdown-value-size);
+    font-weight: 700;
+    line-height: 1;
+
+    content: ":";
+  }
+}
+
+
+
+.m-countdown__value {
+  grid-column: 1;
+  grid-row: 1;
+
+  color: var(--countdown-value-color);
+  font-size: var(--countdown-value-size);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+
+
+.m-countdown__label {
+  grid-column: 1;
+  grid-row: 2;
+
+  color: var(--countdown-label-color);
+  font-size: var(--countdown-label-size);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+
+
+// Pause / resume control (injected by countdown.js). Satisfies WCAG 2.2.2 by
+// letting any user stop the auto-updating display. Understated by default; the
+// focus-visible ring uses the shared focus token so keyboard users get a clear
+// indicator (WCAG 2.4.7).
+.m-countdown__toggle {
+  padding: var(--space-3xs) var(--space-xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--borderRadius);
+
+  background: var(--color-bg-overlay);
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: var(--space-xs);
+  line-height: 1.4;
+
+  cursor: pointer;
+
+  &:hover {
+    color: var(--color-text);
+    border-color: var(--color-border-strong);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: var(--outlineOffset);
+  }
+}
+
+
+
+// Visually hidden, but available to assistive tech. Carries the coherent
+// countdown sentence (data-countdown-summary) and the terminal status message.
+.m-countdown__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

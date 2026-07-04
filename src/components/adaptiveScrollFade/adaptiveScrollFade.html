@@ -1,14 +1,46 @@
 <!--
-  Basic: default fade depth (--space-xl).
+  adaptiveScrollFade — copy-paste snippet
+  ============================================================================
+  Copy the block below into your own project.
 
-  A constrained height is REQUIRED: the box must overflow, because
-  that overflow is what the fade reacts to.
+  1) In <head> (or before </body>): load the shared styles, this component's
+     styles and the boot script. boot.min.js lazily loads the adaptiveScrollFade
+     module as soon as it finds data-js-module="adaptiveScrollFade" in the DOM —
+     you do not import adaptiveScrollFade.js yourself. Adjust the paths to where
+     you serve /dist.
 
-  The inline max-block-size below only keeps this snippet
-  self-contained. In a real project the height usually comes from
-  the layout (a flex/grid track, a fixed panel, ...), so move it
-  into your CSS or drop it once the layout constrains the box.
+       <link rel="stylesheet" href="/dist/css/shared.min.css" />
+       <link rel="stylesheet" href="/dist/css/adaptiveScrollFade.min.css" />
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+  2) Drop the markup below where the scrollable area should appear, then:
+       - Give the box a constrained height so its content can overflow. The
+         .m-scrollFade class only supplies overflow-y: auto; the overflow is
+         what the fade reacts to. The inline max-block-size below just keeps
+         this snippet self-contained — in a real project the height usually
+         comes from the layout, so move it into your CSS or drop it once the
+         layout constrains the box.
+       - Add aria-label (or aria-labelledby) naming the scroll region. Once the
+         box overflows it becomes a keyboard tab stop, and an unnamed one fails
+         WCAG 4.1.2 — so this is REQUIRED (the omission is reported via the
+         reporter as soon as the box becomes focusable).
+
+  Notes
+    - The fade is a pure progressive enhancement: without JavaScript the mask
+      stays fully opaque and the content remains completely readable.
+    - While the box overflows the module makes it focusable (tabindex="0") so
+      the arrow / PageUp / PageDown / Home / End / Space keys scroll it; the
+      tabindex is removed again once the content fits. Set your own tabindex to
+      opt out of this focus management.
+    - With an accessible name present the box is promoted to role="region".
+    - Optional config (see the second block below):
+        --scrollFade-size    fade depth. Set inline or in CSS. Default: --space-xl
+        data-fade-threshold  px tolerance before an edge counts as reached. Default: 1
 -->
+
+
+
+<!-- Basic: default fade depth (--space-xl) -->
 <div class="m-scrollFade" data-js-module="adaptiveScrollFade"
      aria-label="Scrollable content" style="max-block-size: 12rem;">
   <p>First paragraph …</p>
@@ -18,11 +50,7 @@
 
 
 
-<!--
-  Optional config:
-  - --scrollFade-size: fade depth. Set inline or in CSS. Default: --space-xl
-  - data-fade-threshold: px tolerance before an edge counts as reached. Default: 1
--->
+<!-- With optional config: custom fade depth + edge threshold -->
 <div class="m-scrollFade" data-js-module="adaptiveScrollFade"
      aria-label="Scrollable content" data-fade-threshold="2"
      style="max-block-size: 12rem; --scrollFade-size: 24px;">

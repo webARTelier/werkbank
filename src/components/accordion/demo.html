@@ -31,15 +31,25 @@
     <section class="stage" aria-label="Live demo">
       
       <!--
-          Accessible accordion based on <details>/<summary>.
+          Accordion based on native <details>/<summary>.
 
-          Single-open mode (only one panel open at a time):
-            Give every <details> element in a group the same name
-            attribute. This groups them natively like radio buttons ->
-            no JS needed.
+          Wiring
+            - data-js-module="accordion" boots the module on the container.
+            - Each item is a <details data-accordion-item> holding a <summary>
+              and a <div data-accordion-panel>.
+            - Single-open (only one panel open at a time): give every <details>
+              in a group the same name attribute, so they behave like radio
+              buttons — natively, no JS needed. See Example 1.
+            - Multi-open (several panels open at once): omit the name attribute.
+              See Example 2.
 
-          Multi-open mode (several panels open at the same time):
-            Simply omit the name attribute.
+          Progressive enhancement
+            - Open/close, keyboard operation and the expanded state work without
+              JavaScript. The module only adds the smooth height animation in
+              browsers that still lack native ::details-content + interpolate-size.
+
+          Accessibility
+            - Browsers derive the expanded state for screen readers from the open attribute, so aria-expanded need not be set manually.
         -->
 
       <!-- Example 1: only one panel open at a time -->

@@ -209,12 +209,14 @@ class ScrollFade {
 
     if (scrollable) {
       this.container.setAttribute("tabindex", "0")
-    } else if (this.container !== document.activeElement) {
-      // Don't yank the tabindex out from under a user who is focused here; drop
-      // it only once focus has moved on. Otherwise their focus would vanish
-      // mid-interaction (e.g. a resize that briefly makes the box fit).
-      this.container.removeAttribute("tabindex")
+      return
     }
+
+    // Don't yank the tabindex out from under a user who is focused here; drop
+    // it only once focus has moved on. Otherwise their focus would vanish
+    // mid-interaction (e.g. a resize that briefly makes the box fit).
+    if (this.container === document.activeElement) return
+    this.container.removeAttribute("tabindex")
   }
 }
 

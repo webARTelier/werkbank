@@ -29,6 +29,90 @@
       </section>
 
       <section class="stage" aria-label="Live demo">
+
+        <!--
+            Live countdown to a target date.
+
+            Wiring
+              - data-js-module="countdown" boots the module on this element.
+              - data-countdown-date holds the target date. It may sit on the
+                module itself (as below) or on any child element. Any value
+                Date.parse() understands works; an ISO 8601 string with an
+                explicit offset (…+02:00 / …Z) is the safest, since it is not
+                interpreted in the visitor's local timezone.
+              - data-countdown-label (optional) names what the countdown counts
+                to; it is woven into the screen-reader sentence.
+              - The day / hour / minute output nodes are required. The seconds
+                node is optional — Example 2 omits it and simply shows no
+                seconds.
+
+            Behavior
+              - Values are recomputed from the target date every tick (not
+                decremented), so the display never drifts and self-corrects
+                after the tab was throttled or asleep.
+
+            Accessibility (see countdown.js header)
+              - [data-countdown-display] becomes role="timer" (aria-live off).
+              - [data-countdown-units] is hidden from assistive tech; the single
+                sentence in [data-countdown-summary] is read instead.
+              - The pause/resume button (WCAG 2.2.2) and the polite status
+                region are injected by countdown.js.
+          -->
+
+        <!-- Example 1: full countdown incl. seconds -->
+        <p class="stage__intro">
+          <strong>Full countdown:</strong> days, hours, minutes and seconds,
+          counting down to a fixed target date.
+        </p>
+        <div class="m-countdown" data-js-module="countdown" data-countdown-date="2026-12-31T23:59:59+01:00" data-countdown-label="the New Year">
+          <div class="m-countdown__display" data-countdown-display>
+            <div class="m-countdown__units" data-countdown-units>
+              <div class="m-countdown__unit">
+                <span class="m-countdown__value" data-countdown-days>0</span>
+                <span class="m-countdown__label">Days</span>
+              </div>
+              <div class="m-countdown__unit">
+                <span class="m-countdown__value" data-countdown-hours>0</span>
+                <span class="m-countdown__label">Hours</span>
+              </div>
+              <div class="m-countdown__unit">
+                <span class="m-countdown__value" data-countdown-minutes>0</span>
+                <span class="m-countdown__label">Minutes</span>
+              </div>
+              <div class="m-countdown__unit">
+                <span class="m-countdown__value" data-countdown-seconds>0</span>
+                <span class="m-countdown__label">Seconds</span>
+              </div>
+            </div>
+            <span class="m-countdown__sr" data-countdown-summary></span>
+          </div>
+        </div>
+
+        <!-- Example 2: seconds node omitted (optional) -->
+        <p class="stage__intro" style="margin-top: var(--space-xl);">
+          <strong>Without seconds:</strong> the <code>data-countdown-seconds</code>
+          node is left out, so the countdown runs on days, hours and minutes only.
+        </p>
+        <div class="m-countdown" data-js-module="countdown" data-countdown-date="2027-01-01T00:00:00+01:00" data-countdown-label="the product launch">
+          <div class="m-countdown__display" data-countdown-display>
+            <div class="m-countdown__units" data-countdown-units>
+              <div class="m-countdown__unit">
+                <span class="m-countdown__value" data-countdown-days>0</span>
+                <span class="m-countdown__label">Days</span>
+              </div>
+              <div class="m-countdown__unit">
+                <span class="m-countdown__value" data-countdown-hours>0</span>
+                <span class="m-countdown__label">Hours</span>
+              </div>
+              <div class="m-countdown__unit">
+                <span class="m-countdown__value" data-countdown-minutes>0</span>
+                <span class="m-countdown__label">Minutes</span>
+              </div>
+            </div>
+            <span class="m-countdown__sr" data-countdown-summary></span>
+          </div>
+        </div>
+
       </section>
 
     </main>

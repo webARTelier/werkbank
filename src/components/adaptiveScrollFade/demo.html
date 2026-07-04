@@ -30,6 +30,35 @@
 
       <section class="stage" aria-label="Live demo">
 
+        <!--
+            Adaptive fade mask for a scrollable container: whichever edge still
+            has hidden content beyond it fades out to hint "there is more".
+
+            Wiring
+              - data-js-module="adaptiveScrollFade" boots the module on the box.
+              - .m-scrollFade supplies overflow-y: auto; give the box a
+                constrained height (below via max-block-size) so it can overflow
+                — that overflow is what the fade reacts to.
+              - data-fade-threshold (optional) px tolerance before an edge counts
+                as reached. Default: 1.
+              - --scrollFade-size (optional) fade depth. Default: --space-xl.
+
+            Progressive enhancement
+              - The script sets no inline styles; it only toggles the
+                data-fade-top / data-fade-bottom state attributes and the SCSS
+                turns them into the mask. Without JavaScript the mask stays fully
+                opaque and every word stays readable — the fade is a pure hint.
+
+            Accessibility
+              - While the box overflows the module makes it focusable
+                (tabindex="0") so the arrow / PageUp / PageDown / Home / End /
+                Space keys scroll it; the tabindex is dropped again once the
+                content fits.
+              - aria-label / aria-labelledby names the scroll region (which is
+                then promoted to role="region"). Required once the box can
+                overflow — a focusable region without a name fails WCAG 4.1.2.
+          -->
+
         <p class="stage__intro">
           The box below <strong>grows with your viewport</strong>. On a large
           screen (Full-HD or taller) the whole text fits, so no fade appears at
@@ -40,11 +69,7 @@
           it.
         </p>
 
-        <!--
-          Demo-only sizing: the box height tracks the viewport (max-block-size),
-          capped so a Full-HD monitor shows the whole text without scrolling.
-          On shorter viewports it overflows and the adaptive fade kicks in.
-        -->
+        <!-- Demo-only sizing: height tracks the viewport, capped so Full-HD shows all text; shorter viewports overflow and fade -->
         <div class="m-scrollFade" data-js-module="adaptiveScrollFade"
              aria-label="About this component"
              style="max-block-size: min(32rem, calc(100dvh - 27rem));">

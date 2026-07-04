@@ -1,0 +1,65 @@
+<!--
+  countdown — copy-paste snippet
+  ============================================================================
+  Copy the two blocks below into your own project.
+
+  1) In <head> (or before </body>): load the shared styles, this component's
+     styles and the boot script. boot.min.js lazily loads the countdown module
+     as soon as it finds data-js-module="countdown" in the DOM — you do not
+     import countdown.js yourself. Adjust the paths to where you serve /dist.
+
+       <link rel="stylesheet" href="/dist/css/shared.min.css" />
+       <link rel="stylesheet" href="/dist/css/countdown.min.css" />
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+  2) Drop the markup below where the countdown should appear, then change:
+       - data-countdown-date  → your target date. An ISO 8601 string with an
+                                 explicit offset (…+01:00 / …Z) is safest; it is
+                                 not reinterpreted in the visitor's timezone.
+       - data-countdown-label → what you are counting down to (optional). It is
+                                 woven into the screen-reader sentence, e.g.
+                                 "… remaining until the New Year."
+
+  Notes
+    - The day / hour / minute nodes are required; the seconds node is optional
+      (delete that one .m-countdown__unit and the countdown runs without it).
+    - [data-countdown-display] becomes role="timer" (aria-live off: read on
+      demand, never announced per second). [data-countdown-units] is marked
+      aria-hidden; screen readers get the single sentence in
+      [data-countdown-summary] instead of the flickering columns.
+    - The pause/resume button (WCAG 2.2.2) and the polite status region are
+      injected by countdown.js — leave that a11y plumbing out of your markup.
+    - Values are recomputed from the target date every tick (not decremented),
+      so the display never drifts and self-corrects after the tab was asleep.
+-->
+
+
+
+<div
+  class="m-countdown"
+  data-js-module="countdown"
+  data-countdown-date="2026-12-31T23:59:59+01:00"
+  data-countdown-label="the New Year"
+>
+  <div class="m-countdown__display" data-countdown-display>
+    <div class="m-countdown__units" data-countdown-units>
+      <div class="m-countdown__unit">
+        <span class="m-countdown__value" data-countdown-days>0</span>
+        <span class="m-countdown__label">Days</span>
+      </div>
+      <div class="m-countdown__unit">
+        <span class="m-countdown__value" data-countdown-hours>0</span>
+        <span class="m-countdown__label">Hours</span>
+      </div>
+      <div class="m-countdown__unit">
+        <span class="m-countdown__value" data-countdown-minutes>0</span>
+        <span class="m-countdown__label">Minutes</span>
+      </div>
+      <div class="m-countdown__unit">
+        <span class="m-countdown__value" data-countdown-seconds>0</span>
+        <span class="m-countdown__label">Seconds</span>
+      </div>
+    </div>
+    <span class="m-countdown__sr" data-countdown-summary></span>
+  </div>
+</div>

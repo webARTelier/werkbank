@@ -1,3 +1,32 @@
+<!--
+  accordion — copy-paste snippet
+  ============================================================================
+  Copy the block(s) below into your own project.
+
+  1) In <head> (or before </body>): load the shared styles, this component's
+     styles and the boot script. boot.min.js lazily loads the accordion module
+     as soon as it finds data-js-module="accordion" in the DOM — you do not
+     import accordion.js yourself. Adjust the paths to where you serve /dist.
+
+       <link rel="stylesheet" href="/dist/css/shared.min.css" />
+       <link rel="stylesheet" href="/dist/css/accordion.min.css" />
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+  2) Drop the markup below where the accordion should appear. It is built on
+     native <details>/<summary>, so open/close works without JavaScript; the
+     module only adds a smooth height animation in browsers that still lack
+     ::details-content + interpolate-size (currently e.g. Firefox and Safari).
+
+  Notes
+    - Each item is a <details data-accordion-item> holding a <summary> and a
+      <div data-accordion-panel>. Both the summary and the panel are required.
+    - Single-open (only one panel open at a time): give every <details> in a
+      group the same name attribute, so they behave like radio buttons — see
+      the first block below.
+    - Multi-open (several panels open independently): omit the name attribute —
+      see the second block below.
+-->
+
 <!-- Single-open: same name="" on all items -> only one open at a time -->
 <div class="m-accordion" data-js-module="accordion">
 
