@@ -65,6 +65,7 @@ const defaults = {
   selSeconds: "[data-countdown-seconds]",
   selDisplay: "[data-countdown-display]",
   selUnits: "[data-countdown-units]",
+  selUnit: "[data-countdown-unit]", // a single unit wrapper (label + value)
   selSummary: "[data-countdown-summary]",
 
   dateAttr: "data-countdown-date", // target date; selector derived from it
@@ -132,7 +133,10 @@ class Countdown {
 
     this.targetMs = targetMs
     this.counterElements = { days, hours, minutes, seconds }
-    this.secondsUnit = seconds ? seconds.closest(".m-countdown__unit") : null
+    // Walk up to the unit wrapper via its data hook (not the .m-countdown__unit
+    // style class) so we can hide the whole seconds column under reduced motion
+    // without coupling the behaviour to the styling class.
+    this.secondsUnit = seconds ? seconds.closest(this.config.selUnit) : null
 
     // Optional wiring for the accessibility tree. All of these are progressive:
     // if the markup does not provide them the countdown still works, it just

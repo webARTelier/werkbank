@@ -1,0 +1,107 @@
+<!--
+  dateInputFormat — copy-paste snippet
+  ============================================================================
+  Copy the block(s) below into your own project.
+
+  1) In <head> (or before </body>): load the shared styles, this component's
+     styles and the boot script. boot.min.js lazily loads the dateInputFormat
+     module as soon as it finds data-js-module="dateInputFormat" in the DOM —
+     you do not import dateInputFormat.js yourself. Adjust the paths to where
+     you serve /dist.
+
+       <link rel="stylesheet" href="/dist/css/shared.min.css" />
+       <link rel="stylesheet" href="/dist/css/dateInputFormat.min.css" />
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+  2) Drop the markup below where the date field should appear. While typing,
+     the value is auto-formatted to DD.MM.YYYY. The field is a normal text
+     input, so it works without JavaScript too — it just won't insert the dots.
+
+  Wiring
+    - data-js-module="dateInputFormat" boots the module. It may sit on the
+      <input> itself (Example 1) or on a wrapper holding one or more fields
+      (Example 2) — the module formats every [data-dateinputformat] in scope.
+    - data-dateinputformat marks the <input> to format. It defaults to the
+      DD.MM.YYYY mask; give it a pattern value to override the mask for that
+      field, e.g. data-dateinputformat="MM/DD/YYYY" or "YYYY-MM-DD" (see
+      Example 3). Segments are runs of D/M/Y; the char between them is the
+      separator.
+    - Use type="text" (or "tel" / "search"); type="date"/"number" are
+      skipped, as a DD.MM.YYYY mask makes no sense there.
+
+  Accessibility (author responsibility — the module only formats)
+    - Give the field a <label> (or aria-label).
+    - Provide a format hint (WCAG 3.3.2): a placeholder AND a visible hint
+      wired via aria-describedby, as shown below.
+    - When the field collects the user's own data, set autocomplete (WCAG
+      3.3.5 Identify Input Purpose) — e.g. autocomplete="bday" for a date of
+      birth, as on the field below. Skip it for arbitrary dates (e.g. a
+      From/To range).
+    - The module adds inputmode="numeric" (for the touch keypad) only if you
+      have not set inputmode yourself.
+-->
+
+
+
+<!-- Example 1: attribute on the input itself -->
+<p class="m-dateField">
+  <label class="m-dateField__label" for="date-single">Date of birth</label>
+  <input
+    class="m-dateField__control"
+    id="date-single"
+    type="text"
+    name="dob"
+    autocomplete="bday"
+    placeholder="DD.MM.YYYY"
+    aria-describedby="date-single-hint"
+    data-js-module="dateInputFormat"
+    data-dateinputformat
+  />
+  <span class="m-dateField__hint" id="date-single-hint">Format: DD.MM.YYYY</span>
+</p>
+
+
+
+<!-- Example 2: attribute on a wrapper (formats every field it contains) -->
+<div data-js-module="dateInputFormat">
+  <p class="m-dateField">
+    <label class="m-dateField__label" for="date-from">From</label>
+    <input
+      class="m-dateField__control"
+      id="date-from"
+      type="text"
+      placeholder="DD.MM.YYYY"
+      aria-describedby="date-range-hint"
+      data-dateinputformat
+    />
+  </p>
+  <p class="m-dateField">
+    <label class="m-dateField__label" for="date-to">To</label>
+    <input
+      class="m-dateField__control"
+      id="date-to"
+      type="text"
+      placeholder="DD.MM.YYYY"
+      aria-describedby="date-range-hint"
+      data-dateinputformat
+    />
+  </p>
+  <span class="m-dateField__hint" id="date-range-hint">Format: DD.MM.YYYY</span>
+</div>
+
+
+
+<!-- Example 3: a per-field mask via a pattern value on the data attribute -->
+<p class="m-dateField">
+  <label class="m-dateField__label" for="date-us">Date (US format)</label>
+  <input
+    class="m-dateField__control"
+    id="date-us"
+    type="text"
+    placeholder="MM/DD/YYYY"
+    aria-describedby="date-us-hint"
+    data-js-module="dateInputFormat"
+    data-dateinputformat="MM/DD/YYYY"
+  />
+  <span class="m-dateField__hint" id="date-us-hint">Format: MM/DD/YYYY</span>
+</p>

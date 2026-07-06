@@ -25,10 +25,117 @@
       <section class="hero">
         <a class="back" href="../../../index.html">← Overview</a>
         <h1>dateInputFormat</h1>
-        <p>Formats date input while typing.</p>
+        <p>Formats a date field to DD.MM.YYYY while typing.</p>
       </section>
 
       <section class="stage" aria-label="Live demo">
+
+        <!--
+            Auto-formats a plain text field into a DD.MM.YYYY mask as you
+            type, paste or edit.
+
+            Wiring
+              - data-js-module="dateInputFormat" boots the module. It may
+                sit on the <input> (Example 1) or on a wrapper that holds one
+                or more fields (Example 2).
+              - data-dateinputformat marks the <input> to format.
+              - Use type="text" (or "tel" / "search").
+
+            Behavior
+              - The value is rebuilt from its digits on every edit, so it can
+                never end up half-formatted. The caret is preserved in digit
+                space, so editing in the middle works; a Backspace/Delete that
+                lands on a "." removes the adjacent digit instead of
+                re-inserting the separator. Formatting only — the date is not
+                validated.
+
+            Progressive enhancement / accessibility
+              - It is a normal text input: without JavaScript a date can
+                still be typed, just without the auto-inserted dots.
+              - inputmode="numeric" is added (for the touch keypad) only when
+                the author has not set inputmode.
+              - Label + placeholder + a hint wired via aria-describedby (WCAG
+                3.3.2) are the author's job; the module only formats. For
+                fields collecting the user's own data, also set autocomplete
+                (WCAG 3.3.5) — e.g. autocomplete="bday" on the date-of-birth
+                field below.
+          -->
+
+        <!-- Example 1: attribute on the input itself -->
+        <p class="stage__intro">
+          <strong>Single field:</strong> type digits and the dots appear
+          automatically. Try editing in the middle, or backspacing onto a dot —
+          the caret stays where you expect.
+        </p>
+        <p class="m-dateField">
+          <label class="m-dateField__label" for="date-single">Date of birth</label>
+          <input
+            class="m-dateField__control"
+            id="date-single"
+            type="text"
+            name="dob"
+            autocomplete="bday"
+            placeholder="DD.MM.YYYY"
+            aria-describedby="date-single-hint"
+            data-js-module="dateInputFormat"
+            data-dateinputformat
+          />
+          <span class="m-dateField__hint" id="date-single-hint">Format: DD.MM.YYYY</span>
+        </p>
+
+        <!-- Example 2: attribute on a wrapper — formats every field inside -->
+        <p class="stage__intro" style="margin-top: var(--space-xl);">
+          <strong>Wrapper scope:</strong> <code>data-js-module</code> sits on the
+          surrounding element, so every <code>data-dateinputformat</code> field
+          inside it is formatted.
+        </p>
+        <div data-js-module="dateInputFormat">
+          <p class="m-dateField">
+            <label class="m-dateField__label" for="date-from">From</label>
+            <input
+              class="m-dateField__control"
+              id="date-from"
+              type="text"
+              placeholder="DD.MM.YYYY"
+              aria-describedby="date-range-hint"
+              data-dateinputformat
+            />
+          </p>
+          <p class="m-dateField" style="margin-top: var(--space-s);">
+            <label class="m-dateField__label" for="date-to">To</label>
+            <input
+              class="m-dateField__control"
+              id="date-to"
+              type="text"
+              placeholder="DD.MM.YYYY"
+              aria-describedby="date-range-hint"
+              data-dateinputformat
+            />
+          </p>
+          <span class="m-dateField__hint" id="date-range-hint">Format: DD.MM.YYYY</span>
+        </div>
+
+        <!-- Example 3: a per-field mask via a pattern value on the attribute -->
+        <p class="stage__intro" style="margin-top: var(--space-xl);">
+          <strong>Per-field mask:</strong> give
+          <code>data-dateinputformat</code> a pattern value to override the mask
+          for that field — here <code>MM/DD/YYYY</code>. Different locales can
+          coexist on one page.
+        </p>
+        <p class="m-dateField">
+          <label class="m-dateField__label" for="date-us">Date (US format)</label>
+          <input
+            class="m-dateField__control"
+            id="date-us"
+            type="text"
+            placeholder="MM/DD/YYYY"
+            aria-describedby="date-us-hint"
+            data-js-module="dateInputFormat"
+            data-dateinputformat="MM/DD/YYYY"
+          />
+          <span class="m-dateField__hint" id="date-us-hint">Format: MM/DD/YYYY</span>
+        </p>
+
       </section>
 
     </main>

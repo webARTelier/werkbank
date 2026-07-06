@@ -38,8 +38,8 @@
   // Colors map to the shared semantic tokens
   // (see _shared/scss/_colors_semantic.scss).
   --accordion-border-color: var(--color-border);
-  --accordion-bg: var(--color-bg-surface);
-  --accordion-bg-hover: var(--color-bg-elevated);
+  --accordion-bg-color: var(--color-bg-surface);
+  --accordion-bg-color-hover: var(--color-bg-elevated);
   --accordion-text-color: var(--color-text);
   --accordion-focus-color: var(--color-focus-ring);
 }
@@ -63,7 +63,7 @@
   border-radius: var(--accordion-radius);
   overflow: hidden;
 
-  background: var(--accordion-bg);
+  background-color: var(--accordion-bg-color);
 
   // Visible focus ring instead of the removed default outline. The ring is
   // placed on the item (not the trigger) so it surrounds the whole item and
@@ -115,7 +115,7 @@
   }
 
   &:hover {
-    background: var(--accordion-bg-hover);
+    background-color: var(--accordion-bg-color-hover);
   }
 
   // The focus ring is drawn on the parent ".m-accordion__item" (see there).

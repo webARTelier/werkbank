@@ -13,7 +13,7 @@ The root element gets `data-js-module="countdown"` as well as `data-countdown-da
 Optional attributes:
 - `data-countdown-label` — names what the countdown counts to (e.g. `the New Year`). It is woven into the screen-reader sentence and the "finished" announcement.
 
-Recommended structure (see `countdown.html`): wrap the unit columns in `[data-countdown-display]` › `[data-countdown-units]` and add an empty `[data-countdown-summary]` node. This is what powers the accessibility behavior below.
+Recommended structure (see `countdown.html`): wrap the unit columns in `[data-countdown-display]` › `[data-countdown-units]`, mark each unit column with `[data-countdown-unit]`, and add an empty `[data-countdown-summary]` node. This is what powers the accessibility behavior below. (The `[data-countdown-unit]` hook lets the script hide the whole seconds column under `prefers-reduced-motion` without depending on the `m-countdown__unit` style class.)
 
 ## Accessibility (BITV / WCAG)
 - **2.2.2 Pause, Stop, Hide (A):** the auto-updating display is paused/resumed by a `<button>` that `countdown.js` injects — no author markup needed.

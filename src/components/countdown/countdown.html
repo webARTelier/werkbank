@@ -21,8 +21,11 @@
                                  "… remaining until the New Year."
 
   Notes
+    - Each unit wrapper carries data-countdown-unit (the JS hook; the
+      m-countdown__unit class is styling only). It lets the script hide the
+      whole seconds column under prefers-reduced-motion.
     - The day / hour / minute nodes are required; the seconds node is optional
-      (delete that one .m-countdown__unit and the countdown runs without it).
+      (delete that one unit wrapper and the countdown runs without it).
     - [data-countdown-display] becomes role="timer" (aria-live off: read on
       demand, never announced per second). [data-countdown-units] is marked
       aria-hidden; screen readers get the single sentence in
@@ -43,19 +46,19 @@
 >
   <div class="m-countdown__display" data-countdown-display>
     <div class="m-countdown__units" data-countdown-units>
-      <div class="m-countdown__unit">
+      <div class="m-countdown__unit" data-countdown-unit>
         <span class="m-countdown__value" data-countdown-days>0</span>
         <span class="m-countdown__label">Days</span>
       </div>
-      <div class="m-countdown__unit">
+      <div class="m-countdown__unit" data-countdown-unit>
         <span class="m-countdown__value" data-countdown-hours>0</span>
         <span class="m-countdown__label">Hours</span>
       </div>
-      <div class="m-countdown__unit">
+      <div class="m-countdown__unit" data-countdown-unit>
         <span class="m-countdown__value" data-countdown-minutes>0</span>
         <span class="m-countdown__label">Minutes</span>
       </div>
-      <div class="m-countdown__unit">
+      <div class="m-countdown__unit" data-countdown-unit>
         <span class="m-countdown__value" data-countdown-seconds>0</span>
         <span class="m-countdown__label">Seconds</span>
       </div>
