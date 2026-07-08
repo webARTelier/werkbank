@@ -53,7 +53,7 @@
   // ResizeObserver. Logical properties keep it correct under RTL / vertical
   // writing modes. Only items the script marked as having a following neighbour
   // in the same row get one — a row's last item stays clean.
-  > .has-neighbor {
+  > .has-neighbor::after {
     position: absolute;
     pointer-events: none;
     
