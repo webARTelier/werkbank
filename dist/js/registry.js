@@ -5,12 +5,14 @@ export const registry = {
   countdown: () => import('./modules/countdown.min.js'),
   dateInputFormat: () => import('./modules/dateInputFormat.min.js'),
   debounce: () => import('./modules/debounce.min.js'),
+  dialog: () => import('./modules/dialog.min.js'),
   flexNeighborMarker: () => import('./modules/flexNeighborMarker.min.js'),
   formValidation: () => import('./modules/formValidation.min.js'),
   getCssCustomProperty: () => import('./modules/getCssCustomProperty.min.js'),
   inlineSVG: () => import('./modules/inlineSVG.min.js'),
   inputCharCount: () => import('./modules/inputCharCount.min.js'),
   marquee: () => import('./modules/marquee.min.js'),
+  rafThrottle: () => import('./modules/rafThrottle.min.js'),
   responsiveVideo: () => import('./modules/responsiveVideo.min.js'),
   scaleSVG: () => import('./modules/scaleSVG.min.js'),
   stickyObserver: () => import('./modules/stickyObserver.min.js'),
@@ -18,5 +20,5 @@ export const registry = {
 }
 
 export const globalRegistry = {
-  dialogs: () => import('./modules/dialogs.min.js')
+
 }

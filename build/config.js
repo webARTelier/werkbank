@@ -63,7 +63,7 @@ module.exports = {
       adaptiveScrollFade: p("src", "components", "adaptiveScrollFade", "adaptiveScrollFade.js"),
       countdown: p("src", "components", "countdown", "countdown.js"),
       dateInputFormat: p("src", "components", "dateInputFormat", "dateInputFormat.js"),
-      dialogs: p("src", "components", "dialog", "dialogs.js"),
+      dialog: p("src", "components", "dialog", "dialog.js"),
       flexNeighborMarker: p("src", "components", "flexNeighborMarker", "flexNeighborMarker.js"),
       formValidation: p("src", "components", "formValidation", "formValidation.js"),
       inlineSVG: p("src", "components", "inlineSVG", "inlineSVG.js"),
@@ -99,7 +99,8 @@ module.exports = {
     outFile: p("dist", "js", "registry.js"),
     modulesDir: p("dist", "js", "modules"),
     // Modules initialised once per page (boot.js -> globalRegistry).
-    globalModules: ["dialogs"],
+    // (none: dialog is now a per-element module loaded via data-js-module)
+    globalModules: [],
     // Built module basenames end with this suffix.
     moduleSuffix: ".min.js",
   },
