@@ -38,8 +38,9 @@ focusable (`tabindex="0"`); the browser then handles the arrow keys, `PageUp` /
 overflow) the `tabindex` is removed again so the box is not a dead tab stop. If
 you set your own `tabindex`, the module leaves focus management to you.
 
-A visible focus ring (`:focus-visible`, using `--color-focus-ring`) shows keyboard
-users where they are.
+A visible focus ring (`:focus-visible`, via the shared `focus-ring()` mixin with
+the `light` tone, drawn inset so the mask does not clip it) shows keyboard users
+where they are.
 
 Give the container an `aria-label` (or `aria-labelledby`) so screen-reader users
 know what the focusable scroll area holds. This is **required**: a focusable

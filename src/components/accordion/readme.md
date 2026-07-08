@@ -16,6 +16,11 @@ The root element gets `data-js-module="accordion"`. It is built on native `<deta
 
 See `accordion.html` for a ready-to-copy snippet of both modes.
 
+Keyboard focus is drawn on the `<details>` item via `:has()` — the `<summary>`'s
+own outline would be clipped by the item's `overflow: hidden` — using the shared
+`focus-ring-outline()` mixin (`light` tone; see the focus-ring convention in the
+project `CLAUDE.md`).
+
 ## Integration
 The JS exports `init(el, services)` and does not self-initialize. It is loaded on demand by `boot.js` for every element carrying `data-js-module="accordion"`.
 

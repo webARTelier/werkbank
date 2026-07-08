@@ -19,6 +19,8 @@
 // fallback runs it also sets "data-js-enhanced" on the container and wraps
 // each panel in an element carrying "data-accordion-wrapper".
 
+@use "focus" as *;
+
 
 
 :root {
@@ -41,7 +43,6 @@
   --accordion-bg-color: var(--color-bg-surface);
   --accordion-bg-color-hover: var(--color-bg-elevated);
   --accordion-text-color: var(--color-text);
-  --accordion-focus-color: var(--color-focus-ring);
 }
 
 
@@ -69,9 +70,11 @@
   // placed on the item (not the trigger) so it surrounds the whole item and
   // follows its rounded corners. An outline on the trigger would be clipped
   // by this element's "overflow: hidden"; an element's own outline is not.
+  // Trigger sits on a dark surface -> the light (bright) tone. focus-ring-outline
+  // (not focus-ring) because the ring lives on the item, keyed off the child's
+  // :focus-visible via :has(); the 2px offset lifts it clear of the item edge.
   &:has(> .m-accordion__trigger:focus-visible) {
-    outline: 2px solid var(--accordion-focus-color);
-    outline-offset: 2px;
+    @include focus-ring-outline(light, 2px);
   }
 }
 

@@ -13,6 +13,8 @@
 // the markup ("data-dateinputformat"). Keeping the JS hook and the style hook
 // separate lets you restyle the field freely without touching the behaviour.
 
+@use "focus" as *;
+
 
 
 :root {
@@ -36,7 +38,6 @@
   --dateField-bg-color: var(--color-bg-surface);
   --dateField-border-color: var(--color-border);
   --dateField-border-color-hover: var(--color-border-strong);
-  --dateField-focus-color: var(--color-focus-ring);
 }
 
 
@@ -83,12 +84,9 @@
     border-color: var(--dateField-border-color-hover);
   }
 
-  // Visible focus ring for keyboard users, using the shared focus token
-  // (WCAG 2.4.7).
-  &:focus-visible {
-    outline: 2px solid var(--dateField-focus-color);
-    outline-offset: var(--outlineOffset);
-  }
+  // Visible focus ring for keyboard users (WCAG 2.4.7). The control sits on a
+  // dark surface -> the light (bright) ring.
+  @include focus-ring(light);
 }
 
 

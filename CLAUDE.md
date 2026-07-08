@@ -45,6 +45,43 @@ every page, so anything it imports for the `services` object lands in the
 always-loaded `boot.min.js` — defeating the per-component lazy loading. Utilities
 also have no config/shared state, so DI would add indirection without benefit.
 
+## Focus ring (keyboard focus indicator)
+
+The keyboard `:focus-visible` ring is **opt-in per element**, not a global rule.
+`_shared/scss/_focus.scss` defines a single `focus-ring()` mixin; each element
+that should show a ring `@use`s it and applies it, choosing the tone that
+contrasts with its own surface:
+
+```scss
+@use "focus" as *;
+.my-control { @include focus-ring(light); }   // element on a dark surface
+.on-white   { @include focus-ring(dark); }     // element on a light surface
+```
+
+- **Two tones, one mixin.** `light` / `dark` map to `--color-focus-ring-light`
+  / `--color-focus-ring-dark` (see `_shared/scss/_colors_semantic.scss`). Pick by
+  the element's *background*, not by preference — a bright ring for dark surfaces,
+  a deep ring for light ones. The whole current theme is dark, so every component
+  uses `light`; `dark` exists for elements placed on a light surface.
+- **Optional `$offset`.** `focus-ring($tone, $offset)` overrides `outline-offset`
+  for cases where the default outset ring would be clipped — e.g. `adaptiveScrollFade`
+  passes a negative (inset) offset because its `mask-image` would otherwise cut the
+  ring away.
+- **Two mixins.** `focus-ring($tone, $offset)` is the common case — it wraps the
+  ring in the element's own `&:focus-visible`. `focus-ring-outline($tone, $offset)`
+  emits *only* the `outline` declarations for a bespoke selector that is **not**
+  the focused element's own `:focus-visible` — e.g. `accordion` draws the ring on
+  the parent `<details>` via `:has(> .trigger:focus-visible)` (the trigger's own
+  outline is clipped by `overflow: hidden`) and sets `outline: 0` on the trigger.
+- **Why opt-in, not a global `:focus-visible`.** Per-element application lets each
+  element choose its tone (and offset) and keeps the ring out of places that style
+  focus differently (see `accordion` above). Behaviour-only components ship a stub
+  stylesheet (`tabs`, `marquee`, `inputCharCount`, `formValidation`, …) — they carry
+  no CSS by design, so the consuming project styles their focus.
+- `_focus.scss` emits **no CSS on its own** (mixin only), so it is *not* `@use`d by
+  `shared.scss`; only the components that apply a ring pull it in. The tone tokens,
+  however, live in `shared.min.css` so they resolve at runtime.
+
 ## Still open / intentionally not changed
 
 These do not (yet) follow the camelCase convention, since they are not file/folder names

@@ -17,6 +17,8 @@
 // The "m-scrollFade" class (BEM "m-" prefix) is used for styling only. The JS
 // hooks onto the element via data-js-module and sets the data attributes above.
 
+@use "focus" as *;
+
 
 
 :root {
@@ -71,12 +73,10 @@
 
   // Visible focus ring for keyboard users. adaptiveScrollFade.js makes the box
   // focusable (tabindex) while it overflows, so it must show where focus is.
-  // The ring is drawn *inset* (negative offset) on purpose: the mask-image
-  // above clips to the element's box, so an outset outline would be masked away
-  // and an inset one keeps its left/right edges fully visible even while the
-  // top/bottom fade zones are active.
-  &:focus-visible {
-    outline: 2px solid var(--color-focus-ring);
-    outline-offset: calc(-1 * var(--outlineOffset));
-  }
+  // The box sits on a dark surface -> the light (bright) ring, drawn *inset*
+  // (negative offset) on purpose: the mask-image above clips to the element's
+  // box, so an outset outline would be masked away and an inset one keeps its
+  // left/right edges fully visible even while the top/bottom fade zones are
+  // active.
+  @include focus-ring(light, calc(-1 * var(--outlineOffset)));
 }

@@ -32,6 +32,9 @@ for range/plausibility checks.
   the end, so mid-value editing stays possible for everyone.
 - **Touch keypad:** the module adds `inputmode="numeric"` only when the author
   has not set `inputmode`, so the numeric keypad appears on touch devices.
+- **2.4.7 Focus Visible (AA):** the field shows the shared keyboard focus ring
+  via the `focus-ring()` mixin (`light` tone; see the focus-ring convention in the
+  project `CLAUDE.md`).
 - **3.3.2 Labels or Instructions (A) — author responsibility:** give the field
   a `<label>` (or `aria-label`) and a format hint — a `placeholder="DD.MM.YYYY"`
   plus a visible hint wired via `aria-describedby` (see `dateInputFormat.html`).

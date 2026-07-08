@@ -16,6 +16,8 @@
 // The colon separator is a decorative pseudo-element between the units, so
 // it works with or without the optional seconds unit.
 
+@use "focus" as *;
+
 
 
 :root {
@@ -119,8 +121,7 @@
 
 // Pause / resume control (injected by countdown.js). Satisfies WCAG 2.2.2 by
 // letting any user stop the auto-updating display. Understated by default; the
-// focus-visible ring uses the shared focus token so keyboard users get a clear
-// indicator (WCAG 2.4.7).
+// keyboard focus ring (WCAG 2.4.7) is applied via the shared focus-ring() mixin.
 .m-countdown__toggle {
   padding: var(--space-3xs) var(--space-xs);
   border: 1px solid var(--color-border);
@@ -139,10 +140,8 @@
     border-color: var(--color-border-strong);
   }
 
-  &:focus-visible {
-    outline: 2px solid var(--color-focus-ring);
-    outline-offset: var(--outlineOffset);
-  }
+  // Sits on a dark surface -> the light (bright) ring.
+  @include focus-ring(light);
 }
 
 

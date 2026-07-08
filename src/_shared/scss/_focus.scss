@@ -1,0 +1,39 @@
+/* ==========================================================================
+   Core Settings: _focus.scss
+   Central keyboard-focus indicator, exposed as a mixin for per-element control.
+
+   Instead of forcing one ring on every element via a global :focus-visible
+   selector, each element opts in with focus-ring() and picks the tone that
+   contrasts with its own surface:
+
+     @use "focus" as *;
+     .my-control { @include focus-ring(light); }   // on a dark surface
+     .on-white   { @include focus-ring(dark); }     // on a light surface
+
+   The tones map to --color-focus-ring-light / --color-focus-ring-dark
+   (see _colors_semantic.scss). An optional $offset overrides outline-offset for
+   cases where the default outset ring would be clipped (e.g. a masked scroll
+   container needs a negative, inset offset).
+
+   Note: this partial emits no CSS on its own — it only defines the mixin, so it
+   is @used by the components that need a ring, not by shared.scss.
+   ========================================================================== */
+
+// Low-level: emits just the outline declarations, no selector. Use this from a
+// bespoke selector that is NOT the focused element's own ":focus-visible" — e.g.
+// accordion draws the ring on the parent via :has(> .trigger:focus-visible).
+@mixin focus-ring-outline($tone: light, $offset: var(--outlineOffset)) {
+  @if $tone != light and $tone != dark {
+    @error "focus-ring(): $tone must be `light` or `dark`, but got `#{$tone}`.";
+  }
+
+  outline: 2px solid var(--color-focus-ring-#{$tone});
+  outline-offset: $offset;
+}
+
+// Common case: the element shows its own ring on :focus-visible.
+@mixin focus-ring($tone: light, $offset: var(--outlineOffset)) {
+  &:focus-visible {
+    @include focus-ring-outline($tone, $offset);
+  }
+}

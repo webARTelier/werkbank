@@ -19,6 +19,7 @@ Recommended structure (see `countdown.html`): wrap the unit columns in `[data-co
 - **2.2.2 Pause, Stop, Hide (A):** the auto-updating display is paused/resumed by a `<button>` that `countdown.js` injects — no author markup needed.
 - **prefers-reduced-motion:** the tick slows to once per minute and the fast-churning seconds unit is hidden, so reduced-motion users get no per-second flicker.
 - **4.1.3 / 1.3.1 (screen readers):** the visual columns are `aria-hidden`; a single natural-language sentence in `[data-countdown-summary]` carries the value inside a `role="timer"` region (`aria-live="off"`, so it is read on demand, never announced per second). Reaching the target emits one polite `role="status"` message.
+- **2.4.7 Focus Visible (AA):** the injected pause/resume button shows the shared keyboard focus ring via the `focus-ring()` mixin (`light` tone; see the focus-ring convention in the project `CLAUDE.md`).
 
 For the fullest experience, place a visible heading or intro next to the countdown (or set `data-countdown-label`) so it is clear what is being counted down to.
 

@@ -25,7 +25,13 @@
   --color-accent-secondary: var(--c-sky-400);
 
   // Interactive states
-  --color-focus-ring: var(--c-sky-400);
+  // Two focus-ring tones so an element can pick the one that contrasts with its
+  // own surface. Applied via the focus-ring() mixin 
+  // (see _shared/scss/_focus.scss):
+  //   light -> bright ring, for elements on dark surfaces
+  //   dark  -> deep ring, for elements on light surfaces
+  --color-focus-ring-light: var(--c-sky-400);
+  --color-focus-ring-dark: var(--c-sky-700);
   --color-border-focus: color-mix(in srgb, var(--c-sky-400) 45%, transparent);
 
   // Shadow
