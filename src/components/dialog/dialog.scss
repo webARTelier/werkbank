@@ -59,15 +59,18 @@
 // Everything visible lives on the inner panel (see file header). Kept centered
 // via the UA's margin:auto for an open modal dialog.
 .m-dialog {
-  padding: 0;
   border: 0;
-  background: transparent;
-  color: var(--dialog-text-color);
-
-  max-width: var(--dialog-width);
+  padding: 0;
   width: 100%;
-
+  max-width: var(--dialog-width);
+  
   font-family: system-ui, sans-serif;
+
+  color: var(--dialog-text-color);
+  background-color: transparent;
+  
+
+
 
   // ----- open/close animation (progressive enhancement) -----
   // Closed resting state. When the dialog opens, [open] is set and the panel
@@ -78,6 +81,7 @@
   transition:
     opacity var(--dialog-duration) var(--dialog-easing),
     transform var(--dialog-duration) var(--dialog-easing),
+
     // "overlay" + "display" are discrete top-layer properties: allow-discrete
     // keeps the element in the top layer (and displayed) until the fade-out
     // has finished, so the close can animate instead of snapping away.
@@ -92,6 +96,7 @@
   // Entry starting point: the very first rendered frame after [open] appears.
   // Browsers without @starting-style ignore this block and just show instantly.
   @starting-style {
+
     &[open] {
       opacity: 0;
       transform: translateY(var(--dialog-enter-offset));
@@ -100,15 +105,16 @@
 
   // Backdrop (only present for a modal dialog opened via showModal()).
   &::backdrop {
-    background-color: var(--dialog-backdrop-color);
-    // Progressive: modern engines support backdrop-filter here.
-    backdrop-filter: blur(2px);
-
     opacity: 0;
+    
+    background-color: var(--dialog-backdrop-color);
     transition:
       opacity var(--dialog-duration) var(--dialog-easing),
       overlay var(--dialog-duration) allow-discrete,
       display var(--dialog-duration) allow-discrete;
+    
+    // Progressive: modern engines support backdrop-filter here.
+    backdrop-filter: blur(2px);
   }
 
   &[open]::backdrop {
@@ -127,14 +133,14 @@
 // The visible card. Carries the surface, padding and radius so the <dialog>
 // stays chrome-free (see file header).
 .m-dialog__panel {
+  border: 1px solid var(--dialog-border-color);
+  border-radius: var(--dialog-radius);
+  padding: var(--dialog-padding);
+  max-block-size: var(--dialog-max-block);
+
   display: flex;
   flex-direction: column;
   gap: var(--dialog-gap);
-
-  max-block-size: var(--dialog-max-block);
-  padding: var(--dialog-padding);
-  border: 1px solid var(--dialog-border-color);
-  border-radius: var(--dialog-radius);
 
   background-color: var(--dialog-bg-color);
   box-shadow: var(--dialog-shadow);
@@ -157,9 +163,11 @@
 
 .m-dialog__title {
   margin: 0;
+
   font-size: 1.25rem;
   font-weight: 600;
   line-height: 1.3;
+
   color: var(--dialog-title-color);
 }
 
@@ -172,8 +180,9 @@
   min-height: 0;
   overflow-y: auto;
 
-  color: var(--dialog-text-color);
   line-height: 1.55;
+
+  color: var(--dialog-text-color);
 
   p:first-child { margin-block-start: 0; }
   p:last-child { margin-block-end: 0; }
@@ -238,20 +247,16 @@
 
 
 
-// -------------------------------------------------------------
 // Body scroll lock, toggled by dialog.js while a dialog is open.
 // Modal dialogs make the background inert but do not stop the page
 // behind them from scrolling, so we suppress it here.
-// -------------------------------------------------------------
 body.is-scrollLocked {
   overflow: hidden;
 }
 
 
 
-// -------------------------------------------------------------
 // Respect reduced motion: keep the open/close instant.
-// -------------------------------------------------------------
 @media (prefers-reduced-motion: reduce) {
   .m-dialog,
   .m-dialog::backdrop {

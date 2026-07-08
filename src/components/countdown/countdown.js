@@ -133,6 +133,7 @@ class Countdown {
 
     this.targetMs = targetMs
     this.counterElements = { days, hours, minutes, seconds }
+
     // Walk up to the unit wrapper via its data hook (not the .m-countdown__unit
     // style class) so we can hide the whole seconds column under reduced motion
     // without coupling the behaviour to the styling class.
@@ -185,6 +186,7 @@ class Countdown {
   // off) carries the value, and a role="status" node carries the one-off
   // "finished" announcement. See the file header for the rationale.
   setupAccessibility = () => {
+
     // The flickering unit columns are decorative for screen readers.
     this.units?.setAttribute("aria-hidden", "true")
 
@@ -255,8 +257,9 @@ class Countdown {
 
 
 
-  // Under prefers-reduced-motion we hide the per-second unit and tick once per
-  // minute, so there is no fast flicker. Outside reduced motion we restore both.
+  // Under prefers-reduced-motion we hide the per-second unit and tick once
+  // per minute, so there is no fast flicker. Outside reduced motion we
+  // restore both.
   applyMotionPreference = () => {
     const reduced = !!this.motionQuery?.matches
     this.secondsUnit?.toggleAttribute("hidden", reduced)
@@ -273,6 +276,7 @@ class Countdown {
 
   // renders immediately and refreshes at the current cadence.
   start = () => {
+
     // A target that is already in the past finishes on the first render, so
     // handle that synchronously instead of waiting a full cadence for the
     // first tick (which, under reduced motion, would be up to a minute).
@@ -385,6 +389,7 @@ class Countdown {
     const mirrors = marquee.querySelectorAll("[data-js-module~='countdown']")
 
     mirrors.forEach((mirror) => {
+      
       // querySelectorAll only yields elements, and renderCountdownValue guards
       // each write, so the only check needed here is skipping the source module
       // itself (we don't want to mirror it onto itself).

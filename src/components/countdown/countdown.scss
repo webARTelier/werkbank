@@ -21,6 +21,7 @@
 
 
 :root {
+  
   // Spacing maps to the shared spacing scale
   // (see _shared/scss/_foundations.scss).
   --countdown-gap: var(--space-s); // gap between the units
@@ -119,9 +120,10 @@
 
 
 
-// Pause / resume control (injected by countdown.js). Satisfies WCAG 2.2.2 by
-// letting any user stop the auto-updating display. Understated by default; the
-// keyboard focus ring (WCAG 2.4.7) is applied via the shared focus-ring() mixin.
+// Pause / resume control (injected by countdown.js). Satisfies WCAG 2.2.2
+// by letting any user stop the auto-updating display. Understated by
+// default; the keyboard focus ring (WCAG 2.4.7) is applied via the shared
+// focus-ring() mixin.
 .m-countdown__toggle {
   padding: var(--space-3xs) var(--space-xs);
   border: 1px solid var(--color-border);

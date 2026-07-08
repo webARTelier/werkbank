@@ -25,10 +25,61 @@
       <section class="hero">
         <a class="back" href="../../../index.html">← Overview</a>
         <h1>flexNeighborMarker</h1>
-        <p>Marks neighboring elements in a flex container.</p>
+        <p>Marks flex items that share a visual row so CSS can style row neighbours.</p>
       </section>
 
       <section class="stage" aria-label="Live demo">
+
+        <!--
+            The module measures the laid-out rows of the wrapping flex
+            container and toggles ONE class on each item:
+              .has-neighbor -> this item has a following sibling
+              in the SAME row
+            The shipped stylesheet draws a hairline divider between
+            row-neighbours (never a trailing one at a row's end) off that
+            class.
+
+            Wiring
+              - data-js-module="flexNeighborMarker" boots the module
+                on the <ul>.
+              - .m-flexNeighbor is the convenience container: a wrapping
+                flex row with a gap plus the default divider between
+                neighbours.
+
+            Progressive enhancement
+              - The script sets no inline styles; it only toggles
+                .has-neighbor. Without JavaScript the class is never added
+                and the dividers simply do not appear — the row of items
+                stays fully intact.
+
+            Try it
+              - Resize the window. As items reflow onto more or fewer
+                rows, the dividers follow the LIVE row layout: the last item
+                of every row never gets a trailing divider, no matter where
+                the wrap lands.
+          -->
+
+        <p class="stage__intro">
+          A wrapping flex row where each item that is
+          <strong>followed by a neighbour in the same visual row</strong> shows a
+          divider — but the <strong>last item of every row never does</strong>.
+          <strong>Resize the window</strong>: as the items reflow onto more or
+          fewer rows, the dividers recompute to match the live layout, something
+          pure CSS <code>:not(:last-child)</code> cannot express.
+        </p>
+
+        <ul class="m-flexNeighbor" data-js-module="flexNeighborMarker"
+            style="list-style: none; margin: 0; padding: 0;">
+          <li>Frodo</li>
+          <li>Samweis Gamdschie</li>
+          <li>Gandalf</li>
+          <li>Aragorn</li>
+          <li>Legolas</li>
+          <li>Gimli</li>
+          <li>Boromir</li>
+          <li>Galadriel</li>
+        </ul>
+
       </section>
 
     </main>

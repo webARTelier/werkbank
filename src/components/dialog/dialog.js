@@ -89,28 +89,37 @@ const FOCUSABLE = [
 
 
 const defaults = {
+
   // Open triggers live outside the dialog and name their target dialog by id.
   triggerOpenAttr: "data-open-dialog",
+
   // Close controls live inside the dialog; presence is enough.
   selClose: "[data-close-dialog]",
+
   // Opt-out / mode switches (presence-based, read off the dialog element).
   staticAttr: "data-dialog-static",
   nonModalAttr: "data-dialog-nonmodal",
+
   // The scrollable content region inside the dialog. Marked with a behavioural
   // attribute (not a style class) so the script stays decoupled from the CSS.
   scrollRegionAttr: "data-dialog-scroll",
+
   // Marks an <iframe> the close handler may reload to stop it playing (see
   // stopMedia). Opt-in, because reloading a frame drops its state.
   mediaAttr: "data-dialog-media",
+
   // Body class toggled while at least one dialog is open.
   scrollLockClass: "is-scrollLocked",
+
   // Optional media-cleanup hook. Runs on every close; override to customise.
   stopMedia: (dialog) => {
+
     // Pausing native media is cheap and side-effect-free, so we always do it —
     // a closed dialog must never keep playing sound.
     dialog.querySelectorAll("video, audio").forEach((media) => {
       if (typeof media.pause === "function") media.pause()
     })
+
     // Reassigning src is the reliable cross-browser way to stop an <iframe>
     // (e.g. an embedded video) from playing on in the background — but it
     // reloads the frame, losing its state and costing a request. So we only

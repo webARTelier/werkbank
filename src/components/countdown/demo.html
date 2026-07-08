@@ -1,36 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>countdown – Demo</title>
-    <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
-    <link rel="stylesheet" href="../../../dist/css/countdown.min.css" />
-    <script type="module" src="../../../dist/js/boot.min.js"></script>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>countdown – Demo</title>
+  <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
+  <link rel="stylesheet" href="../../../dist/css/countdown.min.css" />
+  <script type="module" src="../../../dist/js/boot.min.js"></script>
 
-    <!-- for development only -->
-     <script type="module" src="../../../src/_shared/js/dev_pageInfo.js"></script>
-     <script type="module" src="../../../src/_shared/js/dev_a11yInspector.js"></script>
-     <script type="module" src="../../../src/_shared/js/dev_qrCode.js"></script>
-    <!-- end for development only -->
+  <!-- for development only -->
+  <script type="module" src="../../../src/_shared/js/dev_pageInfo.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_a11yInspector.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_qrCode.js"></script>
+  <!-- end for development only -->
 
-  </head>
+</head>
 
-  <body>
+<body>
 
-    <main class="shell">
+  <main class="shell">
 
-      <section class="hero">
-        <a class="back" href="../../../index.html">← Overview</a>
-        <h1>countdown</h1>
-        <p>Live countdown to a target date.</p>
-      </section>
+    <section class="hero">
+      <a class="back" href="../../../index.html">← Overview</a>
+      <h1>countdown</h1>
+      <p>Live countdown to a target date.</p>
+    </section>
 
-      <section class="stage" aria-label="Live demo">
+    <section class="stage" aria-label="Live demo">
 
-        <!--
+      <!--
             Live countdown to a target date.
 
             Wiring
@@ -59,63 +59,68 @@
                 region are injected by countdown.js.
           -->
 
-        <!-- Example 1: full countdown incl. seconds -->
-        <p class="stage__intro">
-          <strong>Full countdown:</strong> days, hours, minutes and seconds,
-          counting down to a fixed target date.
-        </p>
-        <div class="m-countdown" data-js-module="countdown" data-countdown-date="2026-12-31T23:59:59+01:00" data-countdown-label="the New Year">
-          <div class="m-countdown__display" data-countdown-display>
-            <div class="m-countdown__units" data-countdown-units>
-              <div class="m-countdown__unit" data-countdown-unit>
-                <span class="m-countdown__value" data-countdown-days>0</span>
-                <span class="m-countdown__label">Days</span>
-              </div>
-              <div class="m-countdown__unit" data-countdown-unit>
-                <span class="m-countdown__value" data-countdown-hours>0</span>
-                <span class="m-countdown__label">Hours</span>
-              </div>
-              <div class="m-countdown__unit" data-countdown-unit>
-                <span class="m-countdown__value" data-countdown-minutes>0</span>
-                <span class="m-countdown__label">Minutes</span>
-              </div>
-              <div class="m-countdown__unit" data-countdown-unit>
-                <span class="m-countdown__value" data-countdown-seconds>0</span>
-                <span class="m-countdown__label">Seconds</span>
-              </div>
+
+
+      <!-- Example 1: full countdown incl. seconds -->
+      <p class="stage__intro">
+        <strong>Full countdown:</strong> days, hours, minutes and seconds,
+        counting down to a fixed target date.
+      </p>
+      <div class="m-countdown" data-js-module="countdown" data-countdown-date="2026-12-31T23:59:59+01:00" data-countdown-label="the New Year">
+        <div class="m-countdown__display" data-countdown-display>
+          <div class="m-countdown__units" data-countdown-units>
+            <div class="m-countdown__unit" data-countdown-unit>
+              <span class="m-countdown__value" data-countdown-days>0</span>
+              <span class="m-countdown__label">Days</span>
             </div>
-            <span class="m-countdown__sr" data-countdown-summary></span>
-          </div>
-        </div>
-
-        <!-- Example 2: seconds node omitted (optional) -->
-        <p class="stage__intro" style="margin-top: var(--space-xl);">
-          <strong>Without seconds:</strong> the <code>data-countdown-seconds</code>
-          node is left out, so the countdown runs on days, hours and minutes only.
-        </p>
-        <div class="m-countdown" data-js-module="countdown" data-countdown-date="2027-01-01T00:00:00+01:00" data-countdown-label="the product launch">
-          <div class="m-countdown__display" data-countdown-display>
-            <div class="m-countdown__units" data-countdown-units>
-              <div class="m-countdown__unit" data-countdown-unit>
-                <span class="m-countdown__value" data-countdown-days>0</span>
-                <span class="m-countdown__label">Days</span>
-              </div>
-              <div class="m-countdown__unit" data-countdown-unit>
-                <span class="m-countdown__value" data-countdown-hours>0</span>
-                <span class="m-countdown__label">Hours</span>
-              </div>
-              <div class="m-countdown__unit" data-countdown-unit>
-                <span class="m-countdown__value" data-countdown-minutes>0</span>
-                <span class="m-countdown__label">Minutes</span>
-              </div>
+            <div class="m-countdown__unit" data-countdown-unit>
+              <span class="m-countdown__value" data-countdown-hours>0</span>
+              <span class="m-countdown__label">Hours</span>
             </div>
-            <span class="m-countdown__sr" data-countdown-summary></span>
+            <div class="m-countdown__unit" data-countdown-unit>
+              <span class="m-countdown__value" data-countdown-minutes>0</span>
+              <span class="m-countdown__label">Minutes</span>
+            </div>
+            <div class="m-countdown__unit" data-countdown-unit>
+              <span class="m-countdown__value" data-countdown-seconds>0</span>
+              <span class="m-countdown__label">Seconds</span>
+            </div>
           </div>
+          <span class="m-countdown__sr" data-countdown-summary></span>
         </div>
+      </div>
 
-      </section>
 
-    </main>
 
-  </body>
+      <!-- Example 2: seconds node omitted (optional) -->
+      <p class="stage__intro" style="margin-top: var(--space-xl);">
+        <strong>Without seconds:</strong> the <code>data-countdown-seconds</code>
+        node is left out, so the countdown runs on days, hours and minutes only.
+      </p>
+      <div class="m-countdown" data-js-module="countdown" data-countdown-date="2027-01-01T00:00:00+01:00" data-countdown-label="the product launch">
+        <div class="m-countdown__display" data-countdown-display>
+          <div class="m-countdown__units" data-countdown-units>
+            <div class="m-countdown__unit" data-countdown-unit>
+              <span class="m-countdown__value" data-countdown-days>0</span>
+              <span class="m-countdown__label">Days</span>
+            </div>
+            <div class="m-countdown__unit" data-countdown-unit>
+              <span class="m-countdown__value" data-countdown-hours>0</span>
+              <span class="m-countdown__label">Hours</span>
+            </div>
+            <div class="m-countdown__unit" data-countdown-unit>
+              <span class="m-countdown__value" data-countdown-minutes>0</span>
+              <span class="m-countdown__label">Minutes</span>
+            </div>
+          </div>
+          <span class="m-countdown__sr" data-countdown-summary></span>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+</body>
+
 </html>
