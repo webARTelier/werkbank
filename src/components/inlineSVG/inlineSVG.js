@@ -1,192 +1,519 @@
 /**
  * inlineSVG.js
- * ----------------------------------------------------------------------------
- * Converts SVG <img> elements into inline <svg> nodes so styles and DOM updates
- * can target the SVG content directly while preserving relevant attributes.
- * ----------------------------------------------------------------------------
+ * ---------------------------------------------------------------------------
+ * Progressive-enhancement transform that swaps an <img> pointing at an .svg
+ * file for a real, inline <svg> node — so the SVG's own markup can be styled
+ * and scripted directly (currentColor, CSS on inner shapes, DOM access to
+ * paths) instead of being a sealed, un-stylable raster-like image.
+ *
+ * Why this is needed
+ * ------------------
+ * An SVG referenced through <img src="icon.svg"> renders but is a black box:
+ * its internals are unreachable from the page's CSS/JS and it cannot inherit
+ * currentColor. Inlining the file exposes the whole SVG tree to the document.
+ *
+ * Strategy (like the other components: lean on the platform, fill the gap)
+ * -----------------------------------------------------------------------
+ * The source of truth is the fetched SVG file itself; the module fetches it,
+ * parses it with the native DOMParser, carries the relevant <img> attributes
+ * onto the resulting <svg> and replaces the <img> in place. It is a stateless
+ * DOM transform — like its sibling scaleSVG — so it is written as plain
+ * functions, not a lifecycle class.
+ *
+ * What this transform adds
+ * ------------------------
+ * 1. Fetch + parse: only same-origin .svg sources are fetched (same-origin
+ *    policy); anything else is left as a plain <img>, untouched. Repeated
+ *    references to the same file share one fetch + parse (see svgCache).
+ * 2. Attribute carry-over: id, class (merged), width/height and data-scale
+ *    are moved onto the <svg> so layout and scaleSVG keep working.
+ * 3. Id & class de-collision: every id inside the inlined SVG (and every
+ *    internal reference to it — href, url(#…) in attributes, inline style and
+ *    <style>) is given a unique per-instance prefix, so multiple inlined SVGs
+ *    on one page cannot clash over shared ids (gradients, clip-paths, masks,
+ *    filters, <use> targets). The same prefix is applied to the class names an
+ *    embedded <style> targets — Figma-style exports carry generic names like
+ *    .cls-1, and an inline <svg>'s <style> is document-global — so one SVG's
+ *    rules cannot bleed onto another's shapes. See §Scoping.
+ * 4. Accessible name: an <img alt> / aria-label becomes the <svg>'s
+ *    aria-label + role="img"; an explicitly empty alt marks the graphic
+ *    decorative (aria-hidden + focusable="false"). See §Accessibility.
+ *
+ * Scoping
+ * -------
+ * Two inlined SVGs on one page share a single document, so anything global to
+ * that document can collide: element ids (and the url(#…)/href/<use> that
+ * point at them) and the class-selector rules of an embedded <style>. Both are
+ * neutralised by giving each inlined SVG a per-instance prefix. Ids are always
+ * prefixed (they must be unique regardless); class names are prefixed only
+ * when the SVG's own <style> styles them (those are the ones that can leak) —
+ * classes the file leaves unstyled stay intact so a project can still target
+ * them from its own CSS. Element-local features (transform, presentation
+ * attributes, inline style) are never global and need no scoping. Because the
+ * prefix varies per instance, project CSS cannot target an inlined SVG's inner
+ * shapes by their original id or styled class; recolour via currentColor or
+ * structural selectors, which is the intended styling surface anyway.
+ *
+ * Accessibility
+ * -------------
+ * An <img> conveys its meaning through alt; a bare inline <svg> has neither
+ * an implicit role nor a name, so the swap would silently drop the accessible
+ * name. We map the image's name onto the SVG: a non-empty alt (or an
+ * aria-label) is copied to aria-label and the SVG is given role="img"; an
+ * explicit alt="" means the author marked the image decorative, so the SVG is
+ * hidden from AT (aria-hidden="true", focusable="false"). An SVG the author
+ * already named (aria-label / aria-labelledby) is respected as-is. An <img>
+ * with no alt at all leaves the author's intent undefined; rather than emit
+ * an unnamed SVG we hide it from AT (as if decorative) and report the missing
+ * alt so the authoring gap surfaces instead of shipping silently.
+ *
+ * Configuration
+ * -------------
+ * None. Put data-js-module="inlineSVG" directly on an <img> whose src is an
+ * .svg file, or on any container holding such <img> elements; every matching
+ * image inside the boot scope is converted. Non-.svg and cross-origin images
+ * are ignored.
+ * ---------------------------------------------------------------------------
  */
 
 
 
-async function inlineSvg(img, reporter) {
-  const src = img.getAttribute('src')
+const defaults = {
+
+  // Only same-origin .svg sources are inlined. Sent with the fetch so an
+  // authenticated same-origin asset still resolves.
+  fetchCredentials: "same-origin",
+
+  // Attributes on the id-carrying nodes whose value may reference another id
+  // via url(#id) — these must be rewritten alongside the id itself.
+  urlRefAttrs: [
+    "clip-path",
+    "mask",
+    "filter",
+    "fill",
+    "stroke",
+    "marker-start",
+    "marker-mid",
+    "marker-end",
+  ],
+
+  // Attributes whose value is a bare #id reference (<use>, gradient links).
+  hashRefAttrs: ["href", "xlink:href"],
+}
+
+
+
+// Running counter shared across all conversions on the page, used to build a
+// unique id prefix per inlined SVG (see prefixSvgIds).
+let idCounter = 0
+
+
+
+// Creates a unique prefix for the ids inside one inlined SVG.
+function nextIdPrefix() {
+  idCounter += 1
+  return `inlineSVG-${idCounter}`
+}
+
+
+
+// Per-page cache keyed by resolved .svg src: each value is the promise of the
+// file's parsed <svg> template (or null on failure). Repeated inlinings of
+// the same file share a single fetch + parse; every instance clones the
+// template before it is prefixed and mutated, so the cached node stays clean.
+const svgCache = new Map()
+
+
+
+// Returns the cached template promise for a src, starting the load once.
+function fetchSvgTemplate(src, reporter) {
+  let template = svgCache.get(src)
+  if (!template) {
+    template = loadSvgTemplate(src, reporter)
+    svgCache.set(src, template)
+  }
+  return template
+}
+
+
+
+// Fetches and parses one .svg file into its <svg> root. Returns null (and
+// reports) on an HTTP error or a file without an <svg> root; the caller then
+// leaves the original <img> in place.
+async function loadSvgTemplate(src, reporter) {
+  const res = await fetch(src, { credentials: defaults.fetchCredentials })
+  if (!res.ok) {
+    reporter?.report(
+      "inlineSVG",
+      `fetch failed (HTTP ${res.status}); left <img> in place.`, src
+    )
+    return null
+  }
+
+  const text = await res.text()
+  const doc = new DOMParser().parseFromString(text, "image/svg+xml")
+  const svg = doc.querySelector("svg")
+  if (!svg) {
+    reporter?.report("inlineSVG", "fetched file has no <svg> root.", src)
+    return null
+  }
+
+  return svg
+}
+
+
+
+// Replaces one <img> with an inline clone of its .svg source. Non-.svg
+// sources are skipped; any failure (network, parse, missing <svg>) leaves the
+// original <img> in place and is reported. The unique id prefix is passed in
+// so it can be assigned in document order before the concurrent conversions.
+async function inlineOne(img, prefix, reporter) {
+  const src = img.getAttribute("src")
   if (!src || !/\.svg(\?|#|$)/i.test(src)) return
 
   try {
-    const res = await fetch(src, { credentials: 'same-origin' })
-    if (!res.ok) return
+    const template = await fetchSvgTemplate(src, reporter)
+    if (!template) return
 
-    const text = await res.text()
-    const doc = new DOMParser().parseFromString(text, 'image/svg+xml')
-    const svg = doc.querySelector('svg')
-    if (!svg) return
-
-    prefixSvgIds(svg, nextSvgIdPrefix())
-
-    if (img.id) svg.id = img.id
-
-    const imgClass = img.getAttribute('class')
-    if (imgClass) svg.setAttribute('class', imgClass)
-
-    if (img.getAttribute('aria-label')) {
-      svg.setAttribute('aria-label', img.getAttribute('aria-label'))
-    }
-
-    if (
-      !svg.getAttribute('role') &&
-      (svg.getAttribute('aria-label') || img.getAttribute('alt'))
-    ) {
-      svg.setAttribute('role', 'img')
-    }
-
-    if (img.getAttribute('width') && !svg.getAttribute('width')) {
-      svg.setAttribute('width', img.getAttribute('width'))
-    }
-
-    if (img.getAttribute('height') && !svg.getAttribute('height')) {
-      svg.setAttribute('height', img.getAttribute('height'))
-    }
-
-    if (img.dataset.scale && !svg.dataset.scale) {
-      svg.dataset.scale = img.dataset.scale
-    }
+    const svg = template.cloneNode(true)
+    scopeSvg(svg, prefix)
+    carryAttributes(img, svg)
+    applyAccessibleName(img, svg, reporter)
 
     img.replaceWith(svg)
   }
 
   catch {
-    reporter?.report('inlineSvg', 'failed to convert', img)
+    reporter?.report("inlineSVG", "failed to convert image.", img)
   }
 }
 
-let inlineSvgIdCounter = 0
 
-// creates a unique prefix for ids inside each inlined SVG.
-function nextSvgIdPrefix() {
-  inlineSvgIdCounter += 1
 
-  return `inlinesvg-${inlineSvgIdCounter}`
+// Moves the presentation-relevant <img> attributes onto the inlined <svg>.
+// Classes are merged (the fetched file may carry its own); width/height and
+// data-scale are only set when the SVG does not already define them, so the
+// file's own sizing wins and the scaleSVG companion can still read the scale.
+function carryAttributes(img, svg) {
+  if (img.id) svg.id = img.id
+
+  const imgClass = img.getAttribute("class")
+  if (imgClass) {
+    for (const name of imgClass.split(/\s+/)) {
+      if (name) svg.classList.add(name)
+    }
+  }
+
+  const width = img.getAttribute("width")
+  if (width && !svg.hasAttribute("width")) svg.setAttribute("width", width)
+
+  const height = img.getAttribute("height")
+  if (height && !svg.hasAttribute("height")) svg.setAttribute("height", height)
+
+  if (img.dataset.scale && !svg.dataset.scale) {
+    svg.dataset.scale = img.dataset.scale
+  }
 }
 
-// rewrites internal SVG ids and references to prevent document-level
-// collisions.
+
+
+// Preserves the image's accessible name on the SVG (see file header). An SVG
+// the author already named is left untouched.
+function applyAccessibleName(img, svg, reporter) {
+  if (svg.hasAttribute("aria-label") || svg.hasAttribute("aria-labelledby")) {
+    return
+  }
+
+  const ariaLabel = img.getAttribute("aria-label")
+  const alt = img.getAttribute("alt")
+
+  // Decorative: an author who wrote alt="" opted the image out of AT; mirror
+  // that so the inline SVG is not announced either.
+  if (alt === "" && ariaLabel === null) {
+    svg.setAttribute("aria-hidden", "true")
+    svg.setAttribute("focusable", "false")
+    return
+  }
+
+  // Named: expose the SVG as an image with the carried-over name. Icon files
+  // are often authored decorative (aria-hidden / focusable="false") as silent
+  // embeds; a meaningful <img alt> overrides that intent, so clear the
+  // suppression that would otherwise keep the named graphic hidden from AT.
+  const name = ariaLabel || alt
+  if (name) {
+    svg.removeAttribute("aria-hidden")
+    svg.removeAttribute("focusable")
+    svg.setAttribute("aria-label", name)
+    if (!svg.hasAttribute("role")) svg.setAttribute("role", "img")
+    return
+  }
+
+  // No name at all: the <img> carried neither alt nor aria-label, so the
+  // author's intent is undefined. An unnamed inline <svg> exposed to AT is
+  // the worst outcome, so default to the safe reading (hide it, as if
+  // decorative) and report the missing alt so the authoring mistake surfaces
+  // instead of passing silently.
+  reporter?.report(
+    "inlineSVG",
+    "<img> has no alt attribute; inlined SVG hidden from assistive "
+      + "technology. Add alt (meaningful or empty) to make the intent explicit.",
+    img
+  )
+  svg.setAttribute("aria-hidden", "true")
+  svg.setAttribute("focusable", "false")
+}
+
+
+
+// Makes one inlined SVG self-contained at the document level, so several on a
+// page cannot interfere: ids (and their references) and the class names the
+// SVG's own <style> targets are both given the instance's unique prefix.
+function scopeSvg(svg, prefix) {
+  prefixSvgIds(svg, prefix)
+  prefixSvgClasses(svg, prefix)
+}
+
+
+
+// Rewrites every id inside the SVG (and every internal reference to it) with
+// a unique prefix, so multiple inlined SVGs cannot collide over shared ids —
+// gradients, clip-paths, masks, filters, <use> targets — at the document
+// level.
 function prefixSvgIds(svg, prefix) {
   const idMap = new Map()
-  const idNodes = svg.querySelectorAll('[id]')
 
-  idNodes.forEach((node) => {
-    const oldId = node.getAttribute('id')
+  svg.querySelectorAll("[id]").forEach((node) => {
+    const oldId = node.getAttribute("id")
     if (!oldId) return
 
     const newId = `${prefix}-${oldId}`
     idMap.set(oldId, newId)
-    node.setAttribute('id', newId)
+    node.setAttribute("id", newId)
   })
 
   if (!idMap.size) return
 
-  const attrsWithUrlRefs = [
-    'clip-path',
-    'mask',
-    'filter',
-    'fill',
-    'stroke',
-    'marker-start',
-    'marker-mid',
-    'marker-end',
-  ]
+  svg.querySelectorAll("*").forEach((node) => {
+    rewriteHashRefs(node, idMap)
+    rewriteUrlRefs(node, idMap)
+    rewriteInlineStyle(node, idMap)
+  })
 
-  const attrsWithHashRefs = ['href', 'xlink:href']
-  const allNodes = svg.querySelectorAll('*')
+  rewriteStyleSheets(svg, idMap)
+}
 
-  allNodes.forEach((node) => {
-    attrsWithHashRefs.forEach((attr) => {
-      const value = node.getAttribute(attr)
-      if (!value || !value.startsWith('#')) return
 
-      const refId = value.slice(1)
-      const newRefId = idMap.get(refId)
-      if (!newRefId) return
 
-      node.setAttribute(attr, `#${newRefId}`)
+// #id references (e.g. <use href="#icon">, gradient links).
+function rewriteHashRefs(node, idMap) {
+  for (const attr of defaults.hashRefAttrs) {
+    const value = node.getAttribute(attr)
+    if (!value || !value.startsWith("#")) continue
+
+    const newId = idMap.get(value.slice(1))
+    if (newId) node.setAttribute(attr, `#${newId}`)
+  }
+}
+
+
+
+// url(#id) references inside presentation attributes.
+function rewriteUrlRefs(node, idMap) {
+  for (const attr of defaults.urlRefAttrs) {
+    const value = node.getAttribute(attr)
+    if (!value || !value.includes("url(#")) continue
+
+    const updated = replaceUrlIds(value, idMap)
+    if (updated !== value) node.setAttribute(attr, updated)
+  }
+}
+
+
+
+// url(#id) references inside an inline style attribute.
+function rewriteInlineStyle(node, idMap) {
+  const value = node.getAttribute("style")
+  if (!value || !value.includes("url(#")) return
+
+  const updated = replaceUrlIds(value, idMap)
+  if (updated !== value) node.setAttribute("style", updated)
+}
+
+
+
+// Both url(#id) and bare #id references inside embedded <style> blocks. A
+// single boundary-aware pass rewrites every #id (this also covers url(#id),
+// since the closing ")" is not an identifier char): unlike a per-id
+// replaceAll, matching longest ids first and refusing to run on into a longer
+// identifier means a short id (#a) can never clobber a longer one (#ab) it is
+// a prefix of, nor a same-prefixed id the file did not declare (#abc).
+function rewriteStyleSheets(svg, idMap) {
+  const idRefs = buildRefPattern([...idMap.keys()], "#")
+  if (!idRefs) return
+
+  svg.querySelectorAll("style").forEach((styleNode) => {
+    const css = styleNode.textContent
+    if (!css || !css.includes("#")) return
+
+    const updated = css.replace(idRefs, (match, oldId) => {
+      const newId = idMap.get(oldId)
+      return newId ? `#${newId}` : match
     })
 
-    attrsWithUrlRefs.forEach((attr) => {
-      const value = node.getAttribute(attr)
-      if (!value || !value.includes('url(#')) return
+    if (updated !== css) styleNode.textContent = updated
+  })
+}
 
-      let updatedValue = value
-      idMap.forEach((newId, oldId) => {
-        updatedValue = updatedValue.replaceAll(`url(#${oldId})`, `url(#${newId})`)
-      })
 
-      if (updatedValue !== value) {
-        node.setAttribute(attr, updatedValue)
+
+// Scopes the class names the SVG's own <style> styles — and only those — with
+// the instance prefix, on both the element class attributes and the <style>
+// selectors. Figma-style exports carry generic class names (.cls-1, .cls-2)
+// in an embedded <style>; because an inline <svg>'s <style> is document-global
+// (there is no shadow boundary), two such SVGs sharing a name would style each
+// other's shapes. Prefixing the styled classes confines each rule to its own
+// SVG. Classes the file does not style itself are left intact, so they stay
+// usable as page hooks (mirroring how ids the file never references are still
+// prefixed only because ids must be unique; classes need not be).
+function prefixSvgClasses(svg, prefix) {
+  const styleNodes = [...svg.querySelectorAll("style")]
+  if (!styleNodes.length) return
+
+  const styleText = styleNodes.map((node) => node.textContent || "").join("\n")
+
+  // The class tokens actually present on elements are the authoritative set;
+  // intersecting with the ones the <style> references confines the rewrite to
+  // real, internally-styled classes and sidesteps false positives (e.g. a
+  // ".5" fragment inside a length value is never an element class).
+  const classMap = new Map()
+  svg.querySelectorAll("[class]").forEach((node) => {
+    for (const name of node.getAttribute("class").split(/\s+/)) {
+      if (!name || classMap.has(name)) continue
+      if (buildRefPattern([name], "\\.").test(styleText)) {
+        classMap.set(name, `${prefix}-${name}`)
       }
-    })
-
-    const styleValue = node.getAttribute('style')
-    if (!styleValue || !styleValue.includes('url(#')) return
-
-    let updatedStyleValue = styleValue
-    idMap.forEach((newId, oldId) => {
-      updatedStyleValue = updatedStyleValue.replaceAll(`url(#${oldId})`, `url(#${newId})`)
-    })
-
-    if (updatedStyleValue !== styleValue) {
-      node.setAttribute('style', updatedStyleValue)
     }
   })
 
-  const styleNodes = svg.querySelectorAll('style')
+  if (!classMap.size) return
+
+  svg.querySelectorAll("[class]").forEach((node) => {
+    rewriteClassAttribute(node, classMap)
+  })
+
+  rewriteStyleClassSelectors(styleNodes, classMap)
+}
+
+
+
+// Swaps the mapped tokens in one element's class attribute, leaving unmapped
+// tokens (and their order) untouched.
+function rewriteClassAttribute(node, classMap) {
+  const tokens = node.getAttribute("class").split(/\s+/).filter(Boolean)
+  let changed = false
+
+  const next = tokens.map((name) => {
+    const mapped = classMap.get(name)
+    if (mapped) changed = true
+    return mapped || name
+  })
+
+  if (changed) node.setAttribute("class", next.join(" "))
+}
+
+
+
+// Rewrites the mapped ".class" selector tokens inside the <style> blocks, with
+// the same boundary-aware single pass as the id rewriting (see buildRefPattern).
+function rewriteStyleClassSelectors(styleNodes, classMap) {
+  const classRefs = buildRefPattern([...classMap.keys()], "\\.")
+  if (!classRefs) return
+
   styleNodes.forEach((styleNode) => {
     const css = styleNode.textContent
-    if (!css || !css.includes('url(#')) return
+    if (!css || !css.includes(".")) return
 
-    let updatedCss = css
-    idMap.forEach((newId, oldId) => {
-      updatedCss = updatedCss.replaceAll(`url(#${oldId})`, `url(#${newId})`)
-      updatedCss = updatedCss.replaceAll(`#${oldId}`, `#${newId}`)
+    const updated = css.replace(classRefs, (match, name) => {
+      const mapped = classMap.get(name)
+      return mapped ? `.${mapped}` : match
     })
 
-    if (updatedCss !== css) {
-      styleNode.textContent = updatedCss
-    }
+    if (updated !== css) styleNode.textContent = updated
   })
 }
 
 
 
-// collects SVG image candidates from the boot element or its descendants.
-function collectTargetImages(el) {
-  if (!(el instanceof Element)) return []
+// Builds one regex matching every "<sigil><name>" whose name is in the list —
+// "#" for id references, "\\." for class selectors. Alternatives are ordered
+// longest-first so the regex prefers the longer name, and a negative lookahead
+// ((?![\w-])) forbids a match that continues into a longer identifier: this is
+// what lets a short name (#a / .a) never clobber a longer one (#ab / .ab) it
+// prefixes, nor a same-prefixed name the file did not declare (#abc / .abc).
+function buildRefPattern(names, sigil) {
+  if (!names.length) return null
 
-  if (el instanceof HTMLImageElement) {
-    return [el]
-  }
+  const alternatives = names
+    .slice()
+    .sort((a, b) => b.length - a.length)
+    .map(escapeRegExp)
+    .join("|")
 
-  return [...el.querySelectorAll('img')]
+  return new RegExp(`${sigil}(${alternatives})(?![\\w-])`, "g")
 }
 
 
 
-// --- loader-compatible entry point ---
+// Escapes a string for literal use inside a RegExp.
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+
+
+// Replaces every url(#oldId) occurrence in a string using the id map.
+function replaceUrlIds(value, idMap) {
+  let updated = value
+  idMap.forEach((newId, oldId) => {
+    updated = updated.replaceAll(`url(#${oldId})`, `url(#${newId})`)
+  })
+  return updated
+}
+
+
+
+// Collects the SVG-image candidates from the boot element: the element itself
+// when it is an <img>, otherwise every descendant <img>.
+function collectImages(el) {
+  if (el instanceof HTMLImageElement) return [el]
+  return [...el.querySelectorAll("img")]
+}
+
+
+
+// loader-compatible entry point
+// (boot.js -> mod.init(el, services))
 export async function init(el, services = {}) {
   const reporter = services.reporter
 
   if (!(el instanceof Element)) {
     reporter?.report(
-      'inlineSvg',
-      'module was initialized on a non-element node:',
-      el
+      "inlineSVG",
+      "module was initialized on a non-element node.", el
     )
     return
   }
 
-  const images = collectTargetImages(el)
+  const images = collectImages(el)
   if (!images.length) return
 
-  for (const img of images) {
-    await inlineSvg(img, reporter)
-  }
+  // Assign each id prefix synchronously in document order first, so prefixes
+  // stay deterministic even though the conversions then run concurrently
+  // (distinct sources fetch in parallel; repeated ones share one fetch via
+  // svgCache). Double-init is prevented by the loader (boot.js sets a
+  // per-element, per-module flag before calling init), so no extra guard is
+  // needed here.
+  await Promise.all(
+    images.map((img) => inlineOne(img, nextIdPrefix(), reporter))
+  )
 }

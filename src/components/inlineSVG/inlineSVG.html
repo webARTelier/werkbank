@@ -1,0 +1,70 @@
+<!--
+  inlineSVG — copy-paste snippet
+  ============================================================================
+  Copy the block(s) below into your own project.
+
+  1) In <head> (or before </body>): load the shared styles, this component's
+     (empty) styles and the boot script. boot.min.js lazily loads the inlineSVG
+     module as soon as it finds data-js-module="inlineSVG" in the DOM — you do
+     not import inlineSVG.js yourself. Adjust the paths to your /dist.
+
+       <link rel="stylesheet" href="/dist/css/shared.min.css" />
+       <link rel="stylesheet" href="/dist/css/inlineSVG.min.css" />
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+  2) Point an <img> at an .svg file and mark it (or a container around several
+     such images) with data-js-module="inlineSVG". On boot the module fetches
+     the file and replaces the <img> with a real inline <svg>, so the graphic
+     becomes stylable and scriptable — it can inherit currentColor, be styled
+     by the page's CSS, and expose its inner shapes to the DOM.
+
+  Notes
+    - Progressive enhancement: without JavaScript (or if the fetch fails) the
+      <img> simply renders as-is — nothing breaks, the graphic just is not
+      inlined.
+    - Same-origin only: the .svg is fetched, so it must be served from the
+      same origin as the page. Cross-origin and non-.svg sources are ignored.
+    - Carried over onto the <svg>: id, class (merged with the file's own),
+      width/height (only if the file sets none) and data-scale.
+    - Accessible name: give the <img> an alt. A non-empty alt becomes the
+      SVG's aria-label + role="img"; alt="" marks it decorative (hidden from
+      assistive tech). An <svg> already named in the file is respected.
+    - Scoping: internal ids and their references (url(#…), <use href="#…">,
+      <style>) are auto-prefixed per instance, so several inlined SVGs on one
+      page never collide over shared gradients/clip-paths/masks/filters. The
+      same prefix is applied to the class names an embedded <style> targets
+      (e.g. Figma's .cls-1) so one SVG's rules cannot bleed onto another's;
+      classes the file does not style itself stay intact as CSS hooks.
+    - Combine with scaleSVG (data-js-module="inlineSVG,scaleSVG" + data-scale)
+      to inline and then size the SVG from its viewBox in one go.
+-->
+
+
+
+<!-- Meaningful icon: alt becomes the SVG's accessible name -->
+<img
+  data-js-module="inlineSVG"
+  src="/assets/icons/download.svg"
+  alt="Download"
+  width="24"
+  height="24"
+/>
+
+
+
+<!-- Decorative icon: alt="" hides the inlined SVG from assistive tech -->
+<img
+  data-js-module="inlineSVG"
+  src="/assets/icons/sparkle.svg"
+  alt=""
+  width="24"
+  height="24"
+/>
+
+
+
+<!-- One container inlines every <img> inside it -->
+<div data-js-module="inlineSVG">
+  <img src="/assets/logos/mark.svg" alt="Acme" />
+  <img src="/assets/logos/wordmark.svg" alt="Acme Inc." />
+</div>

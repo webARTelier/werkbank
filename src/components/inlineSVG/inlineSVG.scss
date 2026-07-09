@@ -1,1 +1,8 @@
-// inlineSVG styles
+// =============================================================
+// inlineSVG — behaviour-only, ships no styles
+// =============================================================
+//
+// The whole point of inlining is that the resulting <svg> is a normal part of
+// the document, so the consuming project styles it directly (size it, colour
+// it via currentColor, target inner shapes). This component has no CSS
+// of its own; this stub exists only so the build has a stylesheet to compile.

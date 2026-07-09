@@ -16,6 +16,48 @@
      <script type="module" src="../../../src/_shared/js/dev_qrCode.js"></script>
     <!-- end for development only -->
 
+    <!--
+        DEMO-ONLY STYLES
+        --------------------------------------------------------------------
+        inlineSVG ships no styles of its own (behaviour-only). The rules below
+        are ONLY for this demo: they colour the inlined <svg> to show that,
+        once inlined, it inherits currentColor and can be styled by ordinary
+        CSS — something an <img src="…svg"> can never do. Tokens (--space-*,
+        --color-*) come from shared.min.css.
+    -->
+        
+    <style>
+      .demo-iconRow {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-l);
+        margin-top: var(--space-s);
+      }
+
+      .demo-swatch {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-2xs);
+      }
+
+      /* The colour lives on the parent; the inlined SVG's stroke is
+         currentColor, so it simply follows. */
+      .demo-swatch svg { width: 2.5rem; height: 2.5rem; }
+
+      .demo-swatch--accent { color: var(--color-accent); }
+      .demo-swatch--error { color: var(--color-error); }
+      .demo-swatch--muted { color: var(--color-text-muted); }
+
+      /* Hover recolour proves it is live CSS, not a baked-in image. */
+      .demo-swatch--hover {
+        color: var(--color-text-muted);
+        transition: color 0.15s ease;
+        cursor: pointer;
+      }
+      .demo-swatch--hover:hover { color: var(--color-accent-secondary); }
+    </style>
+
   </head>
 
   <body>
@@ -25,10 +67,98 @@
       <section class="hero">
         <a class="back" href="../../../index.html">← Overview</a>
         <h1>inlineSVG</h1>
-        <p>Replaces img references with inline-embedded SVG.</p>
+        <p>Replaces an &lt;img&gt; that points at an .svg file with a real,
+           inline &lt;svg&gt; node.</p>
       </section>
 
       <section class="stage" aria-label="Live demo">
+
+        <!--
+            Each <img> below points at a shared icon file and carries
+            data-js-module="inlineSVG". On boot the module fetches the file
+            and swaps the <img> for an inline <svg>.
+
+            Wiring
+              - data-js-module="inlineSVG" on an <img> (or a container).
+              - The icons are the shared source files under
+                src/_shared/media/img/, whose stroke is currentColor.
+
+            Progressive enhancement
+              - Without JS (or if the fetch fails) each <img> just renders as
+                the SVG image — nothing breaks, it is only not inlined, so it
+                keeps the fixed colour the file draws with.
+
+            Accessibility
+              - A meaningful icon carries alt; it becomes the SVG's
+                aria-label + role="img". A decorative icon carries alt="";
+                the inlined SVG is hidden from assistive tech.
+
+            Note: the .svg is fetched, so open this page from a server (the
+            gulp dev server) — a file:// origin blocks the fetch.
+          -->
+
+        <p class="stage__intro">
+          Once inlined, an SVG becomes an ordinary part of the document: it can
+          inherit <code>currentColor</code> and be styled by page CSS. The three
+          copies of the same file below are tinted purely by the
+          <code>color</code> of their parent — proof the graphic is live SVG,
+          not a sealed <code>&lt;img&gt;</code>.
+        </p>
+
+        <div class="demo-iconRow">
+          <span class="demo-swatch demo-swatch--accent">
+            <img data-js-module="inlineSVG"
+                 src="../../_shared/media/img/system/warning.svg"
+                 alt="Warning" />
+          </span>
+          <span class="demo-swatch demo-swatch--error">
+            <img data-js-module="inlineSVG"
+                 src="../../_shared/media/img/system/warning.svg"
+                 alt="Warning" />
+          </span>
+          <span class="demo-swatch demo-swatch--muted">
+            <img data-js-module="inlineSVG"
+                 src="../../_shared/media/img/system/warning.svg"
+                 alt="Warning" />
+          </span>
+        </div>
+
+
+
+        <p class="stage__intro" style="margin-top: var(--space-xl);">
+          <strong>Hover me.</strong> The inlined icon recolours on
+          <code>:hover</code> via CSS on its wrapper — impossible with an
+          <code>&lt;img&gt;</code>.
+        </p>
+
+        <div class="demo-iconRow">
+          <span class="demo-swatch demo-swatch--hover">
+            <img data-js-module="inlineSVG"
+                 src="../../_shared/media/img/icons/close.svg"
+                 alt="Close" />
+            <span>Close</span>
+          </span>
+        </div>
+
+
+
+        <p class="stage__intro" style="margin-top: var(--space-xl);">
+          <strong>One container, many icons.</strong> Putting
+          <code>data-js-module="inlineSVG"</code> on a wrapper inlines every
+          <code>&lt;img&gt;</code> inside it. The chevron below is
+          <strong>decorative</strong> (<code>alt=""</code>), so its inlined SVG
+          is hidden from assistive tech.
+        </p>
+
+        <div class="demo-iconRow" data-js-module="inlineSVG">
+          <span class="demo-swatch demo-swatch--accent">
+            <img src="../../_shared/media/img/system/chevronDown.svg" alt="" />
+          </span>
+          <span class="demo-swatch demo-swatch--muted">
+            <img src="../../_shared/media/img/system/chevronDown.svg" alt="" />
+          </span>
+        </div>
+
       </section>
 
     </main>
