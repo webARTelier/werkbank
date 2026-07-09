@@ -24,6 +24,11 @@
   --color-accent: var(--c-violet-600);
   --color-accent-secondary: var(--c-sky-400);
 
+  // Feedback
+  // Error text and invalid-field borders (e.g. formValidation). Picked light
+  // enough to keep AA contrast on the dark surfaces above.
+  --color-error: var(--c-red-400);
+
   // Interactive states
   // Two focus-ring tones so an element can pick the one that contrasts with its
   // own surface. Applied via the focus-ring() mixin 

@@ -1,0 +1,203 @@
+<!--
+  formValidation — copy-paste snippet
+  ============================================================================
+  Copy the block(s) below into your own project.
+
+  1) In <head> (or before </body>): load the shared styles, this component's
+     validation-state styles and the boot script. boot.min.js lazily loads
+     the formValidation module as soon as it finds data-js-module="formValidation"
+     in the DOM — you do not import formValidation.js yourself. Adjust the paths
+     to where you serve /dist.
+
+       <link rel="stylesheet" href="/dist/css/shared.min.css" />
+       <link rel="stylesheet" href="/dist/css/formValidation.min.css" />
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+  2) Drop the form below where it should appear. Validation is driven entirely by
+     the native constraints you declare in the markup (required, type="email",
+     minlength, pattern, …) — the module reads the browser's verdict and renders
+     accessible inline messages for it. It works without JavaScript too (the
+     browser then shows its own bubbles), so the constraints are never optional.
+
+  Wiring
+    - The <form> carries data-js-module="formValidation". Do NOT add `novalidate`
+      yourself — the module sets it from JS so the no-JS path keeps native
+      validation.
+    - Wrap each control (or each radio/checkbox group) in an element carrying
+      data-fv-item. That container gets `is-invalid` while the field is invalid
+      and holds the injected .fv-error message. Without it the field still
+      validates, but the message falls back to the field's parent.
+    - Declare the rules with native attributes: required, type="email"/"url",
+      minlength/maxlength, pattern (+ title as the format hint), min/max/step.
+    - One extra rule for confirmation fields: data-fv-equals="#otherField"
+      (selector, scoped to the form). Do not combine it with your own
+      setCustomValidity on the same field.
+    - Give every control a <label for> (or aria-label) and a stable id/name — the
+      message is linked back to the control via aria-describedby, and the label
+      (or a radio group's <legend>) names the field in the error summary.
+    - On a failed submit the module injects a focusable error summary (a
+      .fv-summary block listing every invalid field as a link) at the top of the
+      form and moves focus to it. You do NOT add it to the markup; just style
+      the .fv-summary box in your project (see demo.html).
+
+  CMS-maintained default messages (optional)
+    - One JSON block per page overrides/extends the built-in de/en defaults —
+      the single place a CMS edits all texts. Same shape as below; you may
+      change single messages only, or add further locales (picked via
+      <html lang>). {placeholders} are interpolated from the live field:
+      {minLength} {maxLength} {valueLength} {min} {max}.
+
+        <script type="application/json" data-fv-messages>
+          {
+            "de": { "valueMissing": "Bitte füllen Sie dieses Feld aus." },
+            "en": { "valueMissing": "Please fill out this field." }
+          }
+        </script>
+
+  Custom messages per field (all optional; defaults are used otherwise)
+    - data-fv-message="…"    one message for whichever constraint the field fails
+    - per constraint (more specific, wins over the generic one):
+        data-fv-required   data-fv-type    data-fv-minlength  data-fv-maxlength
+        data-fv-pattern    data-fv-min     data-fv-max        data-fv-step
+        data-fv-equals-message (for the data-fv-equals rule)
+    - For pattern, a `title` doubles as the format instruction shown to everyone.
+
+  Styling
+    - formValidation.min.css ships ONLY the validation state: the invalid
+      field's border color and the .fv-error message (both via --fv-error-color
+      -> --color-error). Your project styles the fields themselves — the classes
+      below (c-form, c-field, c-input, c-label, c-radio, c-checkbox, c-select,
+      c-unit, c-cta) are ONE example design following the project's BEM
+      convention (c- prefix); demo.html shows the full stylesheet, including
+      freely designable radios/checkboxes (native input visually hidden,
+      box/mark spans drawn by CSS), a select chevron and an invalid-field
+      warning icon — both SVGs from src/_shared/media/img/system/
+      (chevronDown.svg, warning.svg) applied as a mask, colored via a token.
+    - The plain inputs below sit in a .c-field wrapper: its only job is to be
+      the positioning context for that warning icon (shown on the wrapping
+      [data-fv-item].is-invalid), exactly as .c-select hosts the chevron.
+-->
+
+
+
+<form class="c-form" data-js-module="formValidation" action="#" method="post">
+
+  <!-- Text field: required + minimum length -->
+  <div class="c-form__item" data-fv-item>
+    <label class="c-label" for="fv-name">Name</label>
+    <span class="c-field">
+      <input
+        class="c-input"
+        type="text"
+        id="fv-name"
+        name="name"
+        required
+        minlength="2"
+        autocomplete="name"
+      />
+    </span>
+  </div>
+
+  <!-- Email: required + native type check, with a custom message -->
+  <div class="c-form__item" data-fv-item>
+    <label class="c-label" for="fv-email">Email</label>
+    <span class="c-field">
+      <input
+        class="c-input"
+        type="email"
+        id="fv-email"
+        name="email"
+        required
+        autocomplete="email"
+        data-fv-type="We need a valid email address to reply to you."
+      />
+    </span>
+  </div>
+
+  <!-- Confirmation field: must match the field selected by data-fv-equals -->
+  <div class="c-form__item" data-fv-item>
+    <label class="c-label" for="fv-email2">Repeat email</label>
+    <span class="c-field">
+      <input
+        class="c-input"
+        type="email"
+        id="fv-email2"
+        name="email2"
+        required
+        autocomplete="email"
+        data-fv-equals="#fv-email"
+      />
+    </span>
+  </div>
+
+  <!-- Pattern: the title is the format hint shown to sighted and AT users -->
+  <div class="c-form__item" data-fv-item>
+    <label class="c-label" for="fv-zip">Postal code</label>
+    <span class="c-field">
+      <input
+        class="c-input"
+        type="text"
+        id="fv-zip"
+        name="zip"
+        inputmode="numeric"
+        pattern="\d{5}"
+        required
+        title="Five digits, e.g. 20095."
+      />
+    </span>
+  </div>
+
+  <!-- Select: wrap it to draw a custom chevron on the wrapper (see demo.html) -->
+  <div class="c-form__item" data-fv-item>
+    <label class="c-label" for="fv-topic">Topic</label>
+    <span class="c-select">
+      <select class="c-select__control" id="fv-topic" name="topic" required>
+        <option value="">Please choose…</option>
+        <option value="sales">Sales</option>
+        <option value="support">Support</option>
+      </select>
+    </span>
+  </div>
+
+  <!-- Radio group: ONE data-fv-item on the fieldset = one shared message.
+       The native input is visually hidden but focusable; box/checkmark spans
+       are freely designable in CSS (see demo.html). -->
+  <fieldset class="c-form__radioGroup" data-fv-item>
+    <legend class="c-form__legend">How should we contact you?</legend>
+
+    <div class="c-form__item">
+      <input class="c-radio" type="radio" id="fv-contact-email" name="contact" value="email" required />
+      <label class="c-radio__label" for="fv-contact-email">
+        By email
+        <span class="c-radio__box" aria-hidden="true"></span>
+        <span class="c-radio__checkmark" aria-hidden="true"></span>
+      </label>
+    </div>
+
+    <div class="c-form__item">
+      <input class="c-radio" type="radio" id="fv-contact-phone" name="contact" value="phone" required />
+      <label class="c-radio__label" for="fv-contact-phone">
+        By phone
+        <span class="c-radio__box" aria-hidden="true"></span>
+        <span class="c-radio__checkmark" aria-hidden="true"></span>
+      </label>
+    </div>
+  </fieldset>
+
+  <!-- Checkbox: required consent, same freely designable pattern -->
+  <div class="c-form__item" data-fv-item>
+    <input class="c-checkbox" type="checkbox" id="fv-consent" name="consent" required />
+    <label class="c-checkbox__label" for="fv-consent">
+      I agree to the terms.
+      <span class="c-checkbox__box" aria-hidden="true"></span>
+      <span class="c-checkbox__checkmark" aria-hidden="true"></span>
+    </label>
+  </div>
+
+  <div class="c-form__actions">
+    <button class="c-cta" type="submit">
+      <span class="c-cta__label">Submit</span>
+    </button>
+  </div>
+
+</form>

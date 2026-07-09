@@ -85,10 +85,9 @@ module.exports = {
 
     // Modules resolved at runtime, never bundled:
     // - ./registry.js  -> the generated registry (boot.js)
-    // - ./pristine.js  -> vendor lib loaded for its side effect (formValidation)
-    // Kept external so Rollup neither inlines them nor tries to resolve their
-    // dynamic module imports.
-    runtimeExternals: ["./registry.js", "./pristine.js"],
+    // Kept external so Rollup neither inlines it nor tries to resolve its
+    // dynamic module import.
+    runtimeExternals: ["./registry.js"],
 
     outDir: p("dist", "js"),
     bootName: "boot",

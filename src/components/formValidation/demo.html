@@ -1,37 +1,643 @@
 <!DOCTYPE html>
 <html lang="en">
 
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>formValidation – Demo</title>
-    <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
-    <link rel="stylesheet" href="../../../dist/css/formValidation.min.css" />
-    <script type="module" src="../../../dist/js/boot.min.js"></script>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>formValidation – Demo</title>
+  <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
+  <link rel="stylesheet" href="../../../dist/css/formValidation.min.css" />
+  <script type="module" src="../../../dist/js/boot.min.js"></script>
 
-    <!-- for development only -->
-     <script type="module" src="../../../src/_shared/js/dev_pageInfo.js"></script>
-     <script type="module" src="../../../src/_shared/js/dev_a11yInspector.js"></script>
-     <script type="module" src="../../../src/_shared/js/dev_qrCode.js"></script>
-    <!-- end for development only -->
+  <!-- for development only -->
+  <script type="module" src="../../../src/_shared/js/dev_pageInfo.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_a11yInspector.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_qrCode.js"></script>
+  <!-- end for development only -->
 
-  </head>
+  <!--
+      DEMO-ONLY STYLES
+      ----------------------------------------------------------------------
+      formValidation ships only the validation-state styles (invalid border +
+      .fv-error message, see formValidation.min.css). Everything below — the
+      field design, the freely designable radios/checkboxes, the select
+      chevron, the unit field — is ONE example of how a consuming project can
+      style its form; none of it is part of the component. (Tokens like
+      --space-* / --color-* come from shared.min.css.)
+  -->
+      
+  <style>
+    .c-form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-m);
+      max-width: 34rem;
+    }
 
-  <body>
+    .c-form__item {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3xs);
+    }
 
-    <main class="shell">
+    .c-label {
+      font-weight: 600;
+      color: var(--color-text);
+    }
 
-      <section class="hero">
-        <a class="back" href="../../../index.html">← Overview</a>
-        <h1>formValidation</h1>
-        <p>Form validation with error messages.</p>
-      </section>
+    .c-input,
+    .c-select__control,
+    .c-textarea {
+      padding: var(--space-2xs) var(--space-xs);
+      border: 1px solid var(--color-border);
+      border-radius: var(--borderRadius);
+      font: inherit;
+      color: var(--color-text);
+      background-color: var(--color-bg-surface);
+    }
 
-      <section class="stage" aria-label="Live demo">
-      </section>
+    .c-input:hover,
+    .c-select__control:hover,
+    .c-textarea:hover {
+      border-color: var(--color-border-strong);
+    }
 
-    </main>
+    .c-textarea {
+      min-height: 6em;
+      resize: vertical;
+    }
 
-  </body>
+    /*
+      Field wrapper for single-line inputs / textareas. Its only job is to be a
+      positioning context for the invalid warning icon (below) — exactly like
+      .c-select is for the chevron and .c-unit for the € badge. The right
+      padding reserves room for the icon so nothing shifts when a field turns
+      invalid (mirrors the select's always-on padding-right for its chevron).
+    */
+    .c-field {
+      position: relative;
+      display: block;
+    }
+
+    .c-field .c-input,
+    .c-field .c-textarea {
+      width: 100%;
+      padding-right: 2.4em;
+    }
+
+    /* Keyboard focus ring — the component leaves this to the project. */
+    .c-input:focus-visible,
+    .c-select__control:focus-visible,
+    .c-textarea:focus-visible,
+    .c-cta:focus-visible {
+      outline: 2px solid var(--color-focus-ring-light);
+      outline-offset: var(--outlineOffset);
+    }
+
+    /*
+      Select with a custom chevron. The glyph's source of truth is
+      src/_shared/media/img/system/chevronDown.svg; it is applied as a mask
+      on a ::after, so its color is just background-color: currentColor — it
+      follows the text color automatically (hover, invalid, …) and needs no
+      runtime path from dist/css to the media folder.
+    */
+    .c-select {
+      position: relative;
+      display: block;
+      color: var(--color-text-muted);
+    }
+
+    .c-select__control {
+      width: 100%;
+      appearance: none;
+      padding-right: 2.5em;
+      cursor: pointer;
+    }
+
+    .c-select::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      right: var(--space-xs);
+      width: 1em;
+      height: 1em;
+      translate: 0 -50%;
+      pointer-events: none;
+
+      background-color: currentColor;
+      mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m3 6 5 5 5-5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      mask-repeat: no-repeat;
+      mask-size: contain;
+      mask-position: center;
+    }
+
+    .c-form__item.is-invalid .c-select {
+      color: var(--color-error);
+    }
+
+    /*
+      Unit field: the € badge is a pseudo-element on the --euro modifier, so the
+      input itself stays a plain <input type="number"> for validation.
+    */
+    .c-unit {
+      position: relative;
+      display: block;
+    }
+
+    .c-unit .c-input {
+      width: 100%;
+      padding-right: 2.6em;
+    }
+
+    .c-unit--euro::after {
+      content: "€";
+      position: absolute;
+      top: 1px;
+      right: 1px;
+      bottom: 1px;
+      width: 2em;
+      display: grid;
+      place-items: center;
+      border-radius: 0 var(--borderRadius) var(--borderRadius) 0;
+      color: var(--color-text-muted);
+      background-color: var(--color-bg-overlay);
+      pointer-events: none;
+    }
+
+    /*
+      Freely designable radios & checkboxes (the pattern from the previous
+      project): the native input is visually hidden but stays focusable, the
+      label carries the text, and two spans (__box / __checkmark) are yours to
+      design — any shape, size, animation. Radio and checkbox are separate BEM
+      blocks (c-radio / c-checkbox), matching the project's form system.
+    */
+    .c-form__radioGroup {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2xs);
+      border: 0;
+      padding: 0;
+      margin: 0;
+    }
+
+    .c-form__legend {
+      padding: 0;
+      margin-bottom: var(--space-3xs);
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    /* The item that hosts a radio/checkbox is the positioning context for the
+       visually-hidden native input (text-field items need no positioning). */
+    .c-form__item:has(> .c-radio),
+    .c-form__item:has(> .c-checkbox) {
+      position: relative;
+    }
+
+    .c-radio,
+    .c-checkbox {
+      position: absolute;
+      top: 0.2em;
+      left: 0;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+    }
+
+    .c-radio__label,
+    .c-checkbox__label {
+      display: inline-block;
+      position: relative;
+      padding-left: 1.8em;
+      cursor: pointer;
+      color: var(--color-text);
+    }
+
+    .c-radio__box,
+    .c-checkbox__box {
+      position: absolute;
+      top: 0.15em;
+      left: 0;
+      width: 1.2em;
+      height: 1.2em;
+      border: 2px solid var(--color-border-strong);
+      border-radius: var(--borderRadius);
+      background-color: var(--color-bg-surface);
+      transition: border-color 0.15s ease;
+    }
+
+    .c-radio__box {
+      border-radius: 50%;
+    }
+
+    /* Checkbox stays square, just softened at the corners. */
+    .c-checkbox__box {
+      border-radius: 3px;
+    }
+
+    .c-radio__checkmark,
+    .c-checkbox__checkmark {
+      position: absolute;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+    }
+
+    .c-radio__checkmark {
+      top: 0.5em;
+      left: 0.35em;
+      width: 0.5em;
+      height: 0.5em;
+      border-radius: 50%;
+      background-color: var(--color-accent-secondary);
+    }
+
+    .c-checkbox__checkmark {
+      top: 0.4em;
+      left: 0.28em;
+      width: 0.68em;
+      height: 0.38em;
+      border-left: 2px solid var(--color-accent-secondary);
+      border-bottom: 2px solid var(--color-accent-secondary);
+      rotate: -45deg;
+    }
+
+    .c-radio:checked + .c-radio__label .c-radio__checkmark,
+    .c-checkbox:checked + .c-checkbox__label .c-checkbox__checkmark {
+      opacity: 1;
+    }
+
+    .c-radio:hover + .c-radio__label .c-radio__box,
+    .c-checkbox:hover + .c-checkbox__label .c-checkbox__box {
+      border-color: var(--color-text-muted);
+    }
+
+    /*
+      The hidden input still owns keyboard focus: ring on the drawn box.
+      We match plain :focus in addition to :focus-visible here — unlike a text
+      field, this input is visually hidden, and when the error summary moves
+      focus to it programmatically (a summary link → field.focus()) after a
+      pointer click, the browser does NOT reliably flag that as :focus-visible.
+      Without the :focus fallback the jumped-to radio/checkbox would show no
+      visible focus at all (WCAG 2.4.7). The extra ring on a mouse click is a
+      harmless trade for a guaranteed indicator.
+    */
+    .c-radio:focus + .c-radio__label .c-radio__box,
+    .c-checkbox:focus + .c-checkbox__label .c-checkbox__box,
+    .c-radio:focus-visible + .c-radio__label .c-radio__box,
+    .c-checkbox:focus-visible + .c-checkbox__label .c-checkbox__box {
+      outline: 2px solid var(--color-focus-ring-light);
+      outline-offset: var(--outlineOffset);
+    }
+
+    /*
+      Invalid state. The component already recolors input/select/textarea
+      borders and the .fv-error message (formValidation.min.css); a project
+      extends that to its own drawn elements — here the radio/checkbox boxes —
+      plus whatever extra emphasis it wants (here a background tint).
+    */
+    .is-invalid .c-input,
+    .is-invalid .c-select__control,
+    .is-invalid .c-textarea {
+      background-color: color-mix(in srgb, var(--color-error) 8%, var(--color-bg-surface));
+    }
+
+    .is-invalid .c-radio__box,
+    .is-invalid .c-checkbox__box {
+      border-color: var(--color-error);
+      background-color: color-mix(in srgb, var(--color-error) 8%, var(--color-bg-surface));
+    }
+
+    /*
+      Invalid-field warning icon — a non-color cue in the field.
+      ----------------------------------------------------------------------
+      Source of truth is src/_shared/media/img/system/warning.svg; it is
+      embedded and applied as a mask-image on a pseudo-element with
+      background-color, so its colour comes from a CSS token (here the error
+      tone) — the exact same technique as the select chevron, and it likewise
+      needs no runtime path from dist/css to the media folder. The red border
+      alone signals invalidity only by colour; pairing it with this shape adds a
+      second, non-colour indicator at the field (WCAG 1.4.1).
+
+      It sits on the wrapper that gives each control its positioning context:
+      .c-field for plain inputs/textareas, and — offset to the LEFT of the
+      element already parked on the right — .c-select (its chevron) and .c-unit
+      (its € badge).
+    */
+    :root {
+      --fv-icon-warning: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='8' cy='8' r='6.75'/%3E%3Cpath d='M8 4.75v3.5'/%3E%3Cpath d='M8 11.25h.01'/%3E%3C/svg%3E");
+    }
+
+    .c-form__item.is-invalid .c-field::after,
+    .c-form__item.is-invalid .c-select::before,
+    .c-form__item.is-invalid .c-unit::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      right: var(--space-xs);
+      width: 1.1em;
+      height: 1.1em;
+      translate: 0 -50%;
+      pointer-events: none;
+
+      background-color: var(--color-error);
+      mask: var(--fv-icon-warning) no-repeat center / contain;
+    }
+
+    /* Textarea: pin the icon to the top, not the vertical centre. */
+    .c-form__item.is-invalid .c-field:has(.c-textarea)::after {
+      top: 0.85em;
+      translate: 0 0;
+    }
+
+    /* Select / unit already park a glyph on the right; sit just left of it and
+       widen the control's right padding (only while invalid) so neither the
+       chevron/€ nor the field's own value slides under the warning. */
+    .c-form__item.is-invalid .c-select::before {
+      right: 2.5em;
+    }
+
+    .c-form__item.is-invalid .c-select__control {
+      padding-right: 3.7em;
+    }
+
+    .c-form__item.is-invalid .c-unit--euro::before {
+      right: 3em;
+    }
+
+    .c-form__item.is-invalid .c-unit--euro .c-input {
+      padding-right: 4.2em;
+    }
+
+    /*
+      Injected error summary. The component ships only its error-tone color
+      (title + links); the box, spacing and the focusable container's focus
+      outline are the project's design. Note :focus (not only :focus-visible):
+      focus is moved here programmatically on a failed submit, which does not
+      always trigger :focus-visible, so the ring must show on plain :focus too.
+    */
+    .fv-summary {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2xs);
+      padding: var(--space-xs) var(--space-m);
+      border: 2px solid var(--color-error);
+      border-radius: var(--borderRadius);
+      background-color: color-mix(in srgb, var(--color-error) 8%, var(--color-bg-surface));
+    }
+
+    .fv-summary:focus,
+    .fv-summary:focus-visible {
+      outline: 2px solid var(--color-focus-ring-light);
+      outline-offset: var(--outlineOffset);
+    }
+
+    .fv-summary__list {
+      margin: 0;
+      padding-left: 1.25em;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3xs);
+    }
+
+    .fv-summary a:focus-visible {
+      outline: 2px solid var(--color-focus-ring-light);
+      outline-offset: var(--outlineOffset);
+    }
+
+    .c-cta {
+      align-self: flex-start;
+      padding: var(--space-2xs) var(--space-m);
+      border: 0;
+      border-radius: var(--borderRadius);
+      font: inherit;
+      font-weight: 600;
+      color: var(--color-text-on-accent);
+      background-color: var(--color-accent);
+      cursor: pointer;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <main class="shell">
+
+    <section class="hero">
+      <a class="back" href="../../../index.html">← Overview</a>
+      <h1>formValidation</h1>
+      <p>Accessible inline validation built on the native Constraint Validation API.</p>
+    </section>
+
+    <section class="stage" aria-label="Live demo">
+
+      <!--
+          Form validated by the native constraints declared in the markup.
+
+          Wiring
+            - data-js-module="formValidation" boots the module on the <form>.
+            - Each control (or radio/checkbox group) is wrapped in a
+              [data-fv-item] container that receives .is-invalid and holds the
+              .fv-error message.
+            - Rules are native attributes: required, type="email", minlength,
+              pattern (+ title as the hint), min/max. One extra rule:
+              data-fv-equals="#field" for confirmation fields.
+            - Messages can be overridden per field via data-fv-* attributes,
+              and ALL defaults are maintained in one CMS-editable JSON block
+              (see <script data-fv-messages> below).
+
+          Progressive enhancement
+            - Without JavaScript the browser validates the form and shows its
+              own bubbles. With JS the module suppresses those (novalidate, set
+              from JS) and renders persistent, localized inline messages instead.
+
+          Accessibility
+            - Invalid fields get aria-invalid and an aria-describedby link
+              to a persistent inline message (NOT a live region). On a
+              failed submit an error summary is injected at the top of the
+              form and focus moves to it — the single announcement channel.
+              Messages clear live as each field is fixed.
+        -->
+
+      <!--
+          CMS-MAINTAINED MESSAGES — an OVERRIDE, not a full copy.
+          ----------------------------------------------------------------------
+          The module already ships complete de/en defaults inside
+          formValidation.js (the MESSAGES map). This page-level block does NOT
+          repeat them — it is merged OVER those built-ins, per locale and per
+          message id (see readCmsMessages / mergeMessages in the JS). So you
+          only list what you actually want to change; every id you omit keeps
+          its built-in default, and any locale you omit is untouched.
+
+          That is the single hook a CMS needs: change one message, change many,
+          or add a whole new locale — all without touching the JS. Here we
+          override just two English messages so the effect is visible in this
+          en page (submit empty → the two reworded texts below appear, every
+          other message is still the JS default). {placeholders} are filled
+          from the live field: {minLength} {maxLength} {valueLength} {min} {max}.
+        -->
+
+      <script type="application/json" data-fv-messages>
+        {
+          "en": {
+            "valueMissing": "This field is required — please complete it.",
+            "tooShort": "A little longer, please: at least {minLength} characters (you have {valueLength})."
+          }
+        }
+      </script>
+
+      <p class="stage__intro">
+        <strong>Try submitting it empty.</strong> An error summary appears at
+        the top and focus jumps to it; its links jump to each field, every
+        invalid field gets an inline message, and both the summary and the
+        messages clear one by one as you fix them. The messages follow
+        <code>&lt;html lang&gt;</code> (this page is <code>en</code>) and come
+        from the module's built-in defaults, which a single CMS-editable JSON
+        block can override (here two English texts are reworded), while
+        individual fields can override further — the email below carries a
+        custom message.
+      </p>
+
+      <form class="c-form" data-js-module="formValidation" action="#" method="post">
+
+        <!-- Required text + minimum length -> valueMissing / tooShort -->
+        <div class="c-form__item" data-fv-item>
+          <label class="c-label" for="fv-name">Name</label>
+          <span class="c-field">
+            <input class="c-input" type="text" id="fv-name" name="name" required minlength="2" autocomplete="name" />
+          </span>
+        </div>
+
+        <!-- Required + native email check, with a custom message override -->
+        <div class="c-form__item" data-fv-item>
+          <label class="c-label" for="fv-email">Email</label>
+          <span class="c-field">
+            <input class="c-input" type="email" id="fv-email" name="email" required autocomplete="email"
+              data-fv-type="We need a valid email address to reply to you." />
+          </span>
+        </div>
+
+        <!-- Cross-field rule: must match the field selected by data-fv-equals -->
+        <div class="c-form__item" data-fv-item>
+          <label class="c-label" for="fv-email2">Repeat email</label>
+          <span class="c-field">
+            <input class="c-input" type="email" id="fv-email2" name="email2" required autocomplete="email"
+              data-fv-equals="#fv-email" />
+          </span>
+        </div>
+
+        <!-- Pattern; the title is the format hint shown to sighted and AT users -->
+        <div class="c-form__item" data-fv-item>
+          <label class="c-label" for="fv-zip">Postal code</label>
+          <span class="c-field">
+            <input class="c-input" type="text" id="fv-zip" name="zip" inputmode="numeric" pattern="\d{5}" required
+              title="Five digits, e.g. 20095." />
+          </span>
+        </div>
+
+        <!-- Integer: a native pattern replaces the old data-pristine-type="integer" -->
+        <div class="c-form__item" data-fv-item>
+          <label class="c-label" for="fv-guests">Guests (whole number)</label>
+          <span class="c-field">
+            <input class="c-input" type="text" id="fv-guests" name="guests" inputmode="numeric" pattern="[0-9]+" required
+              title="A whole number, e.g. 4." />
+          </span>
+        </div>
+
+        <!-- Number range -> valueMissing / rangeUnderflow / rangeOverflow -->
+        <div class="c-form__item" data-fv-item>
+          <label class="c-label" for="fv-seats">Seats (5–10)</label>
+          <span class="c-field">
+            <input class="c-input" type="number" id="fv-seats" name="seats" min="5" max="10" required />
+          </span>
+        </div>
+
+        <!-- Number with a unit badge; the input stays a plain number field -->
+        <div class="c-form__item" data-fv-item>
+          <label class="c-label" for="fv-budget">Budget</label>
+          <span class="c-unit c-unit--euro">
+            <input class="c-input" type="number" id="fv-budget" name="budget" min="0" required />
+          </span>
+        </div>
+
+        <!-- Required select -> valueMissing (select variant); custom chevron -->
+        <div class="c-form__item" data-fv-item>
+          <label class="c-label" for="fv-topic">Topic</label>
+          <span class="c-select">
+            <select class="c-select__control" id="fv-topic" name="topic" required>
+              <option value="">Please choose…</option>
+              <option value="sales">Sales</option>
+              <option value="support">Support</option>
+              <option value="other">Other</option>
+            </select>
+          </span>
+        </div>
+
+        <!-- Required radio group -> valueMissing (radio variant). One
+             data-fv-item on the fieldset = one shared message for the group. -->
+        <fieldset class="c-form__radioGroup" data-fv-item>
+          <legend class="c-form__legend">How should we contact you?</legend>
+
+          <div class="c-form__item">
+            <input class="c-radio" type="radio" id="fv-contact-email" name="contact" value="email" required />
+            <label class="c-radio__label" for="fv-contact-email">
+              By email
+              <span class="c-radio__box" aria-hidden="true"></span>
+              <span class="c-radio__checkmark" aria-hidden="true"></span>
+            </label>
+          </div>
+
+          <div class="c-form__item">
+            <input class="c-radio" type="radio" id="fv-contact-phone" name="contact" value="phone" required />
+            <label class="c-radio__label" for="fv-contact-phone">
+              By phone
+              <span class="c-radio__box" aria-hidden="true"></span>
+              <span class="c-radio__checkmark" aria-hidden="true"></span>
+            </label>
+          </div>
+
+          <div class="c-form__item">
+            <input class="c-radio" type="radio" id="fv-contact-post" name="contact" value="post" required />
+            <label class="c-radio__label" for="fv-contact-post">
+              By mail
+              <span class="c-radio__box" aria-hidden="true"></span>
+              <span class="c-radio__checkmark" aria-hidden="true"></span>
+            </label>
+          </div>
+        </fieldset>
+
+        <!-- Required textarea -->
+        <div class="c-form__item" data-fv-item>
+          <label class="c-label" for="fv-message">Message</label>
+          <span class="c-field">
+            <textarea class="c-textarea" id="fv-message" name="message" required minlength="10"
+              placeholder="Your message"></textarea>
+          </span>
+        </div>
+
+        <!-- Required consent checkbox -> valueMissing (checkbox variant) -->
+        <div class="c-form__item" data-fv-item>
+          <input class="c-checkbox" type="checkbox" id="fv-consent" name="consent" required />
+          <label class="c-checkbox__label" for="fv-consent">
+            I agree to the terms and conditions.
+            <span class="c-checkbox__box" aria-hidden="true"></span>
+            <span class="c-checkbox__checkmark" aria-hidden="true"></span>
+          </label>
+        </div>
+
+        <div class="c-form__actions">
+          <button class="c-cta" type="submit">
+            <span class="c-cta__label">Submit</span>
+          </button>
+        </div>
+
+      </form>
+
+    </section>
+
+  </main>
+
+</body>
+
 </html>

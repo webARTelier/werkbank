@@ -1,1 +1,72 @@
-// formValidation styles
+// =============================================================
+// formValidation — validation-state styles ONLY
+// =============================================================
+//
+// formValidation stays behaviour-first: it does not style your form fields
+// (inputs, selects, radios, checkboxes stay entirely the consuming project's
+// design — demo.html shows one fully worked example, including the freely
+// designable radio/checkbox pattern and the select chevron). What DOES ship
+// here is the one thing the component itself owns: how the invalid state and
+// the injected message look. Everything hangs off the component's own
+// contract hooks, so no project class names are assumed:
+//
+//   - [data-fv-item].is-invalid  a field's item container while it is invalid
+//   - .fv-error                  the injected message element (NOT a live
+//                                region; announced via the summary, see JS)
+//   - form.is-submitted          on the form after the first submit attempt
+//                                (not styled here; hook for the project)
+//
+// Also style the field's own :focus-visible ring in your project — that
+// part deliberately stays out of the component (see the CLAUDE.md focus-ring
+// convention; that is why _focus.scss is not @used here).
+
+
+
+:root {
+
+  // Error tone maps to the shared semantic token
+  // (see _shared/scss/_colors_semantic.scss).
+  --fv-error-color: var(--color-error);
+  --fv-error-font-size: 0.85em;
+}
+
+
+
+// The invalid field itself: recolor the border of whatever control sits
+// inside the invalid item. Scoped to the component's own item hook so no
+// project markup is assumed; radios/checkboxes (usually visually hidden and
+// re-drawn by the project) are covered by the project's own .is-invalid
+// styling.
+[data-fv-item].is-invalid :is(input, select, textarea) {
+  border-color: var(--fv-error-color);
+}
+
+
+
+// The injected message (tied to the field via aria-describedby; not a live
+// region — announcement happens through the summary below).
+.fv-error {
+  display: block;
+
+  font-size: var(--fv-error-font-size);
+  line-height: 1.4;
+
+  color: var(--fv-error-color);
+}
+
+
+
+// The injected error summary (focusable region at the top of the form; see the
+// JS). As with everything else the component owns only its error TONE here —
+// the title and the field links carry the error color. The box itself (border,
+// padding, spacing, and the container's :focus outline) is the consuming
+// project's design; demo.html shows one worked example.
+.fv-summary__title {
+  margin: 0;
+  font-weight: 600;
+  color: var(--fv-error-color);
+}
+
+.fv-summary a {
+  color: var(--fv-error-color);
+}
