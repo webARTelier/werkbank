@@ -1,5 +1,13 @@
 # UI Components
 
+## Component authoring standards
+
+When building or reworking a component, follow `docs/componentStandards.md` — the
+distilled checklist for the file set, the `init` contract, JS/SCSS style,
+progressive enhancement, accessibility and the demo/readme/snippet structure
+(derived from the already-reworked components). Note in particular: code comment
+text is wrapped at **78 characters**.
+
 ## Naming convention: files & folders
 
 Folder and file names are written in **camelCase**.
