@@ -1,0 +1,1 @@
+:root{--marquee-gap:var(--space-l)}[data-marquee-container]{overflow:hidden;display:flex}[data-marquee-animated]{flex:0 0 auto;padding-inline-end:var(--marquee-gap);max-inline-size:none;white-space:nowrap}

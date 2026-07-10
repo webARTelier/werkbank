@@ -1,0 +1,73 @@
+<!--
+  marquee — copy-paste snippet
+  ============================================================================
+  Copy the block(s) below into your own project.
+
+  1) In <head> (or before </body>): load the shared styles, this component's
+     stylesheet and the boot script. boot.min.js lazily loads the marquee
+     module as soon as it finds data-js-module="marquee" in the DOM — you do
+     not import marquee.js yourself. Adjust the paths to where you serve
+     /dist.
+
+       <link rel="stylesheet" href="/dist/css/shared.min.css" />
+       <link rel="stylesheet" href="/dist/css/marquee.min.css" />
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+  2) Place the fragment where the ticker should appear. The module element
+     carries data-js-module="marquee" and contains the clipping
+     [data-marquee-container] with ONE scrolling [data-marquee-animated]
+     track. The script clones the track often enough for a seamless loop
+     (clones are aria-hidden + inert) and drives it with the Web Animations
+     API. It is a progressive enhancement — without JavaScript the strip is
+     a static, fully readable row and the pause button stays hidden.
+
+  Wiring
+    - data-js-module="marquee" goes on the outer module element.
+      (Combine with other modules via a comma: data-js-module="a,marquee".)
+    - The pause/play <button data-marquee-toggle> is strongly recommended:
+      endlessly auto-moving content needs a user-operable stop mechanism
+      (WCAG 2.2.2). Keep it OUTSIDE [data-marquee-container] so it is not
+      cloned, keep its label constant ("Pause") — the script reflects the
+      state via aria-pressed — and keep the `hidden` attribute: the script
+      reveals the button once it is functional.
+    - The m-marquee* classes are styling hooks for YOUR css only; the JS
+      binds exclusively to the data attributes.
+
+  Notes / Configuration (all optional, on the module element)
+    - data-marquee-direction="left|right"   visual scroll direction
+                                            (default "left"; RTL-safe)
+    - data-marquee-start="always|overflow"  "overflow" animates only while
+                                            the content is wider than the
+                                            visible track (default "always")
+    - data-marquee-duration="8"             seconds per full track cycle
+    - data-marquee-speed="80"               pixels per second; constant
+                                            velocity, takes precedence over
+                                            duration when set
+    - data-marquee-clones="3"               minimum clone count (raised
+                                            automatically for wide viewports)
+    - --marquee-gap (CSS custom property)   space between repetitions,
+                                            e.g. style="--marquee-gap: 96px"
+
+  Behaviour / Accessibility
+    - Hover over the track pauses; so does keyboard focus inside it.
+    - prefers-reduced-motion: reduce starts the marquee paused; the toggle
+      is the explicit opt-in to motion.
+    - The script toggles is-running / is-paused on the module element as
+      styling hooks (e.g. hide the pause button while nothing runs).
+-->
+
+
+
+<div class="m-marquee" data-js-module="marquee">
+
+  <button class="m-marquee__toggle" type="button" data-marquee-toggle hidden>
+    Pause
+  </button>
+
+  <div class="m-marquee__strip" data-marquee-container>
+    <p class="m-marquee__track" data-marquee-animated>
+      +++ Breaking: marquee is back — as a progressive enhancement +++
+    </p>
+  </div>
+
+</div>

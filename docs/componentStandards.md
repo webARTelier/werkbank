@@ -192,8 +192,10 @@ Boot (`_shared/js/boot.js`) lazily imports the module when it sees
 - Use **logical properties** (`inset-inline-end`, `inline-size`) so RTL /
   vertical writing modes stay correct.
 - **Behaviour-only components ship a stub stylesheet** and leave visuals
-  (including focus) to the consuming project (`tabs`, `marquee`, `formValidation`,
-  `inputCharCount`, `inlineSVG`, `scaleSVG`).
+  (including focus) to the consuming project (`tabs`, `formValidation`,
+  `inputCharCount`, `inlineSVG`, `scaleSVG`). A component may also ship *only*
+  the rules it cannot work without (e.g. `marquee`'s clipping flex row) and
+  still leave every visual to the project.
 
 
 ## 7. `<name>.html` (copy-paste snippet)

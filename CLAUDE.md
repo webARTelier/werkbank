@@ -84,8 +84,9 @@ contrasts with its own surface:
 - **Why opt-in, not a global `:focus-visible`.** Per-element application lets each
   element choose its tone (and offset) and keeps the ring out of places that style
   focus differently (see `accordion` above). Behaviour-only components ship a stub
-  stylesheet (`tabs`, `marquee`, `inputCharCount`, `formValidation`, …) — they carry
-  no CSS by design, so the consuming project styles their focus.
+  stylesheet (`tabs`, `inputCharCount`, `formValidation`, …) — they carry
+  no CSS by design (`marquee` ships only structural rules), so the consuming
+  project styles their focus.
 - `_focus.scss` emits **no CSS on its own** (mixin only), so it is *not* `@use`d by
   `shared.scss`; only the components that apply a ring pull it in. The tone tokens,
   however, live in `shared.min.css` so they resolve at runtime.

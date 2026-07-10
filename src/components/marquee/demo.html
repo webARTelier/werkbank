@@ -1,37 +1,397 @@
 <!DOCTYPE html>
 <html lang="en">
 
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>marquee – Demo</title>
-    <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
-    <link rel="stylesheet" href="../../../dist/css/marquee.min.css" />
-    <script type="module" src="../../../dist/js/boot.min.js"></script>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>marquee – Demo</title>
+  <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
+  <link rel="stylesheet" href="../../../dist/css/marquee.min.css" />
+  <!-- Example 6 embeds a countdown in the ticker, so its styles load too. -->
+  <link rel="stylesheet" href="../../../dist/css/countdown.min.css" />
+  <script type="module" src="../../../dist/js/boot.min.js"></script>
 
-    <!-- for development only -->
-     <script type="module" src="../../../src/_shared/js/dev_pageInfo.js"></script>
-     <script type="module" src="../../../src/_shared/js/dev_a11yInspector.js"></script>
-     <script type="module" src="../../../src/_shared/js/dev_qrCode.js"></script>
-    <!-- end for development only -->
+  <!-- for development only -->
+  <script type="module" src="../../../src/_shared/js/dev_pageInfo.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_a11yInspector.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_qrCode.js"></script>
+  <!-- end for development only -->
 
-  </head>
+  <!--
+      DEMO-ONLY STYLES
+      ----------------------------------------------------------------------
+      marquee.min.css ships only the structure the animation needs (clipping
+      flex row, non-shrinking track, --marquee-gap). Everything below — the
+      look of the strip, the pause button and its states — is ONE example of
+      how a consuming project styles it via the is-running / is-paused hooks
+      the JS writes; none of it is part of the component. (Tokens like
+      --space-* / --color-* come from shared.min.css.)
+  -->
 
-  <body>
+  <style>
+    .demo {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2xl);
+    }
 
-    <main class="shell">
+    .demo__example {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
 
-      <section class="hero">
-        <a class="back" href="../../../index.html">← Overview</a>
-        <h1>marquee</h1>
-        <p>Infinitely scrolling text (marquee).</p>
-      </section>
+    .demo__example h2 {
+      font-size: 1.1rem;
+      color: var(--color-text);
+    }
 
-      <section class="stage" aria-label="Live demo">
-      </section>
+    /* Direct children only — the marquee track is a <p> too and must
+       never inherit a prose width clamp. */
+    .demo__example > p {
+      max-width: 60ch;
+      color: var(--color-text-muted);
+    }
 
-    </main>
+    /* The module element: strip + pause button stacked. */
+    .m-marquee {
+      display: grid;
+      gap: var(--space-2xs);
+      justify-items: end;
+    }
 
-  </body>
+    /* The clipping viewport, designed as a bordered strip. Horizontal
+       padding stays off the container on purpose — the clip edge IS the
+       design edge of a marquee. */
+    .m-marquee__strip {
+      width: 100%;
+      border-block: 1px solid var(--color-border);
+      padding-block: var(--space-xs);
+      background-color: var(--color-bg-surface);
+    }
+
+    .m-marquee__track {
+      margin: 0;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    /*
+      The pause/play toggle. Shown only while the marquee actually runs —
+      is-running is the hook the JS writes for exactly this. aria-pressed
+      carries the paused state (the label stays "Pause", per the APG
+      toggle-button pattern), so the pressed style hangs off the attribute.
+    */
+    .m-marquee__toggle {
+      border: 1px solid var(--color-border);
+      border-radius: var(--borderRadius);
+      padding: var(--space-3xs) var(--space-xs);
+      font: inherit;
+      font-size: 0.8rem;
+      color: var(--color-text);
+      background-color: transparent;
+      cursor: pointer;
+    }
+
+    .m-marquee:not(.is-running) .m-marquee__toggle {
+      display: none;
+    }
+
+    .m-marquee__toggle[aria-pressed="true"] {
+      color: var(--color-bg);
+      background-color: var(--color-text);
+    }
+
+    /* Keyboard focus ring — the component leaves this to the project. */
+    .m-marquee__toggle:focus-visible,
+    .m-marquee__strip a:focus-visible {
+      outline: 2px solid var(--color-focus-ring-light);
+      outline-offset: var(--outlineOffset);
+    }
+
+    /* While the user paused, dim the strip a touch (is-paused hook). */
+    .m-marquee.is-paused .m-marquee__strip {
+      opacity: 0.6;
+    }
+
+    /* Example 3: badges inside the track. */
+    .tag {
+      display: inline-block;
+      margin-inline-end: var(--space-xs);
+      border: 1px solid var(--color-border-strong);
+      border-radius: 999px;
+      padding: var(--space-3xs) var(--space-xs);
+      font-size: 0.85rem;
+    }
+
+    /* Example 3: a drag-to-resize testbed so the overflow re-evaluation
+       can be watched live. */
+    .resizer {
+      resize: horizontal;
+      overflow: hidden;
+      min-width: 14rem;
+      max-width: 100%;
+      border: 1px dashed var(--color-border-strong);
+      border-radius: var(--borderRadius);
+      padding: var(--space-xs);
+    }
+
+    /*
+      Example 6: a countdown living inside the ticker. The countdown is a
+      real module (data-js-module="countdown"); the marquee clones its
+      track and countdown.js mirrors the live values into the (inert)
+      clones — the documented marquee↔countdown integration. countdown.min.css
+      renders the countdown as a big vertical block by default; the rules
+      below only shrink it and lay it out inline so it rides inside a
+      one-line strip. They are demo styling, not part of either component.
+    */
+    .demo__countdown .m-marquee__track {
+      display: inline-flex;
+      align-items: baseline;
+      gap: var(--space-xs);
+    }
+
+    .demo__countdown .m-countdown {
+      flex-direction: row;
+      align-items: baseline;
+      gap: var(--space-2xs);
+
+      --countdown-value-size: 1rem;
+      --countdown-label-size: 0.7rem;
+      --countdown-gap: var(--space-3xs);
+    }
+
+    .demo__countdown .m-countdown__toggle {
+      font-size: 0.7rem;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <main class="shell">
+
+    <section class="hero">
+      <a class="back" href="../../../index.html">← Overview</a>
+      <h1>marquee</h1>
+      <p>An infinitely scrolling content strip (news ticker), added as a progressive enhancement on a static row.</p>
+    </section>
+
+    <section class="stage" aria-label="Live demo">
+
+      <!--
+          One marquee per module element, enabled with
+          data-js-module="marquee" on the wrapper.
+
+          Wiring
+            - Inside the wrapper: [data-marquee-container] (the clipping
+              viewport) with ONE [data-marquee-animated] track. The script
+              clones the track for a seamless loop and animates it via the
+              Web Animations API — no inline styles.
+            - The <button data-marquee-toggle hidden> sits OUTSIDE the
+              container (so it is not cloned) and is revealed by the JS.
+
+          Progressive enhancement
+            - Without JavaScript each strip below is a static, readable row;
+              no clones exist and no pause button appears.
+
+          Accessibility
+            - Clones are aria-hidden + inert, so assistive tech and the tab
+              order only ever meet the original track.
+            - Hover and keyboard focus inside the track pause the motion;
+              the toggle (aria-pressed) pauses it durably — WCAG 2.2.2.
+            - prefers-reduced-motion: reduce starts everything here paused;
+              the toggle is the explicit opt-in.
+        -->
+
+      <p class="stage__intro">
+        <strong>Watch the strips scroll.</strong> Hovering a strip pauses it,
+        tabbing into one pauses it too, and the <em>Pause</em> button parks it
+        until you press play again. With
+        <code>prefers-reduced-motion: reduce</code> every strip starts paused.
+      </p>
+
+      <div class="demo">
+
+        <!-- 1) Default: scrolls left, always, default speed -->
+        <div class="demo__example">
+          <h2>Default ticker</h2>
+          <p>
+            No options set: scrolls to the left, always, one cycle every
+            8&nbsp;seconds. The link inside shows the focus pause.
+          </p>
+          <div class="m-marquee" data-js-module="marquee">
+            <button class="m-marquee__toggle" type="button" data-marquee-toggle hidden>
+              Pause
+            </button>
+            <div class="m-marquee__strip" data-marquee-container>
+              <p class="m-marquee__track" data-marquee-animated>
+                +++ Breaking: marquee is back — as a progressive enhancement
+                +++ <a href="../../../index.html">All components</a> +++
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2) Direction, speed and gap overrides -->
+        <div class="demo__example">
+          <h2>Scrolls right, slower, wider gap</h2>
+          <p>
+            <code>data-marquee-direction="right"</code>,
+            <code>data-marquee-duration="16"</code> and a per-instance
+            <code>--marquee-gap</code> override.
+          </p>
+          <div class="m-marquee" style="--marquee-gap: 8rem" data-js-module="marquee"
+            data-marquee-direction="right" data-marquee-duration="16">
+            <button class="m-marquee__toggle" type="button" data-marquee-toggle hidden>
+              Pause
+            </button>
+            <div class="m-marquee__strip" data-marquee-container>
+              <p class="m-marquee__track" data-marquee-animated>
+                Slow and steady — the other way round.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3) Overflow-only start mode in a resizable testbed -->
+        <div class="demo__example">
+          <h2>Only while it overflows</h2>
+          <p>
+            <code>data-marquee-start="overflow"</code>: the strip animates
+            only while its content is wider than the box. Drag the handle in
+            the bottom-right corner — make the box wide enough and the
+            marquee stops and cleans up its clones; narrow it and it starts
+            again.
+          </p>
+          <div class="resizer">
+            <div class="m-marquee" data-js-module="marquee" data-marquee-start="overflow"
+              data-marquee-duration="12">
+              <button class="m-marquee__toggle" type="button" data-marquee-toggle hidden>
+                Pause
+              </button>
+              <div class="m-marquee__strip" data-marquee-container>
+                <div class="m-marquee__track" data-marquee-animated>
+                  <span class="tag">accordion</span>
+                  <span class="tag">countdown</span>
+                  <span class="tag">dialog</span>
+                  <span class="tag">formValidation</span>
+                  <span class="tag">inlineSVG</span>
+                  <span class="tag">tabs</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4) RTL context: the translate range is mirrored automatically -->
+        <div class="demo__example">
+          <h2>RTL context</h2>
+          <p>
+            The same default options inside <code>dir="rtl"</code>. The
+            script mirrors the translate range, so the loop stays seamless
+            in right-to-left layouts too.
+          </p>
+          <div dir="rtl">
+            <div class="m-marquee" data-js-module="marquee">
+              <button class="m-marquee__toggle" type="button" data-marquee-toggle hidden>
+                Pause
+              </button>
+              <div class="m-marquee__strip" data-marquee-container>
+                <p class="m-marquee__track" data-marquee-animated>
+                  +++ عاجل: شريط الأخبار يعمل في الاتجاهين +++
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5) Constant pixel speed regardless of content length -->
+        <div class="demo__example">
+          <h2>Constant pixel speed</h2>
+          <p>
+            <code>data-marquee-speed="80"</code>: both strips move at the same
+            80&nbsp;px/s even though their text differs in length. With
+            <code>data-marquee-duration</code> the shorter one would finish its
+            cycle in the same time and so appear slower.
+          </p>
+          <div class="m-marquee" data-js-module="marquee" data-marquee-speed="80">
+            <button class="m-marquee__toggle" type="button" data-marquee-toggle hidden>
+              Pause
+            </button>
+            <div class="m-marquee__strip" data-marquee-container>
+              <p class="m-marquee__track" data-marquee-animated>
+                Short line.
+              </p>
+            </div>
+          </div>
+          <div class="m-marquee" data-js-module="marquee" data-marquee-speed="80">
+            <button class="m-marquee__toggle" type="button" data-marquee-toggle hidden>
+              Pause
+            </button>
+            <div class="m-marquee__strip" data-marquee-container>
+              <p class="m-marquee__track" data-marquee-animated>
+                A noticeably longer line of ticker text that still travels at
+                exactly the same pixel speed as the short one above.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6) A countdown living inside the ticker (marquee↔countdown) -->
+        <div class="demo__example demo__countdown">
+          <h2>Countdown inside the ticker</h2>
+          <p>
+            The <code>countdown</code> component is placed inside the marquee.
+            The marquee clones its track for the seamless loop and
+            <code>countdown.js</code> mirrors its live values into the (inert)
+            clones, so every copy stays in sync — the documented
+            marquee&nbsp;↔&nbsp;countdown integration. Seconds are omitted on
+            purpose: a per-second digit width change would force the marquee to
+            re-measure constantly, so a ticker reads best on days / hours /
+            minutes.
+          </p>
+          <div class="m-marquee" data-js-module="marquee" data-marquee-speed="70">
+            <button class="m-marquee__toggle" type="button" data-marquee-toggle hidden>
+              Pause
+            </button>
+            <div class="m-marquee__strip" data-marquee-container>
+              <div class="m-marquee__track" data-marquee-animated>
+                <span>+++ Sale ends in</span>
+                <div class="m-countdown" data-js-module="countdown"
+                  data-countdown-date="2027-01-01T00:00:00+01:00" data-countdown-label="the sale end">
+                  <div class="m-countdown__display" data-countdown-display>
+                    <div class="m-countdown__units" data-countdown-units>
+                      <div class="m-countdown__unit" data-countdown-unit>
+                        <span class="m-countdown__value" data-countdown-days>0</span>
+                        <span class="m-countdown__label">Days</span>
+                      </div>
+                      <div class="m-countdown__unit" data-countdown-unit>
+                        <span class="m-countdown__value" data-countdown-hours>0</span>
+                        <span class="m-countdown__label">Hours</span>
+                      </div>
+                      <div class="m-countdown__unit" data-countdown-unit>
+                        <span class="m-countdown__value" data-countdown-minutes>0</span>
+                        <span class="m-countdown__label">Minutes</span>
+                      </div>
+                    </div>
+                    <span class="m-countdown__sr" data-countdown-summary></span>
+                  </div>
+                </div>
+                <span>— don't miss it! +++</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</body>
+
 </html>

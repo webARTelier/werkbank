@@ -48,9 +48,10 @@
  * Marquee integration (optional)
  * ------------------------------
  * The usual case is a standalone countdown with no marquee involved. When the
- * countdown is placed inside a marquee (.c-marquee) that clones its content for
- * the scrolling effect, those clones carry duplicate countdown markup that is
- * never initialized as its own module. syncMirrors therefore pushes the current
+ * countdown is placed inside a marquee module (data-js-module="marquee") that
+ * clones its content for the scrolling effect, those clones carry duplicate
+ * countdown markup that is never initialized as its own module. syncMirrors
+ * therefore pushes the current
  * values into the sibling clones so they stay in sync with the live instance.
  * Without a surrounding marquee this is simply a no-op.
  * ----------------------------------------------------------------------------
@@ -383,7 +384,9 @@ class Countdown {
   // mirrors the current countdown values into cloned marquee instances.
   // No-op in the common case where the countdown runs without a marquee.
   syncMirrors = ({ d, h, m, s }) => {
-    const marquee = this.module.closest(".c-marquee")
+    // The marquee is detected via its module attribute, not a styling
+    // class — classes stay free for the consuming project's CSS.
+    const marquee = this.module.closest("[data-js-module~='marquee']")
     if (!(marquee instanceof HTMLElement)) return
 
     const mirrors = marquee.querySelectorAll("[data-js-module~='countdown']")
