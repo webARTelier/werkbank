@@ -1,1 +1,51 @@
-// inputCharCount styles
+// =============================================================
+// inputCharCount — the one style the component must own
+// =============================================================
+//
+// inputCharCount is behaviour-first: the *look* of the counter is entirely
+// the consuming project's design, so this stylesheet ships almost nothing.
+// The single exception is an accessibility necessity, not a design choice:
+// the injected status region MUST be visually hidden (it exists only to be
+// announced by assistive tech), so the component owns that one rule rather
+// than hoping every project remembers to add it.
+//
+// Everything else hangs off the component's own contract hooks, which the JS
+// only ever WRITES (never reads back) — style them freely:
+//
+//   .icc-counter / [data-icc-counter]  the visible counter after the field
+//                                      (aria-hidden; sighted affordance only)
+//   .is-atLimit                        set on the field once the maxlength
+//                                      budget is spent (a valid state, not an
+//                                      error — no aria-invalid is set)
+//
+// The counter is a plain sibling right after the field, so a project can
+// reach it from the field's state, e.g.:
+//
+//   .icc-counter                     { color: var(--color-text-muted); }
+//   .is-atLimit + .icc-counter       { color: var(--color-error); }
+//
+// The field's own :focus-visible ring is the project's too (see the
+// CLAUDE.md focus-ring convention; that is why _focus.scss is not @used
+// here). demo.html shows one fully worked example design.
+
+
+
+// The injected status region: in the DOM and announced (role="status",
+// aria-live="polite"), but removed from the visual/layout flow. Standard
+// "visually hidden" recipe — accessible to AT, invisible to sighted users.
+.icc-srStatus {
+  position: absolute;
+
+  margin: -1px;
+  border: 0;
+  padding: 0;
+  width: 1px;
+  height: 1px;
+
+  overflow: hidden;
+  
+  white-space: nowrap;
+  
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+}

@@ -1,0 +1,89 @@
+<!--
+  inputCharCount — copy-paste snippet
+  ============================================================================
+  Copy the block(s) below into your own project.
+
+  1) In <head> (or before </body>): load the shared styles, this component's
+     stylesheet and the boot script. boot.min.js lazily loads the
+     inputCharCount module as soon as it finds data-js-module="inputCharCount"
+     in the DOM — you do not import inputCharCount.js yourself. Adjust the
+     paths to where you serve /dist.
+
+       <link rel="stylesheet" href="/dist/css/shared.min.css" />
+       <link rel="stylesheet" href="/dist/css/inputCharCount.min.css" />
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+  2) Put data-js-module="inputCharCount" on EACH <input> / <textarea> that
+     should show a counter (one counter per field). The module injects two
+     siblings right after the field: a visible counter (.icc-counter,
+     aria-hidden) and a visually-hidden status region announced to assistive
+     tech. It is a progressive enhancement — without JavaScript the field
+     still works, and a maxlength is still enforced by the browser.
+
+  Wiring
+    - data-js-module="inputCharCount" goes on the field itself, not a wrapper.
+      (Combine with other modules via a comma: data-js-module="a,inputCharCount".)
+    - Add a native maxlength to switch from a plain count to "used / max" and
+      to enable the is-atLimit state; the browser then also enforces the limit
+      with or without JS.
+    - Give the field a <label> as usual — the counter is tied to the field via
+      aria-describedby, so it is read together with the label on focus.
+
+  Options (all optional; on the field)
+    - maxlength="N"          show "used / max" and set is-atLimit at the limit
+    - data-icc-countdown     show the remaining budget instead of the used
+                             count (needs maxlength)
+    - data-icc-text="…"      override the VISIBLE wording for this field
+                             (tokens: {count} {max} {remaining}); the spoken
+                             text keeps its natural-language locale wording
+
+  Localization
+    - Text ships in de/en, picked from <html lang> (e.g. lang="de-CH" -> de),
+      falling back to English. Tokens {count} {max} {remaining} are filled from
+      the live field.
+
+  Styling
+    - inputCharCount.min.css ships ONLY the visually-hidden rule for the status
+      region (an accessibility necessity). The visible counter and the field's
+      at-limit state are yours to style via the hooks the JS writes:
+        .icc-counter                the visible counter (right after the field)
+        .is-atLimit                 on the field once the maxlength is reached
+      e.g.  .is-atLimit + .icc-counter { color: var(--color-error); }
+      Style the field's own :focus-visible ring in your project too. The demo
+      (demo.html) shows one complete example design.
+-->
+
+
+
+<!-- Plain count (no limit) -->
+<label class="c-label" for="icc-bio">Short bio</label>
+<textarea
+  class="c-input"
+  id="icc-bio"
+  name="bio"
+  data-js-module="inputCharCount"
+></textarea>
+
+
+<!-- Used / max, with the browser-enforced limit -->
+<label class="c-label" for="icc-title">Title</label>
+<input
+  class="c-input"
+  type="text"
+  id="icc-title"
+  name="title"
+  maxlength="60"
+  data-js-module="inputCharCount"
+/>
+
+
+<!-- Countdown: show how many characters remain -->
+<label class="c-label" for="icc-tweet">Message</label>
+<textarea
+  class="c-input"
+  id="icc-tweet"
+  name="tweet"
+  maxlength="280"
+  data-icc-countdown
+  data-js-module="inputCharCount"
+></textarea>

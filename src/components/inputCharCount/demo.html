@@ -1,37 +1,186 @@
 <!DOCTYPE html>
 <html lang="en">
 
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>inputCharCount – Demo</title>
-    <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
-    <link rel="stylesheet" href="../../../dist/css/inputCharCount.min.css" />
-    <script type="module" src="../../../dist/js/boot.min.js"></script>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>inputCharCount – Demo</title>
+  <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
+  <link rel="stylesheet" href="../../../dist/css/inputCharCount.min.css" />
+  <script type="module" src="../../../dist/js/boot.min.js"></script>
 
-    <!-- for development only -->
-     <script type="module" src="../../../src/_shared/js/dev_pageInfo.js"></script>
-     <script type="module" src="../../../src/_shared/js/dev_a11yInspector.js"></script>
-     <script type="module" src="../../../src/_shared/js/dev_qrCode.js"></script>
-    <!-- end for development only -->
+  <!-- for development only -->
+  <script type="module" src="../../../src/_shared/js/dev_pageInfo.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_a11yInspector.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_qrCode.js"></script>
+  <!-- end for development only -->
 
-  </head>
+  <!--
+      DEMO-ONLY STYLES
+      ----------------------------------------------------------------------
+      inputCharCount ships only the visually-hidden status-region rule (see
+      inputCharCount.min.css). Everything below — the field design AND the
+      look of the counter (.icc-counter) and its at-limit state — is ONE
+      example of how a consuming project styles it; none of it is part of the
+      component. (Tokens like --space-* / --color-* come from shared.min.css.)
+  -->
 
-  <body>
+  <style>
+    .c-form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-l);
+      max-width: 34rem;
+    }
 
-    <main class="shell">
+    .c-form__item {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3xs);
+    }
 
-      <section class="hero">
-        <a class="back" href="../../../index.html">← Overview</a>
-        <h1>inputCharCount</h1>
-        <p>Displays the character count of an input field.</p>
-      </section>
+    .c-label {
+      font-weight: 600;
+      color: var(--color-text);
+    }
 
-      <section class="stage" aria-label="Live demo">
-      </section>
+    .c-input {
+      padding: var(--space-2xs) var(--space-xs);
+      border: 1px solid var(--color-border);
+      border-radius: var(--borderRadius);
+      font: inherit;
+      color: var(--color-text);
+      background-color: var(--color-bg-surface);
+    }
 
-    </main>
+    .c-input:hover {
+      border-color: var(--color-border-strong);
+    }
 
-  </body>
+    textarea.c-input {
+      min-height: 5em;
+      resize: vertical;
+    }
+
+    /* Keyboard focus ring — the component leaves this to the project. */
+    .c-input:focus-visible {
+      outline: 2px solid var(--color-focus-ring-light);
+      outline-offset: var(--outlineOffset);
+    }
+
+    /*
+      The counter injected by the module. It is a plain sibling right after the
+      field, so it is styled directly and (below) reacts to the field's state.
+      aria-hidden is set by the JS, so this element is purely visual.
+    */
+    .icc-counter {
+      align-self: flex-end;
+      font-size: 0.8rem;
+      font-variant-numeric: tabular-nums;
+      color: var(--color-text-muted);
+    }
+
+    /*
+      At-limit is a state the JS writes on the FIELD (not an error — the field
+      is simply full). Recolor the field border and the sibling counter to make
+      the ceiling obvious. The counter follows the field in the DOM, so the
+      adjacent-sibling selector reaches it.
+    */
+    .c-input.is-atLimit {
+      border-color: var(--color-error);
+    }
+
+    .is-atLimit + .icc-counter {
+      color: var(--color-error);
+      font-weight: 600;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <main class="shell">
+
+    <section class="hero">
+      <a class="back" href="../../../index.html">← Overview</a>
+      <h1>inputCharCount</h1>
+      <p>A live character counter, added as a progressive enhancement on a plain input or textarea.</p>
+    </section>
+
+    <section class="stage" aria-label="Live demo">
+
+      <!--
+          A counter per field, enabled with data-js-module="inputCharCount"
+          on the field itself.
+
+          Wiring
+            - The attribute goes on each <input>/<textarea>. The module injects
+              a visible .icc-counter and a visually-hidden status region right
+              after it.
+            - A native maxlength turns the plain count into "used / max",
+              enables the is-atLimit state, AND is enforced by the browser.
+            - data-icc-countdown shows the remaining budget instead.
+            - data-icc-text overrides the visible wording per field.
+
+          Progressive enhancement
+            - Without JavaScript the fields still work and any maxlength is
+              still enforced by the browser. The counter is pure extra.
+
+          Accessibility
+            - The visible number is aria-hidden; the count is announced through
+              one polite status region, debounced so it is not read on every
+              keystroke, and tied to the field via aria-describedby so it is
+              read on focus. Reaching the limit is a state (is-atLimit), not an
+              error — no aria-invalid.
+        -->
+
+      <p class="stage__intro">
+        <strong>Type in the fields below.</strong> The counter updates as you
+        go; with a <code>maxlength</code> it shows how much of the budget is
+        used (or, in countdown mode, how much is left) and turns red once the
+        field is full — where the browser also stops accepting input. The text
+        follows <code>&lt;html lang&gt;</code> (this page is <code>en</code>).
+      </p>
+
+      <form class="c-form" action="#" method="post" novalidate>
+
+        <!-- Plain count: no maxlength -> "{count} characters" -->
+        <div class="c-form__item">
+          <label class="c-label" for="icc-bio">Short bio (no limit)</label>
+          <textarea class="c-input" id="icc-bio" name="bio" placeholder="Tell us about yourself…"
+            data-js-module="inputCharCount"></textarea>
+        </div>
+
+        <!-- Used / max: a native maxlength enables "used / max" + is-atLimit -->
+        <div class="c-form__item">
+          <label class="c-label" for="icc-title">Title (max 60)</label>
+          <input class="c-input" type="text" id="icc-title" name="title" maxlength="60"
+            placeholder="A short, punchy title" data-js-module="inputCharCount" />
+        </div>
+
+        <!-- Countdown: show the remaining budget instead of the used count -->
+        <div class="c-form__item">
+          <label class="c-label" for="icc-tweet">Message (countdown from 280)</label>
+          <textarea class="c-input" id="icc-tweet" name="tweet" maxlength="280" data-icc-countdown
+            placeholder="What's happening?" data-js-module="inputCharCount"></textarea>
+        </div>
+
+        <!-- Per-field visible override via data-icc-text (tokens interpolated) -->
+        <div class="c-form__item">
+          <label class="c-label" for="icc-code">Coupon code (max 12, custom wording)</label>
+          <input class="c-input" type="text" id="icc-code" name="code" maxlength="12"
+            data-icc-text="{count}/{max} used · {remaining} to go" placeholder="e.g. SUMMER25"
+            data-js-module="inputCharCount" />
+        </div>
+
+      </form>
+
+    </section>
+
+  </main>
+
+</body>
+
 </html>
