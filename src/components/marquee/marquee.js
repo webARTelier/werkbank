@@ -60,15 +60,11 @@
  *                                         the content is wider than the
  *                                         visible track (default
  *                                         "always").
- * - `data-marquee-duration="8"`           seconds one track needs for a
- *                                         full cycle (positive number).
- * - `data-marquee-speed="80"`             pixels per second — a
- *                                         constant-velocity alternative to
- *                                         `duration`, so tickers with
- *                                         differently long content still
- *                                         scroll at the same speed. When
- *                                         set it wins over `duration`
- *                                         (positive number).
+ * - `data-marquee-speed="80"`             pixels per second (positive
+ *                                         number, default 80) — a constant
+ *                                         velocity, so tickers with
+ *                                         differently long content all
+ *                                         scroll at the same pace.
  * - `data-marquee-clones="3"`             minimum number of generated
  *                                         clone tracks (positive
  *                                         integer); raised automatically
@@ -115,12 +111,14 @@ const defaults = {
   direction: "left",          // visual scroll direction (left|right)
   startAttr: "data-marquee-start",
   startMode: "always",        // always | overflow (run only on overflow)
-  durationAttr: "data-marquee-duration",
-  duration: 8,                // seconds one track needs for a full cycle
   speedAttr: "data-marquee-speed",
-  speed: null,                // px/s; when set it wins over `duration` and
-                              // keeps a constant velocity regardless of the
-                              // content width
+  speed: 80,                  // px/s — one constant velocity for the whole
+                              // cycle, so tickers with differently long
+                              // content all scroll at the same pace
+  // Seconds for one cycle, used only as a transient fallback before the
+  // track can be measured — speed needs a width to turn into a duration
+  // (see getCycleDuration).
+  fallbackCycleSeconds: 8,
   clonesAttr: "data-marquee-clones",
   clones: 3,                  // minimum number of generated clone tracks
 
@@ -179,9 +177,6 @@ class Marquee {
     this.startMode = this.readKeyword(
       config.startAttr, ["always", "overflow"], config.startMode
     )
-    this.duration = this.readNumber(
-      config.durationAttr, config.duration, false
-    )
     this.speed = this.readNumber(config.speedAttr, config.speed, false)
     this.minClones = this.readNumber(config.clonesAttr, config.clones, true)
 
@@ -190,10 +185,10 @@ class Marquee {
     this.isRunning = false
     this.resizeObserver = null
 
-    // Seconds per cycle actually applied to the running animations. In speed
-    // mode it is derived from the track width (see getCycleDuration); the
-    // fixed `duration` is the placeholder until the first measurement.
-    this.cycleDuration = this.duration
+    // Seconds per cycle actually applied to the running animations, always
+    // derived from the track width (see getCycleDuration). The fallback
+    // stands in until the first measurement.
+    this.cycleDuration = config.fallbackCycleSeconds
 
     // Border-box width of the source track at the last (re)build. The
     // seamless loop relies on every track being an exact, equal-width copy,
@@ -357,8 +352,8 @@ class Marquee {
   // the loop only stays seamless while all tracks are exact, equal-width
   // copies. A nested widget that mutates the original AFTER it was cloned
   // (e.g. a countdown injecting its pause control, or web fonts widening the
-  // text) changes that width, so we re-clone to restore parity — and, in
-  // speed mode, re-pace to the new width. Writes stay idempotent:
+  // text) changes that width, so we re-clone to restore parity — and
+  // re-pace to the new width. Writes stay idempotent:
   // re-cloning does not change the ORIGINAL track's width, so a
   // ResizeObserver notification caused by our own clone insertion settles
   // instead of looping.
@@ -468,16 +463,15 @@ class Marquee {
 
 
 
-  // Seconds for one full cycle (one track width of travel). In speed mode
-  // the duration is derived from the CURRENT track width so every marquee
-  // scrolls at the same pixel velocity regardless of how long its content
-  // is; the fixed `duration` is the fallback — including when the width
-  // cannot be measured yet.
+  // Seconds for one full cycle (one track width of travel), derived from the
+  // CURRENT track width so every marquee scrolls at the same pixel velocity
+  // regardless of how long its content is. The fixed fallback stands in only
+  // while the width cannot be measured yet.
   getCycleDuration = () => {
-    if (!this.speed) return this.duration
-
     const trackWidth = this.animated.offsetWidth
-    if (!Number.isFinite(trackWidth) || trackWidth <= 0) return this.duration
+    if (!Number.isFinite(trackWidth) || trackWidth <= 0) {
+      return this.config.fallbackCycleSeconds
+    }
 
     return trackWidth / this.speed
   }

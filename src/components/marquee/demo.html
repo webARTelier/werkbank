@@ -157,13 +157,26 @@
       align-items: baseline;
       gap: var(--space-2xs);
 
-      --countdown-value-size: 1rem;
+      --countdown-value-size: clamp(2.5rem, 8vw, 4.5rem);
       --countdown-label-size: 0.7rem;
       --countdown-gap: var(--space-3xs);
     }
 
     .demo__countdown .m-countdown__toggle {
       font-size: 0.7rem;
+    }
+
+    /*
+      Fixed-width number slots. Together with the countdown's tabular-nums
+      (set in countdown.scss) this keeps every value box the same width
+      whether it shows "9" or "59", so the track width stays constant as the
+      seconds tick and the marquee never re-measures/re-clones on a
+      digit-count change. 2ch covers the two-digit seconds/minutes/hours;
+      the days box widens once to its own content and then stays put.
+    */
+    .demo__countdown .m-countdown__value {
+      min-width: 2ch;
+      text-align: center;
     }
   </style>
 
@@ -219,8 +232,8 @@
         <div class="demo__example">
           <h2>Default ticker</h2>
           <p>
-            No options set: scrolls to the left, always, one cycle every
-            8&nbsp;seconds. The link inside shows the focus pause.
+            No options set: scrolls to the left, always, at the default
+            80&nbsp;px/s. The link inside shows the focus pause.
           </p>
           <div class="m-marquee" data-js-module="marquee">
             <button class="m-marquee__toggle" type="button" data-marquee-toggle hidden>
@@ -240,11 +253,11 @@
           <h2>Scrolls right, slower, wider gap</h2>
           <p>
             <code>data-marquee-direction="right"</code>,
-            <code>data-marquee-duration="16"</code> and a per-instance
+            <code>data-marquee-speed="40"</code> and a per-instance
             <code>--marquee-gap</code> override.
           </p>
           <div class="m-marquee" style="--marquee-gap: 8rem" data-js-module="marquee"
-            data-marquee-direction="right" data-marquee-duration="16">
+            data-marquee-direction="right" data-marquee-speed="40">
             <button class="m-marquee__toggle" type="button" data-marquee-toggle hidden>
               Pause
             </button>
@@ -268,7 +281,7 @@
           </p>
           <div class="resizer">
             <div class="m-marquee" data-js-module="marquee" data-marquee-start="overflow"
-              data-marquee-duration="12">
+              data-marquee-speed="60">
               <button class="m-marquee__toggle" type="button" data-marquee-toggle hidden>
                 Pause
               </button>
@@ -313,9 +326,9 @@
           <h2>Constant pixel speed</h2>
           <p>
             <code>data-marquee-speed="80"</code>: both strips move at the same
-            80&nbsp;px/s even though their text differs in length. With
-            <code>data-marquee-duration</code> the shorter one would finish its
-            cycle in the same time and so appear slower.
+            80&nbsp;px/s even though their text differs in length. Because the
+            pace is pixels-per-second, the longer line simply takes more time
+            for a full cycle instead of racing to keep up.
           </p>
           <div class="m-marquee" data-js-module="marquee" data-marquee-speed="80">
             <button class="m-marquee__toggle" type="button" data-marquee-toggle hidden>
@@ -348,10 +361,11 @@
             The marquee clones its track for the seamless loop and
             <code>countdown.js</code> mirrors its live values into the (inert)
             clones, so every copy stays in sync — the documented
-            marquee&nbsp;↔&nbsp;countdown integration. Seconds are omitted on
-            purpose: a per-second digit width change would force the marquee to
-            re-measure constantly, so a ticker reads best on days / hours /
-            minutes.
+            marquee&nbsp;↔&nbsp;countdown integration. The seconds tick too:
+            fixed-width number slots (demo CSS, on top of the countdown's
+            tabular-nums) keep the track width constant across the
+            <code>10&nbsp;→&nbsp;9</code> digit change, so the marquee never has
+            to re-measure while it runs.
           </p>
           <div class="m-marquee" data-js-module="marquee" data-marquee-speed="70">
             <button class="m-marquee__toggle" type="button" data-marquee-toggle hidden>
@@ -375,6 +389,10 @@
                       <div class="m-countdown__unit" data-countdown-unit>
                         <span class="m-countdown__value" data-countdown-minutes>0</span>
                         <span class="m-countdown__label">Minutes</span>
+                      </div>
+                      <div class="m-countdown__unit" data-countdown-unit>
+                        <span class="m-countdown__value" data-countdown-seconds>0</span>
+                        <span class="m-countdown__label">Seconds</span>
                       </div>
                     </div>
                     <span class="m-countdown__sr" data-countdown-summary></span>

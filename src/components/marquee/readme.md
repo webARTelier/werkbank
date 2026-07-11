@@ -45,8 +45,7 @@ wide viewports and cleans itself up when it is not needed.
 |---|---|
 | `data-marquee-direction="left\|right"` | visual scroll direction (default `left`). In an RTL context (`dir="rtl"`) the translate range is mirrored automatically, so both directions stay seamless. |
 | `data-marquee-start="always\|overflow"` | `overflow` animates only while the content is wider than the visible track; once everything fits, the animation stops and the clones are removed (default `always`) |
-| `data-marquee-duration="8"` | seconds one track needs for a full cycle (positive number) |
-| `data-marquee-speed="80"` | pixels per second — a constant-velocity alternative to `duration`, so tickers with differently long content scroll at the same speed. When set it takes precedence over `duration` (positive number). |
+| `data-marquee-speed="80"` | pixels per second (positive number, default `80`) — a constant velocity, so tickers with differently long content all scroll at the same pace |
 | `data-marquee-clones="3"` | minimum number of generated clone tracks (positive integer); raised automatically when a wide viewport needs more |
 
 Invalid values fall back to the defaults with a reporter warning.
@@ -114,8 +113,10 @@ The `countdown` component detects a surrounding marquee (via
 exact, equal-width copy, so the marquee re-clones whenever the source
 track's width changes (e.g. once, after a nested countdown injects its pause
 control, or after web fonts load). Content that changes width *frequently*
-(such as a per-second seconds unit) is therefore best avoided inside a
-ticker — mirror only the slow units (days / hours / minutes).
+(such as a per-second seconds unit crossing the `10 → 9` digit boundary)
+would trigger a re-clone on every change, so give it fixed-width slots — e.g.
+`min-width` plus `tabular-nums` on the countdown values, as `demo.html` does —
+so the box stays constant and the marquee never re-measures while it runs.
 
 ## Demo
 Open `demo.html` in the browser (requires a prior `gulp build`).
