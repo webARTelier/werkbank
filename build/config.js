@@ -40,10 +40,10 @@ module.exports = {
       p("src", "components", "inlineSVG", "inlineSVG.scss"),
       p("src", "components", "inputCharCount", "inputCharCount.scss"),
       p("src", "components", "marquee", "marquee.scss"),
-      p("src", "components", "responsiveVideo", "responsiveVideo.scss"),
       p("src", "components", "scaleSVG", "scaleSVG.scss"),
       p("src", "components", "stickyObserver", "stickyObserver.scss"),
       p("src", "components", "tabs", "tabs.scss"),
+      p("src", "components", "video", "video.scss"),
     ],
     outDir: p("dist", "css"),
     // A .scss file counts as "vendor" if it lives under one of these folders.
@@ -69,10 +69,10 @@ module.exports = {
       inlineSVG: p("src", "components", "inlineSVG", "inlineSVG.js"),
       inputCharCount: p("src", "components", "inputCharCount", "inputCharCount.js"),
       marquee: p("src", "components", "marquee", "marquee.js"),
-      responsiveVideo: p("src", "components", "responsiveVideo", "responsiveVideo.js"),
       scaleSVG: p("src", "components", "scaleSVG", "scaleSVG.js"),
       stickyObserver: p("src", "components", "stickyObserver", "stickyObserver.js"),
       tabs: p("src", "components", "tabs", "tabs.js"),
+      video: p("src", "components", "video", "video.js"),
 
       // shared helpers that are also lazily loadable modules
       debounce: p("src", "_shared", "js", "debounce.js"),

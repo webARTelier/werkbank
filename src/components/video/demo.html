@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>video – Demo</title>
+  <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
+  <link rel="stylesheet" href="../../../dist/css/video.min.css" />
+  <script type="module" src="../../../dist/js/boot.min.js"></script>
+
+  <!-- for development only -->
+  <script type="module" src="../../../src/_shared/js/dev_pageInfo.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_a11yInspector.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_qrCode.js"></script>
+  <!-- end for development only -->
+
+  <!--
+      DEMO-ONLY STYLES
+      ----------------------------------------------------------------------
+      video.min.css ships the overlay structure (module fills its
+      container, media covers it, button placement/look). What a consuming
+      project owns is the MEDIA CONTAINER: the wrapper that dictates size
+      and aspect ratio per instance. The .demo__media rules below are that
+      wrapper — one example of the project side of the contract, not part
+      of the component. (Tokens like --space-* / --color-* come from
+      shared.min.css.)
+  -->
+
+  <style>
+    .demo {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2xl);
+    }
+
+    .demo__example {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    .demo__example h2 {
+      font-size: 1.1rem;
+      color: var(--color-text);
+    }
+
+    .demo__example > p {
+      max-width: 60ch;
+      color: var(--color-text-muted);
+    }
+
+    /* The project-side media container: it owns size and aspect ratio,
+       the component fills it (object-fit: cover). */
+    .demo__media {
+      width: 100%;
+      max-width: 640px;
+      aspect-ratio: 16 / 9;
+      border-radius: var(--borderRadius);
+      overflow: hidden;
+      background-color: var(--color-bg-surface);
+    }
+
+    /* Ambient loops often run wider than 16:9. */
+    .demo__media--wide {
+      max-width: 100%;
+      aspect-ratio: 21 / 9;
+    }
+
+    /* Art direction: portrait container on small viewports, landscape
+       from 768px up — the same breakpoint the <source media> list uses,
+       so container shape and footage switch together. */
+    .demo__media--artDirection {
+      max-width: 300px;
+      aspect-ratio: 9 / 16;
+    }
+
+    @media (min-width: 768px) {
+      .demo__media--artDirection {
+        max-width: 640px;
+        aspect-ratio: 16 / 9;
+      }
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <main class="shell">
+
+    <section class="hero">
+      <a class="back" href="../../../index.html">← Overview</a>
+      <h1>video</h1>
+      <p>CMS-maintainable video embeds: self-hosted with responsive sources and art direction, or YouTube behind a GDPR-friendly click-to-load facade.</p>
+    </section>
+
+    <section class="stage" aria-label="Live demo">
+
+      <!--
+          One instance per module element, enabled with
+          data-js-module="video" on the wrapper.
+
+          Wiring
+            - Each instance sits inside its own .demo__media container —
+              the project layout owns size and aspect ratio, the media
+              covers it (object-fit: cover).
+            - Self-hosted variants declare plain <source media="…"> lists;
+              the script mirrors the native first-match-wins rule, re-runs
+              it on every media-query change and carries playback position
+              and play state over to the newly chosen source.
+            - The YouTube example is a facade: a locally hosted poster and
+              a play button. The youtube-nocookie.com iframe is created
+              only after the click — before that, nothing is requested
+              from Google.
+
+          Progressive enhancement
+            - Without JavaScript: example 1 and 3 play via their native
+              `controls`; example 2 autoplays natively as a muted loop;
+              example 4 is a poster with a plain link to YouTube. No
+              overlay button appears anywhere (they ship `hidden`).
+
+          Accessibility
+            - The overlay buttons carry localized, state-switching
+              aria-labels (de/en from <html lang>); the icons are
+              aria-hidden.
+            - The autoplaying loop offers a persistent pause toggle
+              (WCAG 2.2.2) and does not start at all under
+              prefers-reduced-motion: reduce — play is the opt-in.
+            - After activating the facade, focus moves to the iframe
+              (which gets a title), so keyboard users continue where they
+              acted.
+        -->
+
+      <p class="stage__intro">
+        <strong>Resize the window</strong> (or rotate your device) to watch
+        the source switching: the DevTools network panel shows which
+        rendition loads, and in example&nbsp;3 the footage itself changes
+        shape. Playback position survives every switch. With
+        <code>prefers-reduced-motion: reduce</code> the ambient loop in
+        example&nbsp;2 starts paused.
+      </p>
+
+      <div class="demo">
+
+        <!-- 1) Click-to-play with a resolution ladder (all 16:9) -->
+        <div class="demo__example">
+          <h2>1 — Click to play, resolution ladder</h2>
+          <p>
+            One footage, five renditions from 640&nbsp;px to 4K: picked by
+            viewport width and pixel density
+            (<code>min-resolution:&nbsp;2dppx</code>), first match wins, the
+            attribute-less source is the fallback. The centered play button
+            hands over to the native controls; pausing brings it back.
+          </p>
+          <div class="demo__media">
+            <div class="m-video" data-js-module="video">
+
+              <video class="m-video__video" poster="https://res.cloudinary.com/dxdxjequc/video/upload/so_0,w_1280,h_720,c_fill/v1745751181/greenblob.jpg" controls preload="metadata" playsinline>
+                <source src="https://res.cloudinary.com/dxdxjequc/video/upload/w_3840,h_2160,ar_16:9/v1745751181/greenblob.mp4" media="(min-width: 990px) and (min-resolution: 2dppx)">
+                <source src="https://res.cloudinary.com/dxdxjequc/video/upload/w_1920,h_1080,ar_16:9/v1745751181/greenblob.mp4" media="(min-width: 990px)">
+                <source src="https://res.cloudinary.com/dxdxjequc/video/upload/w_1280,h_720,ar_16:9/v1745751181/greenblob.mp4" media="(min-width: 768px) and (min-resolution: 2dppx)">
+                <source src="https://res.cloudinary.com/dxdxjequc/video/upload/w_854,h_480,ar_16:9/v1745751181/greenblob.mp4" media="(min-width: 768px)">
+                <source src="https://res.cloudinary.com/dxdxjequc/video/upload/w_854,h_480,ar_16:9/v1745751181/greenblob.mp4" media="(min-resolution: 2dppx)">
+                <source src="https://res.cloudinary.com/dxdxjequc/video/upload/w_640,h_360,ar_16:9/v1745751181/greenblob.mp4">
+              </video>
+
+              <button class="m-video__toggle" type="button" data-video-toggle hidden>
+                <svg class="m-video__icon m-video__icon--play" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" aria-hidden="true" focusable="false">
+                  <circle cx="24" cy="24" r="22.5" fill="rgba(0, 0, 0, 0.45)" stroke="currentColor" stroke-width="1.5" />
+                  <path d="M19.5 15.5 34 24l-14.5 8.5z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+                </svg>
+              </button>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- 2) Ambient autoplay loop with the corner pause toggle -->
+        <div class="demo__example">
+          <h2>2 — Ambient loop (autoplay, muted)</h2>
+          <p>
+            <code>autoplay muted loop playsinline</code> on the
+            <code>&lt;video&gt;</code>: it runs natively, the script only adds
+            the persistent corner toggle (WCAG&nbsp;2.2.2). Under
+            <code>prefers-reduced-motion: reduce</code> it does not start —
+            the toggle is the explicit opt-in.
+          </p>
+          <div class="demo__media demo__media--wide">
+            <div class="m-video m-video--ambient" data-js-module="video">
+
+              <video class="m-video__video" autoplay muted loop playsinline preload="auto">
+                <source src="https://res.cloudinary.com/dxdxjequc/video/upload/w_1920,h_1080,ar_16:9/v1745751181/greenblob.mp4" media="(min-width: 990px)">
+                <source src="https://res.cloudinary.com/dxdxjequc/video/upload/w_1280,h_720,ar_16:9/v1745751181/greenblob.mp4" media="(min-width: 768px)">
+                <source src="https://res.cloudinary.com/dxdxjequc/video/upload/w_854,h_480,ar_16:9/v1745751181/greenblob.mp4">
+              </video>
+
+              <button class="m-video__toggle" type="button" data-video-toggle hidden>
+                <svg class="m-video__icon m-video__icon--play" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" aria-hidden="true" focusable="false">
+                  <circle cx="24" cy="24" r="22.5" fill="rgba(0, 0, 0, 0.45)" stroke="currentColor" stroke-width="1.5" />
+                  <path d="M19.5 15.5 34 24l-14.5 8.5z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+                </svg>
+                <svg class="m-video__icon m-video__icon--pause" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" aria-hidden="true" focusable="false">
+                  <circle cx="24" cy="24" r="22.5" fill="rgba(0, 0, 0, 0.45)" stroke="currentColor" stroke-width="1.5" />
+                  <rect x="17.5" y="15.5" width="4.5" height="17" rx="1.5" fill="currentColor" />
+                  <rect x="26" y="15.5" width="4.5" height="17" rx="1.5" fill="currentColor" />
+                </svg>
+              </button>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- 3) Art direction: portrait footage below 768px, landscape above -->
+        <div class="demo__example">
+          <h2>3 — Art direction (portrait ↔ landscape)</h2>
+          <p>
+            Below 768&nbsp;px the container is 9:16 and a portrait rendition
+            (<code>c_fill</code> crop of the same footage) loads; from
+            768&nbsp;px up both switch to 16:9. Start the video, then resize
+            across the breakpoint: the source swaps and the playback position
+            carries over.
+          </p>
+          <div class="demo__media demo__media--artDirection">
+            <div class="m-video" data-js-module="video">
+
+              <video class="m-video__video" poster="https://res.cloudinary.com/dxdxjequc/video/upload/so_0,w_1280,h_720,c_fill/v1745751181/greenblob.jpg" controls preload="metadata" playsinline>
+                <source src="https://res.cloudinary.com/dxdxjequc/video/upload/w_360,h_640,c_fill/v1745751181/greenblob.mp4" media="(max-width: 767px)">
+                <source src="https://res.cloudinary.com/dxdxjequc/video/upload/w_1280,h_720,ar_16:9/v1745751181/greenblob.mp4">
+              </video>
+
+              <button class="m-video__toggle" type="button" data-video-toggle hidden>
+                <svg class="m-video__icon m-video__icon--play" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" aria-hidden="true" focusable="false">
+                  <circle cx="24" cy="24" r="22.5" fill="rgba(0, 0, 0, 0.45)" stroke="currentColor" stroke-width="1.5" />
+                  <path d="M19.5 15.5 34 24l-14.5 8.5z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+                </svg>
+              </button>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- 4) YouTube click-to-load facade (youtube-nocookie) -->
+        <div class="demo__example">
+          <h2>4 — YouTube facade (click to load)</h2>
+          <p>
+            A locally hosted poster and a play button — check the network
+            panel: nothing is requested from Google until you click. The
+            click builds the <code>youtube-nocookie.com</code> iframe with
+            autoplay; without JavaScript the link opens the video on
+            YouTube. The CMS field accepts the full URL or the bare id.
+          </p>
+          <div class="demo__media">
+            <div class="m-video" data-js-module="video" data-video-youtube="https://www.youtube.com/watch?v=a3ICNMQW7Ok" data-video-title="YouTube demo video">
+
+              <img class="m-video__poster" src="../../_shared/media/img/content/videoPosterDemo.svg" alt="" data-video-poster>
+
+              <a class="m-video__fallback" href="https://www.youtube.com/watch?v=a3ICNMQW7Ok" data-video-fallback>
+                Watch on YouTube
+              </a>
+
+              <button class="m-video__toggle" type="button" data-video-toggle hidden>
+                <svg class="m-video__icon m-video__icon--play" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" aria-hidden="true" focusable="false">
+                  <circle cx="24" cy="24" r="22.5" fill="rgba(0, 0, 0, 0.45)" stroke="currentColor" stroke-width="1.5" />
+                  <path d="M19.5 15.5 34 24l-14.5 8.5z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+                </svg>
+              </button>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</body>
+
+</html>

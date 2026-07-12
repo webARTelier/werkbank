@@ -96,5 +96,5 @@ contrasts with its own surface:
 These do not (yet) follow the camelCase convention, since they are not file/folder names
 and changing them would require an API/markup adjustment:
 
-- Console prefixes in warnings, e.g. `[stickyobserver]`, `[responsivevideo]`
-- HTML `data` attributes, e.g. `data-inputcharcount`, `data-responsivevideoControls`
+- Console prefixes in warnings, e.g. `[stickyobserver]`
+- HTML `data` attributes, e.g. `data-inputcharcount`

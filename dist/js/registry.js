@@ -14,10 +14,10 @@ export const registry = {
   marquee: () => import('./modules/marquee.min.js'),
   rafThrottle: () => import('./modules/rafThrottle.min.js'),
   resolveLocale: () => import('./modules/resolveLocale.min.js'),
-  responsiveVideo: () => import('./modules/responsiveVideo.min.js'),
   scaleSVG: () => import('./modules/scaleSVG.min.js'),
   stickyObserver: () => import('./modules/stickyObserver.min.js'),
-  tabs: () => import('./modules/tabs.min.js')
+  tabs: () => import('./modules/tabs.min.js'),
+  video: () => import('./modules/video.min.js')
 }
 
 export const globalRegistry = {

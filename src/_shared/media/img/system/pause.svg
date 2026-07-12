@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" aria-hidden="true" focusable="false">
+  <!--
+    Pause control glyph, the counterpart of play.svg. The slightly
+    darkened disc is baked in (literal translucent black) so the file
+    works on any footage; ring and glyph use currentColor so the
+    embedding context picks the light tone. Opacity/hover behaviour is
+    the embedding button's CSS, not the file's.
+  -->
+  <circle cx="24" cy="24" r="22.5" fill="rgba(0, 0, 0, 0.45)" stroke="currentColor" stroke-width="1.5" />
+  <rect x="17.5" y="15.5" width="4.5" height="17" rx="1.5" fill="currentColor" />
+  <rect x="26" y="15.5" width="4.5" height="17" rx="1.5" fill="currentColor" />
+</svg>

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+  <!--
+    Demo-only poster artwork for the video component's YouTube facade. In a
+    real project the CMS supplies a locally hosted poster image; this file
+    merely stands in for it so the demo loads nothing from Google before
+    the click.
+  -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101728" />
+      <stop offset="1" stop-color="#1e293b" />
+    </linearGradient>
+    <radialGradient id="glowViolet" cx="0.3" cy="0.35" r="0.55">
+      <stop offset="0" stop-color="#7c3aed" stop-opacity="0.45" />
+      <stop offset="1" stop-color="#7c3aed" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="glowSky" cx="0.78" cy="0.72" r="0.55">
+      <stop offset="0" stop-color="#38bdf8" stop-opacity="0.35" />
+      <stop offset="1" stop-color="#38bdf8" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <rect width="1280" height="720" fill="url(#bg)" />
+  <rect width="1280" height="720" fill="url(#glowViolet)" />
+  <rect width="1280" height="720" fill="url(#glowSky)" />
+  <text x="640" y="356" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="34" font-weight="600" letter-spacing="10" text-anchor="middle">DEMO POSTER</text>
+  <text x="640" y="400" fill="#64748b" font-family="system-ui, sans-serif" font-size="20" text-anchor="middle">locally hosted — nothing loads from YouTube before the click</text>
+</svg>
