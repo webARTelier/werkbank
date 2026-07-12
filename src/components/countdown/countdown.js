@@ -60,97 +60,97 @@
 
 
 const defaults = {
-  selDays: "[data-countdown-days]",
-  selHours: "[data-countdown-hours]",
-  selMinutes: "[data-countdown-minutes]",
-  selSeconds: "[data-countdown-seconds]",
-  selDisplay: "[data-countdown-display]",
-  selUnits: "[data-countdown-units]",
-  selUnit: "[data-countdown-unit]", // a single unit wrapper (label + value)
-  selSummary: "[data-countdown-summary]",
+  selDays: '[data-countdown-days]',
+  selHours: '[data-countdown-hours]',
+  selMinutes: '[data-countdown-minutes]',
+  selSeconds: '[data-countdown-seconds]',
+  selDisplay: '[data-countdown-display]',
+  selUnits: '[data-countdown-units]',
+  selUnit: '[data-countdown-unit]', // a single unit wrapper (label + value)
+  selSummary: '[data-countdown-summary]',
 
-  dateAttr: "data-countdown-date", // target date; selector derived from it
-  labelAttr: "data-countdown-label", // optional: what the countdown counts to
+  dateAttr: 'data-countdown-date', // target date; selector derived from it
+  labelAttr: 'data-countdown-label', // optional: what the countdown counts to
 
   tickMs: 1000, // normal cadence
   reducedTickMs: 60000, // cadence under prefers-reduced-motion
 
-  toggleLabelPause: "Pause countdown",
-  toggleLabelResume: "Resume countdown",
+  toggleLabelPause: 'Pause countdown',
+  toggleLabelResume: 'Resume countdown',
 
   // Screen-reader text builders (English defaults). Override any of these to
   // localize the announced sentences — each receives raw values, so word order
   // and pluralization stay under the author's control.
   formatUnit: (value, unit) => {
-    const word = { day: "day", hour: "hour", minute: "minute" }[unit]
-    return `${value} ${word}${value === 1 ? "" : "s"}`
+    const word = { day: 'day', hour: 'hour', minute: 'minute' }[unit];
+    return `${value} ${word}${value === 1 ? '' : 's'}`;
   },
   formatSummary: (unitText, label) =>
-    `${unitText} remaining${label ? ` until ${label}` : ""}.`,
+    `${unitText} remaining${label ? ` until ${label}` : ''}.`,
   formatFinished: (label) =>
-    label ? `The countdown to ${label} has finished.` : "The countdown has finished.",
-}
+    label ? `The countdown to ${label} has finished.` : 'The countdown has finished.',
+};
 
 
 
 class Countdown {
 
   constructor(module, config, reporter) {
-    this.module = module
-    this.reporter = reporter
-    this.config = config
+    this.module = module;
+    this.reporter = reporter;
+    this.config = config;
 
-    this.intervalId = null
-    this.paused = false
-    this.finished = false
-    this.lastSummary = ""
+    this.intervalId = null;
+    this.paused = false;
+    this.finished = false;
+    this.lastSummary = '';
 
     // prefers-reduced-motion is read live so the cadence adapts if the user
     // flips the OS setting while the page is open.
-    this.motionQuery = window.matchMedia?.("(prefers-reduced-motion: reduce)")
+    this.motionQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)');
 
-    this.initCountdown()
+    this.initCountdown();
   }
 
 
 
   // resolves required nodes and starts the countdown loop.
   initCountdown = () => {
-    const days = this.module.querySelector(this.config.selDays)
-    const hours = this.module.querySelector(this.config.selHours)
-    const minutes = this.module.querySelector(this.config.selMinutes)
-    const seconds = this.module.querySelector(this.config.selSeconds)
+    const days = this.module.querySelector(this.config.selDays);
+    const hours = this.module.querySelector(this.config.selHours);
+    const minutes = this.module.querySelector(this.config.selMinutes);
+    const seconds = this.module.querySelector(this.config.selSeconds);
 
     if (!days || !hours || !minutes) {
-      this.handleMissingElements()
-      return
+      this.handleMissingElements();
+      return;
     }
 
-    const targetMs = this.getTargetMs()
+    const targetMs = this.getTargetMs();
     if (targetMs === null) {
-      this.handleMissingDate()
-      return
+      this.handleMissingDate();
+      return;
     }
 
-    this.targetMs = targetMs
-    this.counterElements = { days, hours, minutes, seconds }
+    this.targetMs = targetMs;
+    this.counterElements = { days, hours, minutes, seconds };
 
     // Walk up to the unit wrapper via its data hook (not the .m-countdown__unit
     // style class) so we can hide the whole seconds column under reduced motion
     // without coupling the behaviour to the styling class.
-    this.secondsUnit = seconds ? seconds.closest(this.config.selUnit) : null
+    this.secondsUnit = seconds ? seconds.closest(this.config.selUnit) : null;
 
     // Optional wiring for the accessibility tree. All of these are progressive:
     // if the markup does not provide them the countdown still works, it just
     // exposes a less polished experience to assistive tech.
-    this.display = this.module.querySelector(this.config.selDisplay) || this.module
-    this.units = this.module.querySelector(this.config.selUnits)
-    this.summary = this.module.querySelector(this.config.selSummary)
-    this.label = (this.module.getAttribute(this.config.labelAttr) || "").trim()
+    this.display = this.module.querySelector(this.config.selDisplay) || this.module;
+    this.units = this.module.querySelector(this.config.selUnits);
+    this.summary = this.module.querySelector(this.config.selSummary);
+    this.label = (this.module.getAttribute(this.config.labelAttr) || '').trim();
 
-    this.setupAccessibility()
-    this.start()
-  }
+    this.setupAccessibility();
+    this.start();
+  };
 
 
 
@@ -158,27 +158,27 @@ class Countdown {
   // The lookup selector is derived from dateAttr, so the attribute name lives
   // in exactly one place.
   getTargetDate = () => {
-    const selector = `[${this.config.dateAttr}]`
+    const selector = `[${this.config.dateAttr}]`;
     const targetDateElement = this.module.matches(selector)
       ? this.module
-      : this.module.querySelector(selector)
+      : this.module.querySelector(selector);
 
-    if (!targetDateElement) return ""
+    if (!targetDateElement) return '';
 
-    return (targetDateElement.getAttribute(this.config.dateAttr) || "").trim()
-  }
+    return (targetDateElement.getAttribute(this.config.dateAttr) || '').trim();
+  };
 
 
 
   // parses the target date to an epoch timestamp; returns null when it is
   // missing or unparseable, so the caller can report and bail out.
   getTargetMs = () => {
-    const raw = this.getTargetDate()
-    if (!raw) return null
+    const raw = this.getTargetDate();
+    if (!raw) return null;
 
-    const ms = Date.parse(raw)
-    return Number.isNaN(ms) ? null : ms
-  }
+    const ms = Date.parse(raw);
+    return Number.isNaN(ms) ? null : ms;
+  };
 
 
 
@@ -189,72 +189,72 @@ class Countdown {
   setupAccessibility = () => {
 
     // The flickering unit columns are decorative for screen readers.
-    this.units?.setAttribute("aria-hidden", "true")
+    this.units?.setAttribute('aria-hidden', 'true');
 
     // role="timer" marks the value as a live-updating counter without forcing
     // announcements (its implicit aria-live is "off").
-    if (!this.display.hasAttribute("role")) {
-      this.display.setAttribute("role", "timer")
+    if (!this.display.hasAttribute('role')) {
+      this.display.setAttribute('role', 'timer');
     }
 
     // Single polite live region for the terminal "finished" message. Injected
     // here so authors do not have to hand-wire a11y plumbing.
-    this.statusNode = document.createElement("span")
-    this.statusNode.className = "m-countdown__sr"
-    this.statusNode.setAttribute("role", "status")
-    this.module.appendChild(this.statusNode)
+    this.statusNode = document.createElement('span');
+    this.statusNode.className = 'm-countdown__sr';
+    this.statusNode.setAttribute('role', 'status');
+    this.module.appendChild(this.statusNode);
 
     // The mechanism that satisfies WCAG 2.2.2 for every user.
-    this.injectToggle()
+    this.injectToggle();
 
     // React to OS-level reduced-motion changes while the page is open.
-    this.motionQuery?.addEventListener?.("change", this.handleMotionChange)
-    this.applyMotionPreference()
-  }
+    this.motionQuery?.addEventListener?.('change', this.handleMotionChange);
+    this.applyMotionPreference();
+  };
 
 
 
   // Creates the pause/resume control. A plain <button> so it is focusable and
   // operable by keyboard and assistive tech out of the box.
   injectToggle = () => {
-    const button = document.createElement("button")
-    button.type = "button"
-    button.className = "m-countdown__toggle"
-    button.setAttribute("aria-pressed", "false")
-    button.textContent = this.config.toggleLabelPause
-    button.addEventListener("click", this.toggle)
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'm-countdown__toggle';
+    button.setAttribute('aria-pressed', 'false');
+    button.textContent = this.config.toggleLabelPause;
+    button.addEventListener('click', this.toggle);
 
-    this.module.appendChild(button)
-    this.toggleButton = button
-  }
+    this.module.appendChild(button);
+    this.toggleButton = button;
+  };
 
 
 
   toggle = () => {
-    this.paused ? this.resume() : this.pause()
-  }
+    this.paused ? this.resume() : this.pause();
+  };
 
 
 
   pause = () => {
-    if (this.paused || this.finished) return
-    this.paused = true
-    this.stopInterval()
-    this.module.setAttribute("data-countdown-paused", "")
-    this.toggleButton.setAttribute("aria-pressed", "true")
-    this.toggleButton.textContent = this.config.toggleLabelResume
-  }
+    if (this.paused || this.finished) return;
+    this.paused = true;
+    this.stopInterval();
+    this.module.setAttribute('data-countdown-paused', '');
+    this.toggleButton.setAttribute('aria-pressed', 'true');
+    this.toggleButton.textContent = this.config.toggleLabelResume;
+  };
 
 
 
   resume = () => {
-    if (!this.paused || this.finished) return
-    this.paused = false
-    this.module.removeAttribute("data-countdown-paused")
-    this.toggleButton.setAttribute("aria-pressed", "false")
-    this.toggleButton.textContent = this.config.toggleLabelPause
-    this.start()
-  }
+    if (!this.paused || this.finished) return;
+    this.paused = false;
+    this.module.removeAttribute('data-countdown-paused');
+    this.toggleButton.setAttribute('aria-pressed', 'false');
+    this.toggleButton.textContent = this.config.toggleLabelPause;
+    this.start();
+  };
 
 
 
@@ -262,16 +262,16 @@ class Countdown {
   // per minute, so there is no fast flicker. Outside reduced motion we
   // restore both.
   applyMotionPreference = () => {
-    const reduced = !!this.motionQuery?.matches
-    this.secondsUnit?.toggleAttribute("hidden", reduced)
-  }
+    const reduced = !!this.motionQuery?.matches;
+    this.secondsUnit?.toggleAttribute('hidden', reduced);
+  };
 
 
 
   handleMotionChange = () => {
-    this.applyMotionPreference()
-    if (!this.paused && !this.finished) this.start() // restart at new cadence
-  }
+    this.applyMotionPreference();
+    if (!this.paused && !this.finished) this.start(); // restart at new cadence
+  };
 
 
 
@@ -282,27 +282,27 @@ class Countdown {
     // handle that synchronously instead of waiting a full cadence for the
     // first tick (which, under reduced motion, would be up to a minute).
     if (this.render()) {
-      this.finish()
-      return
+      this.finish();
+      return;
     }
 
-    this.stopInterval()
+    this.stopInterval();
     const cadence = this.motionQuery?.matches
       ? this.config.reducedTickMs
-      : this.config.tickMs
+      : this.config.tickMs;
 
     this.intervalId = setInterval(() => {
-      const finished = this.render()
-      if (finished) this.finish()
-    }, cadence)
-  }
+      const finished = this.render();
+      if (finished) this.finish();
+    }, cadence);
+  };
 
 
 
   stopInterval = () => {
-    if (this.intervalId) clearInterval(this.intervalId)
-    this.intervalId = null
-  }
+    if (this.intervalId) clearInterval(this.intervalId);
+    this.intervalId = null;
+  };
 
 
 
@@ -310,34 +310,34 @@ class Countdown {
   // counter) and writes the mapped nodes. Returns true once the target time is
   // reached, so the loop can stop.
   render = () => {
-    const { days, hours, minutes, seconds } = this.counterElements
+    const { days, hours, minutes, seconds } = this.counterElements;
 
-    const remainingMs = Math.max(0, this.targetMs - Date.now())
-    const totalSeconds = Math.floor(remainingMs / 1000)
+    const remainingMs = Math.max(0, this.targetMs - Date.now());
+    const totalSeconds = Math.floor(remainingMs / 1000);
 
-    const d = Math.floor(totalSeconds / 86400)
-    const h = Math.floor((totalSeconds % 86400) / 3600)
-    const m = Math.floor((totalSeconds % 3600) / 60)
-    const s = totalSeconds % 60
+    const d = Math.floor(totalSeconds / 86400);
+    const h = Math.floor((totalSeconds % 86400) / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
 
-    this.renderCountdownValue(days, d)
-    this.renderCountdownValue(hours, h)
-    this.renderCountdownValue(minutes, m)
-    if (seconds) this.renderCountdownValue(seconds, s)
+    this.renderCountdownValue(days, d);
+    this.renderCountdownValue(hours, h);
+    this.renderCountdownValue(minutes, m);
+    if (seconds) this.renderCountdownValue(seconds, s);
 
-    this.renderSummary({ d, h, m })
-    this.syncMirrors({ d, h, m, s })
+    this.renderSummary({ d, h, m });
+    this.syncMirrors({ d, h, m, s });
 
-    return remainingMs <= 0
-  }
+    return remainingMs <= 0;
+  };
 
 
 
   // writes a numeric countdown value into an output element.
   renderCountdownValue = (element, value) => {
-    if (!(element instanceof HTMLElement)) return
-    element.textContent = value
-  }
+    if (!(element instanceof HTMLElement)) return;
+    element.textContent = value;
+  };
 
 
 
@@ -346,16 +346,16 @@ class Countdown {
   // node lives inside the role="timer" region (aria-live off), so this write is
   // never announced; it just keeps the on-demand value fresh.
   renderSummary = ({ d, h, m }) => {
-    if (!this.summary) return
+    if (!this.summary) return;
 
-    const { formatUnit, formatSummary } = this.config
-    const unitText = [formatUnit(d, "day"), formatUnit(h, "hour"), formatUnit(m, "minute")].join(", ")
-    const text = formatSummary(unitText, this.label)
+    const { formatUnit, formatSummary } = this.config;
+    const unitText = [formatUnit(d, 'day'), formatUnit(h, 'hour'), formatUnit(m, 'minute')].join(', ');
+    const text = formatSummary(unitText, this.label);
 
-    if (text === this.lastSummary) return
-    this.lastSummary = text
-    this.summary.textContent = text
-  }
+    if (text === this.lastSummary) return;
+    this.lastSummary = text;
+    this.summary.textContent = text;
+  };
 
 
 
@@ -363,21 +363,21 @@ class Countdown {
   // emit a single polite announcement. role="status" announces the inserted
   // text once — the correct one-off use of a live region.
   finish = () => {
-    this.finished = true
-    this.stopInterval()
-    this.module.removeAttribute("data-countdown-paused")
-    this.module.setAttribute("data-countdown-finished", "")
+    this.finished = true;
+    this.stopInterval();
+    this.module.removeAttribute('data-countdown-paused');
+    this.module.setAttribute('data-countdown-finished', '');
 
-    this.toggleButton?.remove()
-    this.toggleButton = null
+    this.toggleButton?.remove();
+    this.toggleButton = null;
 
-    const message = this.config.formatFinished(this.label)
+    const message = this.config.formatFinished(this.label);
 
     // role="status" announces this once (polite); the timer's on-demand text is
     // replaced too, so a screen reader reading it later gets the same message.
-    if (this.statusNode) this.statusNode.textContent = message
-    if (this.summary) this.summary.textContent = message
-  }
+    if (this.statusNode) this.statusNode.textContent = message;
+    if (this.summary) this.summary.textContent = message;
+  };
 
 
 
@@ -386,64 +386,64 @@ class Countdown {
   syncMirrors = ({ d, h, m, s }) => {
     // The marquee is detected via its module attribute, not a styling
     // class — classes stay free for the consuming project's CSS.
-    const marquee = this.module.closest("[data-js-module~='marquee']")
-    if (!(marquee instanceof HTMLElement)) return
+    const marquee = this.module.closest("[data-js-module~='marquee']");
+    if (!(marquee instanceof HTMLElement)) return;
 
-    const mirrors = marquee.querySelectorAll("[data-js-module~='countdown']")
+    const mirrors = marquee.querySelectorAll("[data-js-module~='countdown']");
 
     mirrors.forEach((mirror) => {
       
       // querySelectorAll only yields elements, and renderCountdownValue guards
       // each write, so the only check needed here is skipping the source module
       // itself (we don't want to mirror it onto itself).
-      if (mirror === this.module) return
+      if (mirror === this.module) return;
 
-      const mirrorDays = mirror.querySelector(this.config.selDays)
-      const mirrorHours = mirror.querySelector(this.config.selHours)
-      const mirrorMinutes = mirror.querySelector(this.config.selMinutes)
-      const mirrorSeconds = mirror.querySelector(this.config.selSeconds)
+      const mirrorDays = mirror.querySelector(this.config.selDays);
+      const mirrorHours = mirror.querySelector(this.config.selHours);
+      const mirrorMinutes = mirror.querySelector(this.config.selMinutes);
+      const mirrorSeconds = mirror.querySelector(this.config.selSeconds);
 
-      this.renderCountdownValue(mirrorDays, d)
-      this.renderCountdownValue(mirrorHours, h)
-      this.renderCountdownValue(mirrorMinutes, m)
-      this.renderCountdownValue(mirrorSeconds, s)
-    })
-  }
+      this.renderCountdownValue(mirrorDays, d);
+      this.renderCountdownValue(mirrorHours, h);
+      this.renderCountdownValue(mirrorMinutes, m);
+      this.renderCountdownValue(mirrorSeconds, s);
+    });
+  };
 
 
 
   handleMissingElements = () => {
     this.reporter?.report(
-      "countdown",
-      "missing day/hour/minute element")
+      'countdown',
+      'missing day/hour/minute element');
     this.reporter?.report(
-      "countdown",
-      "module was not initialized", this.module)
-  }
+      'countdown',
+      'module was not initialized', this.module);
+  };
 
 
 
   handleMissingDate = () => {
     this.reporter?.report(
-      "countdown",
-      "missing target date (data-countdown-date)",
+      'countdown',
+      'missing target date (data-countdown-date)',
       this.module
-    )
-  }
+    );
+  };
 }
 
 
 
 // loader-compatible entry point (boot.js -> mod.init(el, services))
 export function init(el, services = {}) {
-  const reporter = services.reporter
+  const reporter = services.reporter;
 
   if (!(el instanceof HTMLElement)) {
     reporter?.report(
-      "countdown",
-      "module was initialized on a non-element node.", el)
-    return
+      'countdown',
+      'module was initialized on a non-element node.', el);
+    return;
   }
 
-  new Countdown(el, defaults, reporter)
+  new Countdown(el, defaults, reporter);
 }

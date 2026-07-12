@@ -56,15 +56,15 @@
 
 
 
-import { rafThrottle } from "./rafThrottle.js"
+import { rafThrottle } from './rafThrottle.js';
 
 
 
 const defaults = {
-  containerSelector: "[data-neighbor-container]",
-  markerClass: "has-neighbor",
+  containerSelector: '[data-neighbor-container]',
+  markerClass: 'has-neighbor',
   tolerance: 1, // px tolerance before two items count as sharing a row
-}
+};
 
 
 
@@ -73,30 +73,30 @@ class FlexNeighborMarker {
   // Parse a non-negative numeric option, falling back for
   // missing/invalid values.
   static parseTolerance(value, fallback) {
-    const parsed = Number.parseFloat(value)
-    return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback
+    const parsed = Number.parseFloat(value);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
   }
 
 
 
   constructor(module, reporter) {
-    this.module = module
-    this.reporter = reporter
+    this.module = module;
+    this.reporter = reporter;
 
-    this.markerClass = module.dataset.neighborClass?.trim() || defaults.markerClass
+    this.markerClass = module.dataset.neighborClass?.trim() || defaults.markerClass;
     this.tolerance = FlexNeighborMarker.parseTolerance(
       module.dataset.neighborTolerance,
       defaults.tolerance
-    )
+    );
 
-    this.containers = this.resolveContainers()
+    this.containers = this.resolveContainers();
 
     // Collapse bursts of resize / observer events into one
     // measurement per frame.
-    this.requestUpdate = rafThrottle(this.update)
+    this.requestUpdate = rafThrottle(this.update);
 
-    this.bindEvents()
-    this.update()
+    this.bindEvents();
+    this.update();
   }
 
 
@@ -108,40 +108,40 @@ class FlexNeighborMarker {
   // the module element itself is the container, so no extra
   // attribute is needed beyond data-js-module.
   resolveContainers = () => {
-    const marked = []
-    if (this.module.matches(defaults.containerSelector)) marked.push(this.module)
-    marked.push(...this.module.querySelectorAll(defaults.containerSelector))
-    return marked.length ? marked : [this.module]
-  }
+    const marked = [];
+    if (this.module.matches(defaults.containerSelector)) marked.push(this.module);
+    marked.push(...this.module.querySelectorAll(defaults.containerSelector));
+    return marked.length ? marked : [this.module];
+  };
 
 
 
   bindEvents = () => {
-    window.addEventListener("resize", this.requestUpdate, { passive: true })
+    window.addEventListener('resize', this.requestUpdate, { passive: true });
 
     // The container's own box can change without a window
     // resize (layout shifts, sibling content, flex-basis tweaks);
     // ResizeObserver catches those too and fires an initial
     // measurement as soon as each container is observed.
-    if ("ResizeObserver" in window) {
-      this.resizeObserver = new ResizeObserver(this.requestUpdate)
-      this.containers.forEach((container) => this.resizeObserver.observe(container))
+    if ('ResizeObserver' in window) {
+      this.resizeObserver = new ResizeObserver(this.requestUpdate);
+      this.containers.forEach((container) => this.resizeObserver.observe(container));
     }
 
     // A late web-font swap or images finishing can change
     // item sizes and thus how they wrap, after the first
     // measurement — re-measure once each settles.
     if (document.fonts?.ready) {
-      document.fonts.ready.then(this.requestUpdate).catch(() => {})
+      document.fonts.ready.then(this.requestUpdate).catch(() => {});
     }
-    window.addEventListener("load", this.requestUpdate, { once: true })
-  }
+    window.addEventListener('load', this.requestUpdate, { once: true });
+  };
 
 
 
   // Re-mark every managed container. Reads all geometry, then
   // writes classes.
-  update = () => this.containers.forEach(this.markContainer)
+  update = () => this.containers.forEach(this.markContainer);
 
 
 
@@ -149,31 +149,31 @@ class FlexNeighborMarker {
   // their top edge, then mark every item that is not the last
   // of its row.
   markContainer = (container) => {
-    const items = Array.from(container.children)
-    if (!items.length) return
+    const items = Array.from(container.children);
+    if (!items.length) return;
 
-    const rows = []
+    const rows = [];
 
     for (const item of items) {
-      const top = item.getBoundingClientRect().top
-      const row = rows.find((candidate) => Math.abs(candidate.top - top) <= this.tolerance)
+      const top = item.getBoundingClientRect().top;
+      const row = rows.find((candidate) => Math.abs(candidate.top - top) <= this.tolerance);
 
       if (row) {
         // Keep a running average of the row's top so accumulated
         // sub-pixel drift across a wide row cannot push a later
         // item past the tolerance window.
-        row.items.push(item)
-        row.top = (row.top * (row.items.length - 1) + top) / row.items.length
-        continue
+        row.items.push(item);
+        row.top = (row.top * (row.items.length - 1) + top) / row.items.length;
+        continue;
       }
 
-      rows.push({ top, items: [item] })
+      rows.push({ top, items: [item] });
     }
 
     for (const row of rows) {
-      row.items.forEach((item, index) => this.mark(item, index < row.items.length - 1))
+      row.items.forEach((item, index) => this.mark(item, index < row.items.length - 1));
     }
-  }
+  };
 
 
 
@@ -181,7 +181,7 @@ class FlexNeighborMarker {
   // flag only mutates the attribute when the state actually
   // differs, so a mark that changes an item's box cannot feed
   // back into the ResizeObserver as an endless loop.
-  mark = (item, hasNeighbor) => item.classList.toggle(this.markerClass, hasNeighbor)
+  mark = (item, hasNeighbor) => item.classList.toggle(this.markerClass, hasNeighbor);
 }
 
 
@@ -189,18 +189,18 @@ class FlexNeighborMarker {
 // loader-compatible entry point
 // (boot.js -> mod.init(el, services))
 export function init(el, services = {}) {
-  const reporter = services.reporter
+  const reporter = services.reporter;
 
   if (!(el instanceof HTMLElement)) {
     reporter?.report(
-      "flexNeighborMarker",
-      "module was initialized on a non-element node.", el
-    )
-    return
+      'flexNeighborMarker',
+      'module was initialized on a non-element node.', el
+    );
+    return;
   }
 
   // Double-init is prevented by the loader (boot.js sets a
   // per-element, per-module flag before calling init), so no
   // extra guard is needed here.
-  new FlexNeighborMarker(el, reporter)
+  new FlexNeighborMarker(el, reporter);
 }

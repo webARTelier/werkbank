@@ -31,5 +31,5 @@ export const rafThrottle = (func) => {
       scheduled = false;
       func.apply(lastContext, lastArgs);
     });
-  }
-}
+  };
+};

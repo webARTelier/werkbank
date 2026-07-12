@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
       el.style.outline = '2px dotted red';
       el.setAttribute('data-a11y-flag', label);
       el.title = `A11y warning: ${label}`;
-    }
+    };
 
 
 
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
         highlightElement(el, 'Layout table missing th/caption');
         findings.push({ type: 'table (layout)', element: el });
       }
-    })
+    });
 
 
 
@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
         highlightElement(el, 'SVG missing aria/role/title/desc');
         findings.push({ type: 'svg (non-semantic)', element: el });
       }
-    })
+    });
 
 
 
@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         highlightElement(el, 'Image missing or empty alt attribute');
         findings.push({ type: 'img (missing alt)', element: el });
       }
-    })
+    });
 
 
 
@@ -82,14 +82,14 @@ document.addEventListener('DOMContentLoaded', () => {
         highlightElement(el, 'Icon element missing aria-hidden/role');
         findings.push({ type: 'icon (non-semantic)', element: el });
       }
-    })
+    });
 
     document.querySelectorAll('div.c-icon').forEach((el) => {
       if (!el.hasAttribute('aria-hidden') && !el.hasAttribute('role')) {
         highlightElement(el, 'Icon element missing aria-hidden/role');
         findings.push({ type: 'div.c-icon (missing aria-hidden/role)', element: el });
       }
-    })
+    });
 
 
 
@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
         highlightElement(el, 'Form element missing label or aria-label');
         findings.push({ type: 'form (missing label)', element: el });
       }
-    })
+    });
 
 
 
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
         highlightElement(el, 'Interactive element with no accessible name');
         findings.push({ type: `${el.tagName.toLowerCase()} (missing label)`, element: el });
       }
-    })
+    });
 
 
 
@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
         highlightElement(el, 'Empty heading tag');
         findings.push({ type: 'heading (empty)', element: el });
       }
-    })
+    });
 
 
 
@@ -143,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
         highlightElement(el, 'Element has tabindex > 0');
         findings.push({ type: 'tabindex (positive)', element: el });
       }
-    })
+    });
 
 
 
@@ -174,18 +174,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (findings.length) {
       console.group(`Accessibility findings (${findings.length})`);
       findings.forEach(({ type, element }, i) => {
-        if (element) {
-          console.log(`%c[${i + 1}] ${type}`, 'color: orange; font-weight: bold;', element);
-        } else {
-          console.log(`%c[${i + 1}] ${type}`, 'color: orange; font-weight: bold;');
-        }
-      })
+        const args = [`%c[${i + 1}] ${type}`, 'color: orange; font-weight: bold;'];
+        if (element) args.push(element);
+        console.log(...args);
+      });
       console.groupEnd();
       return;
     }
 
     console.log('✅ No accessibility issues detected in visual and interactive elements.');
 
-  }, 500)
+  }, 500);
 
 });

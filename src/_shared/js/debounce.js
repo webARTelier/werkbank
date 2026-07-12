@@ -21,9 +21,9 @@ export const debounceThenExecute = (func, delay) => {
 
     timerId = setTimeout(function () {
       func.apply(context, args);
-    }, delay)
-  }
-}
+    }, delay);
+  };
+};
 
 
 
@@ -44,6 +44,6 @@ export const executeThenDebounce = (func, delay) => {
 
     timerId = setTimeout(function () {
       timerId = null;
-    }, delay)
-  }
-}
+    }, delay);
+  };
+};

@@ -16,10 +16,10 @@
 
 
 export function resolveLocale(locales, fallbackLocale) {
-  const raw = (document.documentElement.lang || "").toLowerCase()
-  const base = raw.split("-")[0]
+  const raw = (document.documentElement.lang || '').toLowerCase();
+  const base = raw.split('-')[0];
 
-  if (locales.includes(raw)) return raw
-  if (locales.includes(base)) return base
-  return fallbackLocale
+  if (locales.includes(raw)) return raw;
+  if (locales.includes(base)) return base;
+  return fallbackLocale;
 }

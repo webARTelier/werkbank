@@ -46,12 +46,12 @@
 
 
 const defaults = {
-  itemSelector: "[data-accordion-item]",
-  panelSelector: "[data-accordion-panel]",
-  wrapperAttr: "data-accordion-wrapper",
-  clipAttr: "data-accordion-clip",
-  enhancedAttr: "data-js-enhanced",
-}
+  itemSelector: '[data-accordion-item]',
+  panelSelector: '[data-accordion-panel]',
+  wrapperAttr: 'data-accordion-wrapper',
+  clipAttr: 'data-accordion-clip',
+  enhancedAttr: 'data-js-enhanced',
+};
 
 
 
@@ -62,9 +62,9 @@ const defaults = {
  */
 function supportsNativeAnimation() {
   return (
-    CSS.supports("interpolate-size", "allow-keywords") &&
-    CSS.supports("selector(::details-content)")
-  )
+    CSS.supports('interpolate-size', 'allow-keywords') &&
+    CSS.supports('selector(::details-content)')
+  );
 }
 
 
@@ -72,49 +72,49 @@ function supportsNativeAnimation() {
 class AccordionEnhancer {
 
   constructor(container, params, reporter) {
-    this.container = container
-    this.reporter = reporter
-    this.itemSelector = params.itemSelector
-    this.panelSelector = params.panelSelector
-    this.wrapperAttr = params.wrapperAttr
-    this.clipAttr = params.clipAttr
-    this.enhancedAttr = params.enhancedAttr
+    this.container = container;
+    this.reporter = reporter;
+    this.itemSelector = params.itemSelector;
+    this.panelSelector = params.panelSelector;
+    this.wrapperAttr = params.wrapperAttr;
+    this.clipAttr = params.clipAttr;
+    this.enhancedAttr = params.enhancedAttr;
 
-    this.enhance()
+    this.enhance();
   }
 
 
 
   // wraps every item in the container so it can be animated
   enhance = () => {
-    this.container.setAttribute(this.enhancedAttr, "")
+    this.container.setAttribute(this.enhancedAttr, '');
 
     // Per-item records, so we can coordinate grouped (single-open)
     // behaviour ourselves instead of leaving it to the browser.
-    this.records = []
+    this.records = [];
 
-    const items = this.container.querySelectorAll(this.itemSelector)
+    const items = this.container.querySelectorAll(this.itemSelector);
     if (!items.length) {
       this.reporter?.report(
-        "accordion",
-        "no items found in container.", { el: this.container }
-      )
-      return
+        'accordion',
+        'no items found in container.', { el: this.container }
+      );
+      return;
     }
 
-    items.forEach((item) => this.enhanceItem(item))
-  }
+    items.forEach((item) => this.enhanceItem(item));
+  };
 
 
 
   // adds the animation wrapper to a single <details> element and
   // intercepts the summary click to drive the animation manually
   enhanceItem = (details) => {
-    const panel = details.querySelector(this.panelSelector)
-    if (!panel || panel.closest("[" + this.wrapperAttr + "]")) return
+    const panel = details.querySelector(this.panelSelector);
+    if (!panel || panel.closest('[' + this.wrapperAttr + ']')) return;
 
-    const summary = details.querySelector("summary")
-    if (!summary) return
+    const summary = details.querySelector('summary');
+    if (!summary) return;
 
     // Two nested elements:
     //   wrapper -> the CSS grid that animates grid-template-rows 0fr <-> 1fr
@@ -124,46 +124,46 @@ class AccordionEnhancer {
     // would leave a residual "half line" at the end of the close. The
     // panel keeps its padding safely inside the clip, where it is simply
     // clipped away.
-    const wrapper = document.createElement("div")
-    wrapper.setAttribute(this.wrapperAttr, "")
-    const clip = document.createElement("div")
-    clip.setAttribute(this.clipAttr, "")
+    const wrapper = document.createElement('div');
+    wrapper.setAttribute(this.wrapperAttr, '');
+    const clip = document.createElement('div');
+    clip.setAttribute(this.clipAttr, '');
 
-    panel.parentNode.insertBefore(wrapper, panel)
-    wrapper.appendChild(clip)
-    clip.appendChild(panel)
+    panel.parentNode.insertBefore(wrapper, panel);
+    wrapper.appendChild(clip);
+    clip.appendChild(panel);
 
     // Take over grouping ourselves: remember the group name, then drop
     // the native 'name' so the browser no longer closes siblings
     // instantly (which would bypass our animation). We enforce
     // single-open in JS below.
-    const group = details.getAttribute("name")
-    if (group) details.removeAttribute("name")
+    const group = details.getAttribute('name');
+    if (group) details.removeAttribute('name');
 
-    const record = { details, wrapper, group, isAnimating: false }
-    this.records.push(record)
+    const record = { details, wrapper, group, isAnimating: false };
+    this.records.push(record);
 
     // We take over the native toggling entirely: preventDefault stops
     // the browser from flipping 'open' itself, so no 'toggle' feedback
     // loop can occur. Works for mouse and keyboard (Enter/Space on a
     // <summary> dispatches a click).
-    summary.addEventListener("click", (event) => {
-      event.preventDefault()
-      if (record.isAnimating) return
+    summary.addEventListener('click', (event) => {
+      event.preventDefault();
+      if (record.isAnimating) return;
 
       if (details.open) {
-        record.isAnimating = true
-        this.animateClose(details, wrapper, () => { record.isAnimating = false })
-        return
+        record.isAnimating = true;
+        this.animateClose(details, wrapper, () => { record.isAnimating = false; });
+        return;
       }
 
       // Opening: animate-close any open sibling in the same group
       // first (see class doc), then open this one. CSS animates the
       // incoming panel 0fr -> 1fr while the sibling runs 1fr -> 0fr.
-      if (group) this.closeGroupSiblings(record)
-      details.open = true
-    })
-  }
+      if (group) this.closeGroupSiblings(record);
+      details.open = true;
+    });
+  };
 
 
 
@@ -172,15 +172,15 @@ class AccordionEnhancer {
   // ourselves after dropping the native 'name' attribute.
   closeGroupSiblings = (record) => {
     this.records.forEach((other) => {
-      if (other === record || other.group !== record.group) return
-      if (!other.details.open || other.isAnimating) return
+      if (other === record || other.group !== record.group) return;
+      if (!other.details.open || other.isAnimating) return;
 
-      other.isAnimating = true
+      other.isAnimating = true;
       this.animateClose(other.details, other.wrapper, () => {
-        other.isAnimating = false
-      })
-    })
-  }
+        other.isAnimating = false;
+      });
+    });
+  };
 
 
 
@@ -191,16 +191,16 @@ class AccordionEnhancer {
   // remove 'open'. No inline styles, no requestAnimationFrame.
   animateClose = (details, wrapper, onDone) => {
     const onTransitionEnd = (event) => {
-      if (event.propertyName !== "grid-template-rows") return
-      wrapper.removeEventListener("transitionend", onTransitionEnd)
-      details.removeAttribute("open")
-      details.removeAttribute("data-closing")
-      onDone()
-    }
+      if (event.propertyName !== 'grid-template-rows') return;
+      wrapper.removeEventListener('transitionend', onTransitionEnd);
+      details.removeAttribute('open');
+      details.removeAttribute('data-closing');
+      onDone();
+    };
 
-    wrapper.addEventListener("transitionend", onTransitionEnd)
-    details.setAttribute("data-closing", "")
-  }
+    wrapper.addEventListener('transitionend', onTransitionEnd);
+    details.setAttribute('data-closing', '');
+  };
 }
 
 
@@ -208,20 +208,20 @@ class AccordionEnhancer {
 // loader-compatible entry point 
 // (boot.js -> mod.init(el, services))
 export function init(el, services = {}) {
-  const reporter = services.reporter
+  const reporter = services.reporter;
 
   if (!(el instanceof HTMLElement)) {
     reporter?.report(
-      "accordion",
-      "module was initialized on a non-element node.", el
-    )
-    return
+      'accordion',
+      'module was initialized on a non-element node.', el
+    );
+    return;
   }
 
   // modern browsers animate natively -> nothing to enhance
-  if (supportsNativeAnimation()) return
+  if (supportsNativeAnimation()) return;
 
   // Double-init is prevented by the loader (boot.js sets a per-element,
   // per-module flag before calling init), so no extra guard is needed here.
-  new AccordionEnhancer(el, defaults, reporter)
+  new AccordionEnhancer(el, defaults, reporter);
 }

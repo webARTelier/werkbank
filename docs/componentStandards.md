@@ -41,7 +41,7 @@ component's `<name>.js` directly. Everything else is lazy.
 **Composition root.** On load, `boot.js` builds the shared `services` object
 **once** and keeps it at module scope so the same instances are reused for every
 `init` call (including later re-scans). Today that is just the `reporter`
-(`createReporter({ level: "warn" })`); further shared collaborators are added
+(`createReporter({ level: 'warn' })`); further shared collaborators are added
 here. This is the DI seam described in `CLAUDE.md` — only configured/stateful
 singletons belong in `services`; pure utilities are direct-imported into each
 component's own lazy chunk instead.
@@ -49,7 +49,7 @@ component's own lazy chunk instead.
 **Two registries** (both from the auto-generated `registry.js`, see §1):
 
 - `registry` — **page modules**, loaded lazily *per element*. Keyed by camelCase
-  module name; each value is a `() => import("./modules/<name>.min.js")` thunk,
+  module name; each value is a `() => import('./modules/<name>.min.js')` thunk,
   so a module's code is only fetched when markup actually asks for it.
 - `globalRegistry` — **global modules**, initialised **once per page**
   regardless of markup (populated from `config.registry.globalModules`; empty by
@@ -62,11 +62,11 @@ component's own lazy chunk instead.
 
 1. Query `scope` for `[data-js-module]` elements.
 2. For each element, parse the attribute as a **comma-separated** list of module
-   names (`"accordion,slider"` → `["accordion", "slider"]`), trimmed, empties
+   names (`'accordion,slider'` → `['accordion', 'slider']`), trimmed, empties
    dropped.
 3. Look the name up in `registry`; a miss is reported via the reporter
    (prefix `"loader"`) and skipped.
-4. **Double-init guard:** set `el.dataset["jsInit_<name>"] = "1"` *before*
+4. **Double-init guard:** set `el.dataset['jsInit_<name>'] = '1'` *before*
    loading; an element already flagged for that module is skipped. This is why
    components must **not** add their own double-init guard (see §3).
 5. `await load()` to fetch the chunk, verify `mod.init` is a function (else
@@ -88,19 +88,19 @@ Boot (`_shared/js/boot.js`) lazily imports the module when it sees
 
 - Export a single `export function init(el, services = {})`. Do **not**
   self-initialize on import.
-- Pull collaborators off `services` (`const reporter = services.reporter`).
+- Pull collaborators off `services` (`const reporter = services.reporter;`).
 - **Guard the element type first** and bail via the reporter on mismatch:
 
   ```js
   export function init(el, services = {}) {
-    const reporter = services.reporter
+    const reporter = services.reporter;
 
     if (!(el instanceof HTMLElement)) {
       reporter?.report(
-        "<name>",
-        "module was initialized on a non-element node.", el
-      )
-      return
+        '<name>',
+        'module was initialized on a non-element node.', el
+      );
+      return;
     }
     // ... construct / run
   }
@@ -113,14 +113,17 @@ Boot (`_shared/js/boot.js`) lazily imports the module when it sees
 - `services.reporter` is **optional** — always call it as `reporter?.report(...)`
   so the module degrades silently without it. The first argument is the
   component name used as the console prefix; use the **camelCase module name**
-  (e.g. `"inlineSVG"`), not a lowercased form (the lowercase prefixes in
+  (e.g. `'inlineSVG'`), not a lowercased form (the lowercase prefixes in
   `CLAUDE.md`'s "still open" list are legacy, not the target).
 
 
 ## 4. JS style & structure
 
-- **2-space indent, double quotes, no semicolons** (ASI). Match the reworked
-  components, not the older `_shared` files.
+- **2-space indent, single quotes, semicolons.** Prefer single quotes; switch
+  to double quotes only to avoid escaping (e.g. a string containing an
+  apostrophe). Every statement ends with a semicolon. Constants use camelCase
+  like any other binding (no `UPPER_SNAKE_CASE`); avoid `else` — return early
+  with guard clauses instead (see the code-style-guide skill).
 - Top of file: a **block header comment** (`/** … */`) that states, in prose:
   1. what the component does and *why it is needed* (the gap it closes);
   2. **what the platform already does** so the script does not reimplement it;
@@ -146,7 +149,7 @@ Boot (`_shared/js/boot.js`) lazily imports the module when it sees
   (`classList.toggle(cls, force)`) so a mutation that changes an element's box
   cannot feed back into a `ResizeObserver` as an infinite loop.
 - **Pure utilities are direct imports** from `_shared/js/` as flat siblings
-  (`import { rafThrottle } from "./rafThrottle.js"`) — the build resolves and
+  (`import { rafThrottle } from './rafThrottle.js';`) — the build resolves and
   bundles them into the component's lazy chunk. **Configured/stateful
   collaborators come via `services`** (DI). See `CLAUDE.md`.
 - Collapse bursts of resize/observer/scroll events into **one measurement per

@@ -89,7 +89,7 @@
 
 // Copy-paste note: requires _shared/js/debounce.js
 // (copy it along into the target project)
-import { debounceThenExecute } from "./debounce.js"
+import { debounceThenExecute } from './debounce.js';
 
 
 
@@ -97,21 +97,21 @@ const defaults = {
 
   // Behavioural hooks (data attributes, not style classes, so the JS stays
   // decoupled from the CSS). All of them live inside the module element.
-  selContainer: "[data-marquee-container]", // clipping viewport (flex row)
-  selAnimated: "[data-marquee-animated]",   // the track that scrolls
-  selToggle: "[data-marquee-toggle]",       // optional pause/play button
+  selContainer: '[data-marquee-container]', // clipping viewport (flex row)
+  selAnimated: '[data-marquee-animated]',   // the track that scrolls
+  selToggle: '[data-marquee-toggle]',       // optional pause/play button
 
   // Flag written onto generated clone tracks so they can be recognized,
   // styled and removed again.
-  cloneAttr: "data-marquee-clone",
+  cloneAttr: 'data-marquee-clone',
 
   // Per-instance option attributes (see the header comment) and their
   // fallbacks when an attribute is absent or invalid.
-  directionAttr: "data-marquee-direction",
-  direction: "left",          // visual scroll direction (left|right)
-  startAttr: "data-marquee-start",
-  startMode: "always",        // always | overflow (run only on overflow)
-  speedAttr: "data-marquee-speed",
+  directionAttr: 'data-marquee-direction',
+  direction: 'left',          // visual scroll direction (left|right)
+  startAttr: 'data-marquee-start',
+  startMode: 'always',        // always | overflow (run only on overflow)
+  speedAttr: 'data-marquee-speed',
   speed: 80,                  // px/s — one constant velocity for the whole
                               // cycle, so tickers with differently long
                               // content all scroll at the same pace
@@ -119,43 +119,43 @@ const defaults = {
   // track can be measured — speed needs a width to turn into a duration
   // (see getCycleDuration).
   fallbackCycleSeconds: 8,
-  clonesAttr: "data-marquee-clones",
+  clonesAttr: 'data-marquee-clones',
   clones: 3,                  // minimum number of generated clone tracks
 
   // State classes written on the module element (styling hooks only; the
   // JS never reads them back).
-  runningClass: "is-running", // animations are built (possibly paused)
-  pausedClass: "is-paused",   // the USER chose pause (toggle / reduced
+  runningClass: 'is-running', // animations are built (possibly paused)
+  pausedClass: 'is-paused',   // the USER chose pause (toggle / reduced
                               // motion) — not set for transient hover or
                               // focus pauses
 
   // How long a resize burst may settle before overflow and clone count
   // are re-evaluated.
   debounceMs: 100,
-}
+};
 
 
 
 class Marquee {
 
   constructor(root, config, reporter) {
-    this.root = root
-    this.config = config
-    this.reporter = reporter
+    this.root = root;
+    this.config = config;
+    this.reporter = reporter;
 
-    this.container = root.querySelector(config.selContainer)
-    this.animated = root.querySelector(config.selAnimated)
-    this.toggle = root.querySelector(config.selToggle)
-    this.parent = root.parentElement
+    this.container = root.querySelector(config.selContainer);
+    this.animated = root.querySelector(config.selAnimated);
+    this.toggle = root.querySelector(config.selToggle);
+    this.parent = root.parentElement;
 
     if (!this.container) {
-      this.reportMissing("container", config.selContainer)
-      return
+      this.reportMissing('container', config.selContainer);
+      return;
     }
 
     if (!this.animated) {
-      this.reportMissing("animated", config.selAnimated)
-      return
+      this.reportMissing('animated', config.selAnimated);
+      return;
     }
 
     // Exactly one track is expected: it is the element that gets cloned and
@@ -163,78 +163,78 @@ class Marquee {
     // warn instead of letting a typo change the visible result unnoticed.
     if (root.querySelectorAll(config.selAnimated).length > 1) {
       this.reporter?.report(
-        "marquee",
+        'marquee',
         `more than one "${config.selAnimated}" found; only the first track` +
-        " is animated and cloned — wrap all moving content in a single" +
-        " track.",
+        ' is animated and cloned — wrap all moving content in a single' +
+        ' track.',
         this.root
-      )
+      );
     }
 
     this.direction = this.readKeyword(
-      config.directionAttr, ["left", "right"], config.direction
-    )
+      config.directionAttr, ['left', 'right'], config.direction
+    );
     this.startMode = this.readKeyword(
-      config.startAttr, ["always", "overflow"], config.startMode
-    )
-    this.speed = this.readNumber(config.speedAttr, config.speed, false)
-    this.minClones = this.readNumber(config.clonesAttr, config.clones, true)
+      config.startAttr, ['always', 'overflow'], config.startMode
+    );
+    this.speed = this.readNumber(config.speedAttr, config.speed, false);
+    this.minClones = this.readNumber(config.clonesAttr, config.clones, true);
 
-    this.allAnimated = []
-    this.allAnimations = []
-    this.isRunning = false
-    this.resizeObserver = null
+    this.allAnimated = [];
+    this.allAnimations = [];
+    this.isRunning = false;
+    this.resizeObserver = null;
 
     // Seconds per cycle actually applied to the running animations, always
     // derived from the track width (see getCycleDuration). The fallback
     // stands in until the first measurement.
-    this.cycleDuration = config.fallbackCycleSeconds
+    this.cycleDuration = config.fallbackCycleSeconds;
 
     // Border-box width of the source track at the last (re)build. The
     // seamless loop relies on every track being an exact, equal-width copy,
     // so a change here forces a re-clone (see run).
-    this.contentWidth = 0
+    this.contentWidth = 0;
 
     // Three independent pause reasons; the animations run only while none
     // of them applies (see syncPlayState). Only userPaused is a durable
     // choice that is reflected into aria-pressed / is-paused.
-    this.hoverPaused = false
-    this.focusPaused = false
+    this.hoverPaused = false;
+    this.focusPaused = false;
 
     // Reduced motion starts the marquee paused; the toggle then acts as an
     // explicit opt-in to motion.
-    this.reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)")
-    this.userPaused = this.reducedMotion.matches
+    this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    this.userPaused = this.reducedMotion.matches;
 
-    this.recompute = debounceThenExecute(this.evaluate, config.debounceMs)
+    this.recompute = debounceThenExecute(this.evaluate, config.debounceMs);
 
-    this.setup()
+    this.setup();
   }
 
 
 
   setup = () => {
-    this.wireToggle()
-    this.wirePauseListeners()
-    this.observeResize()
-    this.reducedMotion.addEventListener("change", this.handleMotionChange)
+    this.wireToggle();
+    this.wirePauseListeners();
+    this.observeResize();
+    this.reducedMotion.addEventListener('change', this.handleMotionChange);
 
     // Reflect the initial (possibly reduced-motion) pause state before the
     // first animation exists.
-    this.syncPlayState()
+    this.syncPlayState();
 
-    document.readyState === "loading"
-      ? document.addEventListener("DOMContentLoaded", this.afterLayout, { once: true })
-      : this.afterLayout()
+    document.readyState === 'loading'
+      ? document.addEventListener('DOMContentLoaded', this.afterLayout, { once: true })
+      : this.afterLayout();
 
     // Web fonts and late-loading assets change the track width, so the
     // overflow / clone math is re-run once they have settled.
     if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(this.recompute).catch(() => {})
+      document.fonts.ready.then(this.recompute).catch(() => {});
     }
 
-    window.addEventListener("load", this.recompute, { once: true })
-  }
+    window.addEventListener('load', this.recompute, { once: true });
+  };
 
 
 
@@ -245,94 +245,94 @@ class Marquee {
   wireToggle = () => {
     if (!this.toggle) {
       this.reporter?.report(
-        "marquee",
+        'marquee',
         `no ${this.config.selToggle} button found — auto-playing motion` +
-        " should offer a pause control (WCAG 2.2.2).",
+        ' should offer a pause control (WCAG 2.2.2).',
         this.root
-      )
-      return
+      );
+      return;
     }
 
-    this.toggle.hidden = false
-    this.toggle.addEventListener("click", this.handleToggle)
-  }
+    this.toggle.hidden = false;
+    this.toggle.addEventListener('click', this.handleToggle);
+  };
 
 
 
   // Pauses while the pointer hovers the track or focus is inside it (a
   // keyboard user reading a link should not have it run away).
   wirePauseListeners = () => {
-    this.container.addEventListener("mouseenter", this.handleMouseEnter)
-    this.container.addEventListener("mouseleave", this.handleMouseLeave)
-    this.container.addEventListener("focusin", this.handleFocusIn)
-    this.container.addEventListener("focusout", this.handleFocusOut)
-  }
+    this.container.addEventListener('mouseenter', this.handleMouseEnter);
+    this.container.addEventListener('mouseleave', this.handleMouseLeave);
+    this.container.addEventListener('focusin', this.handleFocusIn);
+    this.container.addEventListener('focusout', this.handleFocusOut);
+  };
 
 
 
   // Watches every element whose size affects the overflow / clone math.
   observeResize = () => {
-    window.addEventListener("resize", this.recompute, { passive: true })
+    window.addEventListener('resize', this.recompute, { passive: true });
 
-    if (!("ResizeObserver" in window)) return
+    if (!('ResizeObserver' in window)) return;
 
-    this.resizeObserver = new ResizeObserver(this.recompute)
+    this.resizeObserver = new ResizeObserver(this.recompute);
     const observedElements = [
       this.parent, this.root, this.container, this.animated,
-    ]
+    ];
 
     observedElements
       .filter((element) => element instanceof HTMLElement)
-      .forEach((element) => this.resizeObserver.observe(element))
-  }
+      .forEach((element) => this.resizeObserver.observe(element));
+  };
 
 
 
   // Waits for layout to settle (two frames) before the first measurement.
   afterLayout = () => {
-    requestAnimationFrame(() => requestAnimationFrame(this.evaluate))
-  }
+    requestAnimationFrame(() => requestAnimationFrame(this.evaluate));
+  };
 
 
 
   // Starts or stops the marquee based on the current start mode.
   evaluate = () => {
     if (this.shouldStart()) {
-      this.run()
-      return
+      this.run();
+      return;
     }
 
-    this.stop()
-  }
+    this.stop();
+  };
 
 
 
   // Decides whether the marquee should currently animate.
   shouldStart = () => {
-    if (this.startMode === "always") return true
+    if (this.startMode === 'always') return true;
 
-    return this.hasHorizontalOverflow()
-  }
+    return this.hasHorizontalOverflow();
+  };
 
 
 
   // Checks whether the track content exceeds the visible track width.
   hasHorizontalOverflow = () => {
-    const visibleWidth = this.getVisibleWidth()
+    const visibleWidth = this.getVisibleWidth();
 
-    if (!Number.isFinite(visibleWidth)) return false
+    if (!Number.isFinite(visibleWidth)) return false;
 
-    return this.animated.scrollWidth - visibleWidth > 1
-  }
+    return this.animated.scrollWidth - visibleWidth > 1;
+  };
 
 
 
   // Returns the smallest available visible width for the marquee track.
   getVisibleWidth = () => {
-    const widths = [this.container.clientWidth, this.root.clientWidth]
+    const widths = [this.container.clientWidth, this.root.clientWidth];
 
     if (this.parent instanceof HTMLElement) {
-      widths.push(this.parent.clientWidth)
+      widths.push(this.parent.clientWidth);
     }
 
     return widths
@@ -340,8 +340,8 @@ class Marquee {
       .reduce(
         (smallest, value) => Math.min(smallest, value),
         Number.POSITIVE_INFINITY
-      )
-  }
+      );
+  };
 
 
 
@@ -358,97 +358,97 @@ class Marquee {
   // ResizeObserver notification caused by our own clone insertion settles
   // instead of looping.
   run = () => {
-    const contentWidth = this.animated.offsetWidth
-    const requiredCloneCount = this.getRequiredCloneCount()
+    const contentWidth = this.animated.offsetWidth;
+    const requiredCloneCount = this.getRequiredCloneCount();
 
     if (
       this.isRunning &&
       this.getCurrentCloneCount() === requiredCloneCount &&
       this.contentWidth === contentWidth
-    ) return
+    ) return;
 
     if (this.isRunning) {
-      this.cancelAnimations()
-      this.removeClones()
+      this.cancelAnimations();
+      this.removeClones();
     }
 
-    this.contentWidth = contentWidth
-    this.cycleDuration = this.getCycleDuration()
-    this.cloneItems(requiredCloneCount)
-    this.setAnimation()
-    this.isRunning = true
-    this.root.classList.add(this.config.runningClass)
+    this.contentWidth = contentWidth;
+    this.cycleDuration = this.getCycleDuration();
+    this.cloneItems(requiredCloneCount);
+    this.setAnimation();
+    this.isRunning = true;
+    this.root.classList.add(this.config.runningClass);
 
     // Freshly created animations auto-play; re-apply the current pause
     // state so a paused marquee stays paused across a rebuild.
-    this.syncPlayState()
-  }
+    this.syncPlayState();
+  };
 
 
 
   // Stops the animation and removes the runtime clones — the DOM returns
   // to its original, unenhanced state.
   stop = () => {
-    if (!this.isRunning) return
+    if (!this.isRunning) return;
 
-    this.cancelAnimations()
-    this.removeClones()
-    this.isRunning = false
-    this.root.classList.remove(this.config.runningClass)
-  }
+    this.cancelAnimations();
+    this.removeClones();
+    this.isRunning = false;
+    this.root.classList.remove(this.config.runningClass);
+  };
 
 
 
   // Calculates how many clones are needed to avoid visible gaps: enough
   // tracks that viewport + one full cycle of travel is always covered.
   getRequiredCloneCount = () => {
-    const contentWidth = this.animated.scrollWidth
-    const visibleWidth = this.getVisibleWidth()
+    const contentWidth = this.animated.scrollWidth;
+    const visibleWidth = this.getVisibleWidth();
 
-    if (!Number.isFinite(contentWidth) || contentWidth <= 0) return this.minClones
-    if (!Number.isFinite(visibleWidth) || visibleWidth <= 0) return this.minClones
+    if (!Number.isFinite(contentWidth) || contentWidth <= 0) return this.minClones;
+    if (!Number.isFinite(visibleWidth) || visibleWidth <= 0) return this.minClones;
 
-    const requiredTracks = Math.ceil(visibleWidth / contentWidth) + 1
-    const autoClones = Math.max(requiredTracks - 1, 1)
+    const requiredTracks = Math.ceil(visibleWidth / contentWidth) + 1;
+    const autoClones = Math.max(requiredTracks - 1, 1);
 
-    return Math.max(this.minClones, autoClones)
-  }
+    return Math.max(this.minClones, autoClones);
+  };
 
 
 
   // Returns the number of managed clone tracks.
-  getCurrentCloneCount = () => Math.max(this.allAnimated.length - 1, 0)
+  getCurrentCloneCount = () => Math.max(this.allAnimated.length - 1, 0);
 
 
 
   // Duplicates the track often enough to fill the animation loop.
   cloneItems = (cloneCount) => {
-    if (this.allAnimated.length) return
+    if (this.allAnimated.length) return;
 
-    this.allAnimated.push(this.animated)
-    const fragment = document.createDocumentFragment()
+    this.allAnimated.push(this.animated);
+    const fragment = document.createDocumentFragment();
 
     for (let i = 0; i < cloneCount; i++) {
-      const clone = this.animated.cloneNode(true)
+      const clone = this.animated.cloneNode(true);
 
-      clone.setAttribute(this.config.cloneAttr, "")
+      clone.setAttribute(this.config.cloneAttr, '');
 
       // Clones are a purely visual repetition of the original track: inert
       // takes them out of the accessibility tree and the tab order in one
       // go; aria-hidden is the belt-and-braces for engines without inert
       // support. Cloned ids are stripped so the document keeps its ids
       // unique.
-      clone.setAttribute("aria-hidden", "true")
-      clone.inert = true
-      clone.removeAttribute("id")
-      clone.querySelectorAll("[id]").forEach((node) => node.removeAttribute("id"))
+      clone.setAttribute('aria-hidden', 'true');
+      clone.inert = true;
+      clone.removeAttribute('id');
+      clone.querySelectorAll('[id]').forEach((node) => node.removeAttribute('id'));
 
-      fragment.appendChild(clone)
-      this.allAnimated.push(clone)
+      fragment.appendChild(clone);
+      this.allAnimated.push(clone);
     }
 
-    this.container.appendChild(fragment)
-  }
+    this.container.appendChild(fragment);
+  };
 
 
 
@@ -456,10 +456,10 @@ class Marquee {
   removeClones = () => {
     this.container
       .querySelectorAll(`[${this.config.cloneAttr}]`)
-      .forEach((clone) => clone.remove())
+      .forEach((clone) => clone.remove());
 
-    this.allAnimated = []
-  }
+    this.allAnimated = [];
+  };
 
 
 
@@ -468,28 +468,28 @@ class Marquee {
   // regardless of how long its content is. The fixed fallback stands in only
   // while the width cannot be measured yet.
   getCycleDuration = () => {
-    const trackWidth = this.animated.offsetWidth
+    const trackWidth = this.animated.offsetWidth;
     if (!Number.isFinite(trackWidth) || trackWidth <= 0) {
-      return this.config.fallbackCycleSeconds
+      return this.config.fallbackCycleSeconds;
     }
 
-    return trackWidth / this.speed
-  }
+    return trackWidth / this.speed;
+  };
 
 
 
   // Starts a Web Animation on every managed track. No inline styles are
   // involved — pausing and cancelling happen on the Animation objects.
   setAnimation = () => {
-    const keyframes = this.getKeyframes()
+    const keyframes = this.getKeyframes();
 
     this.allAnimations = this.allAnimated.map((animated) =>
       animated.animate(keyframes, {
         duration: this.cycleDuration * 1000,
         iterations: Infinity,
       })
-    )
-  }
+    );
+  };
 
 
 
@@ -500,26 +500,26 @@ class Marquee {
   // direction needs the mirrored translate range to keep the viewport
   // covered at every point of the cycle.
   getKeyframes = () => {
-    const rtlContext = getComputedStyle(this.container).direction === "rtl"
+    const rtlContext = getComputedStyle(this.container).direction === 'rtl';
 
-    if (this.direction === "left") {
+    if (this.direction === 'left') {
       return rtlContext
-        ? [{ transform: "translateX(100%)" }, { transform: "translateX(0)" }]
-        : [{ transform: "translateX(0)" }, { transform: "translateX(-100%)" }]
+        ? [{ transform: 'translateX(100%)' }, { transform: 'translateX(0)' }]
+        : [{ transform: 'translateX(0)' }, { transform: 'translateX(-100%)' }];
     }
 
     return rtlContext
-      ? [{ transform: "translateX(0)" }, { transform: "translateX(100%)" }]
-      : [{ transform: "translateX(-100%)" }, { transform: "translateX(0)" }]
-  }
+      ? [{ transform: 'translateX(0)' }, { transform: 'translateX(100%)' }]
+      : [{ transform: 'translateX(-100%)' }, { transform: 'translateX(0)' }];
+  };
 
 
 
   // Cancels all active Web Animation instances.
   cancelAnimations = () => {
-    this.allAnimations.forEach((animation) => animation.cancel())
-    this.allAnimations = []
-  }
+    this.allAnimations.forEach((animation) => animation.cancel());
+    this.allAnimations = [];
+  };
 
 
 
@@ -527,59 +527,59 @@ class Marquee {
   // aria-pressed reflect only the durable USER choice; hover/focus pauses
   // are transient and stay invisible to styling and AT.
   syncPlayState = () => {
-    const paused = this.userPaused || this.hoverPaused || this.focusPaused
+    const paused = this.userPaused || this.hoverPaused || this.focusPaused;
 
-    this.root.classList.toggle(this.config.pausedClass, this.userPaused)
-    this.toggle?.setAttribute("aria-pressed", String(this.userPaused))
+    this.root.classList.toggle(this.config.pausedClass, this.userPaused);
+    this.toggle?.setAttribute('aria-pressed', String(this.userPaused));
 
     this.allAnimations.forEach((animation) => {
       if (paused) {
-        animation.pause()
-        return
+        animation.pause();
+        return;
       }
 
-      animation.play()
-    })
-  }
+      animation.play();
+    });
+  };
 
 
 
   handleToggle = () => {
-    this.userPaused = !this.userPaused
-    this.syncPlayState()
-  }
+    this.userPaused = !this.userPaused;
+    this.syncPlayState();
+  };
 
 
 
   handleMouseEnter = () => {
-    this.hoverPaused = true
-    this.syncPlayState()
-  }
+    this.hoverPaused = true;
+    this.syncPlayState();
+  };
 
 
 
   handleMouseLeave = () => {
-    this.hoverPaused = false
-    this.syncPlayState()
-  }
+    this.hoverPaused = false;
+    this.syncPlayState();
+  };
 
 
 
   handleFocusIn = () => {
-    this.focusPaused = true
-    this.syncPlayState()
-  }
+    this.focusPaused = true;
+    this.syncPlayState();
+  };
 
 
 
   handleFocusOut = (event) => {
     // Focus moving between elements inside the track is not a reason to
     // resume.
-    if (event.relatedTarget && this.container.contains(event.relatedTarget)) return
+    if (event.relatedTarget && this.container.contains(event.relatedTarget)) return;
 
-    this.focusPaused = false
-    this.syncPlayState()
-  }
+    this.focusPaused = false;
+    this.syncPlayState();
+  };
 
 
 
@@ -587,11 +587,11 @@ class Marquee {
   // not auto-resume — staying still is the safe default; the toggle is
   // right there.
   handleMotionChange = (event) => {
-    if (!event.matches) return
+    if (!event.matches) return;
 
-    this.userPaused = true
-    this.syncPlayState()
-  }
+    this.userPaused = true;
+    this.syncPlayState();
+  };
 
 
 
@@ -599,66 +599,66 @@ class Marquee {
   // falls back silently; a present but invalid value falls back WITH a
   // warning so a typo never silently changes the behaviour.
   readKeyword = (attr, allowed, fallback) => {
-    const raw = this.root.getAttribute(attr)
-    if (raw === null) return fallback
+    const raw = this.root.getAttribute(attr);
+    if (raw === null) return fallback;
 
-    const value = raw.trim().toLowerCase()
-    if (allowed.includes(value)) return value
+    const value = raw.trim().toLowerCase();
+    if (allowed.includes(value)) return value;
 
     this.reporter?.report(
-      "marquee",
-      `"${raw}" is not a valid ${attr} (${allowed.join("|")});` +
+      'marquee',
+      `"${raw}" is not a valid ${attr} (${allowed.join('|')});` +
       ` using "${fallback}".`,
       this.root
-    )
-    return fallback
-  }
+    );
+    return fallback;
+  };
 
 
 
   // Same contract as readKeyword, for positive numeric options.
   readNumber = (attr, fallback, wantsInteger) => {
-    const raw = this.root.getAttribute(attr)
-    if (raw === null) return fallback
+    const raw = this.root.getAttribute(attr);
+    if (raw === null) return fallback;
 
     const parsed = wantsInteger
       ? Number.parseInt(raw, 10)
-      : Number.parseFloat(raw)
+      : Number.parseFloat(raw);
 
-    if (Number.isFinite(parsed) && parsed > 0) return parsed
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
 
     this.reporter?.report(
-      "marquee",
+      'marquee',
       `"${raw}" is not a valid ${attr} (positive number); ` +
-      (fallback === null ? "ignoring it." : `using ${fallback}.`),
+      (fallback === null ? 'ignoring it.' : `using ${fallback}.`),
       this.root
-    )
-    return fallback
-  }
+    );
+    return fallback;
+  };
 
 
 
   reportMissing = (name, selector) => {
     this.reporter?.report(
-      "marquee",
+      'marquee',
       `missing "${name}" element (selector: "${selector}").`,
       this.root
-    )
-  }
+    );
+  };
 }
 
 
 
 // loader-compatible entry point (boot.js -> mod.init(el, services))
 export function init(el, services = {}) {
-  const reporter = services.reporter
+  const reporter = services.reporter;
 
   if (!(el instanceof HTMLElement)) {
-    reporter?.report("marquee", "module was initialized on a non-element node.", el)
-    return
+    reporter?.report('marquee', 'module was initialized on a non-element node.', el);
+    return;
   }
 
   // Double-init is prevented by the loader (boot.js sets a per-element,
   // per-module flag before calling init), so no extra guard is needed here.
-  new Marquee(el, defaults, reporter)
+  new Marquee(el, defaults, reporter);
 }

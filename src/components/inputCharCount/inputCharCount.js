@@ -81,8 +81,8 @@
 
 
 
-import { debounceThenExecute } from "./debounce.js"
-import { resolveLocale } from "./resolveLocale.js"
+import { debounceThenExecute } from './debounce.js';
+import { resolveLocale } from './resolveLocale.js';
 
 
 
@@ -90,19 +90,19 @@ const defaults = {
 
   // Field opt-ins (behavioural data attributes, not style classes, so the
   // JS stays decoupled from the CSS).
-  countdownAttr: "data-icc-countdown", // show remaining instead of used
-  textAttr: "data-icc-text",           // per-field visible template override
+  countdownAttr: 'data-icc-countdown', // show remaining instead of used
+  textAttr: 'data-icc-text',           // per-field visible template override
 
   // Injected elements. `counterClass` + `counterAttr` are styling hooks the
   // project owns; `statusClass` is the visually-hidden status region whose
   // one shipped style lives in inputCharCount.scss.
-  counterClass: "icc-counter",
-  counterAttr: "data-icc-counter",
-  statusClass: "icc-srStatus",
-  statusAttr: "data-icc-status",
+  counterClass: 'icc-counter',
+  counterAttr: 'data-icc-counter',
+  statusClass: 'icc-srStatus',
+  statusAttr: 'data-icc-status',
 
   // State hook (styling only; the JS owns writing it, never reads it back).
-  atLimitClass: "is-atLimit",
+  atLimitClass: 'is-atLimit',
 
   // How long typing must pause before the polite status region is updated,
   // so a screen reader announces the count once the user settles rather than
@@ -110,8 +110,8 @@ const defaults = {
   announceDelay: 500,
 
   // <html lang> matching none of these falls back to this locale.
-  fallbackLocale: "en",
-}
+  fallbackLocale: 'en',
+};
 
 
 
@@ -120,38 +120,38 @@ const defaults = {
 // are deliberately natural language ("3 of 200 characters", not "3 / 200",
 // which a screen reader would read as "3 slash 200"). {placeholders} are
 // interpolated from the live field by formatLabel.
-const LABELS = {
+const labels = {
 
   de: {
-    plainVisible: "{count} Zeichen",
-    plainSr: "{count} Zeichen eingegeben",
-    limitVisible: "{count} / {max}",
-    limitSr: "{count} von {max} Zeichen",
-    countdownVisible: "noch {remaining}",
-    countdownSr: "noch {remaining} von {max} Zeichen übrig",
-    atLimitSr: "Maximale Länge erreicht: {max} von {max} Zeichen.",
+    plainVisible: '{count} Zeichen',
+    plainSr: '{count} Zeichen eingegeben',
+    limitVisible: '{count} / {max}',
+    limitSr: '{count} von {max} Zeichen',
+    countdownVisible: 'noch {remaining}',
+    countdownSr: 'noch {remaining} von {max} Zeichen übrig',
+    atLimitSr: 'Maximale Länge erreicht: {max} von {max} Zeichen.',
   },
 
   en: {
-    plainVisible: "{count} characters",
-    plainSr: "{count} characters entered",
-    limitVisible: "{count} / {max}",
-    limitSr: "{count} of {max} characters",
-    countdownVisible: "{remaining} left",
-    countdownSr: "{remaining} of {max} characters remaining",
-    atLimitSr: "Character limit reached: {max} of {max} characters.",
+    plainVisible: '{count} characters',
+    plainSr: '{count} characters entered',
+    limitVisible: '{count} / {max}',
+    limitSr: '{count} of {max} characters',
+    countdownVisible: '{remaining} left',
+    countdownSr: '{remaining} of {max} characters remaining',
+    atLimitSr: 'Character limit reached: {max} of {max} characters.',
   },
-}
+};
 
 
 
 // Interpolates {placeholder} tokens in a template from a plain values object.
 // Unknown placeholders are left as-is so a typo stays visible, not silent.
 function formatLabel(template, tokens) {
-  if (!template) return ""
+  if (!template) return '';
   return String(template).replace(/\{(\w+)\}/g, (match, key) =>
     key in tokens ? String(tokens[key]) : match
-  )
+  );
 }
 
 
@@ -159,72 +159,72 @@ function formatLabel(template, tokens) {
 // Distinguishes multiple counted fields on one page so their generated
 // status-region ids never collide (a field without its own id still gets a
 // unique one).
-let instanceCount = 0
+let instanceCount = 0;
 
 
 
 class InputCharCount {
 
   constructor(field, config, reporter) {
-    this.field = field
-    this.config = config
-    this.reporter = reporter
+    this.field = field;
+    this.config = config;
+    this.reporter = reporter;
 
-    const locale = resolveLocale(Object.keys(LABELS), config.fallbackLocale)
-    this.labels = LABELS[locale] || LABELS[config.fallbackLocale]
+    const locale = resolveLocale(Object.keys(labels), config.fallbackLocale);
+    this.labels = labels[locale] || labels[config.fallbackLocale];
 
     // The native limit is the source of truth. A missing/zero maxlength means
     // "no limit" — plain count only, and countdown has nothing to count down.
-    const max = parseInt(field.getAttribute("maxlength") || "", 10)
-    this.max = Number.isFinite(max) && max > 0 ? max : 0
+    const max = parseInt(field.getAttribute('maxlength') || '', 10);
+    this.max = Number.isFinite(max) && max > 0 ? max : 0;
 
-    this.countdown = field.hasAttribute(config.countdownAttr)
+    this.countdown = field.hasAttribute(config.countdownAttr);
     if (this.countdown && !this.max) {
       this.reporter?.report(
-        "inputCharCount",
+        'inputCharCount',
         `${config.countdownAttr} needs a maxlength to count down; showing the plain count instead.`,
         field
-      )
-      this.countdown = false
+      );
+      this.countdown = false;
     }
 
     // A per-field override for the visible wording (the spoken text keeps
     // its locale wording for clarity).
-    this.textOverride = field.getAttribute(config.textAttr) || ""
+    this.textOverride = field.getAttribute(config.textAttr) || '';
 
     // Announce debounced: the visible counter updates instantly, but the
     // polite status region only settles after typing pauses (see renderSr).
-    this.announce = debounceThenExecute(this.renderSr, config.announceDelay)
+    this.announce = debounceThenExecute(this.renderSr, config.announceDelay);
 
-    this.setup()
+    this.setup();
   }
 
 
 
   setup = () => {
-    this.buildCounter()
-    this.buildStatus()
+    this.buildCounter();
+    this.buildStatus();
 
     // First paint is immediate for BOTH channels: the visible number so it is
     // never blank, and the status text so a field focused before typing is
     // already described by its current count (aria-describedby, set here).
-    this.renderVisible()
-    this.renderSr()
+    this.renderVisible();
+    this.renderSr();
 
-    this.field.addEventListener("input", this.handleInput)
-  }
+    this.field.addEventListener('input', this.handleInput);
+  };
 
 
 
   // The visible counter, right after the field. aria-hidden so it is a purely
   // sighted affordance and does not double up with the spoken status region.
   buildCounter = () => {
-    this.counter = document.createElement("div")
-    this.counter.className = this.config.counterClass
-    this.counter.setAttribute(this.config.counterAttr, "")
-    this.counter.setAttribute("aria-hidden", "true")
-    this.field.after(this.counter)
-  }
+    this.counter = document.createElement('div');
+    this.counter.className = this.config.counterClass;
+    this.counter.setAttribute(this.config.counterAttr, '');
+    this.counter.setAttribute('aria-hidden', 'true');
+    this.field.after(this.counter);
+  };
 
 
 
@@ -232,120 +232,120 @@ class InputCharCount {
   // region announced without stealing focus; a stable id lets us describe the
   // field with it (addDescribedBy) so the count is read on focus too.
   buildStatus = () => {
-    this.statusId = `iccStatus${++instanceCount}`
+    this.statusId = `iccStatus${++instanceCount}`;
 
-    this.status = document.createElement("div")
-    this.status.className = this.config.statusClass
-    this.status.setAttribute(this.config.statusAttr, "")
-    this.status.id = this.statusId
-    this.status.setAttribute("role", "status")
-    this.status.setAttribute("aria-live", "polite")
+    this.status = document.createElement('div');
+    this.status.className = this.config.statusClass;
+    this.status.setAttribute(this.config.statusAttr, '');
+    this.status.id = this.statusId;
+    this.status.setAttribute('role', 'status');
+    this.status.setAttribute('aria-live', 'polite');
 
-    this.counter.after(this.status)
-    this.addDescribedBy(this.field, this.statusId)
-  }
+    this.counter.after(this.status);
+    this.addDescribedBy(this.field, this.statusId);
+  };
 
 
 
   handleInput = () => {
     // Visible feedback is instant; the spoken announcement is debounced so a
     // screen reader is not interrupted on every keystroke.
-    this.renderVisible()
-    this.announce()
-  }
+    this.renderVisible();
+    this.announce();
+  };
 
 
 
   // Live values, recomputed from the field on every render so the counter can
   // never drift from the actual value.
   tokens = () => {
-    const count = this.field.value.length
+    const count = this.field.value.length;
     return {
       count,
       max: this.max,
       remaining: this.max ? Math.max(0, this.max - count) : 0,
-    }
-  }
+    };
+  };
 
 
 
   // Writes the visible counter and toggles at-limit. Both writes are
   // idempotent (textContent assignment, classList.toggle with a force flag).
   renderVisible = () => {
-    const tokens = this.tokens()
+    const tokens = this.tokens();
 
-    const template = this.textOverride || this.visibleTemplate()
-    this.counter.textContent = formatLabel(template, tokens)
+    const template = this.textOverride || this.visibleTemplate();
+    this.counter.textContent = formatLabel(template, tokens);
 
     // At-limit is meaningful only when there is a limit. Toggle it on the
     // field so the project can style the field and/or its sibling counter.
     if (this.max) {
       this.field.classList.toggle(
         this.config.atLimitClass, tokens.count >= this.max
-      )
+      );
     }
-  }
+  };
 
 
 
   // Writes the spoken status text. At the limit we say so explicitly, so a
   // screen-reader user learns the field will accept no more input.
   renderSr = () => {
-    const tokens = this.tokens()
+    const tokens = this.tokens();
 
     if (this.max && tokens.count >= this.max) {
-      this.status.textContent = formatLabel(this.labels.atLimitSr, tokens)
-      return
+      this.status.textContent = formatLabel(this.labels.atLimitSr, tokens);
+      return;
     }
 
-    this.status.textContent = formatLabel(this.srTemplate(), tokens)
-  }
+    this.status.textContent = formatLabel(this.srTemplate(), tokens);
+  };
 
 
 
   visibleTemplate = () => {
-    if (!this.max) return this.labels.plainVisible
-    return this.countdown ? this.labels.countdownVisible : this.labels.limitVisible
-  }
+    if (!this.max) return this.labels.plainVisible;
+    return this.countdown ? this.labels.countdownVisible : this.labels.limitVisible;
+  };
 
 
 
   srTemplate = () => {
-    if (!this.max) return this.labels.plainSr
-    return this.countdown ? this.labels.countdownSr : this.labels.limitSr
-  }
+    if (!this.max) return this.labels.plainSr;
+    return this.countdown ? this.labels.countdownSr : this.labels.limitSr;
+  };
 
 
 
   // --- aria-describedby token helper (preserves any author-set ids) --------
 
   addDescribedBy = (field, id) => {
-    const tokens = (field.getAttribute("aria-describedby") || "")
+    const tokens = (field.getAttribute('aria-describedby') || '')
       .split(/\s+/)
-      .filter(Boolean)
+      .filter(Boolean);
 
-    if (!tokens.includes(id)) tokens.push(id)
-    field.setAttribute("aria-describedby", tokens.join(" "))
-  }
+    if (!tokens.includes(id)) tokens.push(id);
+    field.setAttribute('aria-describedby', tokens.join(' '));
+  };
 }
 
 
 
 // loader-compatible entry point (boot.js -> mod.init(el, services))
 export function init(el, services = {}) {
-  const reporter = services.reporter
+  const reporter = services.reporter;
 
   if (
     !(el instanceof HTMLTextAreaElement || el instanceof HTMLInputElement)
   ) {
     reporter?.report(
-      "inputCharCount",
-      "module must be initialized on an <input> or <textarea>.", el
-    )
-    return
+      'inputCharCount',
+      'module must be initialized on an <input> or <textarea>.', el
+    );
+    return;
   }
 
   // Double-init is prevented by the loader (boot.js sets a per-element,
   // per-module flag before calling init), so no extra guard is needed here.
-  new InputCharCount(el, defaults, reporter)
+  new InputCharCount(el, defaults, reporter);
 }

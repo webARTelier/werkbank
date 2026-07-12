@@ -11,7 +11,7 @@
 const defaults = {
   selTabTitle: '[data-tab-title]',
   selTabContent: '[data-tab-content]'
-}
+};
 
 class Tabs {
 
@@ -48,25 +48,25 @@ class Tabs {
       }
 
       this.itemsMap[target] = { tabTitle, tabContentItem };
-    })
-  }
+    });
+  };
 
 
   // resolves tab panels within the module first, then by document id.
   resolveContentItem = (id) => {
-    const selector = `#${this.escapeCssId(id)}`
-    return this.module.querySelector(selector) || document.getElementById(id)
-  }
+    const selector = `#${this.escapeCssId(id)}`;
+    return this.module.querySelector(selector) || document.getElementById(id);
+  };
 
 
   // escapes tab panel ids for safe use in query selectors.
   escapeCssId = (id) => {
-    if (typeof CSS !== "undefined" && typeof CSS.escape === "function") {
-      return CSS.escape(id)
+    if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') {
+      return CSS.escape(id);
     }
 
-    return id.replace(/([^\w-])/g, "\\$1")
-  }
+    return id.replace(/([^\w-])/g, '\\$1');
+  };
 
   
 
@@ -77,18 +77,18 @@ class Tabs {
     allContentItems.forEach((contentItem) => {
       if (!this.itemsMap[contentItem.id])
         this.handleOrphanedContent(contentItem.id);
-    })
-  }
+    });
+  };
 
   
 
   // opens the tab referenced by the current hash, if any
   activateLinkedTab = () => {
-    const target = location.hash.replace("#", "");
+    const target = location.hash.replace('#', '');
     if (!this.itemsMap[target]) return;
 
     this.openTab(this.itemsMap[target]);
-  }
+  };
 
   
 
@@ -97,16 +97,16 @@ class Tabs {
     if (this.activeItem) return;
     const firstTab = Object.values(this.itemsMap)[0];
     if (firstTab) this.openTab(firstTab);
-  }
+  };
 
 
   
   // wires up click and keyboard interaction
   startListening = () => {
-    this.module.addEventListener("click", this.handleClick);
-    this.module.addEventListener("keydown", this.handleKeydown);
-    this.module.addEventListener("keyup", this.handleKeyup);
-  }
+    this.module.addEventListener('click', this.handleClick);
+    this.module.addEventListener('keydown', this.handleKeydown);
+    this.module.addEventListener('keyup', this.handleKeyup);
+  };
 
 
   
@@ -122,7 +122,7 @@ class Tabs {
     if (!clickedTab || clickedTab === this.activeItem) return;
 
     this.openTab(clickedTab);
-  }
+  };
 
   
 
@@ -131,7 +131,7 @@ class Tabs {
     const currentTab = this.getActiveTab();
     if (!currentTab) return;
 
-    if (e.key === "Enter" || e.key === " ") e.preventDefault();
+    if (e.key === 'Enter' || e.key === ' ') e.preventDefault();
 
     let newTab = null;
 
@@ -153,16 +153,16 @@ class Tabs {
     }
 
     if (newTab) newTab.tabTitle.focus();
-  }
+  };
 
   
 
   // opens the focused tab on enter/space
   handleKeyup = (e) => {
-    if (e.key !== "Enter" && e.key !== " ") return;
+    if (e.key !== 'Enter' && e.key !== ' ') return;
     const currentTab = this.getActiveTab();
     if (currentTab) this.openTab(currentTab);
-  }
+  };
 
 
   
@@ -172,7 +172,7 @@ class Tabs {
     this.toggleItemClass(item, true);
     this.updateAriaAttributes(item, true);
     this.activeItem = item;
-  }
+  };
 
 
   
@@ -181,24 +181,24 @@ class Tabs {
     if (!this.activeItem) return;
     this.toggleItemClass(this.activeItem, false);
     this.updateAriaAttributes(this.activeItem, false);
-  }
+  };
 
 
   
   // toggles active class on title and panel
   toggleItemClass = (item, isActive) => {
-    item.tabTitle.classList.toggle("is-activeTab", isActive);
-    item.tabContentItem.classList.toggle("is-activeTab", isActive);
-  }
+    item.tabTitle.classList.toggle('is-activeTab', isActive);
+    item.tabContentItem.classList.toggle('is-activeTab', isActive);
+  };
 
 
   
   // updates aria-selected, tabindex, and hidden state
   updateAriaAttributes = (item, isActive) => {
-    item.tabTitle.setAttribute("aria-selected", isActive ? "true" : "false");
-    item.tabTitle.setAttribute("tabindex", isActive ? "0" : "-1");
+    item.tabTitle.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    item.tabTitle.setAttribute('tabindex', isActive ? '0' : '-1');
     item.tabContentItem.hidden = !isActive;
-  }
+  };
 
 
   
@@ -226,30 +226,30 @@ class Tabs {
     const newIndex = (index + direction + tabs.length) % tabs.length;
 
     return tabs[newIndex];
-  }
+  };
 
 
   
   // warns about tab panels that are not referenced by any title.
   handleOrphanedContent = (id) =>
-    this.reporter?.report("tabs", `orphaned tab content: '${id}'`);
+    this.reporter?.report('tabs', `orphaned tab content: '${id}'`);
 
 
 
   handleMissingContentItem = (id) =>
-    this.reporter?.report("tabs", `missing tab content: '${id}'`);
+    this.reporter?.report('tabs', `missing tab content: '${id}'`);
 }
 
 
 
 // loader-compatible entry point (boot.js -> mod.init(el, services))
 export function init(el, services = {}) {
-  const reporter = services.reporter
+  const reporter = services.reporter;
 
   if (!(el instanceof HTMLElement)) {
-    reporter?.report("tabs", "module was initialized on a non-element node.", el)
-    return
+    reporter?.report('tabs', 'module was initialized on a non-element node.', el);
+    return;
   }
 
-  new Tabs(el, defaults, reporter)
+  new Tabs(el, defaults, reporter);
 }

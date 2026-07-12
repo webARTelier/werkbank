@@ -94,7 +94,7 @@
  * --------------------------------------------------------------------------
  */
 
-import { resolveLocale } from "./resolveLocale.js"
+import { resolveLocale } from './resolveLocale.js';
 
 
 
@@ -102,32 +102,32 @@ const defaults = {
 
   // Behavioural hooks (data attributes, not style classes, so the JS stays
   // decoupled from the CSS). All of them live inside the module element.
-  selVideo: "video",                    // the self-hosted video
-  selToggle: "[data-video-toggle]",     // play / play-pause button
-  selFallback: "[data-video-fallback]", // facade no-JS link
-  selPoster: "[data-video-poster]",     // facade poster image
+  selVideo: 'video',                    // the self-hosted video
+  selToggle: '[data-video-toggle]',     // play / play-pause button
+  selFallback: '[data-video-fallback]', // facade no-JS link
+  selPoster: '[data-video-poster]',     // facade poster image
 
   // Per-instance option attributes (see the header comment).
-  youtubeAttr: "data-video-youtube",
-  titleAttr: "data-video-title",
+  youtubeAttr: 'data-video-youtube',
+  titleAttr: 'data-video-title',
 
   // Flag written onto the injected YouTube iframe so the stylesheet can
   // size it without the JS hooking onto styling classes.
-  embedAttr: "data-video-embed",
+  embedAttr: 'data-video-embed',
 
   // State class written on the module element (styling hook only; the JS
   // never reads it back).
-  playingClass: "is-playing",
+  playingClass: 'is-playing',
 
   // Privacy-friendly embed host plus fixed player parameters: autoplay=1
   // because the iframe only ever exists after an explicit user click, and
   // rel=0 to keep the end screen from advertising unrelated videos.
-  embedUrl: "https://www.youtube-nocookie.com/embed/",
-  embedParams: "autoplay=1&rel=0",
+  embedUrl: 'https://www.youtube-nocookie.com/embed/',
+  embedParams: 'autoplay=1&rel=0',
 
   // <html lang> matching none of the offered locales falls back to this.
-  fallbackLocale: "en",
-}
+  fallbackLocale: 'en',
+};
 
 
 
@@ -135,26 +135,26 @@ const defaults = {
 // between play and pause (media-player convention) instead of a constant
 // label with aria-pressed, because "what pressing does next" is the
 // clearer announcement for a transport control.
-const LABELS = {
+const labels = {
 
   de: {
-    play: "Video abspielen",
-    pause: "Video pausieren",
-    fallbackTitle: "YouTube-Video",
+    play: 'Video abspielen',
+    pause: 'Video pausieren',
+    fallbackTitle: 'YouTube-Video',
   },
 
   en: {
-    play: "Play video",
-    pause: "Pause video",
-    fallbackTitle: "YouTube video",
+    play: 'Play video',
+    pause: 'Pause video',
+    fallbackTitle: 'YouTube video',
   },
-}
+};
 
 
 
 // An id is exactly 11 characters from YouTube's id alphabet.
 function isYouTubeId(value) {
-  return /^[\w-]{11}$/.test(value || "")
+  return /^[\w-]{11}$/.test(value || '');
 }
 
 
@@ -164,33 +164,33 @@ function isYouTubeId(value) {
 // live/ — with or without www./m., also youtube-nocookie). Returns ""
 // when nothing usable is found so the caller can warn.
 function extractYouTubeId(raw) {
-  const value = (raw || "").trim()
+  const value = (raw || '').trim();
 
-  if (isYouTubeId(value)) return value
+  if (isYouTubeId(value)) return value;
 
-  let url
+  let url;
   try {
-    url = new URL(value)
+    url = new URL(value);
   } catch {
-    return ""
+    return '';
   }
 
-  const host = url.hostname.replace(/^(www|m)\./, "")
+  const host = url.hostname.replace(/^(www|m)\./, '');
 
-  if (host === "youtu.be") {
-    const id = url.pathname.split("/").filter(Boolean)[0]
-    return isYouTubeId(id) ? id : ""
+  if (host === 'youtu.be') {
+    const id = url.pathname.split('/').filter(Boolean)[0];
+    return isYouTubeId(id) ? id : '';
   }
 
-  if (host !== "youtube.com" && host !== "youtube-nocookie.com") return ""
+  if (host !== 'youtube.com' && host !== 'youtube-nocookie.com') return '';
 
-  const fromQuery = url.searchParams.get("v")
-  if (isYouTubeId(fromQuery)) return fromQuery
+  const fromQuery = url.searchParams.get('v');
+  if (isYouTubeId(fromQuery)) return fromQuery;
 
-  const segments = url.pathname.split("/").filter(Boolean)
-  if (!["shorts", "embed", "live"].includes(segments[0])) return ""
+  const segments = url.pathname.split('/').filter(Boolean);
+  if (!['shorts', 'embed', 'live'].includes(segments[0])) return '';
 
-  return isYouTubeId(segments[1]) ? segments[1] : ""
+  return isYouTubeId(segments[1]) ? segments[1] : '';
 }
 
 
@@ -201,57 +201,57 @@ function extractYouTubeId(raw) {
 class HostedVideo {
 
   constructor(root, video, config, reporter) {
-    this.root = root
-    this.video = video
-    this.config = config
-    this.reporter = reporter
+    this.root = root;
+    this.video = video;
+    this.config = config;
+    this.reporter = reporter;
 
-    this.toggle = root.querySelector(config.selToggle)
-    this.labels = LABELS[
-      resolveLocale(Object.keys(LABELS), config.fallbackLocale)
-    ]
+    this.toggle = root.querySelector(config.selToggle);
+    this.labels = labels[
+      resolveLocale(Object.keys(labels), config.fallbackLocale)
+    ];
 
     // The behaviour mode comes from the native attribute, read once: a
     // video that declares `autoplay` is an ambient loop with a persistent
     // toggle; anything else is click-to-play behind a single play button.
-    this.ambient = video.hasAttribute("autoplay")
+    this.ambient = video.hasAttribute('autoplay');
 
     // Ordered snapshot of the <source> list. The script re-runs the
     // native first-match-wins selection over it whenever a media query
     // flips (see selectSource).
-    this.sources = Array.from(video.querySelectorAll("source"))
+    this.sources = Array.from(video.querySelectorAll('source'))
       .map((source) => ({
-        src: source.getAttribute("src") || "",
-        media: source.getAttribute("media") || "",
+        src: source.getAttribute('src') || '',
+        media: source.getAttribute('media') || '',
       }))
-      .filter((source) => source.src !== "")
+      .filter((source) => source.src !== '');
 
-    this.reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)")
+    this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-    this.setup()
+    this.setup();
   }
 
 
 
   setup = () => {
-    if (!this.sources.length && !this.video.getAttribute("src")) {
+    if (!this.sources.length && !this.video.getAttribute('src')) {
       this.reporter?.report(
-        "video",
-        "the <video> has neither <source> children nor a src attribute —" +
-        " nothing to play.",
+        'video',
+        'the <video> has neither <source> children nor a src attribute —' +
+        ' nothing to play.',
         this.root
-      )
-      return
+      );
+      return;
     }
 
-    this.selectSource()
-    this.observeMediaQueries()
+    this.selectSource();
+    this.observeMediaQueries();
 
-    this.video.addEventListener("play", this.handlePlay)
-    this.video.addEventListener("pause", this.handlePause)
+    this.video.addEventListener('play', this.handlePlay);
+    this.video.addEventListener('pause', this.handlePause);
 
-    this.ambient ? this.setupAmbient() : this.setupClickToPlay()
-  }
+    this.ambient ? this.setupAmbient() : this.setupClickToPlay();
+  };
 
 
 
@@ -260,27 +260,27 @@ class HostedVideo {
   setupAmbient = () => {
     if (!this.toggle) {
       this.reporter?.report(
-        "video",
+        'video',
         `no ${this.config.selToggle} button found — an autoplaying video` +
-        " must offer a pause control (WCAG 2.2.2).",
+        ' must offer a pause control (WCAG 2.2.2).',
         this.root
-      )
+      );
     }
 
-    this.wireToggle()
+    this.wireToggle();
 
     // Reduced motion: prevent the autostart instead of racing it. Clearing
     // the autoplay flag stops a not-yet-started playback; pause() covers
     // the case where it already began. Playing stays available as an
     // explicit opt-in via the toggle.
     if (this.reducedMotion.matches) {
-      this.video.autoplay = false
-      this.video.pause()
+      this.video.autoplay = false;
+      this.video.pause();
     }
 
-    this.reducedMotion.addEventListener("change", this.handleMotionChange)
-    this.syncState()
-  }
+    this.reducedMotion.addEventListener('change', this.handleMotionChange);
+    this.syncState();
+  };
 
 
 
@@ -291,27 +291,27 @@ class HostedVideo {
   setupClickToPlay = () => {
     if (!this.toggle) {
       this.reporter?.report(
-        "video",
+        'video',
         `no ${this.config.selToggle} button found — leaving the native` +
-        " controls in place.",
+        ' controls in place.',
         this.root
-      )
-      return
+      );
+      return;
     }
 
-    this.video.controls = false
-    this.wireToggle()
-    this.syncState()
-  }
+    this.video.controls = false;
+    this.wireToggle();
+    this.syncState();
+  };
 
 
 
   wireToggle = () => {
-    if (!this.toggle) return
+    if (!this.toggle) return;
 
-    this.toggle.hidden = false
-    this.toggle.addEventListener("click", this.handleToggle)
-  }
+    this.toggle.hidden = false;
+    this.toggle.addEventListener('click', this.handleToggle);
+  };
 
 
 
@@ -322,25 +322,25 @@ class HostedVideo {
   observeMediaQueries = () => {
     const queries = [...new Set(
       this.sources.map((source) => source.media).filter(Boolean)
-    )]
+    )];
 
     queries.forEach((query) => {
-      const mq = window.matchMedia(query)
+      const mq = window.matchMedia(query);
 
       // An unparseable query serializes to "not all" and would silently
       // never match — surface the typo instead.
-      if (mq.media === "not all" && query !== "not all") {
+      if (mq.media === 'not all' && query !== 'not all') {
         this.reporter?.report(
-          "video",
+          'video',
           `"${query}" is not a valid media query; this <source> can never` +
-          " match.",
+          ' match.',
           this.root
-        )
+        );
       }
 
-      mq.addEventListener("change", this.handleMediaChange)
-    })
-  }
+      mq.addEventListener('change', this.handleMediaChange);
+    });
+  };
 
 
 
@@ -350,40 +350,40 @@ class HostedVideo {
   // survive the swap: the position is re-applied once the new source's
   // metadata is in.
   selectSource = () => {
-    if (!this.sources.length) return
+    if (!this.sources.length) return;
 
     const choice = this.sources.find(
       (source) => !source.media || window.matchMedia(source.media).matches
-    )
+    );
 
     if (!choice) {
       this.reporter?.report(
-        "video",
-        "no <source> matches the current viewport — add one without a" +
-        " media attribute as the fallback (last in the list).",
+        'video',
+        'no <source> matches the current viewport — add one without a' +
+        ' media attribute as the fallback (last in the list).',
         this.root
-      )
-      return
+      );
+      return;
     }
 
-    const resolved = new URL(choice.src, document.baseURI).href
-    if (this.video.currentSrc === resolved) return
+    const resolved = new URL(choice.src, document.baseURI).href;
+    if (this.video.currentSrc === resolved) return;
 
-    const wasPlaying = !this.video.paused && !this.video.ended
-    const position = this.video.currentTime
+    const wasPlaying = !this.video.paused && !this.video.ended;
+    const position = this.video.currentTime;
 
-    this.video.src = choice.src
+    this.video.src = choice.src;
 
     if (position > 0) {
-      this.video.addEventListener("loadedmetadata", () => {
-        this.video.currentTime = position
-      }, { once: true })
+      this.video.addEventListener('loadedmetadata', () => {
+        this.video.currentTime = position;
+      }, { once: true });
     }
 
     if (wasPlaying) {
-      this.video.play().catch(() => {})
+      this.video.play().catch(() => {});
     }
-  }
+  };
 
 
 
@@ -391,21 +391,21 @@ class HostedVideo {
   // drives the icon swap, the label announces what pressing does next,
   // and in click-to-play mode the native controls swap with the button.
   syncState = () => {
-    const playing = !this.video.paused && !this.video.ended
+    const playing = !this.video.paused && !this.video.ended;
 
-    this.root.classList.toggle(this.config.playingClass, playing)
+    this.root.classList.toggle(this.config.playingClass, playing);
 
-    if (!this.toggle) return
+    if (!this.toggle) return;
 
     this.toggle.setAttribute(
-      "aria-label", playing ? this.labels.pause : this.labels.play
-    )
+      'aria-label', playing ? this.labels.pause : this.labels.play
+    );
 
-    if (this.ambient) return
+    if (this.ambient) return;
 
     // Click-to-play: while playing the native controls own the surface
     // and the big play button disappears; on pause/end they swap back.
-    this.video.controls = playing
+    this.video.controls = playing;
 
     // Hiding the toggle while it holds the keyboard focus would drop the
     // focus to <body>, stranding keyboard users at the top of the page.
@@ -414,10 +414,10 @@ class HostedVideo {
     // by activeElement so play events from elsewhere (e.g. a source swap
     // resuming playback) never steal the user's focus.
     if (playing && document.activeElement === this.toggle) {
-      this.video.focus()
+      this.video.focus();
     }
 
-    this.toggle.hidden = playing
+    this.toggle.hidden = playing;
 
     // Same handoff in reverse: pausing via the native controls leaves the
     // focus on the <video>, whose controls — and with them its keyboard
@@ -425,28 +425,28 @@ class HostedVideo {
     // took the surface back over. The activeElement guard again keeps a
     // pause from elsewhere (e.g. programmatic) from stealing the focus.
     if (!playing && document.activeElement === this.video) {
-      this.toggle.focus()
+      this.toggle.focus();
     }
-  }
+  };
 
 
 
   handleToggle = () => {
     if (this.video.paused || this.video.ended) {
-      this.video.play().catch(() => {})
-      return
+      this.video.play().catch(() => {});
+      return;
     }
 
-    this.video.pause()
-  }
+    this.video.pause();
+  };
 
 
 
-  handlePlay = () => this.syncState()
+  handlePlay = () => this.syncState();
 
-  handlePause = () => this.syncState()
+  handlePause = () => this.syncState();
 
-  handleMediaChange = () => this.selectSource()
+  handleMediaChange = () => this.selectSource();
 
 
 
@@ -454,10 +454,10 @@ class HostedVideo {
   // does not auto-resume — staying still is the safe default; the toggle
   // is right there.
   handleMotionChange = (event) => {
-    if (!event.matches) return
+    if (!event.matches) return;
 
-    this.video.pause()
-  }
+    this.video.pause();
+  };
 }
 
 
@@ -468,43 +468,43 @@ class HostedVideo {
 class YouTubeFacade {
 
   constructor(root, config, reporter) {
-    this.root = root
-    this.config = config
-    this.reporter = reporter
+    this.root = root;
+    this.config = config;
+    this.reporter = reporter;
 
-    this.toggle = root.querySelector(config.selToggle)
-    this.fallback = root.querySelector(config.selFallback)
-    this.poster = root.querySelector(config.selPoster)
-    this.labels = LABELS[
-      resolveLocale(Object.keys(LABELS), config.fallbackLocale)
-    ]
+    this.toggle = root.querySelector(config.selToggle);
+    this.fallback = root.querySelector(config.selFallback);
+    this.poster = root.querySelector(config.selPoster);
+    this.labels = labels[
+      resolveLocale(Object.keys(labels), config.fallbackLocale)
+    ];
 
-    const raw = root.getAttribute(config.youtubeAttr)
-    this.videoId = extractYouTubeId(raw)
+    const raw = root.getAttribute(config.youtubeAttr);
+    this.videoId = extractYouTubeId(raw);
 
     if (!this.videoId) {
       this.reporter?.report(
-        "video",
+        'video',
         `"${raw}" is not a recognizable YouTube URL or video id — the` +
-        " facade stays unenhanced.",
+        ' facade stays unenhanced.',
         this.root
-      )
-      return
+      );
+      return;
     }
 
-    this.title = root.getAttribute(config.titleAttr) || ""
+    this.title = root.getAttribute(config.titleAttr) || '';
 
     if (!this.title) {
       this.reporter?.report(
-        "video",
+        'video',
         `no ${config.titleAttr} set — the embedded iframe needs an` +
         ` accessible title; using "${this.labels.fallbackTitle}".`,
         this.root
-      )
-      this.title = this.labels.fallbackTitle
+      );
+      this.title = this.labels.fallbackTitle;
     }
 
-    this.setup()
+    this.setup();
   }
 
 
@@ -512,24 +512,24 @@ class YouTubeFacade {
   setup = () => {
     if (!this.toggle) {
       this.reporter?.report(
-        "video",
+        'video',
         `no ${this.config.selToggle} button found — the facade stays` +
-        " unenhanced (the fallback link keeps working).",
+        ' unenhanced (the fallback link keeps working).',
         this.root
-      )
-      return
+      );
+      return;
     }
 
     // The button replaces the no-JS link as the way in; naming the video
     // in the label spares screen-reader users a click into the unknown.
     this.toggle.setAttribute(
-      "aria-label", `${this.labels.play}: ${this.title}`
-    )
-    this.toggle.hidden = false
-    this.toggle.addEventListener("click", this.handleActivate)
+      'aria-label', `${this.labels.play}: ${this.title}`
+    );
+    this.toggle.hidden = false;
+    this.toggle.addEventListener('click', this.handleActivate);
 
-    if (this.fallback) this.fallback.hidden = true
-  }
+    if (this.fallback) this.fallback.hidden = true;
+  };
 
 
 
@@ -537,64 +537,64 @@ class YouTubeFacade {
   // YouTube. autoplay=1 starts playback right away so the user does not
   // have to press play twice.
   handleActivate = () => {
-    const iframe = document.createElement("iframe")
+    const iframe = document.createElement('iframe');
 
     iframe.src =
-      `${this.config.embedUrl}${this.videoId}?${this.config.embedParams}`
-    iframe.title = this.title
+      `${this.config.embedUrl}${this.videoId}?${this.config.embedParams}`;
+    iframe.title = this.title;
     iframe.setAttribute(
-      "allow",
-      "accelerometer; autoplay; clipboard-write; encrypted-media;" +
-      " gyroscope; picture-in-picture; web-share"
-    )
-    iframe.setAttribute("allowfullscreen", "")
-    iframe.setAttribute("referrerpolicy", "strict-origin-when-cross-origin")
-    iframe.setAttribute(this.config.embedAttr, "")
+      'allow',
+      'accelerometer; autoplay; clipboard-write; encrypted-media;' +
+      ' gyroscope; picture-in-picture; web-share'
+    );
+    iframe.setAttribute('allowfullscreen', '');
+    iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+    iframe.setAttribute(this.config.embedAttr, '');
 
-    this.toggle.hidden = true
-    if (this.poster) this.poster.hidden = true
+    this.toggle.hidden = true;
+    if (this.poster) this.poster.hidden = true;
 
-    this.root.classList.add(this.config.playingClass)
-    this.root.appendChild(iframe)
+    this.root.classList.add(this.config.playingClass);
+    this.root.appendChild(iframe);
 
     // The activated button just vanished from the tab order; hand focus
     // to the player so keyboard users continue where they acted.
-    iframe.focus()
-  }
+    iframe.focus();
+  };
 }
 
 
 
 // loader-compatible entry point (boot.js -> mod.init(el, services))
 export function init(el, services = {}) {
-  const reporter = services.reporter
+  const reporter = services.reporter;
 
   if (!(el instanceof HTMLElement)) {
     reporter?.report(
-      "video",
-      "module was initialized on a non-element node.", el
-    )
-    return
+      'video',
+      'module was initialized on a non-element node.', el
+    );
+    return;
   }
 
   // Double-init is prevented by the loader (boot.js sets a per-element,
   // per-module flag before calling init), so no extra guard is needed here.
   if (el.hasAttribute(defaults.youtubeAttr)) {
-    new YouTubeFacade(el, defaults, reporter)
-    return
+    new YouTubeFacade(el, defaults, reporter);
+    return;
   }
 
-  const video = el.querySelector(defaults.selVideo)
+  const video = el.querySelector(defaults.selVideo);
 
   if (video) {
-    new HostedVideo(el, video, defaults, reporter)
-    return
+    new HostedVideo(el, video, defaults, reporter);
+    return;
   }
 
   reporter?.report(
-    "video",
+    'video',
     `neither a <video> child nor ${defaults.youtubeAttr} found — nothing` +
-    " to enhance.",
+    ' to enhance.',
     el
-  )
+  );
 }

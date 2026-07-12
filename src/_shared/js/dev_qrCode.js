@@ -65,5 +65,5 @@ document.addEventListener('DOMContentLoaded', function () {
     qrToggle.setAttribute('aria-expanded', String(isHidden));
     qrToggle.title = isHidden ? 'Hide QR code' : 'Show QR code for the current page';
     qrToggle.setAttribute('aria-label', qrToggle.title);
-  })
-})
+  });
+});

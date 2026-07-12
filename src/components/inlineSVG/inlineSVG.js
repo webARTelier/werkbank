@@ -82,37 +82,37 @@ const defaults = {
 
   // Only same-origin .svg sources are inlined. Sent with the fetch so an
   // authenticated same-origin asset still resolves.
-  fetchCredentials: "same-origin",
+  fetchCredentials: 'same-origin',
 
   // Attributes on the id-carrying nodes whose value may reference another id
   // via url(#id) — these must be rewritten alongside the id itself.
   urlRefAttrs: [
-    "clip-path",
-    "mask",
-    "filter",
-    "fill",
-    "stroke",
-    "marker-start",
-    "marker-mid",
-    "marker-end",
+    'clip-path',
+    'mask',
+    'filter',
+    'fill',
+    'stroke',
+    'marker-start',
+    'marker-mid',
+    'marker-end',
   ],
 
   // Attributes whose value is a bare #id reference (<use>, gradient links).
-  hashRefAttrs: ["href", "xlink:href"],
-}
+  hashRefAttrs: ['href', 'xlink:href'],
+};
 
 
 
 // Running counter shared across all conversions on the page, used to build a
 // unique id prefix per inlined SVG (see prefixSvgIds).
-let idCounter = 0
+let idCounter = 0;
 
 
 
 // Creates a unique prefix for the ids inside one inlined SVG.
 function nextIdPrefix() {
-  idCounter += 1
-  return `inlineSVG-${idCounter}`
+  idCounter += 1;
+  return `inlineSVG-${idCounter}`;
 }
 
 
@@ -121,18 +121,18 @@ function nextIdPrefix() {
 // file's parsed <svg> template (or null on failure). Repeated inlinings of
 // the same file share a single fetch + parse; every instance clones the
 // template before it is prefixed and mutated, so the cached node stays clean.
-const svgCache = new Map()
+const svgCache = new Map();
 
 
 
 // Returns the cached template promise for a src, starting the load once.
 function fetchSvgTemplate(src, reporter) {
-  let template = svgCache.get(src)
+  let template = svgCache.get(src);
   if (!template) {
-    template = loadSvgTemplate(src, reporter)
-    svgCache.set(src, template)
+    template = loadSvgTemplate(src, reporter);
+    svgCache.set(src, template);
   }
-  return template
+  return template;
 }
 
 
@@ -141,24 +141,24 @@ function fetchSvgTemplate(src, reporter) {
 // reports) on an HTTP error or a file without an <svg> root; the caller then
 // leaves the original <img> in place.
 async function loadSvgTemplate(src, reporter) {
-  const res = await fetch(src, { credentials: defaults.fetchCredentials })
+  const res = await fetch(src, { credentials: defaults.fetchCredentials });
   if (!res.ok) {
     reporter?.report(
-      "inlineSVG",
+      'inlineSVG',
       `fetch failed (HTTP ${res.status}); left <img> in place.`, src
-    )
-    return null
+    );
+    return null;
   }
 
-  const text = await res.text()
-  const doc = new DOMParser().parseFromString(text, "image/svg+xml")
-  const svg = doc.querySelector("svg")
+  const text = await res.text();
+  const doc = new DOMParser().parseFromString(text, 'image/svg+xml');
+  const svg = doc.querySelector('svg');
   if (!svg) {
-    reporter?.report("inlineSVG", "fetched file has no <svg> root.", src)
-    return null
+    reporter?.report('inlineSVG', 'fetched file has no <svg> root.', src);
+    return null;
   }
 
-  return svg
+  return svg;
 }
 
 
@@ -168,23 +168,23 @@ async function loadSvgTemplate(src, reporter) {
 // original <img> in place and is reported. The unique id prefix is passed in
 // so it can be assigned in document order before the concurrent conversions.
 async function inlineOne(img, prefix, reporter) {
-  const src = img.getAttribute("src")
-  if (!src || !/\.svg(\?|#|$)/i.test(src)) return
+  const src = img.getAttribute('src');
+  if (!src || !/\.svg(\?|#|$)/i.test(src)) return;
 
   try {
-    const template = await fetchSvgTemplate(src, reporter)
-    if (!template) return
+    const template = await fetchSvgTemplate(src, reporter);
+    if (!template) return;
 
-    const svg = template.cloneNode(true)
-    scopeSvg(svg, prefix)
-    carryAttributes(img, svg)
-    applyAccessibleName(img, svg, reporter)
+    const svg = template.cloneNode(true);
+    scopeSvg(svg, prefix);
+    carryAttributes(img, svg);
+    applyAccessibleName(img, svg, reporter);
 
-    img.replaceWith(svg)
+    img.replaceWith(svg);
   }
 
   catch {
-    reporter?.report("inlineSVG", "failed to convert image.", img)
+    reporter?.report('inlineSVG', 'failed to convert image.', img);
   }
 }
 
@@ -195,23 +195,23 @@ async function inlineOne(img, prefix, reporter) {
 // data-scale are only set when the SVG does not already define them, so the
 // file's own sizing wins and the scaleSVG companion can still read the scale.
 function carryAttributes(img, svg) {
-  if (img.id) svg.id = img.id
+  if (img.id) svg.id = img.id;
 
-  const imgClass = img.getAttribute("class")
+  const imgClass = img.getAttribute('class');
   if (imgClass) {
     for (const name of imgClass.split(/\s+/)) {
-      if (name) svg.classList.add(name)
+      if (name) svg.classList.add(name);
     }
   }
 
-  const width = img.getAttribute("width")
-  if (width && !svg.hasAttribute("width")) svg.setAttribute("width", width)
+  const width = img.getAttribute('width');
+  if (width && !svg.hasAttribute('width')) svg.setAttribute('width', width);
 
-  const height = img.getAttribute("height")
-  if (height && !svg.hasAttribute("height")) svg.setAttribute("height", height)
+  const height = img.getAttribute('height');
+  if (height && !svg.hasAttribute('height')) svg.setAttribute('height', height);
 
   if (img.dataset.scale && !svg.dataset.scale) {
-    svg.dataset.scale = img.dataset.scale
+    svg.dataset.scale = img.dataset.scale;
   }
 }
 
@@ -220,32 +220,32 @@ function carryAttributes(img, svg) {
 // Preserves the image's accessible name on the SVG (see file header). An SVG
 // the author already named is left untouched.
 function applyAccessibleName(img, svg, reporter) {
-  if (svg.hasAttribute("aria-label") || svg.hasAttribute("aria-labelledby")) {
-    return
+  if (svg.hasAttribute('aria-label') || svg.hasAttribute('aria-labelledby')) {
+    return;
   }
 
-  const ariaLabel = img.getAttribute("aria-label")
-  const alt = img.getAttribute("alt")
+  const ariaLabel = img.getAttribute('aria-label');
+  const alt = img.getAttribute('alt');
 
   // Decorative: an author who wrote alt="" opted the image out of AT; mirror
   // that so the inline SVG is not announced either.
-  if (alt === "" && ariaLabel === null) {
-    svg.setAttribute("aria-hidden", "true")
-    svg.setAttribute("focusable", "false")
-    return
+  if (alt === '' && ariaLabel === null) {
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('focusable', 'false');
+    return;
   }
 
   // Named: expose the SVG as an image with the carried-over name. Icon files
   // are often authored decorative (aria-hidden / focusable="false") as silent
   // embeds; a meaningful <img alt> overrides that intent, so clear the
   // suppression that would otherwise keep the named graphic hidden from AT.
-  const name = ariaLabel || alt
+  const name = ariaLabel || alt;
   if (name) {
-    svg.removeAttribute("aria-hidden")
-    svg.removeAttribute("focusable")
-    svg.setAttribute("aria-label", name)
-    if (!svg.hasAttribute("role")) svg.setAttribute("role", "img")
-    return
+    svg.removeAttribute('aria-hidden');
+    svg.removeAttribute('focusable');
+    svg.setAttribute('aria-label', name);
+    if (!svg.hasAttribute('role')) svg.setAttribute('role', 'img');
+    return;
   }
 
   // No name at all: the <img> carried neither alt nor aria-label, so the
@@ -254,13 +254,13 @@ function applyAccessibleName(img, svg, reporter) {
   // decorative) and report the missing alt so the authoring mistake surfaces
   // instead of passing silently.
   reporter?.report(
-    "inlineSVG",
-    "<img> has no alt attribute; inlined SVG hidden from assistive "
-      + "technology. Add alt (meaningful or empty) to make the intent explicit.",
+    'inlineSVG',
+    '<img> has no alt attribute; inlined SVG hidden from assistive '
+      + 'technology. Add alt (meaningful or empty) to make the intent explicit.',
     img
-  )
-  svg.setAttribute("aria-hidden", "true")
-  svg.setAttribute("focusable", "false")
+  );
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
 }
 
 
@@ -269,8 +269,8 @@ function applyAccessibleName(img, svg, reporter) {
 // page cannot interfere: ids (and their references) and the class names the
 // SVG's own <style> targets are both given the instance's unique prefix.
 function scopeSvg(svg, prefix) {
-  prefixSvgIds(svg, prefix)
-  prefixSvgClasses(svg, prefix)
+  prefixSvgIds(svg, prefix);
+  prefixSvgClasses(svg, prefix);
 }
 
 
@@ -280,26 +280,26 @@ function scopeSvg(svg, prefix) {
 // gradients, clip-paths, masks, filters, <use> targets — at the document
 // level.
 function prefixSvgIds(svg, prefix) {
-  const idMap = new Map()
+  const idMap = new Map();
 
-  svg.querySelectorAll("[id]").forEach((node) => {
-    const oldId = node.getAttribute("id")
-    if (!oldId) return
+  svg.querySelectorAll('[id]').forEach((node) => {
+    const oldId = node.getAttribute('id');
+    if (!oldId) return;
 
-    const newId = `${prefix}-${oldId}`
-    idMap.set(oldId, newId)
-    node.setAttribute("id", newId)
-  })
+    const newId = `${prefix}-${oldId}`;
+    idMap.set(oldId, newId);
+    node.setAttribute('id', newId);
+  });
 
-  if (!idMap.size) return
+  if (!idMap.size) return;
 
-  svg.querySelectorAll("*").forEach((node) => {
-    rewriteHashRefs(node, idMap)
-    rewriteUrlRefs(node, idMap)
-    rewriteInlineStyle(node, idMap)
-  })
+  svg.querySelectorAll('*').forEach((node) => {
+    rewriteHashRefs(node, idMap);
+    rewriteUrlRefs(node, idMap);
+    rewriteInlineStyle(node, idMap);
+  });
 
-  rewriteStyleSheets(svg, idMap)
+  rewriteStyleSheets(svg, idMap);
 }
 
 
@@ -307,11 +307,11 @@ function prefixSvgIds(svg, prefix) {
 // #id references (e.g. <use href="#icon">, gradient links).
 function rewriteHashRefs(node, idMap) {
   for (const attr of defaults.hashRefAttrs) {
-    const value = node.getAttribute(attr)
-    if (!value || !value.startsWith("#")) continue
+    const value = node.getAttribute(attr);
+    if (!value || !value.startsWith('#')) continue;
 
-    const newId = idMap.get(value.slice(1))
-    if (newId) node.setAttribute(attr, `#${newId}`)
+    const newId = idMap.get(value.slice(1));
+    if (newId) node.setAttribute(attr, `#${newId}`);
   }
 }
 
@@ -320,11 +320,11 @@ function rewriteHashRefs(node, idMap) {
 // url(#id) references inside presentation attributes.
 function rewriteUrlRefs(node, idMap) {
   for (const attr of defaults.urlRefAttrs) {
-    const value = node.getAttribute(attr)
-    if (!value || !value.includes("url(#")) continue
+    const value = node.getAttribute(attr);
+    if (!value || !value.includes('url(#')) continue;
 
-    const updated = replaceUrlIds(value, idMap)
-    if (updated !== value) node.setAttribute(attr, updated)
+    const updated = replaceUrlIds(value, idMap);
+    if (updated !== value) node.setAttribute(attr, updated);
   }
 }
 
@@ -332,11 +332,11 @@ function rewriteUrlRefs(node, idMap) {
 
 // url(#id) references inside an inline style attribute.
 function rewriteInlineStyle(node, idMap) {
-  const value = node.getAttribute("style")
-  if (!value || !value.includes("url(#")) return
+  const value = node.getAttribute('style');
+  if (!value || !value.includes('url(#')) return;
 
-  const updated = replaceUrlIds(value, idMap)
-  if (updated !== value) node.setAttribute("style", updated)
+  const updated = replaceUrlIds(value, idMap);
+  if (updated !== value) node.setAttribute('style', updated);
 }
 
 
@@ -348,20 +348,20 @@ function rewriteInlineStyle(node, idMap) {
 // identifier means a short id (#a) can never clobber a longer one (#ab) it is
 // a prefix of, nor a same-prefixed id the file did not declare (#abc).
 function rewriteStyleSheets(svg, idMap) {
-  const idRefs = buildRefPattern([...idMap.keys()], "#")
-  if (!idRefs) return
+  const idRefs = buildRefPattern([...idMap.keys()], '#');
+  if (!idRefs) return;
 
-  svg.querySelectorAll("style").forEach((styleNode) => {
-    const css = styleNode.textContent
-    if (!css || !css.includes("#")) return
+  svg.querySelectorAll('style').forEach((styleNode) => {
+    const css = styleNode.textContent;
+    if (!css || !css.includes('#')) return;
 
     const updated = css.replace(idRefs, (match, oldId) => {
-      const newId = idMap.get(oldId)
-      return newId ? `#${newId}` : match
-    })
+      const newId = idMap.get(oldId);
+      return newId ? `#${newId}` : match;
+    });
 
-    if (updated !== css) styleNode.textContent = updated
-  })
+    if (updated !== css) styleNode.textContent = updated;
+  });
 }
 
 
@@ -376,32 +376,32 @@ function rewriteStyleSheets(svg, idMap) {
 // usable as page hooks (mirroring how ids the file never references are still
 // prefixed only because ids must be unique; classes need not be).
 function prefixSvgClasses(svg, prefix) {
-  const styleNodes = [...svg.querySelectorAll("style")]
-  if (!styleNodes.length) return
+  const styleNodes = [...svg.querySelectorAll('style')];
+  if (!styleNodes.length) return;
 
-  const styleText = styleNodes.map((node) => node.textContent || "").join("\n")
+  const styleText = styleNodes.map((node) => node.textContent || '').join('\n');
 
   // The class tokens actually present on elements are the authoritative set;
   // intersecting with the ones the <style> references confines the rewrite to
   // real, internally-styled classes and sidesteps false positives (e.g. a
   // ".5" fragment inside a length value is never an element class).
-  const classMap = new Map()
-  svg.querySelectorAll("[class]").forEach((node) => {
-    for (const name of node.getAttribute("class").split(/\s+/)) {
-      if (!name || classMap.has(name)) continue
-      if (buildRefPattern([name], "\\.").test(styleText)) {
-        classMap.set(name, `${prefix}-${name}`)
+  const classMap = new Map();
+  svg.querySelectorAll('[class]').forEach((node) => {
+    for (const name of node.getAttribute('class').split(/\s+/)) {
+      if (!name || classMap.has(name)) continue;
+      if (buildRefPattern([name], '\\.').test(styleText)) {
+        classMap.set(name, `${prefix}-${name}`);
       }
     }
-  })
+  });
 
-  if (!classMap.size) return
+  if (!classMap.size) return;
 
-  svg.querySelectorAll("[class]").forEach((node) => {
-    rewriteClassAttribute(node, classMap)
-  })
+  svg.querySelectorAll('[class]').forEach((node) => {
+    rewriteClassAttribute(node, classMap);
+  });
 
-  rewriteStyleClassSelectors(styleNodes, classMap)
+  rewriteStyleClassSelectors(styleNodes, classMap);
 }
 
 
@@ -409,16 +409,16 @@ function prefixSvgClasses(svg, prefix) {
 // Swaps the mapped tokens in one element's class attribute, leaving unmapped
 // tokens (and their order) untouched.
 function rewriteClassAttribute(node, classMap) {
-  const tokens = node.getAttribute("class").split(/\s+/).filter(Boolean)
-  let changed = false
+  const tokens = node.getAttribute('class').split(/\s+/).filter(Boolean);
+  let changed = false;
 
   const next = tokens.map((name) => {
-    const mapped = classMap.get(name)
-    if (mapped) changed = true
-    return mapped || name
-  })
+    const mapped = classMap.get(name);
+    if (mapped) changed = true;
+    return mapped || name;
+  });
 
-  if (changed) node.setAttribute("class", next.join(" "))
+  if (changed) node.setAttribute('class', next.join(' '));
 }
 
 
@@ -426,20 +426,20 @@ function rewriteClassAttribute(node, classMap) {
 // Rewrites the mapped ".class" selector tokens inside the <style> blocks, with
 // the same boundary-aware single pass as the id rewriting (see buildRefPattern).
 function rewriteStyleClassSelectors(styleNodes, classMap) {
-  const classRefs = buildRefPattern([...classMap.keys()], "\\.")
-  if (!classRefs) return
+  const classRefs = buildRefPattern([...classMap.keys()], '\\.');
+  if (!classRefs) return;
 
   styleNodes.forEach((styleNode) => {
-    const css = styleNode.textContent
-    if (!css || !css.includes(".")) return
+    const css = styleNode.textContent;
+    if (!css || !css.includes('.')) return;
 
     const updated = css.replace(classRefs, (match, name) => {
-      const mapped = classMap.get(name)
-      return mapped ? `.${mapped}` : match
-    })
+      const mapped = classMap.get(name);
+      return mapped ? `.${mapped}` : match;
+    });
 
-    if (updated !== css) styleNode.textContent = updated
-  })
+    if (updated !== css) styleNode.textContent = updated;
+  });
 }
 
 
@@ -451,33 +451,33 @@ function rewriteStyleClassSelectors(styleNodes, classMap) {
 // what lets a short name (#a / .a) never clobber a longer one (#ab / .ab) it
 // prefixes, nor a same-prefixed name the file did not declare (#abc / .abc).
 function buildRefPattern(names, sigil) {
-  if (!names.length) return null
+  if (!names.length) return null;
 
   const alternatives = names
     .slice()
     .sort((a, b) => b.length - a.length)
     .map(escapeRegExp)
-    .join("|")
+    .join('|');
 
-  return new RegExp(`${sigil}(${alternatives})(?![\\w-])`, "g")
+  return new RegExp(`${sigil}(${alternatives})(?![\\w-])`, 'g');
 }
 
 
 
 // Escapes a string for literal use inside a RegExp.
 function escapeRegExp(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 
 
 // Replaces every url(#oldId) occurrence in a string using the id map.
 function replaceUrlIds(value, idMap) {
-  let updated = value
+  let updated = value;
   idMap.forEach((newId, oldId) => {
-    updated = updated.replaceAll(`url(#${oldId})`, `url(#${newId})`)
-  })
-  return updated
+    updated = updated.replaceAll(`url(#${oldId})`, `url(#${newId})`);
+  });
+  return updated;
 }
 
 
@@ -485,8 +485,8 @@ function replaceUrlIds(value, idMap) {
 // Collects the SVG-image candidates from the boot element: the element itself
 // when it is an <img>, otherwise every descendant <img>.
 function collectImages(el) {
-  if (el instanceof HTMLImageElement) return [el]
-  return [...el.querySelectorAll("img")]
+  if (el instanceof HTMLImageElement) return [el];
+  return [...el.querySelectorAll('img')];
 }
 
 
@@ -494,18 +494,18 @@ function collectImages(el) {
 // loader-compatible entry point
 // (boot.js -> mod.init(el, services))
 export async function init(el, services = {}) {
-  const reporter = services.reporter
+  const reporter = services.reporter;
 
   if (!(el instanceof Element)) {
     reporter?.report(
-      "inlineSVG",
-      "module was initialized on a non-element node.", el
-    )
-    return
+      'inlineSVG',
+      'module was initialized on a non-element node.', el
+    );
+    return;
   }
 
-  const images = collectImages(el)
-  if (!images.length) return
+  const images = collectImages(el);
+  if (!images.length) return;
 
   // Assign each id prefix synchronously in document order first, so prefixes
   // stay deterministic even though the conversions then run concurrently
@@ -515,5 +515,5 @@ export async function init(el, services = {}) {
   // needed here.
   await Promise.all(
     images.map((img) => inlineOne(img, nextIdPrefix(), reporter))
-  )
+  );
 }

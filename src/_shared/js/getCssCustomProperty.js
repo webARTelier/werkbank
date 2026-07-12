@@ -8,5 +8,5 @@
 
 
 export function getCssCustomProperty(scope, name) {
-  return getComputedStyle(scope).getPropertyValue(name).trim()
+  return getComputedStyle(scope).getPropertyValue(name).trim();
 }

@@ -66,8 +66,8 @@ pattern is reported and also falls back to the default.
 
 To change the **project-wide default**, edit the `defaults` config in
 `dateInputFormat.js`: the mask is built from `groups: [2, 2, 4]` joined by
-`separator: "."`, and the sum of the groups is the maximum number of digits
-kept. The `order` config (`["D", "M", "Y"]` by default) names the mask's
+`separator: '.'`, and the sum of the groups is the maximum number of digits
+kept. The `order` config (`['D', 'M', 'Y']` by default) names the mask's
 segments so a wholesale ISO date (from autofill) can be reordered into it — set
 it to match your mask, or to `null` to disable ISO reordering. (A per-field
 pattern derives `groups`, `separator` and `order` from the pattern itself.)

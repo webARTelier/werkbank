@@ -25,7 +25,7 @@
 const getCssCustomProperty = (scope, name) => {
   const styles = getComputedStyle(scope);
   return styles.getPropertyValue(name).trim();
-}
+};
 
 
 
@@ -40,9 +40,9 @@ const debounceThenExecute = (func, delay) => {
 
     timerId = setTimeout(function () {
       func.apply(context, args);
-    }, delay)
-  }
-}
+    }, delay);
+  };
+};
 
 
 
@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log(`Element ${excess}px too wide:`, el);
         i++;
       }
-    })
+    });
 
     if (i == 0) console.log('✅ Element widths ok');
   }
@@ -85,12 +85,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
   document.addEventListener('focusin', (event) => {
     console.log('Focused:', document.activeElement);
-  })
+  });
 
   const debouncedCheckWidth = debounceThenExecute(checkWidth, 300);
 
   window.onresize = (e) => {
     devPageInfo.textContent = getInfos();
     debouncedCheckWidth();
-  }
-})
+  };
+});

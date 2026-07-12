@@ -10,34 +10,34 @@
 
 
 const defaults = {
-  className: "is-fixed",
-  selTarget: "[data-sticky-oberserver-target]",
+  className: 'is-fixed',
+  selTarget: '[data-sticky-oberserver-target]',
   transitionDuration: 240,
-  transitionEasing: "ease-out",
-}
+  transitionEasing: 'ease-out',
+};
 
 
 
 class StickyObserver {
   
   constructor(observed, config, reporter) {
-    if (!(observed instanceof HTMLElement)) return
+    if (!(observed instanceof HTMLElement)) return;
 
-    this.observed = observed
-    this.reporter = reporter
-    this.className = config.className
-    this.selTarget = config.selTarget
-    this.transitionDuration = config.transitionDuration
-    this.transitionEasing = config.transitionEasing
-    this.activeAnimation = null
-    this.target = document.querySelector(this.selTarget)
+    this.observed = observed;
+    this.reporter = reporter;
+    this.className = config.className;
+    this.selTarget = config.selTarget;
+    this.transitionDuration = config.transitionDuration;
+    this.transitionEasing = config.transitionEasing;
+    this.activeAnimation = null;
+    this.target = document.querySelector(this.selTarget);
 
     if (!(this.target instanceof HTMLElement)) {
-      this.handleMissingTarget()
-      return
+      this.handleMissingTarget();
+      return;
     }
 
-    this.observe()
+    this.observe();
   }
 
 
@@ -46,69 +46,69 @@ class StickyObserver {
   // for the configured source element.
   observe = () => {
     const observer = new IntersectionObserver((entries) => {
-      const [entry] = entries
-      if (!entry) return
+      const [entry] = entries;
+      if (!entry) return;
 
-      const shouldFix = !entry.isIntersecting
-      this.animateClassToggle(shouldFix)
-    })
+      const shouldFix = !entry.isIntersecting;
+      this.animateClassToggle(shouldFix);
+    });
 
-    observer.observe(this.observed)
-  }
+    observer.observe(this.observed);
+  };
 
 
 
   // toggles the sticky class with a 
   // FLIP-style transition when possible.
   animateClassToggle = (shouldFix) => {
-    const isFixed = this.target.classList.contains(this.className)
-    if (isFixed === shouldFix) return
+    const isFixed = this.target.classList.contains(this.className);
+    if (isFixed === shouldFix) return;
 
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      this.target.classList.toggle(this.className, shouldFix)
-      return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      this.target.classList.toggle(this.className, shouldFix);
+      return;
     }
 
-    const first = this.target.getBoundingClientRect()
-    this.target.classList.toggle(this.className, shouldFix)
-    const last = this.target.getBoundingClientRect()
+    const first = this.target.getBoundingClientRect();
+    this.target.classList.toggle(this.className, shouldFix);
+    const last = this.target.getBoundingClientRect();
 
-    const deltaX = first.left - last.left
-    const deltaY = first.top - last.top
-    if (Math.abs(deltaX) < 0.5 && Math.abs(deltaY) < 0.5) return
+    const deltaX = first.left - last.left;
+    const deltaY = first.top - last.top;
+    if (Math.abs(deltaX) < 0.5 && Math.abs(deltaY) < 0.5) return;
 
     if (this.activeAnimation) {
-      this.activeAnimation.cancel()
+      this.activeAnimation.cancel();
     }
 
     this.activeAnimation = this.target.animate(
       [
         { transform: `translate(${deltaX}px, ${deltaY}px)` },
-        { transform: "translate(0, 0)" },
+        { transform: 'translate(0, 0)' },
       ],
       {
         duration: this.transitionDuration,
         easing: this.transitionEasing,
       }
-    )
+    );
 
     this.activeAnimation.onfinish = () => {
-      this.activeAnimation = null
-    }
+      this.activeAnimation = null;
+    };
 
     this.activeAnimation.oncancel = () => {
-      this.activeAnimation = null
-    }
-  }
+      this.activeAnimation = null;
+    };
+  };
 
 
 
   handleMissingTarget = () => {
     this.reporter?.report(
-      "stickyobserver",
+      'stickyobserver',
       `missing target element (selector: "${this.selTarget}").`
-    )
-  }
+    );
+  };
 }
 
 
@@ -116,12 +116,12 @@ class StickyObserver {
 // loader-compatible entry point 
 // (boot.js -> mod.init(el))
 export function init(el, services = {}) {
-  const reporter = services.reporter
+  const reporter = services.reporter;
 
   if (!(el instanceof HTMLElement)) {
-    reporter?.report("stickyobserver", "module was initialized on a non-element node.", el)
-    return
+    reporter?.report('stickyobserver', 'module was initialized on a non-element node.', el);
+    return;
   }
 
-  new StickyObserver(el, defaults, reporter)
+  new StickyObserver(el, defaults, reporter);
 }
