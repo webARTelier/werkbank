@@ -11,6 +11,7 @@ of its own.
 - `inputCharCount.scss` – styles (source; compiled to `dist/css/inputCharCount.min.css` — ships only the visually-hidden status-region rule, see *Styling*)
 - `inputCharCount.js` – behavior
 - `src/_shared/js/debounce.js` – bundled utility (imported by the module; the build already bundles it into the component's chunk, only relevant if you paste the source into a plain project)
+- `src/_shared/js/resolveLocale.js` – bundled utility (same note as above)
 
 There is **no vendor dependency**.
 

@@ -84,6 +84,8 @@
  * --------------------------------------------------------------------------
  */
 
+import { resolveLocale } from "./resolveLocale.js"
+
 
 
 const defaults = {
@@ -260,19 +262,6 @@ function mergeMessages(builtIn, cms) {
     }
   }
   return merged
-}
-
-
-
-// Chooses the message locale from <html lang>, e.g. lang="de-CH" -> "de".
-// Falls back to fallbackLocale when the page language is not offered.
-function resolveLocale(locales, fallbackLocale) {
-  const raw = (document.documentElement.lang || "").toLowerCase()
-  const base = raw.split("-")[0]
-
-  if (locales.includes(raw)) return raw
-  if (locales.includes(base)) return base
-  return fallbackLocale
 }
 
 

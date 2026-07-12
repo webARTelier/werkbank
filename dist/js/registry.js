@@ -13,6 +13,7 @@ export const registry = {
   inputCharCount: () => import('./modules/inputCharCount.min.js'),
   marquee: () => import('./modules/marquee.min.js'),
   rafThrottle: () => import('./modules/rafThrottle.min.js'),
+  resolveLocale: () => import('./modules/resolveLocale.min.js'),
   responsiveVideo: () => import('./modules/responsiveVideo.min.js'),
   scaleSVG: () => import('./modules/scaleSVG.min.js'),
   stickyObserver: () => import('./modules/stickyObserver.min.js'),

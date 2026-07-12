@@ -77,6 +77,7 @@ module.exports = {
       // shared helpers that are also lazily loadable modules
       debounce: p("src", "_shared", "js", "debounce.js"),
       getCssCustomProperty: p("src", "_shared", "js", "getCssCustomProperty.js"),
+      resolveLocale: p("src", "_shared", "js", "resolveLocale.js"),
     },
 
     // Where component source files look up shared helpers imported as

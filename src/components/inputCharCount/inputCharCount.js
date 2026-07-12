@@ -82,6 +82,7 @@
 
 
 import { debounceThenExecute } from "./debounce.js"
+import { resolveLocale } from "./resolveLocale.js"
 
 
 
@@ -151,19 +152,6 @@ function formatLabel(template, tokens) {
   return String(template).replace(/\{(\w+)\}/g, (match, key) =>
     key in tokens ? String(tokens[key]) : match
   )
-}
-
-
-
-// Chooses the locale from <html lang>, e.g. lang="de-CH" -> "de". Falls back
-// to fallbackLocale when the page language is not offered.
-function resolveLocale(locales, fallbackLocale) {
-  const raw = (document.documentElement.lang || "").toLowerCase()
-  const base = raw.split("-")[0]
-
-  if (locales.includes(raw)) return raw
-  if (locales.includes(base)) return base
-  return fallbackLocale
 }
 
 
