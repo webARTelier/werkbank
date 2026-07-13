@@ -1,37 +1,311 @@
 <!DOCTYPE html>
 <html lang="en">
 
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>tabs – Demo</title>
-    <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
-    <link rel="stylesheet" href="../../../dist/css/tabs.min.css" />
-    <script type="module" src="../../../dist/js/boot.min.js"></script>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tabs – Demo</title>
+  <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
+  <link rel="stylesheet" href="../../../dist/css/tabs.min.css" />
+  <script type="module" src="../../../dist/js/boot.min.js"></script>
 
-    <!-- for development only -->
-     <script type="module" src="../../../src/_shared/js/dev_pageInfo.js"></script>
-     <script type="module" src="../../../src/_shared/js/dev_a11yInspector.js"></script>
-     <script type="module" src="../../../src/_shared/js/dev_qrCode.js"></script>
-    <!-- end for development only -->
+  <!-- for development only -->
+  <script type="module" src="../../../src/_shared/js/dev_pageInfo.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_a11yInspector.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_qrCode.js"></script>
+  <!-- end for development only -->
 
-  </head>
+  <!--
+      DEMO-ONLY STYLES
+      ----------------------------------------------------------------------
+      tabs ships an empty stub stylesheet (behaviour-only component).
+      Everything below is ONE example of how a consuming project styles the
+      widget; none of it is part of the component. The styling hooks are the
+      ARIA attributes the JS maintains — [aria-selected='true'] on the active
+      tab, `hidden` on the inactive panels — plus the data-* attributes for
+      element selection. (Tokens like --space-* / --color-* come from
+      shared.min.css.)
+  -->
 
-  <body>
+  <style>
+    .m-tabs {
+      max-width: 44rem;
+    }
 
-    <main class="shell">
+    .m-tabs__list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
 
-      <section class="hero">
-        <a class="back" href="../../../index.html">← Overview</a>
-        <h1>tabs</h1>
-        <p>Tab navigation with switchable content.</p>
-      </section>
+      display: flex;
+      gap: var(--space-3xs);
 
-      <section class="stage" aria-label="Live demo">
-      </section>
+      border-block-end: 1px solid var(--color-border);
+    }
 
-    </main>
+    .m-tabs__tab {
+      display: block;
 
-  </body>
+      /* -1px pulls the tab's own 2px indicator over the list's 1px rule. */
+      margin-block-end: -1px;
+      border-block-end: 2px solid transparent;
+      padding: var(--space-2xs) var(--space-xs);
+
+      text-decoration: none;
+      color: var(--color-text-muted);
+    }
+
+    .m-tabs__tab:hover {
+      color: var(--color-text);
+    }
+
+    /* Keyboard focus ring — the component leaves this to the project. */
+    .m-tabs__tab:focus-visible,
+    .m-tabs__panel:focus-visible {
+      outline: 2px solid var(--color-focus-ring-light);
+      outline-offset: var(--outlineOffset);
+    }
+
+    /* The active tab: aria-selected is written by the JS and doubles as
+       the styling hook — no extra state class exists. */
+    .m-tabs__tab[aria-selected='true'] {
+      color: var(--color-text);
+      border-color: var(--color-accent-secondary);
+    }
+
+    .m-tabs__panel {
+      padding: var(--space-s) var(--space-2xs);
+    }
+
+    .m-tabs__panel > :first-child {
+      margin-block-start: 0;
+    }
+
+    /* Vertical variant: list and panel side by side, indicator on the
+       inline edge. */
+    .m-tabs--vertical {
+      display: flex;
+      gap: var(--space-m);
+      align-items: flex-start;
+    }
+
+    .m-tabs--vertical .m-tabs__list {
+      flex-direction: column;
+      gap: 0;
+
+      border-block-end: 0;
+      border-inline-end: 1px solid var(--color-border);
+    }
+
+    .m-tabs--vertical .m-tabs__tab {
+      margin-block-end: 0;
+      margin-inline-end: -1px;
+      border-block-end: 0;
+      border-inline-end: 2px solid transparent;
+    }
+
+    .m-tabs--vertical .m-tabs__tab[aria-selected='true'] {
+      border-color: var(--color-accent-secondary);
+    }
+
+    .m-tabs--vertical .m-tabs__panel {
+      flex: 1;
+      padding-block: 0;
+    }
+
+    /* Demo page rhythm only. */
+    .demoExample {
+      margin-block-start: var(--space-xl);
+    }
+
+    .demoExample > h2 {
+      margin-block-end: var(--space-s);
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <main class="shell">
+
+    <section class="hero">
+      <a class="back" href="../../../index.html">← Overview</a>
+      <h1>tabs</h1>
+      <p>An anchor-link table of contents, upgraded into an accessible tabs widget.</p>
+    </section>
+
+    <section class="stage" aria-label="Live demo">
+
+      <!--
+          One tabs widget per wrapper with data-js-module="tabs".
+
+          Wiring
+            - Inside the wrapper: a list (data-tabs-list, with an aria-label)
+              of in-page anchor links (data-tabs-tab, href="#<panel id>") and
+              one section per link (data-tabs-panel with the matching id).
+              The href fragment is the wiring — no extra pairing attribute.
+
+          Progressive enhancement
+            - Without JavaScript each example below is a jump-link list above
+              stacked sections. The module assigns all roles/ARIA at runtime,
+              hides the inactive panels and adds the keyboard behaviour.
+
+          Accessibility
+            - APG tabs pattern: roving tabindex, Arrow keys with wrap-around,
+              Home/End; automatic activation by default, manual (Enter/Space)
+              with data-tabs-manual. Panels without focusable content get
+              tabindex="0". Deep links (#<panel id>) select the tab on load
+              and on hashchange.
+        -->
+
+      <p class="stage__intro">
+        <strong>Use the keyboard.</strong> Tab into a tablist, then move with
+        the arrow keys (wrap-around), <kbd>Home</kbd> and <kbd>End</kbd>. The
+        first example selects on focus (automatic activation); the second
+        only on <kbd>Enter</kbd>/<kbd>Space</kbd> (manual). Without
+        JavaScript every example is a plain jump-link list above stacked,
+        fully readable sections.
+      </p>
+
+
+      <!-- 1) Default: automatic activation, horizontal -->
+      <div class="demoExample">
+        <h2>Default (automatic activation)</h2>
+
+        <div class="m-tabs" data-js-module="tabs">
+          <ul class="m-tabs__list" aria-label="Product information" data-tabs-list>
+            <li><a class="m-tabs__tab" href="#basic-overview" data-tabs-tab>Overview</a></li>
+            <li><a class="m-tabs__tab" href="#basic-specs" data-tabs-tab>Specifications</a></li>
+            <li><a class="m-tabs__tab" href="#basic-reviews" data-tabs-tab>Reviews</a></li>
+          </ul>
+
+          <section class="m-tabs__panel" id="basic-overview" data-tabs-panel>
+            <h3>Overview</h3>
+            <p>Arrow keys move the focus <em>and</em> the selection — the
+              APG-recommended default when panels can be shown instantly.</p>
+          </section>
+
+          <section class="m-tabs__panel" id="basic-specs" data-tabs-panel>
+            <h3>Specifications</h3>
+            <p>This panel has no focusable content, so the script gave it
+              <code>tabindex="0"</code> — press <kbd>Tab</kbd> from the
+              tablist to reach it.</p>
+          </section>
+
+          <section class="m-tabs__panel" id="basic-reviews" data-tabs-panel>
+            <h3>Reviews</h3>
+            <p>Panels may contain focusable content, like
+              <a href="javascript:;">this link</a> — then the panel itself is
+              not focusable.</p>
+          </section>
+        </div>
+      </div>
+
+
+      <!-- 2) Manual activation: arrows only move focus -->
+      <div class="demoExample">
+        <h2>Manual activation (<code>data-tabs-manual</code>)</h2>
+
+        <div class="m-tabs" data-js-module="tabs" data-tabs-manual>
+          <ul class="m-tabs__list" aria-label="Account settings" data-tabs-list>
+            <li><a class="m-tabs__tab" href="#manual-profile" data-tabs-tab>Profile</a></li>
+            <li><a class="m-tabs__tab" href="#manual-security" data-tabs-tab>Security</a></li>
+            <li><a class="m-tabs__tab" href="#manual-billing" data-tabs-tab>Billing</a></li>
+          </ul>
+
+          <section class="m-tabs__panel" id="manual-profile" data-tabs-panel>
+            <h3>Profile</h3>
+            <p>Arrow keys only move the focus here; nothing switches until
+              you press <kbd>Enter</kbd> or <kbd>Space</kbd>.</p>
+          </section>
+
+          <section class="m-tabs__panel" id="manual-security" data-tabs-panel>
+            <h3>Security</h3>
+            <p>Manual activation suits panels that are expensive to show or
+              would disturb the reading flow when flipped through.</p>
+          </section>
+
+          <section class="m-tabs__panel" id="manual-billing" data-tabs-panel>
+            <h3>Billing</h3>
+            <p>Clicking (or tapping) a tab always selects it, in both
+              activation modes.</p>
+          </section>
+        </div>
+      </div>
+
+
+      <!-- 3) Vertical orientation: Up/Down arrows -->
+      <div class="demoExample">
+        <h2>Vertical (<code>data-tabs-orientation="vertical"</code>)</h2>
+
+        <div class="m-tabs m-tabs--vertical" data-js-module="tabs" data-tabs-orientation="vertical">
+          <ul class="m-tabs__list" aria-label="Documentation chapters" data-tabs-list>
+            <li><a class="m-tabs__tab" href="#vertical-install" data-tabs-tab>Install</a></li>
+            <li><a class="m-tabs__tab" href="#vertical-configure" data-tabs-tab>Configure</a></li>
+            <li><a class="m-tabs__tab" href="#vertical-deploy" data-tabs-tab>Deploy</a></li>
+          </ul>
+
+          <section class="m-tabs__panel" id="vertical-install" data-tabs-panel>
+            <h3>Install</h3>
+            <p>The script sets <code>aria-orientation="vertical"</code> and
+              the arrow axis switches to <kbd>↑</kbd>/<kbd>↓</kbd>.</p>
+          </section>
+
+          <section class="m-tabs__panel" id="vertical-configure" data-tabs-panel>
+            <h3>Configure</h3>
+            <p>The side-by-side layout is pure demo CSS — the component knows
+              nothing about it.</p>
+          </section>
+
+          <section class="m-tabs__panel" id="vertical-deploy" data-tabs-panel>
+            <h3>Deploy</h3>
+            <p><kbd>Home</kbd> and <kbd>End</kbd> still jump to the first and
+              last tab.</p>
+          </section>
+        </div>
+      </div>
+
+
+      <!-- 4) Deep linking: hash in, hash out -->
+      <div class="demoExample">
+        <h2>Deep linking (<code>data-tabs-deeplink</code>)</h2>
+
+        <div class="m-tabs" data-js-module="tabs" data-tabs-deeplink>
+          <ul class="m-tabs__list" aria-label="Help topics" data-tabs-list>
+            <li><a class="m-tabs__tab" href="#deeplink-shipping" data-tabs-tab>Shipping</a></li>
+            <li><a class="m-tabs__tab" href="#deeplink-returns" data-tabs-tab>Returns</a></li>
+            <li><a class="m-tabs__tab" href="#deeplink-payment" data-tabs-tab>Payment</a></li>
+          </ul>
+
+          <section class="m-tabs__panel" id="deeplink-shipping" data-tabs-panel>
+            <h3>Shipping</h3>
+            <p>Select a tab and watch the URL: the fragment follows via
+              <code>history.replaceState</code> — no history spam, path and
+              query untouched.</p>
+          </section>
+
+          <section class="m-tabs__panel" id="deeplink-returns" data-tabs-panel>
+            <h3>Returns</h3>
+            <p>Reload the page (or share the URL) with
+              <code>#deeplink-returns</code> — this tab opens directly. Every
+              example on this page reacts to matching hashes; this one also
+              writes them.</p>
+          </section>
+
+          <section class="m-tabs__panel" id="deeplink-payment" data-tabs-panel>
+            <h3>Payment</h3>
+            <p>Foreign hashes (skip links, other anchors) are ignored — only
+              an exact panel id selects a tab.</p>
+          </section>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+</body>
+
 </html>

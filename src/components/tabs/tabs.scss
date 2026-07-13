@@ -1,1 +1,12 @@
-// tabs styles
+// =============================================================
+// tabs — behaviour-only, ships no styles
+// =============================================================
+//
+// The module upgrades an anchor-link table of contents into an ARIA tabs
+// widget — pure behaviour, every visual (including the focus ring) belongs
+// to the consuming project. It sets no inline styles and writes no state
+// class; the ARIA it maintains doubles as the styling hook:
+//   [data-tabs-tab][aria-selected='true']   the active tab
+//   [data-tabs-panel][hidden]               inactive panels (display:none
+//                                           comes free from `hidden`)
+// This stub exists only so the build has a stylesheet to compile.

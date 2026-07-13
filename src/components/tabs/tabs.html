@@ -1,0 +1,83 @@
+<!--
+  tabs — copy-paste snippet
+  ============================================================================
+  Copy the block(s) below into your own project.
+
+  1) In <head> (or before </body>): load the shared styles, this component's
+     stylesheet and the boot script. boot.min.js lazily loads the tabs module
+     as soon as it finds data-js-module="tabs" in the DOM — you do not import
+     tabs.js yourself. Adjust the paths to where you serve /dist.
+
+       <link rel="stylesheet" href="/dist/css/shared.min.css" />
+       <link rel="stylesheet" href="/dist/css/tabs.min.css" />
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+  2) Markup: a wrapper with data-js-module="tabs" containing
+       - a list (data-tabs-list — give it an aria-label) of in-page anchor
+         links (data-tabs-tab, href="#<panel id>"), and
+       - one content section per link (data-tabs-panel, with the matching
+         id). The href fragment IS the wiring — no extra pairing attribute.
+
+  Progressive enhancement
+    - Without JavaScript this is a table of contents with jump links above
+      normal, stacked sections — fully usable, and free of ARIA that would
+      promise tab behaviour that does not exist.
+    - With JavaScript the module assigns role="tablist" / "tab" / "tabpanel",
+      aria-selected, aria-controls and aria-labelledby at runtime, hides the
+      inactive panels and adds roving-tabindex keyboard support (Arrow keys
+      with wrap-around, Home/End).
+
+  Deep linking
+    - A URL fragment that matches a panel id selects that tab on load and on
+      hashchange; any other hash on the page is ignored. Fragments are
+      independent of path and query string, so this works with any URL
+      scheme (query parameters, rewritten/pretty URLs).
+    - With data-tabs-deeplink the selected tab is also written back to the
+      URL via history.replaceState (no history spam). Leave it off on pages
+      whose hash is owned by something else (e.g. a hash-based SPA router).
+
+  Options (all optional; on the data-js-module element)
+    - data-tabs-manual                  select on Enter/Space instead of on
+                                        focus ("manual activation"; default
+                                        is automatic — focus selects)
+    - data-tabs-orientation="vertical"  sets aria-orientation="vertical" and
+                                        switches the arrow keys to Up/Down
+    - data-tabs-deeplink                mirror the selected tab into the URL
+                                        fragment
+
+  Styling
+    - tabs.min.css is an empty stub by design (behaviour-only component).
+      Style the widget in your project via the ARIA the JS maintains:
+        [data-tabs-tab][aria-selected='true']   the active tab
+        [data-tabs-panel][hidden]               inactive panels (display:none
+                                                comes free from `hidden`)
+      Style the tabs' own :focus-visible ring in your project too. The demo
+      (demo.html) shows one complete example design.
+-->
+
+
+
+<div data-js-module="tabs">
+
+  <ul aria-label="Example tabs" data-tabs-list>
+    <li><a href="#tabs-panel-overview" data-tabs-tab>Overview</a></li>
+    <li><a href="#tabs-panel-details" data-tabs-tab>Details</a></li>
+    <li><a href="#tabs-panel-faq" data-tabs-tab>FAQ</a></li>
+  </ul>
+
+  <section id="tabs-panel-overview" data-tabs-panel>
+    <h2>Overview</h2>
+    <p>…</p>
+  </section>
+
+  <section id="tabs-panel-details" data-tabs-panel>
+    <h2>Details</h2>
+    <p>…</p>
+  </section>
+
+  <section id="tabs-panel-faq" data-tabs-panel>
+    <h2>FAQ</h2>
+    <p>…</p>
+  </section>
+
+</div>
