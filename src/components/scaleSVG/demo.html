@@ -16,6 +16,56 @@
      <script type="module" src="../../../src/_shared/js/dev_qrCode.js"></script>
     <!-- end for development only -->
 
+    <!--
+        DEMO-ONLY STYLES
+        --------------------------------------------------------------------
+        scaleSVG ships no styles of its own (behaviour-only). The rules below
+        are ONLY for this demo: they lay out the example rows and use the
+        is-scaled state class the module toggles to fade each graphic in
+        once it has its final size — showing the class as the intended CSS
+        hook. Tokens (--space-*, --color-*) come from shared.min.css.
+    -->
+
+    <style>
+      .demo-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: var(--space-l);
+        margin-top: var(--space-s);
+      }
+
+      .demo-swatch {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--space-2xs);
+        color: var(--color-accent);
+      }
+
+      .demo-swatch figcaption {
+        font-size: 0.8rem;
+        color: var(--color-text-muted);
+      }
+
+      .demo-swatch--muted { color: var(--color-text-muted); }
+      .demo-swatch--secondary { color: var(--color-accent-secondary); }
+
+      /* The is-scaled hook: each SVG fades in once the module has sized
+         it. Scoped to the demo rows so the no-JS fallback elsewhere is
+         unaffected; without JS the graphics stay at reduced opacity but
+         remain visible. */
+      .demo-row svg {
+        opacity: 0.25;
+        transition: opacity 0.4s ease;
+      }
+      .demo-row svg.is-scaled { opacity: 1; }
+
+      @media (prefers-reduced-motion: reduce) {
+        .demo-row svg { transition: none; }
+      }
+    </style>
+
   </head>
 
   <body>
@@ -25,10 +75,127 @@
       <section class="hero">
         <a class="back" href="../../../index.html">← Overview</a>
         <h1>scaleSVG</h1>
-        <p>Scales inline SVGs proportionally to their intrinsic size.</p>
+        <p>Sizes an inline SVG from its viewBox × a data-scale factor.</p>
       </section>
 
       <section class="stage" aria-label="Live demo">
+
+        <!--
+            Each <svg> below carries a viewBox and data-scale. On boot the
+            module multiplies the viewBox size by the factor and writes the
+            result as the width/height presentation attributes.
+
+            Wiring
+              - data-js-module="scaleSVG" on the <svg> itself or a container.
+              - data-scale="<factor>" opts the SVG in and sets the factor;
+                a bare data-scale means natural viewBox size (factor 1).
+
+            Progressive enhancement
+              - Without JS the SVGs render as authored. They carry explicit
+                width/height fallbacks here, so nothing spans the container;
+                the module overwrites those attributes once it runs.
+
+            Accessibility
+              - The module never touches ARIA. The decorative demo graphics
+                are marked aria-hidden="true" + focusable="false" by hand;
+                the chained example's name comes from the <img alt> via
+                inlineSVG.
+          -->
+
+        <p class="stage__intro">
+          Three copies of the same 16×16 graphic, sized purely by their
+          <code>data-scale</code> factor — the width/height attributes are
+          computed from the <code>viewBox</code>, no pixel value appears in
+          the markup. The fade-in is demo CSS reacting to the
+          <code>is-scaled</code> state class the module sets.
+        </p>
+
+        <div class="demo-row" data-js-module="scaleSVG">
+          <figure class="demo-swatch">
+            <svg viewBox="0 0 16 16" width="16" height="16" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                 aria-hidden="true" focusable="false" data-scale>
+              <circle cx="8" cy="8" r="6.75" />
+              <path d="M8 4.75v3.5" />
+              <path d="M8 11.25h.01" />
+            </svg>
+            <figcaption>data-scale (= 1)</figcaption>
+          </figure>
+          <figure class="demo-swatch">
+            <svg viewBox="0 0 16 16" width="16" height="16" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                 aria-hidden="true" focusable="false" data-scale="2.5">
+              <circle cx="8" cy="8" r="6.75" />
+              <path d="M8 4.75v3.5" />
+              <path d="M8 11.25h.01" />
+            </svg>
+            <figcaption>data-scale="2.5"</figcaption>
+          </figure>
+          <figure class="demo-swatch">
+            <svg viewBox="0 0 16 16" width="16" height="16" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                 aria-hidden="true" focusable="false" data-scale="5">
+              <circle cx="8" cy="8" r="6.75" />
+              <path d="M8 4.75v3.5" />
+              <path d="M8 11.25h.01" />
+            </svg>
+            <figcaption>data-scale="5"</figcaption>
+          </figure>
+        </div>
+
+
+
+        <p class="stage__intro" style="margin-top: var(--space-xl);">
+          <strong>Fractional factors shrink.</strong> A large 48×48 drawing
+          brought down to a quarter of its natural size — the factor works in
+          both directions.
+        </p>
+
+        <div class="demo-row">
+          <figure class="demo-swatch demo-swatch--secondary">
+            <svg data-js-module="scaleSVG" data-scale="0.25"
+                 viewBox="0 0 48 48" width="48" height="48" fill="none"
+                 stroke="currentColor" stroke-width="4" stroke-linecap="round"
+                 aria-hidden="true" focusable="false">
+              <rect x="6" y="6" width="36" height="36" rx="8" />
+              <path d="M15 24h18M24 15v18" />
+            </svg>
+            <figcaption>48×48 × 0.25 → 12×12</figcaption>
+          </figure>
+          <figure class="demo-swatch demo-swatch--secondary">
+            <svg data-js-module="scaleSVG" data-scale="1"
+                 viewBox="0 0 48 48" width="48" height="48" fill="none"
+                 stroke="currentColor" stroke-width="4" stroke-linecap="round"
+                 aria-hidden="true" focusable="false">
+              <rect x="6" y="6" width="36" height="36" rx="8" />
+              <path d="M15 24h18M24 15v18" />
+            </svg>
+            <figcaption>48×48 × 1 (natural)</figcaption>
+          </figure>
+        </div>
+
+
+
+        <p class="stage__intro" style="margin-top: var(--space-xl);">
+          <strong>Chained with inlineSVG.</strong> The
+          <code>&lt;img&gt;</code> below carries
+          <code>data-js-module="inlineSVG,scaleSVG"</code>: the file is
+          fetched and inlined first, then scaleSVG sizes the resulting
+          <code>&lt;svg&gt;</code> from its 24×24 viewBox × 3. Its accessible
+          name ("Close") comes from the image's <code>alt</code> via
+          inlineSVG — scaleSVG itself never touches ARIA.
+        </p>
+
+        <div class="demo-row">
+          <figure class="demo-swatch demo-swatch--muted">
+            <img data-js-module="inlineSVG,scaleSVG"
+                 src="../../_shared/media/img/icons/close.svg"
+                 alt="Close"
+                 data-scale="3" />
+            <figcaption>24×24 icon file × 3</figcaption>
+          </figure>
+        </div>
+
       </section>
 
     </main>

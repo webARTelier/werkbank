@@ -1,1 +1,10 @@
-// scaleSVG styles
+// =============================================================
+// scaleSVG — behaviour-only, ships no styles
+// =============================================================
+//
+// The module computes an SVG's size from its viewBox and data-scale and
+// writes it as the width/height presentation attributes — pure behaviour,
+// nothing to style. It sets no inline styles; a sized SVG is marked with
+// the is-scaled state class, which the consuming project may use as a
+// styling hook (e.g. reveal a graphic only once it has its final size).
+// This stub exists only so the build has a stylesheet to compile.

@@ -210,7 +210,9 @@ function carryAttributes(img, svg) {
   const height = img.getAttribute('height');
   if (height && !svg.hasAttribute('height')) svg.setAttribute('height', height);
 
-  if (img.dataset.scale && !svg.dataset.scale) {
+  // Presence check, not truthiness: a bare data-scale (empty value) means
+  // "natural viewBox size" to scaleSVG and must be carried over as well.
+  if ('scale' in img.dataset && !('scale' in svg.dataset)) {
     svg.dataset.scale = img.dataset.scale;
   }
 }

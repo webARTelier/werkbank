@@ -1,0 +1,83 @@
+<!--
+  scaleSVG — copy-paste snippet
+  ============================================================================
+  Copy the block(s) below into your own project.
+
+  1) In <head> (or before </body>): load the shared styles, this component's
+     (empty) styles and the boot script. boot.min.js lazily loads the
+     scaleSVG module as soon as it finds data-js-module="scaleSVG" in the
+     DOM — you do not import scaleSVG.js yourself. Adjust the paths to your
+     /dist.
+
+       <link rel="stylesheet" href="/dist/css/shared.min.css" />
+       <link rel="stylesheet" href="/dist/css/scaleSVG.min.css" />
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+  2) Put data-js-module="scaleSVG" on an inline <svg data-scale="…"> — or on
+     a container holding several — and give each SVG a viewBox. On boot the
+     module multiplies the viewBox size by the data-scale factor and writes
+     the result as the SVG's width/height presentation attributes.
+
+  Notes / Configuration
+    - data-scale="<factor>" — multiplier for the viewBox size (0.5 halves
+      it, 3 triples it). It doubles as the opt-in: SVGs without data-scale
+      are never touched. A bare data-scale (no value) sizes the SVG to its
+      natural viewBox size (factor 1).
+    - viewBox is required — it is the size the factor multiplies. An SVG
+      without a usable viewBox is left untouched (and reported via the
+      optional reporter).
+    - Presentation attributes only: the module writes the SVG's
+      width/height attributes, never inline styles, so any CSS rule still
+      overrides the result. A sized SVG carries the is-scaled state class
+      as a CSS hook.
+    - Progressive enhancement: without JavaScript the SVG renders exactly
+      as the markup says. An SVG with only a viewBox spans its container by
+      default, so author explicit width/height when the unscaled fallback
+      size matters — the module overwrites them once it runs.
+    - Accessibility is not touched: name a meaningful SVG yourself
+      (role="img" + aria-label) or mark a decorative one with
+      aria-hidden="true" and focusable="false".
+    - Combine with inlineSVG: data-js-module="inlineSVG,scaleSVG" plus
+      data-scale on an <img src="….svg"> first inlines the file, then sizes
+      the resulting <svg> from its viewBox. Conversions that arrive later
+      are watched for up to 5 s.
+-->
+
+
+
+<!-- One SVG sizing itself: 24×24 viewBox × factor 4 → 96×96 px -->
+<svg
+  data-js-module="scaleSVG"
+  data-scale="4"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  aria-hidden="true"
+  focusable="false"
+>
+  <circle cx="12" cy="12" r="9" />
+</svg>
+
+
+
+<!-- One container sizes every svg[data-scale] inside it; a bare data-scale
+     means natural viewBox size (factor 1) -->
+<div data-js-module="scaleSVG">
+  <svg data-scale viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <circle cx="12" cy="12" r="9" fill="currentColor" />
+  </svg>
+  <svg data-scale="2" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <circle cx="12" cy="12" r="9" fill="currentColor" />
+  </svg>
+</div>
+
+
+
+<!-- Chained with inlineSVG: inline the .svg file, then size the result -->
+<img
+  data-js-module="inlineSVG,scaleSVG"
+  src="/assets/icons/download.svg"
+  alt="Download"
+  data-scale="2"
+/>

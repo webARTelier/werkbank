@@ -29,7 +29,9 @@ These `<img>` attributes are carried onto the resulting `<svg>`:
 - `id`
 - `class` (merged with any classes the file itself declares)
 - `width` / `height` (only if the file sets none, so the file's own sizing wins)
-- `data-scale` (so the [`scaleSVG`](../scaleSVG/readme.md) companion can size it)
+- `data-scale` (so the [`scaleSVG`](../scaleSVG/readme.md) companion can size
+  it) — including a bare `data-scale` without a value, which means "natural
+  viewBox size" to scaleSVG
 
 ## Scoping (multiple SVGs on one page)
 Two inlined `<svg>` share one document, so anything global to that document can
