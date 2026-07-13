@@ -1,0 +1,102 @@
+<!--
+  stickyObserver — copy-paste snippet
+  ============================================================================
+  Copy the block below into your own project.
+
+  1) In <head> (or before </body>): load the shared styles, this component's
+     styles and the boot script. boot.min.js lazily loads the stickyObserver
+     module as soon as it finds data-js-module="stickyObserver" in the DOM —
+     you do not import stickyObserver.js yourself. Adjust the paths to where
+     you serve /dist.
+
+       <link rel="stylesheet" href="/dist/css/shared.min.css" />
+       <link rel="stylesheet" href="/dist/css/stickyObserver.min.css" />
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+  2) Put data-js-module="stickyObserver" on the position: sticky element
+     itself. While the element is pinned it carries the class "is-stuck"
+     (removed again on the way back).
+       - Detection uses a SENTINEL in the flow above the element. By default
+         the script injects a zero-size, aria-hidden <div> directly before
+         the element — no extra markup needed.
+       - data-sticky-sentinel="<selector>" switches to an author-placed
+         sentinel: use it when the trigger should sit somewhere else in the
+         layout, when an injected sibling would disturb the layout
+         (flex/grid gap slots, :first-child / sibling selectors, list or
+         table markup), or when several elements share one sentinel. The
+         class flips once the sentinel is completely above the trigger edge.
+       - .m-stickyBar is an optional convenience look: position: sticky at
+         the viewport top plus a default pinned-state surface (background,
+         hairline, shadow). The script does not read it — style the element
+         however you like and key your own rules off .is-stuck.
+
+  Notes
+    - Pure progressive enhancement: position: sticky pins the element
+      natively, with or without JavaScript. The script only adds the missing
+      ":stuck" information as a class; without JS no sentinel is injected
+      and the element simply keeps its unstuck look.
+    - The script sets no inline styles and runs no animations — the
+      transition between the two states lives in the CSS (which also honours
+      prefers-reduced-motion).
+    - The class is decorative only: "currently pinned" is a viewport-
+      dependent layout fact, so never let anything meaningful to assistive
+      technology depend on it.
+    - Any number of instances can live on one page — every element owns its
+      sentinel and its observer.
+    - Optional config (attributes on the sticky element):
+        data-sticky-sentinel   CSS selector for an author-placed sentinel
+                               (first match in the document; use unique
+                               selectors per instance).
+                               Default: an injected sibling <div>
+        data-sticky-root       CSS selector for the scroll container the
+                               element sticks in (first match in the
+                               document). Only needed when the element
+                               lives inside an overflow: auto/scroll
+                               container — sticky then pins against that
+                               container's edge, so the class must flip
+                               against the same edge. Element and sentinel
+                               must sit inside it. Default: the viewport
+        data-sticky-class      override the state class. Default: is-stuck
+                               (restyle to match if you change it)
+        data-sticky-offset     px pin distance from the viewport/root top.
+                               Normally not needed: the script reads the
+                               element's computed `top` by itself (e.g.
+                               set via --stickyBar-offset), so CSS is the
+                               single source of truth. Set it only when
+                               that value is `auto` or not resolvable to
+                               px. Default: read from CSS, else 0
+-->
+
+
+
+<!-- Basic: the sticky element is the module element; the sentinel is
+     injected automatically -->
+<header class="m-stickyBar" data-js-module="stickyObserver">
+  <strong>Sticky bar</strong> — gains its surface while pinned
+</header>
+
+
+
+<!-- Advanced: author-placed sentinel elsewhere in the layout, plus a pin
+     offset. The class flips once #heroSection is completely scrolled past —
+     independent of where the bar itself sits. The offset lives only in the
+     CSS: the script reads the bar's computed `top` by itself. -->
+<section id="heroSection">…</section>
+<header class="m-stickyBar" style="--stickyBar-offset: 16px;"
+        data-js-module="stickyObserver"
+        data-sticky-sentinel="#heroSection">
+  <strong>Offset bar</strong> — pins 16px below the viewport top
+</header>
+
+
+
+<!-- Scroll container: the bar sticks inside an overflow: auto/scroll box
+     (styling owned by your project), so it pins against that box's top
+     edge — data-sticky-root points the observer at the same box. -->
+<div id="scrollBox">
+  <header class="m-stickyBar" data-js-module="stickyObserver"
+          data-sticky-root="#scrollBox">
+    <strong>Container bar</strong> — pins inside the scroll box
+  </header>
+  …scrollable content…
+</div>

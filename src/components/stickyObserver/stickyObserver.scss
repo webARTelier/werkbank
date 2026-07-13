@@ -1,1 +1,81 @@
-// stickyObserver styles
+// =============================================================
+// stickyObserver — styling for the pinned state of sticky bars
+// =============================================================
+//
+// The companion script (stickyObserver.js) boots on the position: sticky
+// element itself, watches a zero-size sentinel above it (auto-injected
+// right before the element, or author-placed via data-sticky-sentinel) and
+// toggles ONE state class on the element:
+//   .is-stuck -> the element is currently pinned by position: sticky
+// It sets no inline styles and runs no animations, so everything visual —
+// including the transition between the two states — lives here and reacts to
+// that class. Without JS the class is never added: the element still sticks
+// natively (position: sticky is pure CSS) and simply keeps its unstuck look.
+//
+// This stylesheet ships a sensible DEFAULT: a bar that sticks to the top of
+// the viewport and, while pinned, lifts off the page with an elevated
+// background, a hairline and a soft shadow. It is only a starting point —
+// `.is-stuck` is a styling hook, so override or replace these rules to make
+// the pinned state look like whatever your project needs.
+//
+// The "m-stickyBar" class (BEM "m-" prefix) is styling only — a convenience
+// look so the demo/snippet works out of the box. The JS hooks onto the
+// element via data-js-module and toggles the class above; it does not need
+// or read "m-stickyBar", so the sticky element can be styled any way you
+// like.
+
+:root {
+  // Pin distance from the top edge of the viewport (or of the scroll
+  // container, with data-sticky-root). Changing it here is enough: the
+  // script reads the bar's resulting computed `top` by itself, so the
+  // trigger edge follows automatically — data-sticky-offset exists only
+  // as an explicit override.
+  --stickyBar-offset: 0px;
+
+  // Inner spacing of the bar. Maps to the shared spacing scale (see
+  // _shared/scss/_foundations.scss).
+  --stickyBar-padding: var(--space-xs) var(--space-m);
+
+  // Stuck-state surface: elevated background, hairline and soft shadow so
+  // the pinned bar visibly separates from the content sliding beneath it.
+  --stickyBar-bg: var(--color-bg-elevated);
+  --stickyBar-border-color: var(--color-border-subtle);
+  --stickyBar-shadow: 0 12px 24px -12px var(--color-shadow);
+
+  // Transition between the two states. Maps to the shared motion tokens.
+  --stickyBar-duration: var(--an-duration);
+  --stickyBar-ease: var(--an-ease);
+}
+
+
+
+// Convenience target: a bar that sticks to the top of the viewport. The
+// surface properties are transparent while the bar rests in the normal flow
+// and fade in once the script marks it as pinned.
+.m-stickyBar {
+  position: sticky;
+  inset-block-start: var(--stickyBar-offset);
+  z-index: var(--zi-aboveContent);
+
+  border-block-end: 1px solid transparent;
+  padding: var(--stickyBar-padding);
+
+  background-color: transparent;
+
+  transition:
+    border-color var(--stickyBar-duration) var(--stickyBar-ease),
+    background-color var(--stickyBar-duration) var(--stickyBar-ease),
+    box-shadow var(--stickyBar-duration) var(--stickyBar-ease);
+
+  // State written by the script while the bar is pinned. Everything visual
+  // about "stuck" keys off this class — restyle it to taste.
+  &.is-stuck {
+    border-color: var(--stickyBar-border-color);
+    background-color: var(--stickyBar-bg);
+    box-shadow: var(--stickyBar-shadow);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}

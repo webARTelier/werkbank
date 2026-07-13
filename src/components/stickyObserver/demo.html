@@ -25,10 +25,193 @@
       <section class="hero">
         <a class="back" href="../../../index.html">← Overview</a>
         <h1>stickyObserver</h1>
-        <p>Observes sticky elements and marks their state.</p>
+        <p>Marks a sticky element while it is pinned so CSS can style the stuck state.</p>
       </section>
 
       <section class="stage" aria-label="Live demo">
+
+        <!--
+            position: sticky pins the bars natively, but CSS has no :stuck
+            selector — the pinned state cannot be styled in pure CSS. The
+            module boots on the sticky element itself and toggles ONE class
+            on it while it is pinned:
+              .is-stuck -> the element is currently pinned
+            The shipped stylesheet keys the pinned surface (background,
+            hairline, shadow) and its transition off that class.
+
+            Wiring — three instances, three modes
+              - Bar one: data-js-module="stickyObserver" on the bar, nothing
+                else. The script injects a zero-size, aria-hidden sentinel
+                <div> directly before the bar (inspect the DOM to see it).
+              - Bar two: data-sticky-sentinel="#surfaceTrigger" points at an
+                author-placed sentinel — here the paragraph right below the
+                bar. The class flips only once that paragraph is completely
+                above the viewport edge, so the trigger is visibly decoupled
+                from the pinning itself.
+              - Bar three: sticks INSIDE an overflow: auto box, so it pins
+                against that box's top edge, not the viewport's.
+                data-sticky-root="#demoScrollBox" points the observer at the
+                same box — the class flips when the BOX is scrolled,
+                independent of the page scroll.
+              - Each wrapper <div> is its bar's containing block, so bar one
+                unpins before bar two's section begins.
+
+            Progressive enhancement
+              - The script sets no inline styles and runs no animations; it
+                only toggles .is-stuck. Without JavaScript no sentinel is
+                injected and the bars still stick (position: sticky is pure
+                CSS) — they simply keep their unstuck look. The transition
+                lives in the CSS and honours prefers-reduced-motion.
+
+            Try it
+              - Scroll down. Bar one gains its surface the moment it pins.
+                Further down, bar two pins first and stays transparent until
+                its trigger paragraph has fully scrolled underneath it —
+                only then its surface fades in. Last, scroll the framed box:
+                bar three gains its surface inside the box while the page
+                itself stands still.
+          -->
+
+        <p class="stage__intro">
+          Scroll this page. Each bar below travels with its section until it
+          reaches the top of the viewport — there
+          <code>position:&nbsp;sticky</code> pins it, the script flips
+          <code>is-stuck</code>, and the bar <strong>gains an elevated surface
+          with a hairline and a shadow</strong> — a state pure CSS cannot
+          select, because there is no <code>:stuck</code> pseudo-class. Three
+          independent instances run on this page: auto-injected sentinel,
+          author-placed sentinel, and a bar inside a scroll container.
+        </p>
+
+        <!-- Instance 1: auto-injected sentinel — the bar is the module
+             element, no extra markup -->
+        <div>
+          <header class="m-stickyBar" data-js-module="stickyObserver">
+            <strong>Bar one</strong> — auto-injected sentinel, pinned while it
+            shows its surface
+          </header>
+
+          <p>
+            Keep scrolling — this text exists so the section is long enough
+            for the bar above to actually pin. That bar carries nothing but
+            <code>data-js-module="stickyObserver"</code>: the tiny sentinel
+            element the observer watches was injected by the script right
+            before the bar. Open the inspector and you will find it — an
+            empty, zero-size <code>&lt;div&gt;</code> with
+            <code>aria-hidden="true"</code> that exists only while JavaScript
+            runs.
+          </p>
+          <p>
+            The pinning itself never depended on JavaScript. The bar is a
+            plain <code>position: sticky</code> element, so with scripting
+            disabled it would still attach to the viewport top at exactly the
+            same scroll position — it would just keep its transparent in-flow
+            look, and no sentinel would exist at all. What the script adds is
+            purely the missing piece of information: a class that says "this
+            element is pinned right now", which the stylesheet turns into the
+            elevated surface.
+          </p>
+          <p>
+            There is no scroll listener running and nothing is measured per
+            frame: an IntersectionObserver reports only the moments the
+            sentinel crosses the viewport edge. Between two flips this page
+            costs nothing. Scroll on — this bar unpins where its section
+            ends, and the second instance takes over.
+          </p>
+        </div>
+
+        <!-- Instance 2: author-placed sentinel — the trigger is the
+             paragraph BELOW the bar, decoupled from the pinning -->
+        <div>
+          <header class="m-stickyBar" data-js-module="stickyObserver"
+                  data-sticky-sentinel="#surfaceTrigger">
+            <strong>Bar two</strong> — author-placed sentinel, surface appears
+            when the trigger paragraph is gone
+          </header>
+
+          <p id="surfaceTrigger">
+            <strong>This paragraph is the sentinel</strong> of bar two —
+            marked with an id and referenced via
+            <code>data-sticky-sentinel="#surfaceTrigger"</code>. Watch
+            closely: the bar pins the moment it reaches the viewport top, but
+            it stays transparent while these lines slide underneath it. Only
+            once this whole paragraph has scrolled past does the surface fade
+            in.
+          </p>
+          <p>
+            That is the point of the second mode: the trigger is decoupled
+            from the element. An author-placed sentinel can sit anywhere in
+            the layout — a hero section whose passing should condense the
+            site header, a marker deep inside an article — and any element
+            works, not just an empty helper. It is also the escape hatch for
+            markup where an injected sibling would not be free: inside a
+            flex or grid container with a <code>gap</code> the extra child
+            occupies a slot, and list or table markup does not allow a
+            stray <code>&lt;div&gt;</code> between its items.
+          </p>
+          <p>
+            Both instances on this page run independently — each owns its
+            sentinel and its observer, and several elements could even share
+            one sentinel by pointing at the same selector. Scroll back to the
+            top now and watch the hand-over in reverse: as each trigger
+            re-enters the viewport its bar loses the class, the surface fades
+            out, and the bar is an ordinary part of the page flow again.
+          </p>
+
+          <!-- Demo-only scroll room so bar two can pin on tall viewports
+               too -->
+          <div style="block-size: 100dvh;" aria-hidden="true"></div>
+        </div>
+
+        <!-- Instance 3: scroll container — the bar pins against the box's
+             top edge; data-sticky-root points the observer at the box.
+             The inline sizing/frame is demo-only chrome. -->
+        <div>
+          <p>
+            The third bar does not care about the page scroll at all. It
+            lives inside the framed <code>overflow: auto</code> box below
+            and pins against <em>its</em> top edge —
+            <code>data-sticky-root="#demoScrollBox"</code> hands that box to
+            the observer as its root, because an element root is the only
+            way the class can flip against the container edge the bar
+            actually sticks to. Scroll <strong>inside the box</strong> to
+            see it.
+          </p>
+
+          <div id="demoScrollBox"
+               style="max-block-size: 45vh; overflow: auto;
+                      border: 1px solid var(--color-border-subtle);">
+            <header class="m-stickyBar" data-js-module="stickyObserver"
+                    data-sticky-root="#demoScrollBox">
+              <strong>Bar three</strong> — pins inside this scroll container
+            </header>
+
+            <p>
+              Scroll this box. The bar above is an ordinary
+              <code>position: sticky</code> element whose containing scroller
+              happens to be this box, not the page — so it pins the moment
+              the box's content starts moving underneath it, while the page
+              itself stands still.
+            </p>
+            <p>
+              The wiring is the same as everywhere else: the script injected
+              a zero-size sentinel right before the bar, and the observer
+              reports the moments that sentinel crosses the box's top edge.
+              The only difference is the observer's root — the box instead
+              of the viewport.
+            </p>
+            <p>
+              Scroll back up inside the box and the bar releases: the
+              sentinel re-enters the box, the class is removed, and the
+              surface fades out again — completely independent of the two
+              instances above.
+            </p>
+
+            <!-- Demo-only scroll room so the box always scrolls -->
+            <div style="block-size: 60vh;" aria-hidden="true"></div>
+          </div>
+        </div>
+
       </section>
 
     </main>
