@@ -4,12 +4,17 @@ const fs = require("fs")
 const fsp = fs.promises
 const path = require("path")
 const sass = require("sass")
-const postcss = require("postcss")
-const autoprefixer = require("autoprefixer")
-const CleanCSS = require("clean-css")
+const browserslist = require("browserslist")
+const { transform, browserslistToTargets } = require("lightningcss")
 
 const config = require("./config")
 const { printScssError, printSassDeprecation } = require("./format")
+
+// Browser targets for Lightning CSS, derived from the "browserslist" field
+// in package.json. Lightning CSS does its own vendor prefixing and syntax
+// lowering against these targets, which replaces the previous separate
+// Autoprefixer/PostCSS pass.
+const targets = browserslistToTargets(browserslist(null, { path: config.root }))
 
 // Output name for a given .scss entry: <basename>.min.css (vendor files keep
 // the .min suffix too, so vendor/foo.scss -> foo.min.css, never foo.css).
@@ -34,6 +39,28 @@ function makeLogger() {
   }
 }
 
+// Post-processing via Lightning CSS: vendor prefixing / syntax lowering per
+// the browserslist targets in both modes, plus minification in prod. Unlike
+// the CleanCSS step it replaces, Lightning CSS parses modern CSS natively
+// (@starting-style, anchor positioning, @property, :popover-open, transition
+// values with overlay / allow-discrete), so no shielding or unit-rewriting
+// workarounds are needed.
+function postProcess(css, entry, { dev, inputSourceMap }) {
+  try {
+    return transform({
+      filename: path.relative(config.root, entry),
+      code: Buffer.from(css),
+      minify: !dev,
+      targets,
+      inputSourceMap,
+      sourceMap: dev,
+    })
+  } catch (err) {
+    const loc = err.loc ? ` (${err.loc.line}:${err.loc.column})` : ""
+    throw new Error(`Lightning CSS: ${err.message}${loc}`)
+  }
+}
+
 async function compileEntry(entry, { dev }) {
   const result = await sass.compileAsync(entry, {
     style: dev ? "expanded" : "compressed",
@@ -43,34 +70,24 @@ async function compileEntry(entry, { dev }) {
     logger: makeLogger(),
   })
 
-  // Autoprefixer via PostCSS.
-  const prefixed = await postcss([autoprefixer]).process(result.css, {
-    from: entry,
-    map: false,
+  // Dev: no minify pass, but the same target-based transform as prod so
+  // both modes ship identical prefixes. The Sass source map is chained
+  // through Lightning CSS so positions stay accurate after the transform.
+  const processed = postProcess(result.css, entry, {
+    dev,
+    inputSourceMap: result.sourceMap ? JSON.stringify(result.sourceMap) : undefined,
   })
 
   await fsp.mkdir(config.scss.outDir, { recursive: true })
   const outFile = path.join(config.scss.outDir, outNameFor(entry))
 
-  if (dev) {
-    // Dev: keep it readable + ship a source map. No CleanCSS pass.
-    let css = prefixed.css
+  let css = processed.code.toString()
+  if (dev && processed.map) {
     const mapFile = `${outFile}.map`
-    if (result.sourceMap) {
-      await fsp.writeFile(mapFile, JSON.stringify(result.sourceMap))
-      css += `\n/*# sourceMappingURL=${path.basename(mapFile)} */\n`
-    }
-    await fsp.writeFile(outFile, css)
-  } else {
-    // Prod: minify with CleanCSS.
-    const minified = new CleanCSS({ level: 2, returnPromise: false }).minify(
-      prefixed.css
-    )
-    if (minified.errors && minified.errors.length) {
-      throw new Error(`CleanCSS: ${minified.errors.join(", ")}`)
-    }
-    await fsp.writeFile(outFile, minified.styles)
+    await fsp.writeFile(mapFile, processed.map)
+    css += `\n/*# sourceMappingURL=${path.basename(mapFile)} */\n`
   }
+  await fsp.writeFile(outFile, css)
 
   return outNameFor(entry)
 }

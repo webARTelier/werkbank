@@ -305,7 +305,7 @@ Prefix every class by its role:
   the property they override.
 
 ### Vendor prefixes
-- ❌ Don't write them. Autoprefixer adds them at build time, driven by the
+- ❌ Don't write them. The build takes care of prefixing, driven by the
   project's `browserslist` targets.
 
 ### Nesting

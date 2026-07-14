@@ -60,7 +60,6 @@
     black calc(100% - var(--scrollFade-size)),
     var(--scrollFade-bottom) 100%
   );
-  -webkit-mask-image: $mask;
   mask-image: $mask;
 
   &[data-fade-top] {
