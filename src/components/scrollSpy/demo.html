@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>scrollSpy – Demo</title>
+  <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
+  <link rel="stylesheet" href="../../../dist/css/scrollSpy.min.css" />
+  <script type="module" src="../../../dist/js/boot.min.js"></script>
+
+  <!-- for development only -->
+  <script type="module" src="../../../src/_shared/js/dev_pageInfo.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_a11yInspector.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_qrCode.js"></script>
+  <!-- end for development only -->
+
+  <!--
+      DEMO-ONLY STYLES
+      ----------------------------------------------------------------------
+      scrollSpy ships an empty stub stylesheet (behaviour-only component).
+      Everything below is ONE example of how a consuming project styles the
+      TOC; none of it is part of the component. The styling hook is the ARIA
+      the JS maintains — aria-current="location" on the current link — plus
+      li:has() for the parent trail in the nested list. (Tokens like
+      --space-* / --color-* come from shared.min.css.)
+  -->
+
+  <style>
+    /* Smooth anchor scrolling is the project's CSS, not the module —
+       and it must stay behind a reduced-motion check. */
+    @media (prefers-reduced-motion: no-preference) {
+      html {
+        scroll-behavior: smooth;
+      }
+    }
+
+    /* The sections' scroll-margin is where anchor jumps land AND where
+       the module places its spy line — one CSS value, no attribute. */
+    .m-spy__section {
+      scroll-margin-block-start: var(--space-l);
+    }
+
+    .m-spy {
+      display: grid;
+      gap: var(--space-l);
+      align-items: start;
+    }
+
+    @media (min-width: 48rem) {
+      .m-spy {
+        grid-template-columns: 15rem 1fr;
+      }
+    }
+
+    /* The TOC travels with the reader — position: sticky is demo CSS,
+       the module does not care where the TOC lives. */
+    @media (min-width: 48rem) {
+      .m-spy__toc {
+        position: sticky;
+        inset-block-start: var(--space-m);
+      }
+    }
+
+    .m-spy__list,
+    .m-spy__sublist {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .m-spy__sublist {
+      padding-inline-start: var(--space-s);
+    }
+
+    .m-spy__link {
+      display: block;
+
+      border-inline-start: 2px solid var(--color-border);
+      padding: var(--space-3xs) var(--space-xs);
+
+      text-decoration: none;
+      color: var(--color-text-muted);
+    }
+
+    .m-spy__link:hover {
+      color: var(--color-text);
+    }
+
+    /* Keyboard focus ring — the component leaves this to the project. */
+    .m-spy__link:focus-visible {
+      outline: 2px solid var(--color-focus-ring-light);
+      outline-offset: var(--outlineOffset);
+    }
+
+    /* The current link: aria-current="location" is written by the JS
+       and doubles as the styling hook — no state class exists. */
+    .m-spy__link[aria-current='location'] {
+      border-color: var(--color-accent-secondary);
+      color: var(--color-text);
+    }
+
+    /* Parent trail: when the current link sits in a nested sublist, its
+       parent entry lights up too — pure CSS via :has(), the JS marks
+       exactly one link. */
+    .m-spy__item:has([aria-current]) > .m-spy__link {
+      border-color: var(--color-accent-secondary);
+      color: var(--color-text);
+    }
+
+    .m-spy__section > :first-child {
+      margin-block-start: 0;
+    }
+
+    /* Second example: sections inside an overflow: auto box. The height
+       is deliberately FIXED, not viewport-relative: the spy needs about
+       one box-height of content below a section's top edge before that
+       section can reach the line (see "The end rule" above) — a box
+       growing with a tall viewport would outgrow its own content and
+       skip the middle entries. */
+    .m-spyBox {
+      border: 1px solid var(--color-border-subtle);
+      block-size: 20rem;
+      overflow: auto;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .m-spyBox {
+        scroll-behavior: smooth;
+      }
+    }
+
+    .m-spyBox__section {
+      padding: var(--space-2xs) var(--space-s);
+    }
+
+    /* Demo page rhythm only. */
+    .demoExample {
+      margin-block-start: var(--space-xl);
+    }
+
+    .demoExample > h2 {
+      margin-block-end: var(--space-s);
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <main class="shell">
+
+    <section class="hero">
+      <a class="back" href="../../../index.html">← Overview</a>
+      <h1>scrollSpy</h1>
+      <p>Highlights the TOC link of the section currently being read.</p>
+    </section>
+
+    <section class="stage" aria-label="Live demo">
+
+      <!--
+          One spy instance per element with data-js-module="scrollSpy".
+
+          Wiring
+            - The module element is the TOC itself (here a <nav> with an
+              aria-label). Every in-page anchor link inside it becomes a
+              spy link; the href fragment resolves the target — no extra
+              pairing attribute, and the sections need nothing but ids.
+            - The spy line's distance is read from the first target's
+              computed scroll-margin-top — the same CSS that positions
+              the anchor jumps — so a clicked link always highlights its
+              own section. data-spy-offset would override it.
+
+          Progressive enhancement
+            - Without JavaScript both examples are plain jump-link TOCs —
+              fully usable, free of a highlight that could not update.
+              The module writes ONE attribute (aria-current="location")
+              and no inline styles; no scroll listener runs, everything
+              is IntersectionObserver-driven.
+
+          Accessibility
+            - aria-current="location" is real "you are here" information
+              and doubles as the styling hook. It is no live region, so
+              scrolling never causes announcements. The links stay plain
+              links; smooth scrolling is demo CSS behind a
+              prefers-reduced-motion check.
+            - The target sections carry tabindex="-1": an anchor jump
+              then moves focus onto the activated section itself instead
+              of dropping it on <body> — Tab continues from the content
+              the reader just navigated to, and AT announces the section.
+        -->
+
+      <p class="stage__intro">
+        <strong>Scroll this page.</strong> The table of contents on the left
+        travels along and always marks the section you are reading —
+        <code>aria-current="location"</code> moves from link to link as each
+        section's top edge passes the spy line. Click a link: the page jumps
+        (smoothly, unless you prefer reduced motion) and exactly that link
+        lights up. The second example runs the same wiring inside a scroll
+        container.
+      </p>
+
+
+      <!-- 1) Page-level TOC: sticky sidebar, nested list, short finale -->
+      <div class="demoExample">
+        <h2>Default (page TOC with a nested list)</h2>
+
+        <div class="m-spy">
+
+          <nav class="m-spy__toc" aria-label="On this page"
+               data-js-module="scrollSpy">
+            <ul class="m-spy__list">
+              <li class="m-spy__item">
+                <a class="m-spy__link" href="#spy-concept">Concept</a>
+              </li>
+              <li class="m-spy__item">
+                <a class="m-spy__link" href="#spy-how">How it works</a>
+                <ul class="m-spy__sublist">
+                  <li class="m-spy__item">
+                    <a class="m-spy__link" href="#spy-line">The spy line</a>
+                  </li>
+                  <li class="m-spy__item">
+                    <a class="m-spy__link" href="#spy-end">The end rule</a>
+                  </li>
+                </ul>
+              </li>
+              <li class="m-spy__item">
+                <a class="m-spy__link" href="#spy-finale">A short finale</a>
+              </li>
+            </ul>
+          </nav>
+
+          <div class="m-spy__content">
+
+            <section class="m-spy__section" id="spy-concept" tabindex="-1">
+              <h3>Concept</h3>
+              <p>
+                This column is ordinary content: stacked sections with ids,
+                nothing else. The <code>&lt;nav&gt;</code> on the left is
+                the module element — every in-page anchor link inside it
+                became a spy link when the module booted. Watch the list
+                while you scroll: the moment this section's top edge passes
+                the invisible spy line, its link gains
+                <code>aria-current="location"</code>; the demo stylesheet
+                turns that attribute into the accent bar you see.
+              </p>
+              <p>
+                Nothing here depends on JavaScript to be usable. Disable it
+                and the TOC is still a list of working jump links — there
+                is simply no highlight, and honestly so: a marker that
+                could not update would be worse than none.
+              </p>
+              <p>
+                There is also no scroll listener running and nothing is
+                measured per frame. IntersectionObservers report only the
+                moments a section edge crosses the line; between two
+                crossings this page costs nothing.
+              </p>
+            </section>
+
+            <section class="m-spy__section" id="spy-how" tabindex="-1">
+              <h3>How it works</h3>
+              <p>
+                "Currently being read" is decided at a spy line — a
+                horizontal line a fixed distance below the viewport's top
+                edge. Current is the <em>last</em> section in document
+                order whose top edge has passed that line. This entry has
+                two children in the TOC: as you read on, the highlight
+                wanders into the sublist, and the parent entry keeps a
+                trail — pure CSS via <code>li:has()</code>, the script
+                marks exactly one link.
+              </p>
+            </section>
+
+            <section class="m-spy__section" id="spy-line" tabindex="-1">
+              <h4>The spy line</h4>
+              <p>
+                Where does the line sit? The module reads the first
+                target's computed <code>scroll-margin-top</code> — the
+                very value the browser uses to land anchor jumps. On this
+                page the sections declare
+                <code>scroll-margin-block-start: var(--space-l)</code>,
+                so a click on any TOC link lands the section exactly at
+                the line and the clicked link is the one that lights up.
+                One CSS declaration is the single source of truth for
+                both; <code>data-spy-offset</code> exists only for markup
+                where that value is unusable.
+              </p>
+              <p>
+                Try it: click "Concept" above, then come back via the TOC.
+                Whatever link you choose, the highlight lands on it — no
+                off-by-one flicker to the neighbouring section.
+              </p>
+            </section>
+
+            <section class="m-spy__section" id="spy-end" tabindex="-1">
+              <h4>The end rule</h4>
+              <p>
+                A naive spy has a blind spot: a final section so short
+                that the content ends right below it can never carry the
+                line, so its link could never light up. The module
+                therefore appends a zero-size, aria-hidden sentinel at
+                the very end of the scroll content and observes it — the
+                moment the page (or container) is scrolled to its end,
+                the last link is current. On this page more content
+                follows the finale below, so the blind spot is best seen
+                in the scroll container of the second example: its last
+                section is exactly that case.
+              </p>
+            </section>
+
+            <section class="m-spy__section" id="spy-finale" tabindex="-1">
+              <h4>A short finale</h4>
+              <p>
+                The last stop of this instance — its link lights up as
+                its top edge passes the line and stays lit from there on,
+                including at the very bottom of the page (the end rule).
+              </p>
+              <p>
+                One practical property is on display right here: for a
+                section to get its moment, enough content must follow its
+                top edge — roughly one viewport — otherwise the scroll
+                range ends before its top can reach the line. That is why
+                the second example and the closing notes sit below: they
+                are this instance's tail room.
+              </p>
+            </section>
+
+          </div>
+
+        </div>
+      </div>
+
+
+      <!-- 2) Scroll container: data-spy-root + data-spy-offset. The TOC
+           lives OUTSIDE the box it spies on. -->
+      <div class="demoExample">
+        <h2>Scroll container (<code>data-spy-root</code>)</h2>
+
+        <p>
+          The second instance spies on sections inside the framed
+          <code>overflow: auto</code> box below, so
+          <code>data-spy-root="#spyDemoBox"</code> hands that box to the
+          observers — the spy line now sits below the <em>box's</em> top
+          edge, independent of the page scroll. These sections carry no
+          scroll margin, so <code>data-spy-offset="24"</code> places the
+          line explicitly. Note that the TOC itself lives outside the box:
+          only the targets must sit inside the root.
+        </p>
+
+        <nav aria-label="In the box" data-js-module="scrollSpy"
+             data-spy-root="#spyDemoBox" data-spy-offset="24">
+          <ul class="m-spy__list">
+            <li class="m-spy__item">
+              <a class="m-spy__link" href="#spy-box-alpha">Alpha</a>
+            </li>
+            <li class="m-spy__item">
+              <a class="m-spy__link" href="#spy-box-beta">Beta</a>
+            </li>
+            <li class="m-spy__item">
+              <a class="m-spy__link" href="#spy-box-gamma">Gamma</a>
+            </li>
+          </ul>
+        </nav>
+
+        <div class="m-spyBox" id="spyDemoBox">
+
+          <section class="m-spyBox__section" id="spy-box-alpha" tabindex="-1">
+            <h3>Alpha</h3>
+            <p>
+              Scroll <strong>inside this box</strong>. The page may stand
+              still — the highlight above follows the box's own scroll
+              position, because the observers' root is the box, not the
+              viewport.
+            </p>
+            <p>
+              Clicking a link scrolls the box natively; the browser knows
+              the nearest scrollable ancestor by itself, the module never
+              intercepts the navigation.
+            </p>
+            <p>
+              These sections carry no scroll margin, so the instance sets
+              <code>data-spy-offset="24"</code> — the one case where the
+              attribute earns its keep. With a margin in the CSS the
+              attribute could simply be dropped.
+            </p>
+          </section>
+
+          <section class="m-spyBox__section" id="spy-box-beta" tabindex="-1">
+            <h3>Beta</h3>
+            <p>
+              The wiring is identical to the page example — anchor links,
+              ids, one attribute for the root. Both instances on this page
+              run completely independently; any number can coexist.
+            </p>
+            <p>
+              Resize the box or the window and the spy keeps working: the
+              observers are rebuilt once per settled resize, since the spy
+              line's geometry depends on the root's height.
+            </p>
+            <p>
+              Everything else behaves exactly like the page instance: the
+              highlight follows the section whose top edge last passed the
+              line below the box's top edge, and above the first section
+              no link is current.
+            </p>
+          </section>
+
+          <section class="m-spyBox__section" id="spy-box-gamma" tabindex="-1">
+            <h3>Gamma</h3>
+            <p>
+              This short last section is the end rule's blind-spot case:
+              the box's content ends right below it, so its top edge can
+              never reach the spy line. Scroll the box to its very end —
+              the injected end sentinel crosses the box's bottom edge and
+              this link lights up anyway.
+            </p>
+          </section>
+
+        </div>
+      </div>
+
+
+      <!-- Closing notes — deliberately substantial: they double as the
+           tail room the page instance above needs so that even its late
+           sections can reach the spy line on tall viewports. -->
+      <div class="demoExample">
+        <h2>Notes</h2>
+
+        <p>
+          Everything the two instances above need is one attribute on the
+          TOC: <code>data-js-module="scrollSpy"</code>. The boot script
+          lazy-loads the module when it finds that attribute; the module
+          collects the in-page anchor links, resolves their targets via
+          the href fragments and starts observing. There is nothing to
+          import manually and nothing to initialise by hand — dynamically
+          inserted TOCs are wired by calling
+          <code>initModulesInScope()</code> on the new subtree.
+        </p>
+        <p>
+          The component is behaviour-only: <code>scrollSpy.min.css</code>
+          is an empty stub, and every visual on this page — the accent
+          bar, the muted link colours, the sticky sidebar, the parent
+          trail via <code>li:has()</code> — is demo CSS a consuming
+          project would own. The single styling hook the module
+          guarantees is <code>aria-current="location"</code> on exactly
+          one link (or on none, above the first section). Misconfigured
+          markup — a link whose target id does not exist, a duplicate
+          link, a target outside the <code>data-spy-root</code> element —
+          is reported to the console and skipped; the link then simply
+          stays a working jump link.
+        </p>
+        <p>
+          A closing word on geometry, because it is the one thing every
+          line-based spy shares: a section can only become current once
+          its top edge reaches the spy line, and that takes roughly one
+          viewport of content below the section's top. Where a page ends
+          too soon after its last headings, those entries would be
+          skipped — the end rule rescues the very last one, and tail
+          room (like this notes block) or a larger
+          <code>data-spy-offset</code> takes care of the rest. If you
+          are reading this on a very tall screen, the readme's
+          "tail blind spot" section explains the trade-off in detail.
+        </p>
+      </div>
+
+    </section>
+
+  </main>
+
+</body>
+
+</html>

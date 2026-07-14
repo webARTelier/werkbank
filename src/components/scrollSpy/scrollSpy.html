@@ -1,0 +1,95 @@
+<!--
+  scrollSpy — copy-paste snippet
+  ============================================================================
+  Copy the block(s) below into your own project.
+
+  1) In <head> (or before </body>): load the shared styles, this component's
+     stylesheet and the boot script. boot.min.js lazily loads the scrollSpy
+     module as soon as it finds data-js-module="scrollSpy" in the DOM — you
+     do not import scrollSpy.js yourself. Adjust the paths to where you
+     serve /dist.
+
+       <link rel="stylesheet" href="/dist/css/shared.min.css" />
+       <link rel="stylesheet" href="/dist/css/scrollSpy.min.css" />
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+  2) Markup: put data-js-module="scrollSpy" on the table of contents (a
+     <nav> with an aria-label is the natural fit). Every in-page anchor
+     link inside it (href="#<target id>") becomes a spy link; the sections
+     it points to need nothing but their id. The href fragment IS the
+     wiring — no extra pairing attribute, and the TOC may live anywhere on
+     the page (sticky sidebar, header, …). Give the sections tabindex="-1":
+     an anchor jump then moves focus onto the activated section itself
+     instead of dropping it on <body>, so Tab continues from the content
+     the reader just navigated to.
+
+  Behaviour
+    - The link of the section currently being read carries
+      aria-current="location"; all other links carry nothing. "Currently
+      being read" is decided at a spy line below the top edge of the
+      viewport: current is the last section whose top edge has passed it.
+      Above the first section no link is current; once the page (or
+      container) is scrolled to its very end, the last link is current —
+      a short final section at the content's end could never reach the
+      line. For that end signal the module appends one zero-size,
+      aria-hidden sentinel at the end of the scroll content.
+    - The spy line's distance is read from the first target's computed
+      scroll-margin-top — the same value that positions anchor jumps
+      under a sticky header — so a clicked link always highlights its own
+      section. No attribute needed; keep the scroll margins uniform.
+    - Anchor navigation stays native. Smooth scrolling is your project's
+      CSS (scroll-behavior: smooth, wrapped in a prefers-reduced-motion
+      check), not this module.
+
+  Progressive enhancement
+    - Without JavaScript the markup is a plain jump-link TOC — fully
+      usable, and free of a highlight that could not update. The module
+      is IntersectionObserver-driven: no scroll listener, nothing is
+      measured per frame.
+
+  Options (all optional; on the data-js-module element)
+    - data-spy-offset="96"    px distance of the spy line from the top
+                              edge (default: the first target's computed
+                              scroll-margin-top, else 0). Set it only
+                              when the CSS value is unusable — e.g.
+                              targets with differing scroll margins.
+    - data-spy-root="#box"    CSS selector for the overflow: auto/scroll
+                              container the sections scroll in (default:
+                              the viewport). Every target must sit inside
+                              it; the TOC itself may live anywhere.
+
+  Styling
+    - scrollSpy.min.css is an empty stub by design (behaviour-only
+      component). Style the highlight in your project via the ARIA the JS
+      maintains — no state class is written:
+        a[aria-current='location']            the current link
+        li:has(> a[aria-current='location'])  its list item — e.g. for a
+                                              parent trail in a nested TOC
+      Style the links' :focus-visible ring in your project too. The demo
+      (demo.html) shows one complete example design.
+-->
+
+
+
+<nav aria-label="On this page" data-js-module="scrollSpy">
+  <ul>
+    <li><a href="#spy-introduction">Introduction</a></li>
+    <li><a href="#spy-usage">Usage</a></li>
+    <li><a href="#spy-faq">FAQ</a></li>
+  </ul>
+</nav>
+
+<section id="spy-introduction" tabindex="-1">
+  <h2>Introduction</h2>
+  <p>…</p>
+</section>
+
+<section id="spy-usage" tabindex="-1">
+  <h2>Usage</h2>
+  <p>…</p>
+</section>
+
+<section id="spy-faq" tabindex="-1">
+  <h2>FAQ</h2>
+  <p>…</p>
+</section>

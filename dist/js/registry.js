@@ -16,6 +16,7 @@ export const registry = {
   rafThrottle: () => import('./modules/rafThrottle.min.js'),
   resolveLocale: () => import('./modules/resolveLocale.min.js'),
   scaleSVG: () => import('./modules/scaleSVG.min.js'),
+  scrollSpy: () => import('./modules/scrollSpy.min.js'),
   stickyObserver: () => import('./modules/stickyObserver.min.js'),
   tabs: () => import('./modules/tabs.min.js'),
   video: () => import('./modules/video.min.js')

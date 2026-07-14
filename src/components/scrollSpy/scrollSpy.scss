@@ -1,0 +1,12 @@
+// =============================================================
+// scrollSpy — behaviour-only, ships no styles
+// =============================================================
+//
+// The module highlights the TOC link of the section currently being read
+// — pure behaviour, every visual (including the focus ring) belongs to
+// the consuming project. It sets no inline styles and writes no state
+// class; the ARIA it maintains is the styling hook:
+//   a[aria-current='location']          the link of the current section
+//   li:has(> a[aria-current='location'])  its list item — e.g. for a
+//                                       parent trail in a nested TOC
+// This stub exists only so the build has a stylesheet to compile.
