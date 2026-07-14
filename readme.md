@@ -158,4 +158,8 @@ component's `demo.html` in the browser.
 - [`CLAUDE.md`](CLAUDE.md) — naming conventions, DI vs. direct import, and
   the focus-ring convention.
 
+## License
+
+[MIT](LICENSE) — use, copy and adapt freely; just keep the copyright notice.
+
 <br><br>
