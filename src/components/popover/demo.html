@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>popover – Demo</title>
+  <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
+  <link rel="stylesheet" href="../../../dist/css/popover.min.css" />
+  <script type="module" src="../../../dist/js/boot.min.js"></script>
+
+  <!-- for development only -->
+  <script type="module" src="../../../src/_shared/js/dev_pageInfo.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_a11yInspector.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_qrCode.js"></script>
+  <!-- end for development only -->
+
+  <!--
+      DEMO-ONLY STYLES
+      ----------------------------------------------------------------------
+      Page rhythm, the trigger row, the code blocks of the explainer and the
+      CSS-only support notes below. None of it is part of the component.
+      (Tokens like --space-* / --color-* come from shared.min.css.)
+  -->
+
+  <style>
+    .demoExample {
+      margin-block-start: var(--space-xl);
+    }
+
+    .demoExample > h2 {
+      margin-block-end: var(--space-s);
+    }
+
+    .demoRow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-s);
+    }
+
+    .demoExplainer {
+      margin-block-start: var(--space-2xl);
+      border-block-start: 1px solid var(--color-border);
+      padding-block-start: var(--space-l);
+    }
+
+    .demoExplainer h3 {
+      margin-block-start: var(--space-l);
+      margin-block-end: var(--space-2xs);
+    }
+
+    .demoExplainer pre {
+      margin-block: var(--space-s);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--borderRadius);
+      padding: var(--space-s);
+      overflow-x: auto;
+
+      font-size: 0.875rem;
+      line-height: 1.6;
+
+      background-color: var(--color-bg-surface);
+    }
+
+    /* The two support notes are toggled by CSS alone: the same @supports
+       condition the component uses decides which one is visible — a live
+       demonstration of the feature detection, no JavaScript involved. */
+    .supportNote {
+      margin-block-start: var(--space-m);
+      border: 1px solid var(--color-border);
+      border-inline-start: 3px solid var(--color-accent-secondary);
+      border-radius: var(--borderRadius);
+      padding: var(--space-xs) var(--space-s);
+
+      color: var(--color-text-secondary);
+    }
+
+    .supportNote--yes {
+      display: none;
+    }
+
+    @supports (anchor-name: --a) and (position-area: bottom) {
+      .supportNote--yes {
+        display: block;
+      }
+
+      .supportNote--no {
+        display: none;
+      }
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <main class="shell">
+
+    <section class="hero">
+      <a class="back" href="../../../index.html">← Overview</a>
+      <h1>popover</h1>
+      <p>Anchor-positioned popover on the native Popover API — behaviour and placement without JavaScript.</p>
+    </section>
+
+    <section class="stage" aria-label="Live demo">
+
+      <!--
+          One popover per element with data-js-module="popover".
+
+          Wiring
+            - The popover is an element with the popover attribute and a
+              unique id; a trigger anywhere carries popovertarget="<id>"
+              (native wiring, no data attributes). The trigger doubles as
+              the popover's anchor.
+            - data-popover-position="top|right|bottom|left" picks the side
+              (default bottom); read by the CSS and the JS fallback alike.
+            - popover="manual" disables light dismiss; a close control with
+              popovertarget="<id>" popovertargetaction="hide" closes it
+              natively.
+
+          Progressive enhancement
+            - Toggle, top layer, light dismiss and trigger ARIA are native
+              Popover API. Placement is pure CSS anchor positioning (the
+              trigger is the implicit anchor). The module only validates the
+              wiring and, in engines without anchor positioning, measures
+              the trigger and anchors the popover itself. Without both, the
+              UA centers the popover — still fully usable.
+
+          Accessibility
+            - The browser exposes the trigger's expanded/collapsed state to
+              assistive tech (popovertarget does this natively). A popover
+              is plain content and needs no role or name of its own;
+              widget-like popovers (menus, listboxes) would get their
+              pattern's roles in the markup.
+        -->
+
+      <p class="stage__intro">
+        <strong>All behaviour is native.</strong> Every trigger below is a
+        plain <code>&lt;button popovertarget="…"&gt;</code> — the browser
+        toggles the popover, renders it in the top layer and (for the
+        default <code>popover="auto"</code>) closes it on an outside click
+        or <kbd>Esc</kbd>. The placement next to the trigger is pure CSS:
+        <em>CSS anchor positioning</em>, explained
+        <a href="#anchor-positioning-explained">below the examples</a>.
+      </p>
+
+      <p class="supportNote supportNote--yes">
+        ✔ This browser supports CSS anchor positioning — the popovers on
+        this page are placed by the stylesheet alone; the component's
+        JavaScript does nothing but validate the markup.
+      </p>
+      <p class="supportNote supportNote--no">
+        ✖ This browser does not support CSS anchor positioning yet — the
+        component's JavaScript fallback is anchoring the popovers instead
+        (measured per frame, same sides, same flip behaviour).
+      </p>
+
+
+      <!-- 1) Default: auto popover, placed below the trigger -->
+      <div class="demoExample">
+        <h2>Default (light dismiss, placed below)</h2>
+
+        <button type="button" popovertarget="popover-default">Toggle popover</button>
+
+        <div id="popover-default" class="m-popover" popover data-js-module="popover">
+          <p>
+            A default <code>popover="auto"</code>: click outside it or press
+            <kbd>Esc</kbd> and it closes itself — no close button required.
+            It sits below its trigger because <code>bottom</code> is the
+            default placement.
+          </p>
+        </div>
+      </div>
+
+
+      <!-- 2) Placements: one popover per side -->
+      <div class="demoExample">
+        <h2>Placement (<code>data-popover-position</code>)</h2>
+
+        <div class="demoRow">
+          <button type="button" popovertarget="popover-top">Top</button>
+          <button type="button" popovertarget="popover-right">Right</button>
+          <button type="button" popovertarget="popover-bottom">Bottom</button>
+          <button type="button" popovertarget="popover-left">Left</button>
+        </div>
+
+        <div id="popover-top" class="m-popover" popover data-js-module="popover" data-popover-position="top">
+          <p><code>position-area: top</code> — centered above the trigger.</p>
+        </div>
+
+        <div id="popover-right" class="m-popover" popover data-js-module="popover" data-popover-position="right">
+          <p><code>position-area: right</code> — centered right of the trigger.</p>
+        </div>
+
+        <div id="popover-bottom" class="m-popover" popover data-js-module="popover" data-popover-position="bottom">
+          <p><code>position-area: bottom</code> — the default.</p>
+        </div>
+
+        <div id="popover-left" class="m-popover" popover data-js-module="popover" data-popover-position="left">
+          <p><code>position-area: left</code> — centered left of the trigger.</p>
+        </div>
+      </div>
+
+
+      <!-- 3) The anchor is live: scroll while open -->
+      <div class="demoExample">
+        <h2>Anchored, not parked — scroll while it is open</h2>
+
+        <p class="stage__intro">
+          The popover is tethered to its anchor, not to a coordinate: open
+          it, then <strong>scroll the page</strong>. It follows the trigger,
+          and when the space below runs out it flips above it
+          (<code>position-try-fallbacks: flip-block</code>) — the browser
+          re-evaluates the placement continuously.
+        </p>
+
+        <button type="button" popovertarget="popover-follow">Open, then scroll</button>
+
+        <div id="popover-follow" class="m-popover" popover data-js-module="popover">
+          <p>
+            Keep scrolling — I stay glued to my trigger and flip to its
+            other side at the viewport edge.
+          </p>
+        </div>
+      </div>
+
+
+      <!-- 4) Manual popover: explicit close only -->
+      <div class="demoExample">
+        <h2>Manual (<code>popover="manual"</code>)</h2>
+
+        <p class="stage__intro">
+          A manual popover has no light dismiss — outside clicks and
+          <kbd>Esc</kbd> are ignored, so it must keep a visible close
+          control. The × button closes it natively via
+          <code>popovertargetaction="hide"</code>; several manual popovers
+          can even be open at once.
+        </p>
+
+        <button type="button" popovertarget="popover-manual">Toggle manual popover</button>
+
+        <div id="popover-manual" class="m-popover" popover="manual" data-js-module="popover" data-popover-position="right">
+          <header class="m-popover__header">
+            <h3 class="m-popover__title">Pinned note</h3>
+            <!--
+              Close icon: the "×" glyph inlined from
+              src/_shared/media/img/icons/close.svg (the canonical source),
+              embedded so stroke="currentColor" inherits the button colour.
+              aria-hidden keeps it silent — the button's aria-label names
+              the control. Closing is native: popovertargetaction="hide".
+            -->
+            <button
+              type="button"
+              class="m-popover__close"
+              popovertarget="popover-manual"
+              popovertargetaction="hide"
+              aria-label="Close popover"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+                <path d="M6 6 18 18M18 6 6 18" />
+              </svg>
+            </button>
+          </header>
+          <p>
+            I stay open while you click around the page — only the × (or my
+            trigger) closes me.
+          </p>
+        </div>
+      </div>
+
+
+      <!-- ================================================================
+           Explainer: CSS anchor positioning
+           ================================================================ -->
+      <div class="demoExplainer" id="anchor-positioning-explained">
+        <h2>CSS anchor positioning in a nutshell</h2>
+
+        <p>
+          A top-layer overlay is a <code>position: fixed</code> box that
+          knows nothing about its trigger — placing it next to one used to
+          mean JavaScript (or a library like Floating&nbsp;UI). Anchor
+          positioning (Chrome/Edge 125+, Safari 26+, Firefox in development)
+          moves that into CSS:
+        </p>
+        <pre><code>.trigger { anchor-name: --my-anchor; }
+
+.overlay {
+  position: fixed;
+  position-anchor: --my-anchor;
+  inset: auto;           /* undo the UA centering of [popover] */
+  position-area: bottom; /* below the anchor, centered         */
+  position-try-fallbacks: flip-block;
+}</code></pre>
+
+        <ul>
+          <li>
+            <strong>Implicit anchor:</strong> this component ships no
+            <code>anchor-name</code> at all — a popover opened via
+            <code>popovertarget</code> automatically gets that button as
+            its anchor.
+          </li>
+          <li>
+            <strong><code>position-area</code></strong> places the overlay
+            on a 3×3 grid around the anchor (<code>top</code>,
+            <code>bottom span-right</code>, <code>block-end</code>, …);
+            naming only one axis centers it on the other. For fine-grained
+            control there are also <code>top: anchor(bottom)</code> and
+            <code>anchor-size()</code>.
+          </li>
+          <li>
+            <strong><code>position-try-fallbacks</code></strong> keeps the
+            overlay on screen: the placement is re-evaluated on every
+            scroll and resize, flipping to the opposite side when space
+            runs out — see the “scroll while it is open” example above.
+          </li>
+          <li>
+            <strong>No support?</strong> Detected with the same
+            <code>@supports</code> condition in CSS and JS: popover.js then
+            measures the trigger itself and feeds
+            <code>--popover-fallback-*</code> custom properties to the
+            stylesheet; without JS the UA default (centered in the
+            viewport) still works.
+          </li>
+        </ul>
+      </div>
+
+    </section>
+
+  </main>
+
+</body>
+
+</html>

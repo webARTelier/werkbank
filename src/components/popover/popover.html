@@ -1,0 +1,61 @@
+<!--
+  popover — copy-paste snippet
+  ============================================================================
+  Copy the block(s) below into your own project.
+
+  1) In <head> (or before </body>): load the shared styles, this component's
+     styles and the boot script. boot.min.js lazily loads the popover module
+     as soon as it finds data-js-module="popover" in the DOM — you do not
+     import popover.js yourself. Adjust the paths to where you serve /dist.
+
+       <link rel="stylesheet" href="/dist/css/shared.min.css" />
+       <link rel="stylesheet" href="/dist/css/popover.min.css" />
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+  2) Drop the markup below where the trigger should appear. It is built on
+     the native Popover API, so the toggle on click, the top layer, light
+     dismiss (outside click / Esc) and the trigger's expanded state for
+     assistive tech all come from the browser — the popover works without
+     any JavaScript. Placement next to the trigger is pure CSS: the trigger
+     is the popover's *implicit anchor*, and CSS anchor positioning
+     (position-area) puts the popover on the configured side, flipping to
+     the opposite side when the viewport runs out of room.
+
+  Wiring
+    - The popover is an element with the popover attribute, a unique id and
+      data-js-module="popover".
+    - A trigger anywhere on the page carries popovertarget="<that id>" —
+      native wiring, no data attributes needed. The trigger doubles as the
+      popover's anchor.
+    - data-popover-position="top | right | bottom | left" picks the side of
+      the trigger (default: bottom). Read by the CSS (position-area) and by
+      the JS fallback alike.
+    - popover (= popover="auto") light-dismisses on outside click and Esc.
+      Use popover="manual" for a popover that only closes explicitly — then
+      keep a visible close control: a <button popovertarget="<id>"
+      popovertargetaction="hide"> closes it natively (see demo.html).
+
+  Notes / Configuration
+    - The JS is a thin companion: it warns about broken wiring and, only in
+      engines without CSS anchor positioning, measures the trigger and
+      anchors the popover itself (same side, same flip behaviour). In such
+      engines without JS the popover falls back to the UA default — centered
+      in the viewport — and stays fully usable.
+    - The gap to the trigger comes from the --popover-offset custom property
+      (default: var(--space-2xs)); all other colors/spacing/animation knobs
+      are --popover-* custom properties, see popover.scss.
+    - The open/close animation is a pure CSS enhancement (@starting-style +
+      allow-discrete); prefers-reduced-motion is respected.
+-->
+
+
+
+<!-- The trigger: toggles the popover and doubles as its anchor -->
+<button type="button" popovertarget="popover-example">Toggle popover</button>
+
+
+
+<!-- The popover: placed below the trigger by default -->
+<div id="popover-example" class="m-popover" popover data-js-module="popover">
+  <p>Popover content goes here.</p>
+</div>

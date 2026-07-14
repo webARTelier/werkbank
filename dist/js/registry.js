@@ -12,6 +12,7 @@ export const registry = {
   inlineSVG: () => import('./modules/inlineSVG.min.js'),
   inputCharCount: () => import('./modules/inputCharCount.min.js'),
   marquee: () => import('./modules/marquee.min.js'),
+  popover: () => import('./modules/popover.min.js'),
   rafThrottle: () => import('./modules/rafThrottle.min.js'),
   resolveLocale: () => import('./modules/resolveLocale.min.js'),
   scaleSVG: () => import('./modules/scaleSVG.min.js'),

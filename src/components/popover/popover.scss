@@ -1,0 +1,270 @@
+// =============================================================
+// Popover — anchor-positioned popover on the native Popover API
+// =============================================================
+//
+// The behaviour ([popover] + popovertarget: top layer, light dismiss, Esc,
+// trigger ARIA) is entirely native — no JavaScript involved. This stylesheet
+// adds the look AND the placement: CSS anchor positioning puts the popover
+// next to the trigger that opened it. A popover opened via popovertarget
+// gets that trigger as its *implicit anchor element*, so no anchor-name /
+// position-anchor wiring is needed — position-area alone places it, and
+// position-try-fallbacks flips it to the opposite side when the viewport
+// runs out of room.
+//
+// Placement is keyed on data-popover-position (top | right | bottom | left,
+// default bottom). The same attribute is read by popover.js, whose only job
+// is to back-fill the anchored placement in engines without CSS anchor
+// positioning: it measures the trigger and writes the result into the
+// --popover-fallback-* custom properties + the is-jsAnchored state class,
+// which the "@supports not" block below turns into actual coordinates. The
+// script never writes top/left itself. Without anchor support AND without
+// JS, the UA default (centered in the viewport) keeps the popover usable.
+//
+// The "m-popover*" classes (BEM "m-" prefix) are used for styling only.
+// popover.js does NOT hook onto them; it targets the element via
+// data-js-module="popover" and the data-popover-position attribute.
+// Restyle freely without touching the behaviour.
+
+@use "focus" as *;
+
+
+
+:root {
+  // Animation maps to the shared animation tokens
+  // (see _shared/scss/_foundations.scss). Half the shared duration: a
+  // popover is a small hop next to its trigger, not a scene change.
+  --popover-duration: calc(var(--an-duration) / 2);
+  --popover-easing: var(--an-ease);
+  --popover-radius: var(--borderRadius);
+
+  // Sizing
+  --popover-max-inline: 22rem;
+
+  // Spacing maps to the shared spacing scale
+  // (see _shared/scss/_foundations.scss).
+  --popover-padding: var(--space-s);
+  --popover-gap: var(--space-s); // gap between header and content
+  --popover-offset: var(--space-2xs); // gap between trigger and popover
+
+  // The scale the popover grows from while opening (subtle pop).
+  --popover-enter-scale: 0.96;
+
+  // Colors map to the shared semantic tokens
+  // (see _shared/scss/_colors_semantic.scss).
+  --popover-bg-color: var(--color-bg-elevated);
+  --popover-text-color: var(--color-text);
+  --popover-title-color: var(--color-text);
+  --popover-border-color: var(--color-border);
+  --popover-muted-color: var(--color-text-muted);
+  --popover-shadow: 0 12px 32px var(--color-shadow);
+}
+
+
+
+// Registering the offset as a real <length> makes its computed value always
+// resolve to px — whatever unit it was authored in — so the JS fallback can
+// read it back as one number instead of parsing arbitrary units (see
+// popover.js, readOffset).
+@property --popover-offset {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 8px;
+}
+
+
+
+// The popover surface itself. The UA already provides position: fixed, a
+// fit-content box and the centered default placement (inset: 0 +
+// margin: auto) — only the chrome is ours.
+.m-popover {
+  border: 1px solid var(--popover-border-color);
+  border-radius: var(--popover-radius);
+  padding: var(--popover-padding);
+  max-inline-size: min(var(--popover-max-inline), 90vw);
+
+  font-family: system-ui, sans-serif;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+
+  color: var(--popover-text-color);
+  background-color: var(--popover-bg-color);
+  box-shadow: var(--popover-shadow);
+
+  > :first-child {
+    margin-block-start: 0;
+  }
+
+  > :last-child {
+    margin-block-end: 0;
+  }
+}
+
+
+
+// ----- anchored placement (CSS anchor positioning) -----
+// The trigger is the implicit anchor (see file header), so position-area is
+// all it takes: the keyword names the side of a 3×3 grid around the anchor,
+// and the unnamed axis defaults to spanning the whole grid, which centers
+// the popover on the trigger. The condition mirrors the CSS.supports check
+// in popover.js — keep the two in sync.
+@supports (anchor-name: --a) and (position-area: bottom) {
+
+  .m-popover {
+    // Undo the UA centering (inset: 0 + margin: auto) so the anchor grid
+    // decides; the margin becomes the visual gap to the trigger.
+    inset: auto;
+    margin: var(--popover-offset);
+
+    position-area: bottom;
+
+    // When the preferred side runs out of viewport the browser flips the
+    // popover to the opposite side — re-evaluated on scroll and resize.
+    position-try-fallbacks: flip-block;
+  }
+
+  .m-popover[data-popover-position='top'] {
+    position-area: top;
+  }
+
+  .m-popover[data-popover-position='right'] {
+    position-area: right;
+    position-try-fallbacks: flip-inline;
+  }
+
+  .m-popover[data-popover-position='left'] {
+    position-area: left;
+    position-try-fallbacks: flip-inline;
+  }
+}
+
+
+
+// ----- anchored placement fallback (no CSS anchor positioning) -----
+// popover.js measures the trigger and writes the coordinates into the two
+// custom properties + the is-jsAnchored state class; this block turns them
+// into the actual fixed position. Until the class is present (or without
+// JS at all) the UA's centered default keeps the popover perfectly usable.
+@supports not ((anchor-name: --a) and (position-area: bottom)) {
+
+  .m-popover.is-jsAnchored {
+    inset: auto;
+    top: var(--popover-fallback-top);
+    left: var(--popover-fallback-left);
+    margin: 0;
+  }
+}
+
+
+
+// ----- open/close animation (progressive enhancement) -----
+// Guarded by @supports selector(): in an engine without the Popover API the
+// popover attribute is inert and the element renders as normal in-flow
+// content — the closed resting state below (opacity: 0) must never apply
+// there, or that content would be invisible with no way to reveal it.
+@supports selector(:popover-open) {
+
+  .m-popover {
+    // Closed resting state. When the popover opens, :popover-open matches
+    // and it animates from the @starting-style values below to open.
+    opacity: 0;
+    scale: var(--popover-enter-scale);
+
+    transition:
+      opacity var(--popover-duration) var(--popover-easing),
+      scale var(--popover-duration) var(--popover-easing),
+
+      // "overlay" + "display" are discrete top-layer properties:
+      // allow-discrete keeps the element in the top layer (and displayed)
+      // until the fade-out has finished, so the close can animate instead
+      // of snapping away.
+      overlay var(--popover-duration) allow-discrete,
+      display var(--popover-duration) allow-discrete;
+
+    &:popover-open {
+      opacity: 1;
+      scale: 1;
+    }
+
+    // Entry starting point: the very first rendered frame after the popover
+    // is shown. Engines without @starting-style simply show it instantly.
+    @starting-style {
+
+      &:popover-open {
+        opacity: 0;
+        scale: var(--popover-enter-scale);
+      }
+    }
+  }
+}
+
+
+
+.m-popover__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--popover-gap);
+}
+
+
+
+.m-popover__title {
+  margin: 0;
+
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.3;
+
+  color: var(--popover-title-color);
+}
+
+
+
+// Close affordance for popover="manual" (no light dismiss). A real <button>
+// with popovertarget + popovertargetaction="hide" — the closing itself is
+// native, this only styles it.
+.m-popover__close {
+  flex-shrink: 0;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--popover-radius);
+
+  background: transparent;
+  color: var(--popover-muted-color);
+  line-height: 1;
+
+  cursor: pointer;
+
+  // The inline "×" icon inherits the button's color via
+  // stroke="currentColor", so the hover recolour below applies to the
+  // glyph too.
+  svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  &:hover {
+    color: var(--popover-text-color);
+    border-color: var(--popover-border-color);
+  }
+
+  // Popover sits on a dark elevated surface -> the light (bright) ring.
+  @include focus-ring(light);
+}
+
+
+
+// Respect reduced motion: keep the open/close instant.
+@media (prefers-reduced-motion: reduce) {
+
+  .m-popover {
+    transition-duration: 0.01ms !important;
+  }
+}
