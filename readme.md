@@ -9,6 +9,31 @@ The collection is both a **component library to copy from** and a **workbench**:
 every component ships with a live demo, a copy-paste snippet and its own
 readme, and `index.html` at the project root is a gallery linking to all demos.
 
+## Who it's for
+
+- **Agencies and freelancers in client work.** If you ship many different
+  sites — often on a CMS like WordPress, TYPO3 or Shopware — and don't want to
+  reinvent the accordion, dialog or tabs each time (nor pull a full framework
+  into every project), these are ready-made blocks that drop into any stack,
+  because they sit on plain HTML/CSS/vanilla JS.
+- **Teams betting on the web platform.** For everyone who deliberately builds
+  progressive-enhancement-first — HTML works without JS, CSS carries as much
+  as it can (native Popover API, anchor positioning, `IntersectionObserver`,
+  container queries) — and would rather stay on standards than on the
+  framework upgrade treadmill.
+- **The performance- and accessibility-conscious.** Per-component lazy loading
+  keeps the eager payload tiny, and ARIA, keyboard operation and a visible
+  focus ring are built in, not bolted on — a real time saver under a strict
+  performance budget or WCAG requirements.
+- **Learners and architecture-minded developers.** The clear conventions
+  (camelCase, the component-standards checklist), the DI-vs-direct-import split
+  and the modern build make this a readable, MIT-licensed reference for
+  structuring maintainable vanilla-JS components.
+
+Where it fits less well: teams deep in React, Vue or Angular that want a
+state-driven design system with component props — there, the HTML-attribute
+approach (`data-js-module="…"`) is more friction than help.
+
 ## Philosophy
 
 ### Progressive enhancement
