@@ -324,7 +324,11 @@ class HostedVideo {
       this.sources.map((source) => source.media).filter(Boolean)
     )];
 
-    queries.forEach((query) => {
+    // Kept on the instance (not just wired and discarded) so destroy() can
+    // later remove exactly these listeners — window.matchMedia is not
+    // guaranteed to return the same MediaQueryList object for the same
+    // query string on a later call.
+    this.mediaQueryLists = queries.map((query) => {
       const mq = window.matchMedia(query);
 
       // An unparseable query serializes to "not all" and would silently
@@ -339,6 +343,7 @@ class HostedVideo {
       }
 
       mq.addEventListener('change', this.handleMediaChange);
+      return mq;
     });
   };
 
@@ -457,6 +462,21 @@ class HostedVideo {
     if (!event.matches) return;
 
     this.video.pause();
+  };
+
+
+
+  // Optional teardown for hosts that mount/unmount this subtree repeatedly
+  // instead of doing a full page (re)load — see destroyModulesInScope() in
+  // boot.js. The video/toggle listeners are bound to elements inside this
+  // subtree and would die naturally with it; the matchMedia change
+  // listeners (source-selection queries and reduced-motion) are not
+  // DOM-attached and outlive the subtree unless explicitly removed.
+  destroy = () => {
+    this.mediaQueryLists?.forEach((mq) => {
+      mq.removeEventListener('change', this.handleMediaChange);
+    });
+    this.reducedMotion?.removeEventListener('change', this.handleMotionChange);
   };
 }
 
@@ -587,8 +607,8 @@ export function init(el, services = {}) {
   const video = el.querySelector(defaults.selVideo);
 
   if (video) {
-    new HostedVideo(el, video, defaults, reporter);
-    return;
+    const instance = new HostedVideo(el, video, defaults, reporter);
+    return instance.destroy;
   }
 
   reporter?.report(

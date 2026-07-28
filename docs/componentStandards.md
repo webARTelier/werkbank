@@ -74,11 +74,20 @@ component's own lazy chunk instead.
    loading or `init` is caught and reported — one broken module never aborts the
    rest of the page.
 
-**Dynamically inserted markup.** `initModulesInScope` is the **only** export.
-Code that injects markup after load (AJAX, template render, …) imports it and
-calls `initModulesInScope(newContainer)` to wire just that subtree; the
+**Dynamically inserted markup.** `initModulesInScope` is exported for code
+that injects markup after load (AJAX, template render, …); it calls
+`initModulesInScope(newContainer)` to wire just that subtree, and the
 double-init flags make it safe to call over a scope that already contains
 initialised elements.
+
+**Teardown.** `destroyModulesInScope(scope = document)` is the counterpart for
+hosts that mount/unmount the same subtree repeatedly instead of doing a full
+page (re)load (a JS framework re-rendering, an SPA route change). It calls
+every cleanup function a module's `init()` returned (see §3) for elements
+still in `scope`, then clears their double-init flags so a later
+`initModulesInScope()` call over the same elements can `init()` them again.
+Components that return nothing from `init()` are simply skipped — this is an
+opt-in mechanism, not a requirement.
 
 
 ## 3. The `init` contract (JS entry point)
@@ -115,6 +124,16 @@ Boot (`_shared/js/boot.js`) lazily imports the module when it sees
   component name used as the console prefix; use the **camelCase module name**
   (e.g. `'inlineSVG'`), not a lowercased form (the lowercase prefixes in
   `CLAUDE.md`'s "still open" list are legacy, not the target).
+- **Optionally return a cleanup function** — `init` may `return () => { ... }`.
+  The loader stores it and calls it from `destroyModulesInScope()` (§2). This
+  matters only for state that outlives the component's own subtree: listeners
+  on `window`/`document`, `matchMedia` change listeners, running
+  timers/animations, or DOM nodes injected outside the element itself (e.g. a
+  sentinel appended to `document.body`). Return nothing if the component holds
+  no such state — a `ResizeObserver`/`MutationObserver` that only ever
+  observes descendants of `el`, or listeners bound directly to `el`'s own
+  nodes, die naturally when the host removes `el` from the DOM and need no
+  explicit cleanup.
 
 
 ## 4. JS style & structure

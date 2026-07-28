@@ -7,6 +7,7 @@ beyond an edge, that edge fades out to signal "there is more to scroll".
 - `adaptiveScrollFade.html` – markup
 - `adaptiveScrollFade.scss` – styles (source; compiled to `dist/css/adaptiveScrollFade.min.css`)
 - `adaptiveScrollFade.js` – behavior
+- `_shared/js/rafThrottle.js` – utility imported by the behavior (copy alongside it)
 
 ## Usage
 The scrollable container itself gets `class="m-scrollFade"` and
@@ -63,6 +64,11 @@ progressive enhancement.
 `services.reporter` (dependency injection via `boot.js`) is **optional** — it is
 used to warn when the module is initialized on a non-element node, and when a
 focusable (overflowing) box is missing its required accessible name.
+
+`init()` returns a cleanup function that removes the window resize listener and
+disconnects the `ResizeObserver`/`MutationObserver` it created. The loader only
+needs this for a host that mounts/unmounts the same markup repeatedly instead of
+a full page (re)load — see `destroyModulesInScope()` in `boot.js`.
 
 ## Demo
 Open `demo.html` in the browser.

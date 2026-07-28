@@ -18,9 +18,14 @@
  * What this script adds
  * ---------------------
  * 1. Triggers: open triggers live *outside* the dialog and reference it by id
- *    (data-open-dialog="<dialogId>"). On init we find them, wire the click,
- *    and reflect state into ARIA (aria-haspopup / aria-controls /
- *    aria-expanded).
+ *    (data-open-dialog="<dialogId>"). Clicks are handled through a single
+ *    delegated listener on document (not one direct listener per trigger
+ *    found at init) so a trigger inserted into the page later — CMS/AJAX
+ *    content, a framework re-render — still opens the dialog. ARIA
+ *    (aria-haspopup / aria-controls / aria-expanded) is seeded per-trigger
+ *    the first time it is seen, which happens at construction and again on
+ *    every open()/close(), so any trigger present by the time the dialog is
+ *    first used ends up fully wired.
  * 2. Light dismiss: clicking the backdrop closes the dialog. This is not
  *    native. Because the visible surface lives in an inner .m-dialog__panel
  *    and the <dialog> itself is padding-free, a click whose target IS the
@@ -36,15 +41,16 @@
  *    background. Resetting an <iframe> src reloads it — which drops its state
  *    and costs a request — so it is opt-in rather than applied to every frame.
  * 5. Keyboard-scrollable body: a plain overflowing <div> scrolls with the
- *    mouse wheel but is invisible to the keyboard (it cannot take focus, so the
- *    arrow / paging keys never reach it). Whenever the marked scroll region
- *    (data-dialog-scroll) actually overflows AND holds nothing else focusable,
- *    we make it a tab stop so those keys work, and expose it as a named region
- *    for AT — mirroring adaptiveScrollFade. Removed again once it fits. Overflow
- *    is tracked live while the dialog is open (a ResizeObserver on the region
- *    and its children plus a MutationObserver on its child list), so content
- *    that grows or shrinks after open — async loads, a font swap, an expanding
- *    control — flips the tab stop too, not just a viewport resize.
+ *    mouse wheel but is invisible to the keyboard (it cannot take focus, so
+ *    the arrow / paging keys never reach it). Whenever the marked scroll
+ *    region (data-dialog-scroll) actually overflows AND holds nothing else
+ *    focusable, we make it a tab stop so those keys work, and expose it as a
+ *    named region for AT — mirroring adaptiveScrollFade. Removed again once
+ *    it fits. Overflow is tracked live while the dialog is open (a
+ *    ResizeObserver on the region and its children plus a MutationObserver
+ *    on its child list), so content that grows or shrinks after open —
+ *    async loads, a font swap, an expanding control — flips the tab stop
+ *    too, not just a viewport resize.
  *
  * Single close funnel
  * -------------------
@@ -162,8 +168,11 @@ class Dialog {
 
   // Wires triggers, close controls, backdrop dismiss and the close funnel.
   setup = () => {
-    this.triggers = this.findTriggers();
-    this.wireTriggers();
+    this.seededTriggers = new WeakSet();
+    this.triggerSelector = this.buildTriggerSelector();
+    this.syncTriggers();
+    document.addEventListener('click', this.handleTriggerClick);
+
     this.wireCloseControls();
 
     // Scrollable body bookkeeping (keyboard-scroll gap, see file header). We
@@ -209,39 +218,66 @@ class Dialog {
 
 
 
-  // Finds the open triggers that reference this dialog by id. Without an id the
-  // dialog cannot be addressed by an outside trigger; we still initialise it
-  // (it may be opened programmatically or dismissed from the inside) but warn.
-  findTriggers = () => {
+  // Builds the selector matching this dialog's open triggers by id. Returns
+  // null (and warns) if the dialog has no id — it can still be opened
+  // programmatically or dismissed from the inside, just not addressed from
+  // an outside trigger.
+  buildTriggerSelector = () => {
     const id = this.dialog.id;
     if (!id) {
       this.reporter?.report(
         'dialog',
         'dialog has no id, no open trigger can target it.', this.dialog
       );
-      return [];
+      return null;
     }
-
-    const selector =
-      `[${this.config.triggerOpenAttr}="${CSS.escape(id)}"]`;
-    return [...document.querySelectorAll(selector)];
+    return `[${this.config.triggerOpenAttr}="${CSS.escape(id)}"]`;
   };
 
 
 
-  // Binds each trigger and seeds its ARIA so assistive tech announces that the
-  // control opens a dialog. aria-expanded is deliberately NOT set for a modal
-  // trigger: the ARIA APG modal-dialog pattern uses only aria-haspopup (a modal
-  // takes over the page, it is not an expandable region belonging to the
-  // trigger). We keep aria-expanded only for a non-modal dialog, where the
-  // trigger behaves like a disclosure that toggles an inline popup.
-  wireTriggers = () => {
-    this.triggers.forEach((trigger) => {
-      trigger.addEventListener('click', this.open);
-      trigger.setAttribute('aria-haspopup', 'dialog');
-      trigger.setAttribute('aria-controls', this.dialog.id);
-      if (!this.isModal) trigger.setAttribute('aria-expanded', 'false');
-    });
+  // Live list of this dialog's current triggers — re-queried rather than
+  // cached, so a trigger inserted after construction is picked up the next
+  // time this runs (see syncTriggers).
+  getTriggers = () => {
+    if (!this.triggerSelector) return [];
+    return [...document.querySelectorAll(this.triggerSelector)];
+  };
+
+
+
+  // Seeds ARIA on every currently-present trigger not seeded yet, then (for a
+  // non-modal dialog) reflects expandedState into aria-expanded on all of
+  // them. aria-expanded is deliberately NOT set for a modal trigger: the ARIA
+  // APG modal-dialog pattern uses only aria-haspopup (a modal takes over the
+  // page, it is not an expandable region belonging to the trigger). Called at
+  // construction (seeds only) and again from open()/close() (seeds AND
+  // reflects), so a trigger added after construction is fully wired the next
+  // time this dialog is opened or closed — not just the ones present at
+  // construction.
+  syncTriggers = (expandedState) => {
+    for (const trigger of this.getTriggers()) {
+      if (!this.seededTriggers.has(trigger)) {
+        this.seededTriggers.add(trigger);
+        trigger.setAttribute('aria-haspopup', 'dialog');
+        trigger.setAttribute('aria-controls', this.dialog.id);
+        if (!this.isModal) trigger.setAttribute('aria-expanded', 'false');
+      }
+      if (!this.isModal && expandedState) {
+        trigger.setAttribute('aria-expanded', expandedState);
+      }
+    }
+  };
+
+
+
+  // Delegated: matches a click anywhere on the page against this dialog's
+  // trigger selector, so a trigger inserted after construction still opens
+  // the dialog (see setup()).
+  handleTriggerClick = (event) => {
+    if (!this.triggerSelector) return;
+    if (!event.target.closest(this.triggerSelector)) return;
+    this.open();
   };
 
 
@@ -283,7 +319,7 @@ class Dialog {
     // Only a modal dialog needs the page frozen behind it; a non-modal dialog
     // is meant to leave the rest of the page scrollable and interactive.
     if (this.isModal) this.lockScroll();
-    this.setTriggersExpanded('true');
+    this.syncTriggers('true');
 
     // The dialog is now laid out, so scrollHeight/clientHeight are meaningful:
     // decide whether the body needs to be keyboard-scrollable, and keep that in
@@ -307,7 +343,7 @@ class Dialog {
   // Single teardown funnel for every close path.
   handleClose = () => {
     if (this.isModal) this.unlockScroll();
-    this.setTriggersExpanded('false');
+    this.syncTriggers('false');
     this.runStopMedia();
     this.restoreFocus();
     window.removeEventListener('resize', this.requestScrollSync);
@@ -337,15 +373,6 @@ class Dialog {
     } catch (err) {
       this.reporter?.report('dialog', 'stopMedia hook failed.', err);
     }
-  };
-
-
-
-  // Only meaningful for a non-modal trigger; modal triggers carry no
-  // aria-expanded (see wireTriggers), so there is nothing to toggle.
-  setTriggersExpanded = (state) => {
-    if (this.isModal) return;
-    this.triggers.forEach((t) => t.setAttribute('aria-expanded', state));
   };
 
 
@@ -490,6 +517,23 @@ class Dialog {
       document.body.classList.remove(this.config.scrollLockClass);
     }
   };
+
+
+
+  // Optional teardown for hosts that mount/unmount this subtree repeatedly
+  // instead of doing a full page (re)load — see destroyModulesInScope() in
+  // boot.js. Forces the dialog closed first, which runs the existing single
+  // close funnel (unlockScroll, stopMedia, resize listener, scroll
+  // observers), then removes the delegated trigger listener and the
+  // dialog's own listeners.
+  destroy = () => {
+    if (this.dialog.open) this.dialog.close();
+    document.removeEventListener('click', this.handleTriggerClick);
+    this.dialog.removeEventListener('click', this.handleDialogClick);
+    this.dialog.removeEventListener('cancel', this.handleCancel);
+    this.dialog.removeEventListener('close', this.handleClose);
+    this.unobserveScrollRegion();
+  };
 }
 
 
@@ -509,5 +553,6 @@ export function init(el, services = {}) {
 
   // Double-init is prevented by the loader (boot.js sets a per-element,
   // per-module flag before calling init), so no extra guard is needed here.
-  new Dialog(el, defaults, reporter);
+  const instance = new Dialog(el, defaults, reporter);
+  return instance.destroy;
 }

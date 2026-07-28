@@ -320,6 +320,26 @@ class Popover {
     const parsed = parseFloat(raw);
     return Number.isNaN(parsed) ? 8 : parsed;
   };
+
+
+
+  // Optional teardown for hosts that mount/unmount this subtree repeatedly
+  // instead of doing a full page (re)load — see destroyModulesInScope() in
+  // boot.js. No-op in engines with native CSS anchor positioning, which
+  // never wire any of this; in the fallback path it removes the toggle
+  // listener, the trigger click listeners and — in case the popover is
+  // destroyed while still open — the transient window scroll/resize
+  // listeners handleToggle would otherwise never get to remove.
+  destroy = () => {
+    if (supportsAnchorPositioning) return;
+
+    this.popover.removeEventListener('toggle', this.handleToggle);
+    this.anchorTriggers?.forEach((trigger) => {
+      trigger.removeEventListener('click', this.handleTriggerClick);
+    });
+    window.removeEventListener('resize', this.requestReposition);
+    window.removeEventListener('scroll', this.requestReposition, true);
+  };
 }
 
 
@@ -354,5 +374,6 @@ export function init(el, services = {}) {
 
   // Double-init is prevented by the loader (boot.js sets a per-element,
   // per-module flag before calling init), so no extra guard is needed here.
-  new Popover(el, defaults, reporter);
+  const instance = new Popover(el, defaults, reporter);
+  return instance.destroy;
 }

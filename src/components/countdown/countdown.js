@@ -430,6 +430,18 @@ class Countdown {
       this.module
     );
   };
+
+
+
+  // Optional teardown for hosts that mount/unmount this subtree repeatedly
+  // instead of doing a full page (re)load — see destroyModulesInScope() in
+  // boot.js. The running interval would otherwise keep firing forever,
+  // retaining this instance and the detached module through its closure; the
+  // matchMedia change listener likewise outlives the module unless removed.
+  destroy = () => {
+    this.stopInterval();
+    this.motionQuery?.removeEventListener?.('change', this.handleMotionChange);
+  };
 }
 
 
@@ -445,5 +457,6 @@ export function init(el, services = {}) {
     return;
   }
 
-  new Countdown(el, defaults, reporter);
+  const instance = new Countdown(el, defaults, reporter);
+  return instance.destroy;
 }

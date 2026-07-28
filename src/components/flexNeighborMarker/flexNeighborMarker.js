@@ -182,6 +182,19 @@ class FlexNeighborMarker {
   // differs, so a mark that changes an item's box cannot feed
   // back into the ResizeObserver as an endless loop.
   mark = (item, hasNeighbor) => item.classList.toggle(this.markerClass, hasNeighbor);
+
+
+
+  // Optional teardown for hosts that mount/unmount this subtree
+  // repeatedly instead of doing a full page (re)load — see
+  // destroyModulesInScope() in boot.js. The window resize/load
+  // listeners and the ResizeObserver outlive the module unless
+  // explicitly stopped.
+  destroy = () => {
+    window.removeEventListener('resize', this.requestUpdate);
+    window.removeEventListener('load', this.requestUpdate);
+    this.resizeObserver?.disconnect();
+  };
 }
 
 
@@ -202,5 +215,6 @@ export function init(el, services = {}) {
   // Double-init is prevented by the loader (boot.js sets a
   // per-element, per-module flag before calling init), so no
   // extra guard is needed here.
-  new FlexNeighborMarker(el, reporter);
+  const instance = new FlexNeighborMarker(el, reporter);
+  return instance.destroy;
 }

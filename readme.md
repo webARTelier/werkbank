@@ -150,6 +150,27 @@ That's all the wiring there is:
 - For markup inserted after page load (AJAX, template render), import
   `initModulesInScope` from the boot module and call it with the new
   container; a per-element double-init guard makes repeated calls safe.
+- For a host that mounts/unmounts the same markup repeatedly instead of
+  doing a full page (re)load (a JS framework re-rendering, an SPA route
+  change), import `destroyModulesInScope` too and call it with the
+  outgoing container before it is removed. Components that hold state
+  outside their own element (a `window`/`document` listener, a running
+  timer, a sentinel appended elsewhere) return a cleanup function from
+  `init()`; the loader stores and runs it. Components with no such state
+  need not return anything and are simply skipped.
+
+**Duplicated markup and page-wide id uniqueness.** Several components
+resolve their target by an id-based selector evaluated against the whole
+document (a dialog's open trigger, `scrollSpy`/`tabs` panel targets, an
+element referenced by `data-sticky-sentinel`/`data-sticky-root`/
+`data-spy-root`). On a page built from repeatable content elements — the
+normal case in a CMS like TYPO3, where an editor can place the same
+element (and therefore the same static markup) more than once on one
+page — give every instance's ids a unique suffix (e.g. the content
+element's own uid) so two instances never resolve to the same target.
+`formValidation`'s CMS message block is the one exception: it is resolved
+per-form (inside the form, then its immediate siblings, then page-wide),
+so repeated forms do not need to worry about it.
 
 Per-component theming happens through CSS custom properties: every stylesheet
 declares a `:root` block of `--<name>-*` variables mapped to the shared

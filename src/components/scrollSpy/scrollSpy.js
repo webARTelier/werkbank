@@ -500,6 +500,25 @@ class ScrollSpy {
     this.endObserver.disconnect();
     this.observe();
   };
+
+
+
+  // Optional teardown for hosts that mount/unmount this subtree
+  // repeatedly instead of doing a full page (re)load — see
+  // destroyModulesInScope() in boot.js. Disconnects both observers and
+  // the resize watcher, and removes the end sentinel — for a page spy
+  // (no data-spy-root) that sentinel was appended to document.body,
+  // outside this module's own subtree, so it would otherwise never be
+  // cleaned up on unmount. Guarded throughout because construction can
+  // bail out early (no IntersectionObserver, bad root, no resolvable
+  // links) before any of these exist.
+  destroy = () => {
+    this.lineObserver?.disconnect();
+    this.endObserver?.disconnect();
+    this.resizeObserver?.disconnect();
+    window.removeEventListener('resize', this.handleResize);
+    this.sentinel?.remove();
+  };
 }
 
 
@@ -520,5 +539,6 @@ export function init(el, services = {}) {
   // Double-init is prevented by the loader (boot.js sets a
   // per-element, per-module flag before calling init), so no
   // extra guard is needed here.
-  new ScrollSpy(el, reporter);
+  const instance = new ScrollSpy(el, reporter);
+  return instance.destroy;
 }

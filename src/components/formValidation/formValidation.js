@@ -39,8 +39,13 @@
  *    <html lang> and let the author override any message per field via
  *    data attributes (see resolveMessage / the `checks` list), falling back
  *    to the native message for anything we do not cover. On top of that, ALL
- *    default messages are maintainable in one place by a CMS: a single
- *    <script type="application/json" data-fv-messages> block on the page
+ *    default messages are maintainable by a CMS: a
+ *    <script type="application/json" data-fv-messages> block, resolved
+ *    inside the form first, then among its immediate siblings, then
+ *    page-wide (so several independently-authored forms — e.g. separate CMS
+ *    content elements — can each carry their own block without one
+ *    overriding another's; a single page-wide block still works for a page
+ *    with only one form)
  *    (same {locale: {id: template}} shape as defaultMessages below) is merged
  *    over the built-in defaults — see readCmsMessages. Templates may
  *    interpolate live field limits via {minLength}, {maxLength},
@@ -231,13 +236,21 @@ function formatMessage(template, field) {
 
 
 
-// Reads the page-level CMS message block (see defaults.messagesSelector)
-// and merges it over the built-in defaults, per locale and per message id —
-// so the CMS only has to maintain the messages (or locales) it actually
-// changes. Non-string values are ignored defensively; a malformed block is
-// reported and skipped so the built-in messages keep working.
-function readCmsMessages(selector, reporter) {
-  const el = document.querySelector(selector);
+// Reads the CMS message block (see defaults.messagesSelector) and merges it
+// over the built-in defaults, per locale and per message id — so the CMS
+// only has to maintain the messages (or locales) it actually changes. A page
+// with several independently-authored forms (e.g. multiple CMS content
+// elements) can each carry their own block next to their own form — resolved
+// first inside the form, then among its immediate siblings — so their
+// overrides do not bleed into each other; a single page-wide block (outside
+// every form) still works as a shared fallback for a page with only one.
+// Non-string values are ignored defensively; a malformed block is reported
+// and skipped so the built-in messages keep working.
+function readCmsMessages(form, selector, reporter) {
+  const el =
+    form.querySelector(selector) ||
+    form.parentElement?.querySelector(selector) ||
+    document.querySelector(selector);
   if (!el) return null;
 
   try {
@@ -254,9 +267,11 @@ function mergeMessages(builtIn, cms) {
   if (!cms || typeof cms !== 'object') return builtIn;
 
   const merged = { ...builtIn };
+
   for (const [locale, entries] of Object.entries(cms)) {
     if (!entries || typeof entries !== 'object') continue;
     merged[locale] = { ...merged[locale] };
+    
     for (const [id, template] of Object.entries(entries)) {
       if (typeof template === 'string') merged[locale][id] = template;
     }
@@ -296,7 +311,7 @@ class FormValidation {
 
     // Built-in de/en defaults, overridden/extended by the page's CMS block.
     // The offered locales are whatever the merged map contains.
-    const allMessages = mergeMessages(defaultMessages, readCmsMessages(config.messagesSelector, reporter));
+    const allMessages = mergeMessages(defaultMessages, readCmsMessages(form, config.messagesSelector, reporter));
     const locale = resolveLocale(Object.keys(allMessages), config.fallbackLocale);
     this.messages = allMessages[locale] || allMessages[config.fallbackLocale];
 
@@ -858,6 +873,29 @@ class FormValidation {
     attr
       .replace(/^data-/, '')
       .replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+
+
+
+  // Optional teardown for hosts that mount/unmount this subtree repeatedly
+  // instead of doing a full page (re)load — see destroyModulesInScope() in
+  // boot.js. All of this component's listeners are bound to the form itself,
+  // so they would die naturally once the host removes the form from the DOM;
+  // this exists for the case where the host keeps the same <form> node and
+  // wants it back in its pre-init state (e.g. before re-initializing it).
+  destroy = () => {
+    this.form.removeEventListener('submit', this.handleSubmit);
+    this.form.removeEventListener('input', this.handleFieldChange);
+    this.form.removeEventListener('change', this.handleFieldChange);
+    this.form.removeEventListener('reset', this.handleReset);
+    this.form.removeAttribute('novalidate');
+    this.form.classList.remove(this.config.formSubmittedClass);
+    this.removeSummary();
+
+    for (const field of this.getFields()) {
+      this.clearFieldError(field, this.itemOf(field));
+      if (field.hasAttribute(this.config.equalsAttr)) field.setCustomValidity('');
+    }
+  };
 }
 
 
@@ -873,5 +911,6 @@ export function init(el, services = {}) {
 
   // Double-init is prevented by the loader (boot.js sets a per-element,
   // per-module flag before calling init), so no extra guard is needed here.
-  new FormValidation(el, defaults, reporter);
+  const instance = new FormValidation(el, defaults, reporter);
+  return instance.destroy;
 }

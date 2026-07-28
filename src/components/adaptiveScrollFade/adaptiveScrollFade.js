@@ -218,6 +218,20 @@ class ScrollFade {
     if (this.container === document.activeElement) return;
     this.container.removeAttribute('tabindex');
   };
+
+
+
+  // Optional teardown for hosts that mount/unmount this subtree repeatedly
+  // instead of doing a full page (re)load — see destroyModulesInScope() in
+  // boot.js. The scroll listener is bound to the container itself and would
+  // die naturally with it, but the window resize listener and both observers
+  // outlive the container unless explicitly stopped.
+  destroy = () => {
+    this.container.removeEventListener('scroll', this.requestUpdate);
+    window.removeEventListener('resize', this.requestUpdate);
+    this.resizeObserver?.disconnect();
+    this.mutationObserver?.disconnect();
+  };
 }
 
 
@@ -237,5 +251,6 @@ export function init(el, services = {}) {
 
   // Double-init is prevented by the loader (boot.js sets a per-element,
   // per-module flag before calling init), so no extra guard is needed here.
-  new ScrollFade(el, defaults, reporter);
+  const instance = new ScrollFade(el, defaults, reporter);
+  return instance.destroy;
 }

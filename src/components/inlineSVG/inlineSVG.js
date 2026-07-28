@@ -38,6 +38,11 @@
  * 4. Accessible name: an <img alt> / aria-label becomes the <svg>'s
  *    aria-label + role="img"; an explicitly empty alt marks the graphic
  *    decorative (aria-hidden + focusable="false"). See §Accessibility.
+ * 5. Sanitization: <script> and <foreignObject> elements, every on* event-
+ *    handler attribute and any javascript: URI are stripped from the fetched
+ *    markup before it is inlined. Same-origin only constrains where a file
+ *    comes from, not what it contains — a same-origin media library that
+ *    accepts uploads is still an untrusted source. See §Sanitization.
  *
  * Scoping
  * -------
@@ -53,6 +58,17 @@
  * prefix varies per instance, project CSS cannot target an inlined SVG's inner
  * shapes by their original id or styled class; recolour via currentColor or
  * structural selectors, which is the intended styling surface anyway.
+ *
+ * Sanitization
+ * ------------
+ * A fetched .svg is untrusted content, not code: same-origin only proves
+ * where it was served from, and a same-origin path (a CMS media library, a
+ * user-uploaded asset) can still carry a hostile payload. Before an inlined
+ * SVG is ever cloned into the page, <script> and <foreignObject> elements are
+ * removed and every on* attribute / javascript: URI is stripped from every
+ * remaining node, so an inlined file cannot execute script even if its
+ * source is compromised. This runs once per fetched file (see svgCache), not
+ * per instance.
  *
  * Accessibility
  * -------------
@@ -158,7 +174,60 @@ async function loadSvgTemplate(src, reporter) {
     return null;
   }
 
+  sanitizeSvg(svg, src, reporter);
+
   return svg;
+}
+
+
+
+// Attribute-name pattern for inline event handlers (onload, onclick, ...).
+const eventHandlerAttr = /^on/i;
+
+
+
+// True for a "javascript:" URI, tolerating the leading whitespace/control
+// characters and mixed case browsers themselves normalize before matching
+// the scheme — the same evasions a hand-written check must not miss.
+function isJsUri(value) {
+  const str = value || '';
+  let start = 0;
+  while (start < str.length && str.charCodeAt(start) <= 32) start += 1;
+  return str.slice(start, start + 11).toLowerCase() === 'javascript:';
+}
+
+
+
+// Neutralizes anything in a fetched SVG that could execute script before it
+// is ever cloned into the page (see §Sanitization in the file header):
+// <script> and <foreignObject> elements are removed outright, and every on*
+// event-handler attribute or javascript: URI is stripped from every
+// remaining node. Runs once per fetched file, on the cached template, so
+// every cloned instance is already clean.
+function sanitizeSvg(svg, src, reporter) {
+  let stripped = false;
+
+  svg.querySelectorAll('script, foreignObject').forEach((node) => {
+    node.remove();
+    stripped = true;
+  });
+
+  svg.querySelectorAll('*').forEach((node) => {
+    for (const attr of [...node.attributes]) {
+      if (eventHandlerAttr.test(attr.name) || isJsUri(attr.value)) {
+        node.removeAttribute(attr.name);
+        stripped = true;
+      }
+    }
+  });
+
+  if (stripped) {
+    reporter?.report(
+      'inlineSVG',
+      'fetched SVG contained script/event-handler content; stripped '
+        + 'before inlining.', src
+    );
+  }
 }
 
 

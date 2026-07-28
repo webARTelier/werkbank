@@ -140,14 +140,16 @@ class AccordionEnhancer {
     const group = details.getAttribute('name');
     if (group) details.removeAttribute('name');
 
-    const record = { details, wrapper, group, isAnimating: false };
+    const record = { details, wrapper, group, summary, isAnimating: false };
     this.records.push(record);
 
     // We take over the native toggling entirely: preventDefault stops
     // the browser from flipping 'open' itself, so no 'toggle' feedback
     // loop can occur. Works for mouse and keyboard (Enter/Space on a
-    // <summary> dispatches a click).
-    summary.addEventListener('click', (event) => {
+    // <summary> dispatches a click). Named and kept on the record (not
+    // an inline anonymous listener) so destroy() can remove exactly this
+    // function later.
+    record.handleSummaryClick = (event) => {
       event.preventDefault();
       if (record.isAnimating) return;
 
@@ -162,7 +164,9 @@ class AccordionEnhancer {
       // incoming panel 0fr -> 1fr while the sibling runs 1fr -> 0fr.
       if (group) this.closeGroupSiblings(record);
       details.open = true;
-    });
+    };
+
+    summary.addEventListener('click', record.handleSummaryClick);
   };
 
 
@@ -201,6 +205,21 @@ class AccordionEnhancer {
     wrapper.addEventListener('transitionend', onTransitionEnd);
     details.setAttribute('data-closing', '');
   };
+
+
+
+  // Optional teardown for hosts that mount/unmount this subtree repeatedly
+  // instead of doing a full page (re)load — see destroyModulesInScope() in
+  // boot.js. Every listener here is bound to elements inside this
+  // container and would die naturally with it; this exists for the case
+  // where a host keeps the same <details> elements (e.g. only their
+  // content changed) and wants a clean summary click listener before
+  // re-initializing, rather than accumulating one per re-init.
+  destroy = () => {
+    this.records?.forEach((record) => {
+      record.summary.removeEventListener('click', record.handleSummaryClick);
+    });
+  };
 }
 
 
@@ -223,5 +242,6 @@ export function init(el, services = {}) {
 
   // Double-init is prevented by the loader (boot.js sets a per-element,
   // per-module flag before calling init), so no extra guard is needed here.
-  new AccordionEnhancer(el, defaults, reporter);
+  const instance = new AccordionEnhancer(el, defaults, reporter);
+  return instance.destroy;
 }

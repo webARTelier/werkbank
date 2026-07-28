@@ -6,11 +6,12 @@ Accessible dialog/modal built on the native `<dialog>` element.
 - `dialog.html` – markup
 - `dialog.scss` – styles (source; compiled to `dist/css/dialog.min.css`)
 - `dialog.js` – behavior
+- `_shared/js/rafThrottle.js` – utility imported by the behavior (copy alongside it)
 
 ## Usage
 The dialog is a native `<dialog class="m-dialog" data-js-module="dialog">` with a unique `id`. It relies on the platform for the heavy lifting — the top layer, focus trap, `::backdrop`, `Esc` and focus restoration all come from the browser — so the module is a thin progressive enhancement that wires the outside trigger, adds backdrop-click dismissal, locks body scroll and stops media on close.
 
-- **Open trigger:** any element carrying `data-open-dialog="<dialog id>"` — it can live anywhere on the page. The JS reflects state into `aria-haspopup` and `aria-controls`. `aria-expanded` is added **only for a non-modal dialog** (a disclosure-like popup); a modal trigger follows the ARIA APG pattern and carries no `aria-expanded`.
+- **Open trigger:** any element carrying `data-open-dialog="<dialog id>"` — it can live anywhere on the page, including markup inserted after the dialog itself was initialized (clicks are handled through a single delegated listener on `document`, not one direct listener per trigger found at init). The JS reflects state into `aria-haspopup` and `aria-controls`. `aria-expanded` is added **only for a non-modal dialog** (a disclosure-like popup); a modal trigger follows the ARIA APG pattern and carries no `aria-expanded`.
 - **Close control:** any element inside the dialog carrying `data-close-dialog` (a `<form method="dialog">` submit closes it natively too).
 - **Modal (default):** opened with `showModal()`. Add `data-dialog-nonmodal` for a non-modal dialog opened with `show()` that leaves the rest of the page interactive and scrollable. Note that `Esc` only closes a **modal** dialog — the platform fires no `cancel`/`close` for a non-modal one — so a non-modal dialog must always keep a visible close control (the × button or a footer action).
 - **Static:** add `data-dialog-static` to disable backdrop-click and `Esc` dismissal, so the dialog can only be closed by an explicit action.
@@ -32,6 +33,8 @@ See `dialog.html` for a ready-to-copy snippet.
 The JS exports `init(el, services)` and does not self-initialize. It is loaded on demand by `boot.js` for every `<dialog>` carrying `data-js-module="dialog"` — one controller instance per dialog. (Unlike a global system, nothing runs on pages that have no dialog.)
 
 `services.reporter` (dependency injection via `boot.js`) is **optional** — it is only used for warnings (e.g. a dialog without an `id`, or the module placed on a non-`<dialog>` element). Without it the module degrades silently.
+
+`init()` returns a cleanup function that force-closes the dialog (running the existing close teardown: unlocks scroll, stops media, removes listeners/observers) and removes the delegated trigger listener. The loader only needs this for a host that mounts/unmounts the same markup repeatedly instead of a full page (re)load — see `destroyModulesInScope()` in `boot.js`.
 
 ## Demo
 Open `demo.html` in the browser (requires a previous `gulp build`).

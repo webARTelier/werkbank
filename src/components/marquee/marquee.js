@@ -645,6 +645,23 @@ class Marquee {
       this.root
     );
   };
+
+
+
+  // Optional teardown for hosts that mount/unmount this subtree repeatedly
+  // instead of doing a full page (re)load — see destroyModulesInScope() in
+  // boot.js. Cancels animations and clones (mirrors stop()), then removes
+  // every listener/observer that would otherwise outlive this subtree:
+  // window resize/load, the ResizeObserver and the reduced-motion change
+  // listener. Guarded throughout because construction can bail out early
+  // (missing container/track) before any of these exist.
+  destroy = () => {
+    this.stop();
+    this.resizeObserver?.disconnect();
+    window.removeEventListener('resize', this.recompute);
+    window.removeEventListener('load', this.recompute);
+    this.reducedMotion?.removeEventListener('change', this.handleMotionChange);
+  };
 }
 
 
@@ -660,5 +677,6 @@ export function init(el, services = {}) {
 
   // Double-init is prevented by the loader (boot.js sets a per-element,
   // per-module flag before calling init), so no extra guard is needed here.
-  new Marquee(el, defaults, reporter);
+  const instance = new Marquee(el, defaults, reporter);
+  return instance.destroy;
 }

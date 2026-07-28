@@ -4,9 +4,17 @@
  * Minimal module loader:
  * - loads global modules on demand for every page
  * - loads page modules on demand based on data-js-module
+ * - optionally tears modules back down again via destroyModulesInScope()
  *
  * markup example:
  * <section data-js-module="accordion,slider"></section>
+ *
+ * Teardown contract: init(el, services) may optionally return a cleanup
+ * function (`() => { ... }`). This is for hosts that mount/unmount the same
+ * DOM subtree repeatedly (a JS framework re-rendering, an SPA route change)
+ * rather than a classic full-page load. A component with no listeners/
+ * observers/timers outside its own subtree does not need one; the loader
+ * only stores what init() actually returns.
  * ----------------------------------------------------------------------------
  */
 
@@ -29,6 +37,10 @@ const services = {
   reporter,
   // add further shared functions here (debounce, readCssProp, ...)
 };
+
+// per-element, per-module cleanup functions returned by init(). Only
+// populated when a module actually returns one (see destroyModulesInScope).
+const cleanups = new WeakMap();
 
 
 
@@ -75,7 +87,12 @@ async function initModulesInScope(scope = document) {
           continue;
         }
 
-        await Promise.resolve(mod.init(el, services));
+        const cleanup = await Promise.resolve(mod.init(el, services));
+
+        if (typeof cleanup === 'function') {
+          if (!cleanups.has(el)) cleanups.set(el, new Map());
+          cleanups.get(el).set(name, cleanup);
+        }
       }
 
       catch (err) {
@@ -85,6 +102,38 @@ async function initModulesInScope(scope = document) {
         );
       }
     }
+  }
+}
+
+
+
+// tear modules in scope back down: calls each stored cleanup, then clears
+// the double-init flag so a later initModulesInScope() over the same
+// element can run init() again. For hosts that mount/unmount the same
+// subtree repeatedly instead of doing a full page (re)load.
+function destroyModulesInScope(scope = document) {
+  const nodes = scope.querySelectorAll('[data-js-module]');
+
+  for (const el of nodes) {
+    const stored = cleanups.get(el);
+    if (!stored) continue;
+
+    for (const [name, cleanup] of stored) {
+      try {
+        cleanup();
+      }
+
+      catch (err) {
+        services.reporter.report(
+          'loader',
+          `module "${name}" destroy failed.`, { el, err }
+        );
+      }
+
+      delete el.dataset[`jsInit_${name}`];
+    }
+
+    cleanups.delete(el);
   }
 }
 
@@ -127,5 +176,5 @@ boot();
 
 
 
-// expose scoped init for dynamically loaded content
-export { initModulesInScope };
+// expose scoped init/destroy for dynamically loaded content
+export { initModulesInScope, destroyModulesInScope };

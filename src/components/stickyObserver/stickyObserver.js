@@ -286,6 +286,23 @@ class StickyObserver {
 
     this.target.classList.toggle(this.stateClass, isStuck);
   };
+
+
+
+  // Optional teardown for hosts that mount/unmount this subtree
+  // repeatedly instead of doing a full page (re)load — see
+  // destroyModulesInScope() in boot.js. Disconnects the observer and
+  // removes the injected sentinel — it is the target's PRECEDING
+  // SIBLING, not a descendant, so a host that replaces only the target
+  // node (not its parent) would otherwise leave it behind as an orphan.
+  // A no-op for an author-placed sentinel (data-sticky-sentinel), which
+  // this module does not own. Guarded throughout because construction
+  // can bail out early (no IntersectionObserver, bad root/sentinel
+  // config) before any of these exist.
+  destroy = () => {
+    this.observer?.disconnect();
+    if (!this.target.dataset.stickySentinel) this.sentinel?.remove();
+  };
 }
 
 
@@ -306,5 +323,6 @@ export function init(el, services = {}) {
   // Double-init is prevented by the loader (boot.js sets a
   // per-element, per-module flag before calling init), so no
   // extra guard is needed here.
-  new StickyObserver(el, reporter);
+  const instance = new StickyObserver(el, reporter);
+  return instance.destroy;
 }

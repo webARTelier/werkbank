@@ -380,6 +380,19 @@ class Tabs {
     const length = this.items.length;
     return this.items[(index + direction + length) % length];
   };
+
+
+
+  // Optional teardown for hosts that mount/unmount this subtree repeatedly
+  // instead of doing a full page (re)load — see destroyModulesInScope() in
+  // boot.js. The click/keydown listeners are bound to the tablist itself and
+  // would die naturally with it; only the window hashchange listener
+  // outlives this subtree unless explicitly removed.
+  destroy = () => {
+    this.list?.removeEventListener('click', this.handleClick);
+    this.list?.removeEventListener('keydown', this.handleKeydown);
+    window.removeEventListener('hashchange', this.handleHashChange);
+  };
 }
 
 
@@ -399,5 +412,6 @@ export function init(el, services = {}) {
 
   // Double-init is prevented by the loader (boot.js sets a per-element,
   // per-module flag before calling init), so no extra guard is needed here.
-  new Tabs(el, defaults, reporter);
+  const instance = new Tabs(el, defaults, reporter);
+  return instance.destroy;
 }
