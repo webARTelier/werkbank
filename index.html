@@ -16,80 +16,219 @@
       <section class="hero">
         <div>
           <h1>UI Components</h1>
-          <p>Overview of the available component folders.</p>
+          <p>
+            All components, grouped by what they are for. A linked card opens
+            the component's live demo; a card marked <strong>planned</strong>
+            is a roadmap entry — proposed, not implemented yet.
+          </p>
         </div>
-        <div class="badge">Project index</div>
+        <div class="badge">17 shipped · 13 planned</div>
       </section>
 
-      <section class="grid" aria-label="Component folders">
-        <a class="card" href="src/components/accordion/demo.html">
-          <span class="name">accordion</span>
-          <span class="meta">Accordion component with interaction logic.</span>
-        </a>
-        <a class="card" href="src/components/adaptiveScrollFade/demo.html">
-          <span class="name">adaptiveScrollFade</span>
-          <span class="meta">Adaptive scroll-fade effects.</span>
-        </a>
-        <a class="card" href="src/components/countdown/demo.html">
-          <span class="name">countdown</span>
-          <span class="meta">Countdown and time UI component.</span>
-        </a>
-        <a class="card" href="src/components/dateInputFormat/demo.html">
-          <span class="name">dateInputFormat</span>
-          <span class="meta">Formatted date-input behavior.</span>
-        </a>
-        <a class="card" href="src/components/dialog/demo.html">
-          <span class="name">dialog</span>
-          <span class="meta">Dialog and modal system.</span>
-        </a>
-        <a class="card" href="src/components/flexNeighborMarker/demo.html">
-          <span class="name">flexNeighborMarker</span>
-          <span class="meta">Marker for neighboring flex elements.</span>
-        </a>
-        <a class="card" href="src/components/formValidation/demo.html">
-          <span class="name">formValidation</span>
-          <span class="meta">Form validation and messages.</span>
-        </a>
-        <a class="card" href="src/components/inlineSVG/demo.html">
-          <span class="name">inlineSVG</span>
-          <span class="meta">Inline-SVG integration.</span>
-        </a>
-        <a class="card" href="src/components/inputCharCount/demo.html">
-          <span class="name">inputCharCount</span>
-          <span class="meta">Character-count display for input fields.</span>
-        </a>
-        <a class="card" href="src/components/marquee/demo.html">
-          <span class="name">marquee</span>
-          <span class="meta">Infinitely scrolling content strip (news ticker).</span>
-        </a>
-        <a class="card" href="src/components/popover/demo.html">
-          <span class="name">popover</span>
-          <span class="meta">Anchor-positioned popover on the native Popover API.</span>
-        </a>
-        <a class="card" href="src/components/scaleSVG/demo.html">
-          <span class="name">scaleSVG</span>
-          <span class="meta">Sizes inline SVGs from their viewBox × a scale factor.</span>
-        </a>
-        <a class="card" href="src/components/scrollSpy/demo.html">
-          <span class="name">scrollSpy</span>
-          <span class="meta">Highlights the TOC link of the section currently being read.</span>
-        </a>
-        <a class="card" href="src/components/stickyObserver/demo.html">
-          <span class="name">stickyObserver</span>
-          <span class="meta">Marks a sticky element while it is pinned so CSS can style the stuck state.</span>
-        </a>
-        <a class="card" href="src/components/tabs/demo.html">
-          <span class="name">tabs</span>
-          <span class="meta">Tabs component for content.</span>
-        </a>
-        <a class="card" href="src/components/video/demo.html">
-          <span class="name">video</span>
-          <span class="meta">Self-hosted responsive video and click-to-load YouTube embeds.</span>
-        </a>
 
+      <section class="group" aria-labelledby="group-navigation">
+        <h2 id="group-navigation" class="group__title">Navigation &amp; wayfinding</h2>
+        <p class="group__note">
+          Getting around a page or site: menus, in-page orientation, search.
+        </p>
+
+        <div class="grid">
+          <a class="card" href="src/components/dropdownNav/demo.html">
+            <span class="name">dropdownNav</span>
+            <span class="meta">Multi-level dropdown and mega-menu navigation on the ARIA disclosure pattern.</span>
+          </a>
+          <a class="card" href="src/components/scrollSpy/demo.html">
+            <span class="name">scrollSpy</span>
+            <span class="meta">Highlights the TOC link of the section currently being read.</span>
+          </a>
+          <a class="card" href="src/components/tabs/demo.html">
+            <span class="name">tabs</span>
+            <span class="meta">ARIA tabs enhancement of an anchor-link table of contents.</span>
+          </a>
+          <div class="card card--planned">
+            <span class="name">backToTop</span>
+            <span class="meta">Scroll-triggered control that jumps back to the top of the page.</span>
+            <span class="tag">Planned</span>
+          </div>
+          <div class="card card--planned">
+            <span class="name">offCanvasNav</span>
+            <span class="meta">Off-canvas mobile navigation (burger menu) on the native dialog element.</span>
+            <span class="tag">Planned</span>
+          </div>
+          <div class="card card--planned">
+            <span class="name">siteSearch</span>
+            <span class="meta">Standalone search control that can expand out of a navigation toggle.</span>
+            <span class="tag">Planned</span>
+          </div>
+        </div>
+      </section>
+
+
+      <section class="group" aria-labelledby="group-overlays">
+        <h2 id="group-overlays" class="group__title">Overlays &amp; feedback</h2>
+        <p class="group__note">
+          Everything that renders above the page: dialogs, anchored surfaces,
+          transient messages.
+        </p>
+
+        <div class="grid">
+          <a class="card" href="src/components/dialog/demo.html">
+            <span class="name">dialog</span>
+            <span class="meta">Modal and non-modal dialogs on the native dialog element.</span>
+          </a>
+          <a class="card" href="src/components/popover/demo.html">
+            <span class="name">popover</span>
+            <span class="meta">Anchor-positioned popover on the native Popover API.</span>
+          </a>
+          <div class="card card--planned">
+            <span class="name">lightbox</span>
+            <span class="meta">Image and gallery lightbox on the native dialog element.</span>
+            <span class="tag">Planned</span>
+          </div>
+          <div class="card card--planned">
+            <span class="name">toast</span>
+            <span class="meta">Transient status messages announced through an ARIA live region.</span>
+            <span class="tag">Planned</span>
+          </div>
+          <div class="card card--planned">
+            <span class="name">tooltip</span>
+            <span class="meta">Hover- and focus-triggered tooltip that stays hoverable and dismissible.</span>
+            <span class="tag">Planned</span>
+          </div>
+        </div>
+      </section>
+
+
+      <section class="group" aria-labelledby="group-content">
+        <h2 id="group-content" class="group__title">Content &amp; disclosure</h2>
+        <p class="group__note">
+          Presenting and revealing content: collapsing sections, live data,
+          tabular data.
+        </p>
+
+        <div class="grid">
+          <a class="card" href="src/components/accordion/demo.html">
+            <span class="name">accordion</span>
+            <span class="meta">Expand/collapse panels on native details/summary.</span>
+          </a>
+          <a class="card" href="src/components/countdown/demo.html">
+            <span class="name">countdown</span>
+            <span class="meta">Live countdown to a target date/time.</span>
+          </a>
+          <a class="card" href="src/components/marquee/demo.html">
+            <span class="name">marquee</span>
+            <span class="meta">Infinitely scrolling content strip (news ticker).</span>
+          </a>
+          <div class="card card--planned">
+            <span class="name">dataTable</span>
+            <span class="meta">Responsive table with sortable columns reflected in aria-sort.</span>
+            <span class="tag">Planned</span>
+          </div>
+          <div class="card card--planned">
+            <span class="name">readMore</span>
+            <span class="meta">Clamps long text to a few lines with an expand/collapse control.</span>
+            <span class="tag">Planned</span>
+          </div>
+        </div>
+      </section>
+
+
+      <section class="group" aria-labelledby="group-forms">
+        <h2 id="group-forms" class="group__title">Forms &amp; input</h2>
+        <p class="group__note">
+          Field-level behaviour on top of the native form controls and the
+          Constraint Validation API.
+        </p>
+
+        <div class="grid">
+          <a class="card" href="src/components/dateInputFormat/demo.html">
+            <span class="name">dateInputFormat</span>
+            <span class="meta">Auto-formats a text field into a grouped date mask.</span>
+          </a>
+          <a class="card" href="src/components/formValidation/demo.html">
+            <span class="name">formValidation</span>
+            <span class="meta">Inline validation messages on the Constraint Validation API.</span>
+          </a>
+          <a class="card" href="src/components/inputCharCount/demo.html">
+            <span class="name">inputCharCount</span>
+            <span class="meta">Character-count display for inputs and textareas.</span>
+          </a>
+          <div class="card card--planned">
+            <span class="name">autoGrowTextarea</span>
+            <span class="meta">Textarea that grows with its content instead of scrolling.</span>
+            <span class="tag">Planned</span>
+          </div>
+          <div class="card card--planned">
+            <span class="name">fileUpload</span>
+            <span class="meta">Drag-and-drop file field listing the selected files.</span>
+            <span class="tag">Planned</span>
+          </div>
+          <div class="card card--planned">
+            <span class="name">passwordToggle</span>
+            <span class="meta">Show/hide toggle for password fields.</span>
+            <span class="tag">Planned</span>
+          </div>
+        </div>
+      </section>
+
+
+      <section class="group" aria-labelledby="group-media">
+        <h2 id="group-media" class="group__title">Media &amp; graphics</h2>
+        <p class="group__note">
+          Video, image sequences and SVG handling.
+        </p>
+
+        <div class="grid">
+          <a class="card" href="src/components/inlineSVG/demo.html">
+            <span class="name">inlineSVG</span>
+            <span class="meta">Replaces img SVG references with inline SVG.</span>
+          </a>
+          <a class="card" href="src/components/scaleSVG/demo.html">
+            <span class="name">scaleSVG</span>
+            <span class="meta">Sizes inline SVGs from their viewBox × a scale factor.</span>
+          </a>
+          <a class="card" href="src/components/video/demo.html">
+            <span class="name">video</span>
+            <span class="meta">Self-hosted responsive video and click-to-load YouTube embeds.</span>
+          </a>
+          <div class="card card--planned">
+            <span class="name">carousel</span>
+            <span class="meta">User-driven slider on CSS scroll-snap, with prev/next and markers.</span>
+            <span class="tag">Planned</span>
+          </div>
+        </div>
+      </section>
+
+
+      <section class="group" aria-labelledby="group-scroll">
+        <h2 id="group-scroll" class="group__title">Scroll &amp; layout</h2>
+        <p class="group__note">
+          Observers that let CSS react to scrolling, overflow and layout —
+          without JS writing any styles.
+        </p>
+
+        <div class="grid">
+          <a class="card" href="src/components/adaptiveScrollFade/demo.html">
+            <span class="name">adaptiveScrollFade</span>
+            <span class="meta">Fade-out edges on scrollable containers, only where overflow is.</span>
+          </a>
+          <a class="card" href="src/components/flexNeighborMarker/demo.html">
+            <span class="name">flexNeighborMarker</span>
+            <span class="meta">Marks flex items that have a neighbour on the same row.</span>
+          </a>
+          <a class="card" href="src/components/stickyObserver/demo.html">
+            <span class="name">stickyObserver</span>
+            <span class="meta">Marks a sticky element while it is pinned so CSS can style the stuck state.</span>
+          </a>
+          <div class="card card--planned">
+            <span class="name">revealOnScroll</span>
+            <span class="meta">Reveals elements as they enter the viewport, respecting reduced motion.</span>
+            <span class="tag">Planned</span>
+          </div>
+        </div>
       </section>
 
     </main>
-    
+
   </body>
 </html>
