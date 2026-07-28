@@ -17,7 +17,13 @@
 
 
 
-:root {
+// Field wrapper: stacks the label, the control and the optional hint.
+//
+// The custom properties are the component's override surface. They live on the
+// component root rather than in :root, so they stay scoped to the component
+// and a single instance can be retuned in place.
+.m-dateField {
+
   // Spacing maps to the shared spacing scale
   // (see _shared/scss/_foundations.scss).
   --dateField-gap: var(--space-3xs); // gap label <-> control <-> hint
@@ -38,12 +44,7 @@
   --dateField-bg-color: var(--color-bg-surface);
   --dateField-border-color: var(--color-border);
   --dateField-border-color-hover: var(--color-border-strong);
-}
 
-
-
-// Field wrapper: stacks the label, the control and the optional hint.
-.m-dateField {
   display: flex;
   flex-direction: column;
   gap: var(--dateField-gap);
@@ -65,16 +66,23 @@
 // The formatted input. tabular-nums keeps every digit the same width, so the
 // value does not shift sideways as separators are inserted while typing.
 .m-dateField__control {
-  border: 1px solid var(--dateField-border-color);
-  border-radius: var(--dateField-radius);
-  padding: var(--dateField-padding-block) var(--dateField-padding-inline);
 
-  font: inherit;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
+  // Visible focus ring for keyboard users (WCAG 2.4.7). The control sits on a
+  // dark surface -> the light (bright) ring.
+  @include focus-ring(light);
 
-  color: var(--dateField-text-color);
-  background-color: var(--dateField-bg-color);
+  & {
+    border: 1px solid var(--dateField-border-color);
+    border-radius: var(--dateField-radius);
+    padding: var(--dateField-padding-block) var(--dateField-padding-inline);
+
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+
+    color: var(--dateField-text-color);
+    background-color: var(--dateField-bg-color);
+  }
 
   &::placeholder {
     color: var(--dateField-placeholder-color);
@@ -83,10 +91,6 @@
   &:hover {
     border-color: var(--dateField-border-color-hover);
   }
-
-  // Visible focus ring for keyboard users (WCAG 2.4.7). The control sits on a
-  // dark surface -> the light (bright) ring.
-  @include focus-ring(light);
 }
 
 

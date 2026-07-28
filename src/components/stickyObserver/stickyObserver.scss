@@ -24,7 +24,16 @@
 // or read "m-stickyBar", so the sticky element can be styled any way you
 // like.
 
-:root {
+// Convenience target: a bar that sticks to the top of the viewport. The
+// surface properties are transparent while the bar rests in the normal flow
+// and fade in once the script marks it as pinned.
+//
+// The custom properties are the component's override surface. They live on the
+// component root rather than in :root, so they stay scoped to the component
+// and a single instance can be retuned in place (`style="--stickyBar-offset: …"`
+// on this element still wins over the defaults below).
+.m-stickyBar {
+
   // Pin distance from the top edge of the viewport (or of the scroll
   // container, with data-sticky-root). Changing it here is enough: the
   // script reads the bar's resulting computed `top` by itself, so the
@@ -45,14 +54,7 @@
   // Transition between the two states. Maps to the shared motion tokens.
   --stickyBar-duration: var(--an-duration);
   --stickyBar-ease: var(--an-ease);
-}
 
-
-
-// Convenience target: a bar that sticks to the top of the viewport. The
-// surface properties are transparent while the bar rests in the normal flow
-// and fade in once the script marks it as pinned.
-.m-stickyBar {
   position: sticky;
   inset-block-start: var(--stickyBar-offset);
   z-index: var(--zi-aboveContent);

@@ -326,6 +326,31 @@ Prefix every class by its role:
 
 ### Comments
 - In SCSS use **single-line comments only** (`//`).
+- **One blank line before a leading comment inside a block.** When a
+  declaration block opens with a comment, separate it from the opening brace
+  with a blank line, so the comment reads as its own unit instead of sticking
+  to the selector line.
+
+```scss
+// ❌ comment glued to the selector line
+.m-dropdownNav {
+  // Animation maps to the shared animation tokens.
+  --dropdownNav-duration: calc(var(--an-duration) / 2);
+}
+
+// ✅ blank line between brace and leading comment
+.m-dropdownNav {
+
+  // Animation maps to the shared animation tokens.
+  --dropdownNav-duration: calc(var(--an-duration) / 2);
+}
+```
+
+- Applies to **every** block that opens with a comment — nested pseudo-class,
+  state and media-query blocks and `& { … }` wrappers included — and it is the
+  one blank line a **compact selector** keeps (see *Formatting rules*).
+- A comment that sits *between* declarations needs no extra line: it belongs to
+  the concern group it introduces and rides on that group's blank line.
 
 ### Formatting rules
 - One selector per line.
@@ -339,7 +364,8 @@ Prefix every class by its role:
 - Separate top-level declarations / rules with **three** blank lines.
 - **Compact selectors:** when a selector holds no more than three
   `property: value` declarations, drop all blank lines inside it so the
-  declarations sit directly one after another.
+  declarations sit directly one after another. The single exception is the
+  blank line before a leading comment (see *Comments*).
 
 ```scss
 .c-badge {

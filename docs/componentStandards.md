@@ -197,10 +197,15 @@ Boot (`_shared/js/boot.js`) lazily imports the module when it sees
 - Header comment banner (`// ===` box) describing the component and, crucially,
   the **contract with the JS**: which class/attribute the JS toggles and that
   the script sets no inline styles.
-- Declare a **`:root` block of `--<name>-*` custom properties** that **map to
-  the shared tokens** (`--space-*`, `--color-*`, `--an-duration`, `--an-ease`,
+- Declare the `--<name>-*` custom properties **on the component root**
+  (`.m-<name> { … }`), not in `:root`, so the override surface stays scoped to
+  the component and a single instance can be retuned in place (an inline
+  `style="--<name>-x: …"` on that element still wins). They **map to the shared
+  tokens** (`--space-*`, `--color-*`, `--an-duration`, `--an-ease`,
   `--borderRadius`, `--outlineOffset`; see `_shared/scss/_foundations.scss`,
-  `_colors_semantic.scss`). These are the per-component override surface.
+  `_colors_semantic.scss`). Only a component that owns no root element to scope
+  them to keeps them in `:root` — see the comments in `formValidation.scss` and
+  `marquee.scss`.
 - **BEM with an `m-` prefix** for styling classes (`.m-dialog__panel`); the JS
   must **not** hook onto `m-*` classes — it targets the element via
   `data-js-module` and behavioural `data-*` attributes. State classes the JS

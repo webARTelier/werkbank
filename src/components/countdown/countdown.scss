@@ -20,8 +20,13 @@
 
 
 
-:root {
-  
+// Module root: stacks the unit display over the pause/resume control.
+//
+// The custom properties are the component's override surface. They live on the
+// component root rather than in :root, so they stay scoped to the component
+// and a single instance can be retuned in place.
+.m-countdown {
+
   // Spacing maps to the shared spacing scale
   // (see _shared/scss/_foundations.scss).
   --countdown-gap: var(--space-s); // gap between the units
@@ -36,12 +41,7 @@
   --countdown-value-color: var(--color-text);
   --countdown-label-color: var(--color-text-muted);
   --countdown-separator-color: var(--color-text-muted);
-}
 
-
-
-// Module root: stacks the unit display over the pause/resume control.
-.m-countdown {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -125,25 +125,28 @@
 // default; the keyboard focus ring (WCAG 2.4.7) is applied via the shared
 // focus-ring() mixin.
 .m-countdown__toggle {
-  padding: var(--space-3xs) var(--space-xs);
-  border: 1px solid var(--color-border);
-  border-radius: var(--borderRadius);
 
-  background-color: var(--color-bg-overlay);
-  color: var(--color-text-secondary);
-  font: inherit;
-  font-size: var(--space-xs);
-  line-height: 1.4;
+  // Sits on a dark surface -> the light (bright) ring.
+  @include focus-ring(light);
 
-  cursor: pointer;
+  & {
+    padding: var(--space-3xs) var(--space-xs);
+    border: 1px solid var(--color-border);
+    border-radius: var(--borderRadius);
+
+    background-color: var(--color-bg-overlay);
+    color: var(--color-text-secondary);
+    font: inherit;
+    font-size: var(--space-xs);
+    line-height: 1.4;
+
+    cursor: pointer;
+  }
 
   &:hover {
     color: var(--color-text);
     border-color: var(--color-border-strong);
   }
-
-  // Sits on a dark surface -> the light (bright) ring.
-  @include focus-ring(light);
 }
 
 

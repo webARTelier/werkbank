@@ -23,14 +23,18 @@
 
 
 
-:root {
-  // Animation maps to the shared animation tokens 
+// The custom properties are the component's override surface. They live on
+// the component root rather than in :root, so they stay scoped to the
+// component and a single instance can be retuned in place.
+.m-accordion {
+
+  // Animation maps to the shared animation tokens
   // (see _shared/scss/_foundations.scss).
   --accordion-duration: var(--an-duration);
   --accordion-easing: var(--an-ease);
   --accordion-radius: var(--borderRadius);
 
-  // Spacing maps to the shared spacing scale 
+  // Spacing maps to the shared spacing scale
   // (see _shared/scss/_foundations.scss).
   --accordion-gap: var(--space-2xs); // gap between items
   --accordion-trigger-gap: var(--space-xs); // gap label <-> arrow
@@ -43,11 +47,7 @@
   --accordion-bg-color: var(--color-bg-surface);
   --accordion-bg-color-hover: var(--color-bg-elevated);
   --accordion-text-color: var(--color-text);
-}
 
-
-
-.m-accordion {
   display: flex;
   flex-direction: column;
   gap: var(--accordion-gap);

@@ -23,7 +23,14 @@
 
 
 
+// Deliberately :root, not a component scope: this stylesheet keys on the
+// behavioural data attributes only (no class of its own), and the documented
+// per-instance override is `style="--marquee-gap: …"` on the OUTER module
+// element — above [data-marquee-container]. A default defined on the
+// container would sit closer to the track that consumes it and would
+// therefore shadow that inline override.
 :root {
+
   // Space between the end of one repetition and the start of the next.
   // Maps to the shared spacing scale (_shared/scss/_foundations.scss);
   // override per instance via `style="--marquee-gap: 96px"` or your own

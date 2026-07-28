@@ -23,7 +23,16 @@
 
 
 
-:root {
+// The <dialog> element itself: a transparent, chrome-free positioning box.
+// Everything visible lives on the inner panel (see file header). Kept centered
+// via the UA's margin:auto for an open modal dialog.
+//
+// The custom properties are the component's override surface. They live on the
+// component root rather than in :root, so they stay scoped to the component
+// and a single instance can be retuned in place. ::backdrop inherits from its
+// originating element, so --dialog-backdrop-color still reaches it from here.
+.m-dialog {
+
   // Animation maps to the shared animation tokens
   // (see _shared/scss/_foundations.scss).
   --dialog-duration: var(--an-duration);
@@ -51,26 +60,16 @@
   --dialog-muted-color: var(--color-text-muted);
   --dialog-backdrop-color: color-mix(in srgb, var(--c-blue-black) 70%, transparent);
   --dialog-shadow: 0 24px 60px var(--color-shadow);
-}
 
-
-
-// The <dialog> element itself: a transparent, chrome-free positioning box.
-// Everything visible lives on the inner panel (see file header). Kept centered
-// via the UA's margin:auto for an open modal dialog.
-.m-dialog {
   border: 0;
   padding: 0;
   width: 100%;
   max-width: var(--dialog-width);
-  
+
   font-family: system-ui, sans-serif;
 
   color: var(--dialog-text-color);
   background-color: transparent;
-  
-
-
 
   // ----- open/close animation (progressive enhancement) -----
   // Closed resting state. When the dialog opens, [open] is set and the panel
@@ -202,23 +201,29 @@
 // Close affordance in the header corner. A real <button> so it is focusable and
 // operable by keyboard/AT out of the box.
 .m-dialog__close {
-  flex-shrink: 0;
 
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  // Dialog sits on a dark elevated surface -> the light (bright) ring.
+  @include focus-ring(light);
 
-  width: 2rem;
-  height: 2rem;
-  padding: 0;
-  border: 1px solid transparent;
-  border-radius: var(--dialog-radius);
+  & {
+    flex-shrink: 0;
 
-  background: transparent;
-  color: var(--dialog-muted-color);
-  line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 
-  cursor: pointer;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--dialog-radius);
+
+    background: transparent;
+    color: var(--dialog-muted-color);
+    line-height: 1;
+
+    cursor: pointer;
+  }
 
   // The inline "×" icon inherits the button's color via stroke="currentColor",
   // so the hover recolour below (and its transition) apply to the glyph too.
@@ -231,9 +236,6 @@
     color: var(--dialog-text-color);
     border-color: var(--dialog-border-color);
   }
-
-  // Dialog sits on a dark elevated surface -> the light (bright) ring.
-  @include focus-ring(light);
 }
 
 

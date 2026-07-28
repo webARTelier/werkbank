@@ -174,8 +174,12 @@ per-form (inside the form, then its immediate siblings, then page-wide),
 so repeated forms do not need to worry about it.
 
 Per-component theming happens through CSS custom properties: every stylesheet
-declares a `:root` block of `--<name>-*` variables mapped to the shared
-tokens — override those instead of the rules themselves.
+declares its `--<name>-*` variables on the component root (e.g.
+`.m-dialog { … }`), mapped to the shared tokens — override those instead of the
+rules themselves, either in your own CSS or inline on the element itself. Two
+behaviour-only components keep their tokens in `:root` because they own no root
+element to scope them to (`formValidation`) or document the override on an
+ancestor of the element that consumes them (`marquee`).
 
 ### 2. Cherry-picking single files
 

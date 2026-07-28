@@ -21,7 +21,15 @@
 // the element via data-js-module and toggles the class above; it does not need
 // or read "m-flexNeighbor", so you may lay the container out however you like.
 
-:root {
+// Convenience container: a wrapping flex row with the shared gap. Optional —
+// the JS marks the items whatever the container's display model is.
+//
+// The custom properties are the component's override surface. They live on the
+// component root rather than in :root, so they stay scoped to the component
+// and a single instance can be retuned in place (`style="--flexNeighbor-gap: …"`
+// on this element still wins over the defaults below).
+.m-flexNeighbor {
+
   // Gap between items. Drives both the flex `gap` and where the divider sits,
   // so the divider stays centred in the gutter at any spacing. Maps to the
   // shared spacing scale (see _shared/scss/_foundations.scss).
@@ -31,13 +39,7 @@
   // legible in the wide gutters between wrapped items.
   --flexNeighbor-divider-width: 1px;
   --flexNeighbor-divider-color: color-mix(in srgb, var(--c-white) 55%, transparent);
-}
 
-
-
-// Convenience container: a wrapping flex row with the shared gap. Optional —
-// the JS marks the items whatever the container's display model is.
-.m-flexNeighbor {
   display: flex;
   flex-wrap: wrap;
   gap: var(--flexNeighbor-gap);

@@ -22,6 +22,11 @@
 
 
 
+// Deliberately :root, not a component scope: the component owns no root
+// element of its own here. Its three hooks ([data-fv-item].is-invalid, the
+// injected .fv-error and the injected .fv-summary) sit in different places
+// in the project's own form markup and share no styled ancestor, so there is
+// nothing to scope the shared error tone to.
 :root {
 
   // Error tone maps to the shared semantic token

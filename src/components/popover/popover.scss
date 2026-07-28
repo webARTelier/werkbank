@@ -29,7 +29,29 @@
 
 
 
-:root {
+// Registering the offset as a real <length> makes its computed value always
+// resolve to px — whatever unit it was authored in — so the JS fallback can
+// read it back as one number instead of parsing arbitrary units (see
+// popover.js, readOffset). A registration, not a definition, so it stays at
+// the top level while the value below lives on the component root.
+@property --popover-offset {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 8px;
+}
+
+
+
+// The popover surface itself. The UA already provides position: fixed, a
+// fit-content box and the centered default placement (inset: 0 +
+// margin: auto) — only the chrome is ours.
+//
+// The custom properties are the component's override surface. They live on the
+// component root rather than in :root, so they stay scoped to the component
+// and a single instance can be retuned in place — including --popover-offset,
+// which popover.js reads back off this very element.
+.m-popover {
+
   // Animation maps to the shared animation tokens
   // (see _shared/scss/_foundations.scss). Half the shared duration: a
   // popover is a small hop next to its trigger, not a scene change.
@@ -57,26 +79,7 @@
   --popover-border-color: var(--color-border);
   --popover-muted-color: var(--color-text-muted);
   --popover-shadow: 0 12px 32px var(--color-shadow);
-}
 
-
-
-// Registering the offset as a real <length> makes its computed value always
-// resolve to px — whatever unit it was authored in — so the JS fallback can
-// read it back as one number instead of parsing arbitrary units (see
-// popover.js, readOffset).
-@property --popover-offset {
-  syntax: '<length>';
-  inherits: true;
-  initial-value: 8px;
-}
-
-
-
-// The popover surface itself. The UA already provides position: fixed, a
-// fit-content box and the centered default placement (inset: 0 +
-// margin: auto) — only the chrome is ours.
-.m-popover {
   border: 1px solid var(--popover-border-color);
   border-radius: var(--popover-radius);
   padding: var(--popover-padding);
@@ -110,6 +113,7 @@
 @supports (anchor-name: --a) and (position-area: bottom) {
 
   .m-popover {
+
     // Undo the UA centering (inset: 0 + margin: auto) so the anchor grid
     // decides; the margin becomes the visual gap to the trigger.
     inset: auto;
@@ -164,11 +168,11 @@
 @supports selector(:popover-open) {
 
   .m-popover {
+
     // Closed resting state. When the popover opens, :popover-open matches
     // and it animates from the @starting-style values below to open.
     opacity: 0;
     scale: var(--popover-enter-scale);
-
     transition:
       opacity var(--popover-duration) var(--popover-easing),
       scale var(--popover-duration) var(--popover-easing),
@@ -224,23 +228,29 @@
 // with popovertarget + popovertargetaction="hide" — the closing itself is
 // native, this only styles it.
 .m-popover__close {
-  flex-shrink: 0;
 
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  // Popover sits on a dark elevated surface -> the light (bright) ring.
+  @include focus-ring(light);
 
-  width: 1.75rem;
-  height: 1.75rem;
-  padding: 0;
-  border: 1px solid transparent;
-  border-radius: var(--popover-radius);
+  & {
+    flex-shrink: 0;
 
-  background: transparent;
-  color: var(--popover-muted-color);
-  line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 
-  cursor: pointer;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--popover-radius);
+
+    background: transparent;
+    color: var(--popover-muted-color);
+    line-height: 1;
+
+    cursor: pointer;
+  }
 
   // The inline "×" icon inherits the button's color via
   // stroke="currentColor", so the hover recolour below applies to the
@@ -254,9 +264,6 @@
     color: var(--popover-text-color);
     border-color: var(--popover-border-color);
   }
-
-  // Popover sits on a dark elevated surface -> the light (bright) ring.
-  @include focus-ring(light);
 }
 
 
