@@ -79,6 +79,7 @@ components downloads two chunks — nothing else.
 | `countdown`          | Live countdown to a target date/time.                               |
 | `dateInputFormat`    | Auto-formats a text field into a grouped date mask (`DD.MM.YYYY`).  |
 | `dialog`             | Modal dialogs on the native `<dialog>` element.                     |
+| `dropdownNav`        | Multi-level dropdown / mega-menu nav on the ARIA disclosure pattern.|
 | `flexNeighborMarker` | Marks flex items that have a neighbour on the same row.             |
 | `formValidation`     | Inline validation messages on the Constraint Validation API.        |
 | `inlineSVG`          | Replaces `<img>` SVG references with inline SVG.                    |

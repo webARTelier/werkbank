@@ -1,0 +1,126 @@
+<!--
+  dropdownNav — copy-paste snippet
+  ============================================================================
+  Copy the block(s) below into your own project.
+
+  1) In <head> (or before </body>): load the shared styles, this component's
+     styles and the boot script. boot.min.js lazily loads the dropdownNav
+     module as soon as it finds data-js-module="dropdownNav" in the DOM — you
+     do not import dropdownNav.js yourself. Adjust the paths to where you
+     serve /dist.
+
+       <link rel="stylesheet" href="/dist/css/shared.min.css" />
+       <link rel="stylesheet" href="/dist/css/dropdownNav.min.css" />
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+  2) Drop the markup below where the navigation should appear. Author it as
+     what it is without JavaScript: a <nav> with a nested list of links.
+     Every submenu is then simply visible — a usable, sitemap-like
+     navigation. The module upgrades it in place to the ARIA disclosure
+     navigation pattern: it inserts one <button aria-expanded aria-controls>
+     per submenu and the stylesheet starts collapsing the panels only once
+     that has happened (data-js-enhanced on the nav).
+
+  Wiring
+    - The nav carries data-js-module="dropdownNav" and — as a landmark —
+      an aria-label.
+    - data-dropdownnav-item marks an <li> that owns a submenu.
+    - data-dropdownnav-label marks that item's label element. If it is a
+      link, the link stays a link and a separate chevron button is inserted
+      next to it. If it is inert (a plain grouping label), the button is
+      wrapped around it, so the whole label toggles.
+    - data-dropdownnav-panel marks the submenu. It MUST be the label's next
+      element sibling — the stylesheet keys the collapsed state off that
+      order. A violation is reported and the item is left unenhanced.
+    - Nesting is unlimited: an item inside a panel is marked exactly the
+      same way.
+
+  Notes / Configuration
+    - Without JavaScript, or before the module has loaded, the nav is a
+      nested list with every submenu open. Nothing is hidden and no control
+      exists that would do nothing.
+    - Below the navigation breakpoint (--bp-navigation, 1250px) the nav
+      stays a stacked list and the submenus behave like an accordion; above
+      it, the nav becomes a bar with floating panels.
+    - data-dropdownnav-hover (on the nav, optional) additionally opens
+      submenus on hover, with a short grace period before closing. Only on
+      fine pointers and only in the flyout layout: the script reads the
+      shared --bp-navigation token instead of repeating the breakpoint.
+    - data-dropdownnav-submenu-label (on the nav, optional) sets the
+      accessible-name template of the inserted chevron buttons; "{label}"
+      is replaced by the item's label text. Default:
+      "Show submenu for {label}".
+    - data-dropdownnav-mega (on an item, optional) makes its panel span the
+      full nav width instead of being anchored to the item — style only,
+      the JS is not involved.
+    - data-dropdownnav-align="end" (on an item, optional) aligns the panel
+      to the item's inline-end edge, for items near the edge of the page.
+      Optional: the module measures every panel and sets
+      data-dropdownnav-flip="start|end" on the ones that would leave the
+      viewport, so submenus at any depth turn around by themselves — in
+      either direction, including the start-edge overflow that an
+      align="end" item is the only way to produce. The attribute is the
+      hint that already works before the module has loaded.
+    - Mark the current page yourself with aria-current="page" on its link;
+      the script never guesses it.
+    - Esc closes the innermost open submenu and returns focus to its
+      toggle; a click outside the nav or focus leaving it closes
+      everything. Esc is only swallowed while the focus is inside the nav,
+      so it stays available to a dialog elsewhere on the page. ArrowDown
+      on a toggle opens the submenu and steps into it. Tab order stays
+      native throughout. Hover never closes a branch the focus is inside.
+    - Long submenus are clamped to the viewport height and scroll
+      internally. That applies to the panels at the end of the tree; a
+      panel that itself owns a flyout keeps its natural height, because a
+      scroll container would clip the child that has to escape it. Retune
+      --dropdownNav-panel-viewport-offset (default 8rem) if the nav sits
+      below a tall header.
+    - Colors, spacing, sizing and animation are --dropdownNav-* custom
+      properties, see dropdownNav.scss; the open/close animation respects
+      prefers-reduced-motion.
+    - Everything is mirrored for RTL by the stylesheet's logical
+      properties; the script reads the nav's resolved direction so the
+      collision flip mirrors with it.
+-->
+
+
+
+<nav class="m-dropdownNav" aria-label="Main" data-js-module="dropdownNav">
+  <ul class="m-dropdownNav__list">
+
+    <!-- A plain item without a submenu: nothing to mark up -->
+    <li class="m-dropdownNav__item">
+      <a class="m-dropdownNav__link" href="/">Home</a>
+    </li>
+
+    <!-- Item with a submenu, label is a link -> split toggle -->
+    <li class="m-dropdownNav__item" data-dropdownnav-item>
+      <a class="m-dropdownNav__link" href="/products" data-dropdownnav-label>Products</a>
+
+      <div class="m-dropdownNav__panel" data-dropdownnav-panel>
+        <ul class="m-dropdownNav__subList">
+          <li class="m-dropdownNav__item">
+            <a class="m-dropdownNav__link" href="/products/hardware">Hardware</a>
+          </li>
+
+          <!-- Third level: marked up exactly the same way -->
+          <li class="m-dropdownNav__item" data-dropdownnav-item>
+            <span class="m-dropdownNav__label" data-dropdownnav-label>Software</span>
+
+            <div class="m-dropdownNav__panel" data-dropdownnav-panel>
+              <ul class="m-dropdownNav__subList">
+                <li class="m-dropdownNav__item">
+                  <a class="m-dropdownNav__link" href="/products/software/desktop">Desktop</a>
+                </li>
+                <li class="m-dropdownNav__item">
+                  <a class="m-dropdownNav__link" href="/products/software/mobile">Mobile</a>
+                </li>
+              </ul>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </li>
+
+  </ul>
+</nav>

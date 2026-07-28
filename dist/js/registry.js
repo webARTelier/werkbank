@@ -6,6 +6,7 @@ export const registry = {
   dateInputFormat: () => import('./modules/dateInputFormat.min.js'),
   debounce: () => import('./modules/debounce.min.js'),
   dialog: () => import('./modules/dialog.min.js'),
+  dropdownNav: () => import('./modules/dropdownNav.min.js'),
   flexNeighborMarker: () => import('./modules/flexNeighborMarker.min.js'),
   formValidation: () => import('./modules/formValidation.min.js'),
   getCssCustomProperty: () => import('./modules/getCssCustomProperty.min.js'),

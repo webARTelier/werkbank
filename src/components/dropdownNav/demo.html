@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>dropdownNav – Demo</title>
+  <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
+  <link rel="stylesheet" href="../../../dist/css/dropdownNav.min.css" />
+  <script type="module" src="../../../dist/js/boot.min.js"></script>
+
+  <!-- for development only -->
+  <script type="module" src="../../../src/_shared/js/dev_pageInfo.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_a11yInspector.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_qrCode.js"></script>
+  <!-- end for development only -->
+
+  <!--
+      DEMO-ONLY STYLES
+      ----------------------------------------------------------------------
+      Page rhythm, the header bar the navs are shown in, and the CSS-only
+      layout note below. None of it is part of the component.
+      (Tokens like --space-* / --color-* come from shared.min.css.)
+  -->
+
+  <style>
+    .demoExample {
+      margin-block-start: var(--space-xl);
+    }
+
+    .demoExample > h2 {
+      margin-block-end: var(--space-s);
+    }
+
+    /* A page header to put the navigation in, so the flyouts have room to
+       open over something. */
+    .demoBar {
+      border: 1px solid var(--color-border);
+      border-radius: var(--borderRadius);
+      padding: var(--space-2xs) var(--space-s);
+
+      display: flex;
+      align-items: center;
+      gap: var(--space-l);
+
+      background-color: var(--color-bg-surface);
+    }
+
+    .demoBar__brand {
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    /* Let the nav fill the bar, so a mega panel (which spans the nav) also
+       spans the header it sits in. */
+    .demoBar > .m-dropdownNav {
+      flex-grow: 1;
+    }
+
+    /* Below the navigation breakpoint the nav is a stacked list, so the
+       bar stacks with it instead of putting the brand beside a tall block. */
+    @media (width < 1250px) {
+      .demoBar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--space-xs);
+      }
+    }
+
+    /* The panels are absolutely positioned, so the bar must not clip them
+       and needs room below it for the open menu. */
+    .demoStack {
+      min-block-size: 26rem;
+    }
+
+    /* Which layout is active is decided by a media query alone — this note
+       reports it back without a line of JavaScript. */
+    .layoutNote {
+      margin-block-start: var(--space-m);
+      border: 1px solid var(--color-border);
+      border-inline-start: 3px solid var(--color-accent-secondary);
+      border-radius: var(--borderRadius);
+      padding: var(--space-xs) var(--space-s);
+
+      color: var(--color-text-secondary);
+    }
+
+    .layoutNote--expanded {
+      display: none;
+    }
+
+    /* The stacked layout is chosen by a viewport media query, so a narrow
+       box on this page cannot trigger it — only a narrow *viewport* can.
+       An iframe has one of its own, which is what this shows it in. */
+    .demoFrame {
+      border: 1px solid var(--color-border);
+      border-radius: var(--borderRadius);
+      inline-size: 420px;
+      max-inline-size: 100%;
+      block-size: 30rem;
+
+      background-color: var(--color-bg);
+
+      color-scheme: dark;
+    }
+
+    @media (width >= 1250px) {
+      .layoutNote--expanded {
+        display: block;
+      }
+
+      .layoutNote--collapsed {
+        display: none;
+      }
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <main class="shell">
+
+    <section class="hero">
+      <a class="back" href="../../../index.html">← Overview</a>
+      <h1>dropdownNav</h1>
+      <p>Multi-level dropdown and mega-menu navigation on the ARIA disclosure pattern — a plain nested list of links
+        without JavaScript.</p>
+    </section>
+
+    <section class="stage" aria-label="Live demo">
+
+      <!--
+          One instance per element with data-js-module="dropdownNav".
+
+          Wiring
+            - The nav is authored as a nested list of links. An <li> that
+              owns a submenu carries data-dropdownnav-item, its label
+              carries data-dropdownnav-label and the submenu right after
+              it carries data-dropdownnav-panel.
+            - The module inserts one <button aria-expanded aria-controls>
+              per submenu: next to the label when the label is a link
+              (which keeps its own destination), wrapped around it when
+              the label is inert.
+            - data-dropdownnav-hover (nav), data-dropdownnav-mega and
+              data-dropdownnav-align="end" (item) are the options.
+
+          Progressive enhancement
+            - Without JS every submenu is simply visible: a sitemap-like
+              navigation with no hidden content and no dead controls. The
+              stylesheet only collapses panels once the module has set
+              data-js-enhanced on the nav — so a panel can never be closed
+              without a button to open it again.
+
+          Accessibility
+            - APG disclosure navigation, not role="menubar": real links in
+              the natural tab order, one aria-expanded button per submenu.
+              Esc closes the innermost menu and returns focus to its
+              toggle; ArrowDown on a toggle steps into the menu. Collapsed
+              panels are visibility: hidden, so their links leave the tab
+              order and the accessibility tree.
+        -->
+
+      <p class="stage__intro">
+        <strong>The markup is a nested list of links.</strong> Everything
+        the module adds is one
+        <code>&lt;button aria-expanded aria-controls&gt;</code> per submenu
+        — the ARIA <em>disclosure navigation</em> pattern. Disable
+        JavaScript and reload: the navigation is still complete, just fully
+        unfolded.
+      </p>
+
+      <p class="layoutNote layoutNote--expanded">
+        ▸ This viewport is at or above the navigation breakpoint
+        (<code>--bp-navigation</code>, 1250px): the navs below render as a
+        bar with floating panels.
+      </p>
+      <p class="layoutNote layoutNote--collapsed">
+        ▾ This viewport is below the navigation breakpoint
+        (<code>--bp-navigation</code>, 1250px): the navs below render as a
+        stacked list whose submenus collapse like an accordion. Widen the
+        window past 1250px to see the dropdown layout.
+      </p>
+
+
+      <!-- 1) The full pattern: split toggles, three levels, a mega menu -->
+      <div class="demoExample demoStack">
+        <h2>Click to open (default)</h2>
+
+        <p class="stage__intro">
+          “Products” and “Company” have their own landing pages, so their
+          links stay links and a separate chevron button opens the submenu.
+          “Software” is only a grouping label, so the button wraps the label
+          itself. Try <kbd>Tab</kbd>, <kbd>Esc</kbd> and <kbd>↓</kbd>.
+        </p>
+
+        <div class="demoBar">
+          <span class="demoBar__brand">Acme</span>
+
+          <nav class="m-dropdownNav" aria-label="Main" data-js-module="dropdownNav">
+            <ul class="m-dropdownNav__list">
+
+              <li class="m-dropdownNav__item">
+                <a class="m-dropdownNav__link" href="javascript:;" aria-current="page">Home</a>
+              </li>
+
+              <li class="m-dropdownNav__item" data-dropdownnav-item>
+                <a class="m-dropdownNav__link" href="javascript:;" data-dropdownnav-label>Products</a>
+
+                <div class="m-dropdownNav__panel" data-dropdownnav-panel>
+                  <ul class="m-dropdownNav__subList">
+                    <li class="m-dropdownNav__item">
+                      <a class="m-dropdownNav__link" href="javascript:;">Hardware</a>
+                    </li>
+
+                    <!-- Third level: same markup, one nesting deeper -->
+                    <li class="m-dropdownNav__item" data-dropdownnav-item>
+                      <span class="m-dropdownNav__label" data-dropdownnav-label>Software</span>
+
+                      <div class="m-dropdownNav__panel" data-dropdownnav-panel>
+                        <ul class="m-dropdownNav__subList">
+                          <li class="m-dropdownNav__item">
+                            <a class="m-dropdownNav__link" href="javascript:;">Desktop</a>
+                          </li>
+                          <li class="m-dropdownNav__item">
+                            <a class="m-dropdownNav__link" href="javascript:;">Mobile</a>
+                          </li>
+                          <li class="m-dropdownNav__item">
+                            <a class="m-dropdownNav__link" href="javascript:;">Embedded</a>
+                          </li>
+                        </ul>
+                      </div>
+                    </li>
+
+                    <li class="m-dropdownNav__item">
+                      <a class="m-dropdownNav__link" href="javascript:;">Accessories</a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+
+              <!-- Mega menu: the panel spans the whole nav -->
+              <li class="m-dropdownNav__item" data-dropdownnav-item data-dropdownnav-mega>
+                <a class="m-dropdownNav__link" href="javascript:;" data-dropdownnav-label>Solutions</a>
+
+                <div class="m-dropdownNav__panel" data-dropdownnav-panel>
+                  <div class="m-dropdownNav__columns">
+
+                    <div>
+                      <h3 class="m-dropdownNav__panelTitle">By industry</h3>
+                      <ul class="m-dropdownNav__subList">
+                        <li class="m-dropdownNav__item">
+                          <a class="m-dropdownNav__link" href="javascript:;">Manufacturing</a>
+                        </li>
+                        <li class="m-dropdownNav__item">
+                          <a class="m-dropdownNav__link" href="javascript:;">Healthcare</a>
+                        </li>
+                        <li class="m-dropdownNav__item">
+                          <a class="m-dropdownNav__link" href="javascript:;">Public sector</a>
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div>
+                      <h3 class="m-dropdownNav__panelTitle">By team size</h3>
+                      <ul class="m-dropdownNav__subList">
+                        <li class="m-dropdownNav__item">
+                          <a class="m-dropdownNav__link" href="javascript:;">Freelancers</a>
+                        </li>
+                        <li class="m-dropdownNav__item">
+                          <a class="m-dropdownNav__link" href="javascript:;">Small teams</a>
+                        </li>
+                        <li class="m-dropdownNav__item">
+                          <a class="m-dropdownNav__link" href="javascript:;">Enterprise</a>
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div>
+                      <h3 class="m-dropdownNav__panelTitle">Get started</h3>
+                      <ul class="m-dropdownNav__subList">
+                        <li class="m-dropdownNav__item">
+                          <a class="m-dropdownNav__link" href="javascript:;">Migration guide</a>
+                        </li>
+                        <li class="m-dropdownNav__item">
+                          <a class="m-dropdownNav__link" href="javascript:;">Book a demo</a>
+                        </li>
+                      </ul>
+                    </div>
+
+                  </div>
+                </div>
+              </li>
+
+              <!-- Near the end of the bar -> the panel grows towards the start -->
+              <li class="m-dropdownNav__item" data-dropdownnav-item data-dropdownnav-align="end">
+                <a class="m-dropdownNav__link" href="javascript:;" data-dropdownnav-label>Company</a>
+
+                <div class="m-dropdownNav__panel" data-dropdownnav-panel>
+                  <ul class="m-dropdownNav__subList">
+                    <li class="m-dropdownNav__item">
+                      <a class="m-dropdownNav__link" href="javascript:;">About us</a>
+                    </li>
+                    <li class="m-dropdownNav__item">
+                      <a class="m-dropdownNav__link" href="javascript:;">Careers</a>
+                    </li>
+                    <li class="m-dropdownNav__item">
+                      <a class="m-dropdownNav__link" href="javascript:;">Press</a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+
+              <li class="m-dropdownNav__item">
+                <a class="m-dropdownNav__link" href="javascript:;">Contact</a>
+              </li>
+
+            </ul>
+          </nav>
+        </div>
+      </div>
+
+
+      <!-- 2) Hover opening, opt-in -->
+      <div class="demoExample demoStack">
+        <h2>Hover to open (<code>data-dropdownnav-hover</code>)</h2>
+
+        <p class="stage__intro">
+          The same component with hover opening enabled. It only applies to
+          fine pointers — a touch device keeps the tap-to-open behaviour, so
+          nobody gets a menu they cannot leave. Hovering drives the very same
+          <code>aria-expanded</code> state, and clicking, <kbd>Esc</kbd> and
+          <kbd>Tab</kbd> keep working exactly as above.
+        </p>
+
+        <div class="demoBar">
+          <span class="demoBar__brand">Acme</span>
+
+          <nav
+            class="m-dropdownNav"
+            aria-label="Main (hover)"
+            data-js-module="dropdownNav"
+            data-dropdownnav-hover
+            data-dropdownnav-submenu-label="Open the {label} menu"
+          >
+            <ul class="m-dropdownNav__list">
+
+              <li class="m-dropdownNav__item">
+                <a class="m-dropdownNav__link" href="javascript:;">Home</a>
+              </li>
+
+              <li class="m-dropdownNav__item" data-dropdownnav-item>
+                <a class="m-dropdownNav__link" href="javascript:;" data-dropdownnav-label>Docs</a>
+
+                <div class="m-dropdownNav__panel" data-dropdownnav-panel>
+                  <ul class="m-dropdownNav__subList">
+                    <li class="m-dropdownNav__item">
+                      <a class="m-dropdownNav__link" href="javascript:;">Getting started</a>
+                    </li>
+                    <li class="m-dropdownNav__item" data-dropdownnav-item>
+                      <span class="m-dropdownNav__label" data-dropdownnav-label>Reference</span>
+
+                      <div class="m-dropdownNav__panel" data-dropdownnav-panel>
+                        <ul class="m-dropdownNav__subList">
+                          <li class="m-dropdownNav__item">
+                            <a class="m-dropdownNav__link" href="javascript:;">Components</a>
+                          </li>
+                          <li class="m-dropdownNav__item">
+                            <a class="m-dropdownNav__link" href="javascript:;">Tokens</a>
+                          </li>
+                        </ul>
+                      </div>
+                    </li>
+                    <li class="m-dropdownNav__item">
+                      <a class="m-dropdownNav__link" href="javascript:;">Changelog</a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+
+              <li class="m-dropdownNav__item" data-dropdownnav-item>
+                <a class="m-dropdownNav__link" href="javascript:;" data-dropdownnav-label>Support</a>
+
+                <div class="m-dropdownNav__panel" data-dropdownnav-panel>
+                  <ul class="m-dropdownNav__subList">
+                    <li class="m-dropdownNav__item">
+                      <a class="m-dropdownNav__link" href="javascript:;">Help center</a>
+                    </li>
+                    <li class="m-dropdownNav__item">
+                      <a class="m-dropdownNav__link" href="javascript:;">Community</a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+
+            </ul>
+          </nav>
+        </div>
+      </div>
+
+
+      <!-- 3) Right-to-left: the same component, mirrored by the platform -->
+      <div class="demoExample demoStack">
+        <h2>Right-to-left</h2>
+
+        <p class="stage__intro">
+          Nothing here is a second implementation: the stylesheet uses
+          logical properties throughout, so <code>dir="rtl"</code> mirrors
+          the bar, the flyouts and the chevrons on its own. The one place
+          the script has to care is the collision flip — it has to know
+          which physical edge the panel grows towards, so it reads the
+          nav's resolved direction before measuring. Open “المنتجات” and
+          then its nested “البرمجيات”: the panels step out towards the
+          left, and the one nearest the edge turns around.
+        </p>
+
+        <div class="demoBar" dir="rtl" lang="ar">
+          <span class="demoBar__brand">أكمي</span>
+
+          <nav
+            class="m-dropdownNav"
+            aria-label="التنقل الرئيسي"
+            data-js-module="dropdownNav"
+            data-dropdownnav-submenu-label="افتح قائمة {label}"
+          >
+            <ul class="m-dropdownNav__list">
+
+              <li class="m-dropdownNav__item">
+                <a class="m-dropdownNav__link" href="javascript:;" aria-current="page">الرئيسية</a>
+              </li>
+
+              <li class="m-dropdownNav__item" data-dropdownnav-item>
+                <a class="m-dropdownNav__link" href="javascript:;" data-dropdownnav-label>المنتجات</a>
+
+                <div class="m-dropdownNav__panel" data-dropdownnav-panel>
+                  <ul class="m-dropdownNav__subList">
+                    <li class="m-dropdownNav__item">
+                      <a class="m-dropdownNav__link" href="javascript:;">الأجهزة</a>
+                    </li>
+
+                    <li class="m-dropdownNav__item" data-dropdownnav-item>
+                      <span class="m-dropdownNav__label" data-dropdownnav-label>البرمجيات</span>
+
+                      <div class="m-dropdownNav__panel" data-dropdownnav-panel>
+                        <ul class="m-dropdownNav__subList">
+                          <li class="m-dropdownNav__item">
+                            <a class="m-dropdownNav__link" href="javascript:;">سطح المكتب</a>
+                          </li>
+                          <li class="m-dropdownNav__item">
+                            <a class="m-dropdownNav__link" href="javascript:;">الهاتف المحمول</a>
+                          </li>
+                        </ul>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+
+              <li class="m-dropdownNav__item" data-dropdownnav-item>
+                <a class="m-dropdownNav__link" href="javascript:;" data-dropdownnav-label>الشركة</a>
+
+                <div class="m-dropdownNav__panel" data-dropdownnav-panel>
+                  <ul class="m-dropdownNav__subList">
+                    <li class="m-dropdownNav__item">
+                      <a class="m-dropdownNav__link" href="javascript:;">من نحن</a>
+                    </li>
+                    <li class="m-dropdownNav__item">
+                      <a class="m-dropdownNav__link" href="javascript:;">الوظائف</a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+
+              <li class="m-dropdownNav__item">
+                <a class="m-dropdownNav__link" href="javascript:;">اتصل بنا</a>
+              </li>
+
+            </ul>
+          </nav>
+        </div>
+      </div>
+
+
+      <!-- 4) The stacked layout, without having to resize the window -->
+      <div class="demoExample">
+        <h2>Stacked layout (below the breakpoint)</h2>
+
+        <p class="stage__intro">
+          Which layout applies is decided by a viewport media query, so a
+          narrow box on this page cannot show it — only a narrow viewport
+          can. The frame below has one of its own. Same markup, same
+          module, same <code>aria-expanded</code>: only the stylesheet
+          changes its mind, and the submenus behave like an accordion in
+          the flow instead of floating over the page.
+        </p>
+
+        <iframe
+          class="demoFrame"
+          title="The same navigation in a viewport below the breakpoint"
+          srcdoc="
+            <!doctype html>
+            <html lang='en'>
+            <head>
+              <meta charset='utf-8'>
+              <meta name='viewport' content='width=device-width, initial-scale=1'>
+              <link rel='stylesheet' href='../../../dist/css/shared.min.css'>
+              <link rel='stylesheet' href='../../../dist/css/dropdownNav.min.css'>
+              <script type='module' src='../../../dist/js/boot.min.js'></script>
+              <style>body { display: block; padding: 16px; min-height: 0; }</style>
+            </head>
+            <body>
+              <nav class='m-dropdownNav' aria-label='Main' data-js-module='dropdownNav'>
+                <ul class='m-dropdownNav__list'>
+                  <li class='m-dropdownNav__item'>
+                    <a class='m-dropdownNav__link' href='javascript:;' aria-current='page'>Home</a>
+                  </li>
+                  <li class='m-dropdownNav__item' data-dropdownnav-item>
+                    <a class='m-dropdownNav__link' href='javascript:;' data-dropdownnav-label>Products</a>
+                    <div class='m-dropdownNav__panel' data-dropdownnav-panel>
+                      <ul class='m-dropdownNav__subList'>
+                        <li class='m-dropdownNav__item'>
+                          <a class='m-dropdownNav__link' href='javascript:;'>Hardware</a>
+                        </li>
+                        <li class='m-dropdownNav__item' data-dropdownnav-item>
+                          <span class='m-dropdownNav__label' data-dropdownnav-label>Software</span>
+                          <div class='m-dropdownNav__panel' data-dropdownnav-panel>
+                            <ul class='m-dropdownNav__subList'>
+                              <li class='m-dropdownNav__item'>
+                                <a class='m-dropdownNav__link' href='javascript:;'>Desktop</a>
+                              </li>
+                              <li class='m-dropdownNav__item'>
+                                <a class='m-dropdownNav__link' href='javascript:;'>Mobile</a>
+                              </li>
+                            </ul>
+                          </div>
+                        </li>
+                      </ul>
+                    </div>
+                  </li>
+                  <li class='m-dropdownNav__item' data-dropdownnav-item>
+                    <a class='m-dropdownNav__link' href='javascript:;' data-dropdownnav-label>Company</a>
+                    <div class='m-dropdownNav__panel' data-dropdownnav-panel>
+                      <ul class='m-dropdownNav__subList'>
+                        <li class='m-dropdownNav__item'>
+                          <a class='m-dropdownNav__link' href='javascript:;'>About us</a>
+                        </li>
+                        <li class='m-dropdownNav__item'>
+                          <a class='m-dropdownNav__link' href='javascript:;'>Careers</a>
+                        </li>
+                      </ul>
+                    </div>
+                  </li>
+                </ul>
+              </nav>
+            </body>
+            </html>
+          "
+        ></iframe>
+      </div>
+
+
+      <!-- 5) The base layer: what everyone gets before/without the module -->
+      <div class="demoExample">
+        <h2>Without JavaScript (the base layer)</h2>
+
+        <p class="stage__intro">
+          This nav carries no <code>data-js-module</code>, so the module
+          never touches it — exactly what every visitor sees with
+          JavaScript off, and what everyone sees for the moment before the
+          chunk has loaded. It is a nested list of links: nothing hidden,
+          no chevron that would do nothing when clicked, no ARIA promising
+          behaviour that is not there. The stylesheet only starts
+          collapsing panels once the script has set
+          <code>data-js-enhanced</code>, so “collapsed” and “can be
+          expanded again” always arrive together.
+        </p>
+
+        <div class="demoBar">
+          <span class="demoBar__brand">Acme</span>
+
+          <nav class="m-dropdownNav" aria-label="Main (unenhanced)">
+            <ul class="m-dropdownNav__list">
+
+              <li class="m-dropdownNav__item">
+                <a class="m-dropdownNav__link" href="javascript:;" aria-current="page">Home</a>
+              </li>
+
+              <li class="m-dropdownNav__item" data-dropdownnav-item>
+                <a class="m-dropdownNav__link" href="javascript:;" data-dropdownnav-label>Products</a>
+
+                <div class="m-dropdownNav__panel" data-dropdownnav-panel>
+                  <ul class="m-dropdownNav__subList">
+                    <li class="m-dropdownNav__item">
+                      <a class="m-dropdownNav__link" href="javascript:;">Hardware</a>
+                    </li>
+
+                    <li class="m-dropdownNav__item" data-dropdownnav-item>
+                      <span class="m-dropdownNav__label" data-dropdownnav-label>Software</span>
+
+                      <div class="m-dropdownNav__panel" data-dropdownnav-panel>
+                        <ul class="m-dropdownNav__subList">
+                          <li class="m-dropdownNav__item">
+                            <a class="m-dropdownNav__link" href="javascript:;">Desktop</a>
+                          </li>
+                          <li class="m-dropdownNav__item">
+                            <a class="m-dropdownNav__link" href="javascript:;">Mobile</a>
+                          </li>
+                        </ul>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+
+              <li class="m-dropdownNav__item">
+                <a class="m-dropdownNav__link" href="javascript:;">Contact</a>
+              </li>
+
+            </ul>
+          </nav>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+</body>
+
+</html>
