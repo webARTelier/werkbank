@@ -11,7 +11,9 @@
 // Animation is a pure CSS progressive enhancement: @starting-style + transition
 // on the top-layer properties (overlay/display via allow-discrete) animate the
 // open/close in browsers that support it, and older browsers simply show/hide
-// instantly. No JavaScript drives the animation.
+// instantly. No JavaScript drives the animation. Opening and closing carry
+// their own duration/easing — see the animation block for why that takes two
+// rules.
 //
 // The "m-dialog*" classes (BEM "m-" prefix) are used for styling only.
 // dialog.js does NOT hook onto them; it targets the <dialog> element (via
@@ -34,9 +36,17 @@
 .m-dialog {
 
   // Animation maps to the shared animation tokens
-  // (see _shared/scss/_foundations.scss).
+  // (see _shared/scss/_foundations.scss). Opening and closing are timed
+  // separately: --an-ease is an ease-OUT (fast start, slow settle), which is
+  // what an entrance wants — but reused for the exit it front-loads the fade
+  // so hard that the dialog is visually gone in the first quarter of the
+  // duration and the close reads as a snap. So the exit gets an accelerating
+  // curve (slow start, fast finish) over a shorter duration — the usual
+  // asymmetry for overlays: appear eagerly, leave briskly without lingering.
   --dialog-duration: var(--an-duration);
   --dialog-easing: var(--an-ease);
+  --dialog-duration-exit: calc(var(--dialog-duration) * 0.6);
+  --dialog-easing-exit: cubic-bezier(0.4, 0, 1, 1);
   --dialog-radius: var(--borderRadius);
 
   // Sizing
@@ -48,8 +58,12 @@
   --dialog-padding: var(--space-m);
   --dialog-gap: var(--space-s); // gap between header / body / footer
 
-  // The distance the panel travels while opening (subtle lift).
+  // The distance the panel travels while opening / closing (subtle lift). Two
+  // knobs because the two ends live in different rules: the enter offset is
+  // the @starting-style value the panel rises *from*, the exit offset the
+  // resting value it sinks back *to* (see the animation block below).
   --dialog-enter-offset: var(--space-s);
+  --dialog-exit-offset: var(--space-s);
 
   // Colors map to the shared semantic tokens
   // (see _shared/scss/_colors_semantic.scss).
@@ -72,24 +86,36 @@
   background-color: transparent;
 
   // ----- open/close animation (progressive enhancement) -----
-  // Closed resting state. When the dialog opens, [open] is set and the panel
-  // animates from the @starting-style values below to these.
+  // Closed resting state — and therefore also the *exit* target: removing
+  // [open] transitions the panel from the open values back to these. Which
+  // timing a transition uses is decided by the after-change style, i.e. by
+  // the state being animated *to*: closing lands here, so this rule carries
+  // the exit duration/easing and &[open] below the entrance one. A single
+  // shared transition declaration cannot express that — it would force both
+  // directions through the same curve (see the token comment above).
   opacity: 0;
-  transform: translateY(var(--dialog-enter-offset));
+  transform: translateY(var(--dialog-exit-offset));
 
   transition:
-    opacity var(--dialog-duration) var(--dialog-easing),
-    transform var(--dialog-duration) var(--dialog-easing),
+    opacity var(--dialog-duration-exit) var(--dialog-easing-exit),
+    transform var(--dialog-duration-exit) var(--dialog-easing-exit),
 
     // "overlay" + "display" are discrete top-layer properties: allow-discrete
     // keeps the element in the top layer (and displayed) until the fade-out
     // has finished, so the close can animate instead of snapping away.
-    overlay var(--dialog-duration) allow-discrete,
-    display var(--dialog-duration) allow-discrete;
+    overlay var(--dialog-duration-exit) allow-discrete,
+    display var(--dialog-duration-exit) allow-discrete;
 
   &[open] {
     opacity: 1;
     transform: translateY(0);
+
+    // Entrance timing — see the base rule above for why it lives here.
+    transition:
+      opacity var(--dialog-duration) var(--dialog-easing),
+      transform var(--dialog-duration) var(--dialog-easing),
+      overlay var(--dialog-duration) allow-discrete,
+      display var(--dialog-duration) allow-discrete;
   }
 
   // Entry starting point: the very first rendered frame after [open] appears.
@@ -102,22 +128,29 @@
     }
   }
 
-  // Backdrop (only present for a modal dialog opened via showModal()).
+  // Backdrop (only present for a modal dialog opened via showModal()). Same
+  // split as the panel: this rule is the exit, &[open]::backdrop the
+  // entrance.
   &::backdrop {
     opacity: 0;
-    
+
     background-color: var(--dialog-backdrop-color);
     transition:
-      opacity var(--dialog-duration) var(--dialog-easing),
-      overlay var(--dialog-duration) allow-discrete,
-      display var(--dialog-duration) allow-discrete;
-    
+      opacity var(--dialog-duration-exit) var(--dialog-easing-exit),
+      overlay var(--dialog-duration-exit) allow-discrete,
+      display var(--dialog-duration-exit) allow-discrete;
+
     // Progressive: modern engines support backdrop-filter here.
     backdrop-filter: blur(2px);
   }
 
   &[open]::backdrop {
     opacity: 1;
+
+    transition:
+      opacity var(--dialog-duration) var(--dialog-easing),
+      overlay var(--dialog-duration) allow-discrete,
+      display var(--dialog-duration) allow-discrete;
   }
 
   @starting-style {
@@ -258,7 +291,9 @@ body.is-scrollLocked {
 
 
 
-// Respect reduced motion: keep the open/close instant.
+// Respect reduced motion: keep the open/close instant. !important (rather
+// than zeroing the duration tokens) so it also beats the transition declared
+// on the higher-specificity [open] rules above.
 @media (prefers-reduced-motion: reduce) {
   .m-dialog,
   .m-dialog::backdrop {

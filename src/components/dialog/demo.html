@@ -45,6 +45,11 @@
               restoration all come from the browser. The module only wires the
               outside trigger, adds backdrop-click dismissal, locks body scroll
               and stops media on close.
+            - Opening and closing are animated by CSS alone, each with its own
+              duration/easing (an ease-out entrance would front-load the exit
+              into a snap). The close needs the Chromium-only "overlay"
+              property to stay in the top layer while fading — elsewhere it
+              closes instantly, which is the intended fallback.
 
           Accessibility
             - aria-labelledby names the dialog from its title; the open trigger
