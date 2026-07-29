@@ -6,6 +6,11 @@
 // Bundled via shared.scss into dist/css/shared.min.css.
 // -----------------------------------------------------------------------------
 
+@use "focus" as *;
+@use "mediaqueries" as *;
+
+
+
 :root {
   color-scheme: dark;
   --bg: #060816;
@@ -105,10 +110,26 @@ body {
 
 // -----------------------------------------------------------------------------
 // Gallery / overview (root index.html)
-// Extends the demo chrome with the component grid used on the landing page.
+// Extends the demo chrome with the component index used on the landing page.
 // Scoped under .gallery so the component demo pages keep the plain block .hero.
+//
+// The index is ONE board of category columns, not a stack of card sections.
+// With ~30 entries the card grid had two problems this layout answers:
+// stacked sections spent more height on separators, headings and notes than
+// on content, and each section's auto-fit grid ended on a different column,
+// so no vertical axis ran through the page. Here every category is a column
+// of one-line-per-component rows: the whole collection stays on a single
+// screen, and the column axes tie the categories back into one surface.
 // -----------------------------------------------------------------------------
 .gallery {
+
+  // The marker column and the row's outward bleed. Kept as custom properties
+  // because the group heading has to indent by exactly the marker column to
+  // align with the entry names below it.
+  --entryMarkerSize: 7px;
+  --entryMarkerGap: 8px;
+  --entryGutter: calc(var(--entryMarkerSize) + var(--entryMarkerGap));
+  --entryBleed: 8px;
 
   // overview hero puts the badge next to the heading
   .hero {
@@ -131,117 +152,170 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.08);
   }
 
-  // Category section: a headed group of cards. Every group but the first is
-  // separated by a hairline rule and generous space — clearly more than the
-  // gap between the cards inside it, so the grouping is read before the grid.
-  .group + .group {
-    margin-top: 40px;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    padding-top: 30px;
-  }
+  // The board. A fixed column count (rather than auto-fit) keeps the six
+  // categories in even rows — 3 × 2 on a wide screen, 2 × 3 mid-range — so no
+  // row ends with a ragged empty cell. The column gap is wider than the row
+  // gap: columns read as parallel lists, not as a table of cells.
+  .board {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-m) var(--space-l);
 
-  // The accent bar hangs into the shell's left padding, so the heading text
-  // itself stays flush with the card grid below it.
-  .group__title {
-    position: relative;
-    margin: 0 0 5px;
-    font-size: 1.15rem;
-    letter-spacing: -0.01em;
+    @include vp-up(medium) {
+      grid-template-columns: repeat(2, 1fr);
+    }
 
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0.2em;
-      bottom: 0.2em;
-      left: -14px;
-      border-radius: 999px;
-      width: 4px;
-      background: linear-gradient(180deg, var(--accent-2), var(--accent));
+    @include vp-up(large) {
+      grid-template-columns: repeat(3, 1fr);
     }
   }
 
-  .group__note {
-    margin: 0 0 16px;
-    max-width: 70ch;
-    font-size: 0.9rem;
-    line-height: 1.5;
+  // One category. The hairline sits on top of every group, and because grid
+  // cells in the same row start at the same block position, those rules line
+  // up across the board — the separator that used to tear the page apart now
+  // draws the board's horizontal structure.
+  //
+  // It is drawn as a background strip rather than a border because it carries
+  // a gradient: the accent lights up the rule where the heading starts and
+  // fades into the neutral hairline, which gives the category a bit more
+  // presence without adding another element or shouting in colour.
+  .board__group {
+    padding-top: var(--space-xs);
+    background-image: linear-gradient(90deg,
+        var(--accent-2) 0,
+        rgba(255, 255, 255, 0.1) 38%,
+        rgba(255, 255, 255, 0.1) 100%);
+    background-repeat: no-repeat;
+    background-size: 100% 1px;
+    background-position: 0 0;
+  }
+
+  // Heading and topic line are indented by the marker column so their text is
+  // flush with the entry names underneath.
+  .board__title {
+    margin: 0;
+    padding-inline-start: var(--entryGutter);
+    font-size: 0.86rem;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
+  .board__topic {
+    margin: 2px 0 0;
+    padding-inline-start: var(--entryGutter);
+    font-size: 0.78rem;
+    line-height: 1.4;
     color: var(--muted);
   }
 
-  .grid {
+  .board__list {
+    margin: var(--space-xs) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  // One component: marker column plus a two-line text column (name, then a
+  // short descriptor). Padding and negative margin cancel out, so the hover
+  // surface bleeds outward while the text stays on the heading's axis.
+  .entry {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 16px;
-  }
-
-  .card {
-    display: block;
-    padding: 18px 18px 16px;
-    border-radius: 18px;
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    text-decoration: none;
+    grid-template-columns: var(--entryMarkerSize) 1fr;
+    column-gap: var(--entryMarkerGap);
+    margin-inline: calc(var(--entryBleed) * -1);
+    padding: 5px var(--entryBleed);
+    border-radius: var(--borderRadius);
     color: inherit;
-    transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    text-decoration: none;
+    transition: background-color 150ms ease;
 
-    // Only a card that actually leads somewhere reacts to pointer/keyboard —
-    // a roadmap card (.card--planned) is a plain <div> with no demo to open.
-    &:is(a):hover,
-    &:is(a):focus-visible {
-      transform: translateY(-3px);
-      border-color: rgba(56, 189, 248, 0.45);
-      box-shadow: 0 16px 32px rgba(8, 15, 31, 0.35);
-      outline: none;
+    // Status marker, spanning both text lines and optically centred on the
+    // name's line box. Filled = shipped, hollow = proposed.
+    &::before {
+      content: '';
+      grid-column: 1;
+      grid-row: 1 / span 2;
+      align-self: start;
+      margin-block-start: 6px;
+      inline-size: var(--entryMarkerSize);
+      block-size: var(--entryMarkerSize);
+      border-radius: 50%;
+      background-color: var(--accent-2);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12);
     }
 
-    .name {
-      display: block;
-      font-weight: 600;
-      color: #f8fafc;
-      margin-bottom: 6px;
-    }
+    // Only an entry that leads somewhere reacts to pointer/keyboard — a
+    // roadmap entry (.entry--planned) is a plain <span> with no demo to open.
+    // The underline is the link affordance the dense row would otherwise
+    // lack; the ring comes from the shared mixin instead of being removed.
+    &:is(a) {
+      @include focus-ring(light);
 
-    // Block, so anything following it (the .arrow, a .tag) starts on its own
-    // line instead of trailing the last word of the description.
-    .meta {
-      display: block;
-      color: var(--muted);
-      font-size: 0.95rem;
-      line-height: 1.45;
-    }
+      &:hover,
+      &:focus-visible {
+        background-color: rgba(255, 255, 255, 0.055);
 
-    .arrow {
-      display: inline-block;
-      margin-top: 12px;
-      color: var(--accent-2);
-      font-weight: 600;
+        .entry__name {
+          text-decoration: underline;
+          text-decoration-color: var(--accent-2);
+          text-underline-offset: 2px;
+        }
+      }
     }
   }
 
-  // Roadmap entry: a proposed component that has no demo yet. Held back
-  // visually (dashed, dimmed) and non-interactive by markup — it stays a
-  // <div>, so there is neither a dead link nor an empty tab stop.
-  .card--planned {
-    border-style: dashed;
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.45), rgba(15, 23, 42, 0.6));
+  // Name line: the status label is pushed to the far end, so it never trails
+  // the name and the labels align down the column.
+  .entry__head {
+    grid-column: 2;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2xs);
+  }
 
-    .name {
+  .entry__name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--text);
+  }
+
+  .entry__note {
+    grid-column: 2;
+    font-size: 0.78rem;
+    line-height: 1.35;
+    color: var(--muted);
+  }
+
+  .entry__status {
+    flex-shrink: 0;
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #a78bfa;
+  }
+
+  // Roadmap entry: dimmed and marked by a hollow ring plus the "planned"
+  // label, and held back far enough that the shipped components in the same
+  // column are read first.
+  .entry--planned {
+    &::before {
+      background-color: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      box-shadow: none;
+    }
+
+    .entry__name {
+      font-weight: 500;
       color: #cbd5e1;
     }
-  }
 
-  .tag {
-    display: inline-block;
-    margin-top: 12px;
-    border-radius: 999px;
-    padding: 3px 10px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: #c4b5fd;
-    background-color: rgba(124, 58, 237, 0.18);
+    .entry__note {
+      color: #64748b;
+    }
   }
 }
 
