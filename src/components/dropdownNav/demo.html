@@ -507,7 +507,25 @@
               <link rel='stylesheet' href='../../../dist/css/shared.min.css'>
               <link rel='stylesheet' href='../../../dist/css/dropdownNav.min.css'>
               <script type='module' src='../../../dist/js/boot.min.js'></script>
-              <style>body { display: block; padding: 16px; min-height: 0; }</style>
+              <style>
+                /* The shared demo background is a pair of radial gradients
+                   sized to the body box. This body is only as tall as the
+                   nav, and a body background is painted across the whole
+                   canvas — which tiles those gradients down the frame. So
+                   this viewport takes the flat page colour instead, the
+                   same one the frame itself is painted in. */
+                /* place-items comes with the shared body rule for its grid
+                   centring. Current engines honour justify-items in block
+                   layout too, which would shrink the nav to its content
+                   and centre it — so it is reset along with display. */
+                body {
+                  display: block;
+                  place-items: normal;
+                  padding: 16px;
+                  min-height: 0;
+                  background: var(--color-bg);
+                }
+              </style>
             </head>
             <body>
               <nav class='m-dropdownNav' aria-label='Main' data-js-module='dropdownNav'>

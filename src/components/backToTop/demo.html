@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>backToTop – Demo</title>
+  <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
+  <link rel="stylesheet" href="../../../dist/css/backToTop.min.css" />
+  <script type="module" src="../../../dist/js/boot.min.js"></script>
+
+  <!-- for development only -->
+  <script type="module" src="../../../src/_shared/js/dev_pageInfo.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_a11yInspector.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_qrCode.js"></script>
+  <!-- end for development only -->
+
+  <!--
+      DEMO-ONLY STYLES
+      ----------------------------------------------------------------------
+      Everything below belongs to the consuming project, not to the
+      component: the smooth anchor scrolling, the scroll padding that keeps
+      the control off the keyboard focus, and the second control's corner.
+      The component's own look ships in backToTop.min.css.
+  -->
+
+  <style>
+    /* Smooth anchor scrolling is the project's CSS, not the module —
+       and it must stay behind a reduced-motion check. */
+    @media (prefers-reduced-motion: no-preference) {
+      html {
+        scroll-behavior: smooth;
+      }
+    }
+
+    /* Also the project's job: keep the fixed control off the keyboard
+       focus. A browser scrolls a focused element into view by the minimum
+       needed, parking it flush against the bottom edge — overlapping the
+       band the control occupies. Reserving that band moves it clear, which
+       settles WCAG 2.4.12 (partial coverage, AAA); 2.4.11 (AA) turns on
+       ENTIRE coverage and is a layout question instead. See the readme. */
+    html {
+      scroll-padding-block-end: calc(var(--backToTop-inset, 24px) + 3.5rem);
+    }
+
+    /* The second instance is moved to the opposite corner so both can be
+       watched at once. One control per page is the norm — and the corner
+       is the project's call, hence a utility class here rather than a
+       modifier of the component. */
+    .u-cornerInlineStart {
+      inset-inline: var(--space-m) auto;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <main class="shell">
+
+    <section id="pageTop" class="hero">
+      <a class="back" href="../../../index.html">← Overview</a>
+      <h1>backToTop</h1>
+      <p>Scroll-triggered control that jumps back to the top of the page.</p>
+    </section>
+
+    <section class="stage" aria-label="Live demo">
+
+      <!--
+          The jump back to the top needs no JavaScript: both controls on
+          this page are plain in-page anchor links, and the browser does
+          the scrolling. What CSS cannot express is WHEN such a control
+          should be on screen — so the module adds exactly that, as ONE
+          attribute on the control:
+            data-backtotop-hidden -> the page is scrolled less than the
+                                     threshold, so the control is hidden
+          The shipped stylesheet keys the hiding (visibility + opacity +
+          a short slide) and its transition off that attribute.
+
+          Wiring — two instances, two modes
+            - Bottom right, icon + label: data-js-module="backToTop" and
+              nothing else, so the threshold is the default ONE VIEWPORT
+              HEIGHT. Its href points at #pageTop, the hero section at
+              the top of this page: a fragment that RESOLVES also becomes
+              the sequential focus navigation starting point, so after
+              the jump the next Tab continues at the top of the page
+              instead of down here.
+            - Bottom left, icon only: data-backtotop-threshold="200"
+              makes it appear after 200px already, and
+              m-backToTop--iconOnly hides its label visually while
+              keeping it as the accessible name. Its href is "#top" —
+              the fragment the HTML spec resolves to the top of the
+              document without any target element.
+            - Each instance prepends its own zero-size, aria-hidden
+              sentinel <div> to <body> (inspect the DOM to see them). The
+              observer watches that sentinel inside a region as tall as
+              the threshold; while it is inside, the page has not been
+              scrolled far enough. No scroll listener, nothing measured
+              per frame.
+            - Both controls sit in a body-level <footer>, not inside the
+              panel above: .shell carries a backdrop-filter, and that
+              makes it the containing block for anything
+              position: fixed — inside it the controls would be anchored
+              to the panel and scroll away with the page. The same goes
+              for transform, filter, will-change and contain: paint. The
+              footer is the recommended spot for a second reason: it is
+              the contentinfo landmark, so the controls are not the
+              landmark-less body-level content that best-practice
+              checkers report.
+
+          Progressive enhancement
+            - Without JavaScript the attribute is never added: the
+              controls are simply always visible jump links — never dead
+              controls. Which also means they are visible for the moment
+              before the lazily loaded module takes over; the readme has
+              the `@media (scripting: enabled)` opt-out for projects that
+              prefer no flash. That rule keys off the module's second
+              attribute, data-backtotop-ready ("the module has taken
+              over"), which both controls carry here — inspect them
+              alongside data-backtotop-hidden while scrolling.
+
+          Accessibility
+            - Hiding uses visibility: hidden, so a hidden control is not
+              a tab stop and not in the accessibility tree: at the top of
+              this page, Tab goes from the "Overview" link straight into
+              the text, never into an invisible button.
+            - The hidden state excludes :focus-visible, so a control that
+              still holds focus is never hidden away under the user. The
+              two instances show both outcomes of an activation: on the
+              left one (href="#top") the focus stays on the control,
+              because the document top is no element that could take it —
+              it stays on screen until Tab moves on. On the right one
+              (href="#pageTop") the browser moves focus to the resolved
+              target instead, so the next Tab continues at the top of the
+              page and the control just fades out.
+
+          Try it
+            - Scroll down. After 200px the icon-only control fades in
+              bottom left; after a full screen its labelled sibling
+              follows bottom right. Scroll back up and both fade out
+              again — or use them, and watch them disappear behind
+              themselves.
+        -->
+
+      <p class="stage__intro">
+        Scroll this page. Two <strong>ordinary anchor links</strong> sit fixed
+        in the bottom corners, and both are <strong>hidden until the page has
+        been scrolled far enough</strong> to make them useful — the one thing
+        pure CSS cannot decide. The script adds it as a single attribute,
+        driven by one <code>IntersectionObserver</code> on a zero-size
+        sentinel at the top of the page: no scroll listener, nothing measured
+        per frame.
+      </p>
+
+      <h2>What the platform already does</h2>
+      <p>
+        Both controls are <code>&lt;a&gt;</code> elements with an in-page
+        <code>href</code>, so the jump itself is native: the browser scrolls,
+        it honours the <code>scroll-behavior: smooth</code> this demo page
+        sets behind a <code>prefers-reduced-motion</code> check, and it never
+        needed a click handler. The module deliberately refuses to enhance
+        anything else — a <code>&lt;button&gt;</code> would be a control that
+        does nothing without JavaScript, and a fragment pointing at a
+        missing id would scroll nowhere. Both cases are reported through the
+        reporter instead of being hidden behind a nice-looking pill.
+      </p>
+      <p>
+        The right-hand control shows the recommended wiring:
+        <code>href="#pageTop"</code> resolves to the hero section at the top
+        of this page. That matters for the keyboard. A fragment that resolves
+        to an element makes that element the <em>sequential focus navigation
+        starting point</em>, so the next <kbd>Tab</kbd> after the jump
+        continues at the top of the page — where the reader now is — instead
+        of at the control down here. The left-hand control uses plain
+        <code>href="#top"</code>, which the HTML specification resolves to
+        the top of the document without any target element at all: less
+        markup, no focus benefit.
+      </p>
+
+      <h2>What the script adds</h2>
+      <p>
+        Exactly one bit of information: <em>has the reader scrolled far
+        enough for this control to be worth showing?</em> There is no CSS
+        selector for it. Scroll-driven animations come close, but their
+        support is still uneven, and the traditional answer — a scroll
+        listener that reads the scroll offset on every frame — does
+        continuous work for a state that changes twice.
+      </p>
+      <p>
+        So the script borrows the sentinel pattern from
+        <code>stickyObserver</code> and <code>scrollSpy</code>: it prepends
+        an empty, zero-size, <code>aria-hidden</code>
+        <code>&lt;div&gt;</code> to <code>&lt;body&gt;</code> and gives one
+        <code>IntersectionObserver</code> a region grown upwards by the
+        threshold. The sentinel sits at scroll position 0 and travels up with
+        the page, so it leaves that region at precisely the moment the page
+        has been scrolled by the threshold —
+        <code>isIntersecting</code> <em>is</em> "not far enough yet". The
+        browser reports the two crossings; between them this page costs
+        nothing. Instant jumps are crossings as well, so the
+        <kbd>Home</kbd> key or another anchor link can never leave a stale
+        state behind.
+      </p>
+      <p>
+        The threshold defaults to one viewport height — "the reader has left
+        the first screen", whatever that screen happens to be. It is baked
+        into the observed region, so a resize rebuilds the observer once
+        (debounced), and only when the re-measured threshold actually
+        changed. Resize this window and the labelled control's trigger point
+        follows the new height; the icon-only one keeps its explicit 200px.
+      </p>
+
+      <h2>Where the state lives</h2>
+      <p>
+        Nowhere in the script's own memory: it toggles
+        <code>data-backtotop-hidden</code> on the control and stops there —
+        no inline styles, no animations, no ARIA. The stylesheet turns that
+        attribute into <code>opacity: 0</code>,
+        <code>visibility: hidden</code> and a short slide back into the
+        corner, with the transition and its
+        <code>prefers-reduced-motion</code> escape. Hiding with
+        <code>visibility</code> rather than opacity alone is the
+        accessibility-relevant half: a hidden control leaves the tab order
+        and the accessibility tree, so this page has no invisible tab stop
+        waiting in the corner while you read the top of it.
+      </p>
+      <p>
+        One exception is written into that rule:
+        <code>:not(:focus-visible)</code>. A control that still holds
+        keyboard focus is never hidden away under the user — and the two
+        instances here show both outcomes of an activation. <kbd>Tab</kbd> to
+        the <strong>left</strong> one and press <kbd>Enter</kbd>: the page
+        scrolls to the top, the attribute is written, and the pill stays on
+        screen, because <code>href="#top"</code> is the top of the document
+        and no element that could take the focus away from the link. One more
+        <kbd>Tab</kbd> and it fades out. Do the same with the
+        <strong>right</strong> one and the browser moves focus to the
+        resolved <code>#pageTop</code> section instead, so the control fades
+        out immediately and the next <kbd>Tab</kbd> lands on the “Overview”
+        link at the top of the page — which is the reason to prefer a
+        resolving fragment.
+      </p>
+      <p>
+        Everything above is a progressive enhancement in the strict sense: if
+        this page's JavaScript failed to load, the two controls would sit in
+        their corners permanently — still perfectly working jump links, just
+        without the "only when useful" part. That is also why they are
+        briefly visible right after a reload, before the lazily loaded module
+        takes over. The readme documents the opt-out for projects that would
+        rather start hidden; it keys off
+        <code>data-backtotop-ready</code>, the second attribute the module
+        writes, which means "the module has taken over" rather than any
+        state — the absence of <code>data-backtotop-hidden</code> could not
+        serve for it, meaning both “scrolled far enough” and “not
+        initialised yet”.
+      </p>
+      <p>
+        Print this page (or open the print preview) and both controls are
+        gone: they are <code>position: fixed</code> and permanently on
+        screen, so on paper they would sit on top of the text — and a jump
+        link means nothing there. That rule ships with the component.
+      </p>
+
+      <!-- Demo-only scroll room so the default threshold (one viewport
+           height) is comfortably reachable on tall viewports too -->
+      <div style="block-size: 120dvh;" aria-hidden="true"></div>
+
+      <h2>You are near the bottom</h2>
+      <p>
+        Both controls are on screen now. Use one of them, then scroll down
+        here again and use the other — and note that nothing about the page
+        moved: they are <code>position: fixed</code>, anchored to the
+        viewport corners via <code>--backToTop-inset</code>, and layered with
+        the shared <code>--zi-toTop</code> token. The only node the module
+        added to the page is a zero-size sentinel at the very top of
+        <code>&lt;body&gt;</code>, taken out of the flow by the shipped
+        stylesheet so it cannot occupy a grid slot of this centred layout.
+      </p>
+
+    </section>
+
+  </main>
+
+  <!-- The controls live in the page footer, NOT inside <main>: .shell has a
+       backdrop-filter, which would make it the containing block for a
+       position: fixed child (see the notes in the stage above). A body-level
+       footer is outside that subtree and, being the contentinfo landmark,
+       keeps the controls inside a landmark. -->
+  <footer>
+
+    <!-- Instance 1: default threshold (one viewport height), icon + label,
+         href resolving to a real element at the top of the page -->
+    <a class="m-backToTop" href="#pageTop" data-js-module="backToTop">
+      <svg class="m-backToTop__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M12 19V5" />
+        <path d="m5 12 7-7 7 7" />
+      </svg>
+      <span class="m-backToTop__label">Back to top</span>
+    </a>
+
+    <!-- Instance 2: appears after 200px already, label hidden visually (the
+         accessible name survives), moved to the opposite corner by demo CSS -->
+    <a class="m-backToTop m-backToTop--iconOnly u-cornerInlineStart" href="#top"
+       data-js-module="backToTop" data-backtotop-threshold="200">
+      <svg class="m-backToTop__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M12 19V5" />
+        <path d="m5 12 7-7 7 7" />
+      </svg>
+      <span class="m-backToTop__label">Back to top</span>
+    </a>
+
+  </footer>
+
+</body>
+</html>

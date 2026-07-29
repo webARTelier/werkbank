@@ -143,6 +143,13 @@ class ScrollSpy {
 
 
 
+  // Set by destroy(), read by the debounced rebuild: the resize watcher
+  // can already be queued when the host unmounts, and a debounced call
+  // cannot be cancelled from the outside.
+  destroyed = false;
+
+
+
   constructor(container, reporter) {
     this.container = container;
     this.reporter = reporter;
@@ -491,7 +498,15 @@ class ScrollSpy {
   // when neither the root's height nor the resolved offset actually
   // changed (e.g. a width-only resize, or the initial ResizeObserver
   // callback right after observing).
+  //
+  // The destroyed check is what keeps a teardown final: dropping the
+  // watcher cannot un-queue a debounce that is already waiting, so a
+  // resize shortly before the unmount would otherwise land here
+  // afterwards and observe() fresh observers onto the removed sentinel —
+  // ones nothing would ever disconnect again.
   rebuild = () => {
+    if (this.destroyed) return;
+
     const height = this.measureRootHeight();
     const offset = this.resolveOffset();
     if (height === this.rootHeight && offset === this.offset) return;
@@ -513,6 +528,7 @@ class ScrollSpy {
   // bail out early (no IntersectionObserver, bad root, no resolvable
   // links) before any of these exist.
   destroy = () => {
+    this.destroyed = true;
     this.lineObserver?.disconnect();
     this.endObserver?.disconnect();
     this.resizeObserver?.disconnect();

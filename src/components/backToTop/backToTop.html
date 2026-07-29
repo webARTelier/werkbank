@@ -1,0 +1,182 @@
+<!--
+  backToTop — copy-paste snippet
+  ============================================================================
+  Copy the block below into your own project.
+
+  1) In <head> (or before </body>): load the shared styles, this component's
+     styles and the boot script. boot.min.js lazily loads the backToTop
+     module as soon as it finds data-js-module="backToTop" in the DOM — you
+     do not import backToTop.js yourself. Adjust the paths to where you
+     serve /dist.
+
+       <link rel="stylesheet" href="/dist/css/shared.min.css" />
+       <link rel="stylesheet" href="/dist/css/backToTop.min.css" />
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+  2) Put the control at the END of the page: it is fixed-positioned, so its
+     position in the markup only decides where it sits in the reading and
+     tab order, and "back to top" belongs last. The end of your <footer>
+     keeps it inside a landmark (a direct child of <body> is outside every
+     landmark, which best-practice checkers report); either way, no
+     ancestor may have transform, filter, backdrop-filter, will-change or
+     contain: paint — each of those becomes the containing block for a
+     fixed element, and the control would scroll away with the page
+     instead of staying in the corner.
+
+     It must be an <a> with an in-page href:
+
+       - href="#top" jumps to the top of the document without any target
+         element (the HTML spec resolves the fragments "top" and "" to the
+         document top itself). Simple, and enough for the scroll.
+       - href="#<id>" pointing at an element at the top of the page is the
+         better choice for keyboard users: a fragment that resolves to an
+         element also makes that element the sequential focus navigation
+         starting point, so the next Tab continues at the top of the page
+         instead of at the control. Point it at whatever the top of your
+         page is — the skip-link target, the site header, the <h1>'s
+         wrapper. No tabindex needed. The browser scrolls that ELEMENT to
+         the top of the viewport, so keep the id at the very start of the
+         page (or give the target a scroll-margin-block-start) if the jump
+         should land at scroll position 0 exactly.
+       - The label carries the accessible name; the icon is decorative
+         (aria-hidden + focusable="false"). Add .m-backToTop--iconOnly to
+         hide the label VISUALLY while keeping that name.
+
+  3) Smooth scrolling is your project's CSS, not this module's — and it
+     belongs behind a reduced-motion check:
+
+       @media (prefers-reduced-motion: no-preference) {
+         html { scroll-behavior: smooth; }
+       }
+
+  4) Keep the control off the keyboard focus. It is fixed, and a browser
+     scrolls a focused element into view with the minimum amount needed —
+     flush against the bottom edge, overlapping the band the control sits
+     in. Reserve that band on the scroll container:
+
+       html {
+         /* control height + its inset; grow it if you restyle either */
+         scroll-padding-block-end: calc(var(--backToTop-inset, 24px) + 3.5rem);
+       }
+
+     Measured in an 800px viewport at the default inset: without it the
+     focused element ends at y 800 against a control spanning y 740-776, so
+     its upper strip is behind the control; with it the element lands at
+     y 688-720 and is clear. That removes PARTIAL coverage (WCAG 2.4.12,
+     AAA). It is not what satisfies 2.4.11 (AA), which fails only on
+     ENTIRE coverage — an element parked flush at the bottom edge always
+     pokes into the gap the inset leaves, and an element already visible
+     inside the band never triggers a scroll for the padding to act on.
+     For that case keep interactive content out of the control's corner.
+
+     Like the smooth scrolling above this is a page-level property, so the
+     component does not write it for you — it would silently overwrite
+     whatever your sticky header already put there.
+
+  Notes
+    - Progressive enhancement: the jump is the native anchor link, with or
+      without JavaScript. The script only adds the one thing CSS cannot
+      express — WHEN the control should be on screen: while the page is
+      scrolled less than the threshold it carries the attribute
+      data-backtotop-hidden, and the stylesheet hides it. Without JS the
+      attribute never appears and the control is simply always visible.
+      (A second attribute, data-backtotop-ready, marks that the module is
+      live; only the optional start-hidden rule below needs it.)
+    - That baseline also means the control IS briefly visible on a freshly
+      loaded page, until the lazily loaded module takes over. If you prefer
+      no flash over a control that survives a broken script, start it
+      hidden wherever scripting is on:
+
+        @media (scripting: enabled) {
+          .m-backToTop:not([data-backtotop-ready]) {
+            opacity: 0;
+            visibility: hidden;
+          }
+        }
+
+      data-backtotop-ready is the module's second attribute: set once with
+      the first state write, it only means "the module has taken over" —
+      which is what such a rule has to key off. Keying it off a missing
+      data-backtotop-hidden instead would hide the control exactly when it
+      should appear, since that absence means both "scrolled far enough"
+      and "not initialised yet".
+
+      Careful: with this in place a script that never runs (JS error, boot
+      not loaded) leaves the control invisible.
+    - The stylesheet drops the control in @media print: it is fixed and
+      permanently on screen, so it would otherwise be printed over the
+      content — and a jump link means nothing on paper.
+    - The script sets no inline styles and runs no animations — the
+      appear/disappear transition lives in the CSS and honours
+      prefers-reduced-motion. It writes no ARIA either: the control is a
+      plain link, and "scrolled far enough" is a purely visual fact.
+    - Hiding uses visibility: hidden, so the hidden control leaves the tab
+      order and the accessibility tree. Keep it that way if you restyle:
+      hiding with opacity alone leaves an invisible tab stop at the top of
+      the page. The hidden state also excludes :focus-visible, so a control
+      that still holds keyboard focus is never hidden away under the user
+      (which is what happens after activating an href="#top": the document
+      top is no element that could take the focus).
+    - The script prepends a zero-size, aria-hidden <div> to <body> as its
+      scroll trigger and the stylesheet takes it out of the flow. Keep that
+      rule if you replace the styles, and note the node is body's first
+      child (a `body > *:first-child` rule of yours would hit it).
+    - Below 575px the stylesheet drops the label by itself and keeps the
+      glyph, the same look as .m-backToTop--iconOnly. The control cannot
+      be dismissed, so its width is width the reader never gets back —
+      and a labelled pill eats 43-73% of the line in the 320px viewport a
+      400% zoom produces. The accessible name survives the collapse.
+    - Page-level by design: the sentinel lives in the page content and the
+      anchor jump scrolls the document, so a control for an inner
+      overflow: auto container is out of scope.
+    - A page too short to scroll past the threshold never shows the control
+      at all — there is nothing to come back from.
+    - One instance per page is the norm. Several can coexist (each owns its
+      sentinel and observer), but they would all be fixed to the same
+      corner unless you move them.
+    - Optional config (attribute on the control):
+        data-backtotop-threshold   px the page must be scrolled before the
+                                   control appears. Default: one viewport
+                                   height, re-measured on resize. Use 0 to
+                                   show it as soon as the page scrolls at
+                                   all
+-->
+
+
+
+<!-- Basic: the control is the module element, at the end of the page and
+     inside the footer landmark; the href points at the top of the
+     document. -->
+<footer>
+  …your footer content…
+
+  <a class="m-backToTop" href="#top" data-js-module="backToTop">
+    <svg class="m-backToTop__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <path d="M12 19V5" />
+      <path d="m5 12 7-7 7 7" />
+    </svg>
+    <span class="m-backToTop__label">Back to top</span>
+  </a>
+</footer>
+
+
+
+<!-- Recommended: the href resolves to a real element at the top of the page
+     — here the skip-link target at the start of <body>. A fragment that
+     resolves also moves the sequential focus navigation starting point, so
+     the next Tab continues at the top of the page, not at the control. -->
+<a id="pageTop" class="c-skipLink" href="#main">Skip to content</a>
+…page…
+<a class="m-backToTop" href="#pageTop" data-js-module="backToTop">
+  <!-- icon + label as in the basic example above -->
+</a>
+
+
+
+<!-- Icon-only, appearing earlier: the label is hidden visually but still
+     names the control, and the threshold is an explicit 400px instead of
+     one viewport height. -->
+<a class="m-backToTop m-backToTop--iconOnly" href="#top"
+   data-js-module="backToTop" data-backtotop-threshold="400">
+  <!-- icon + label as in the basic example above -->
+</a>
