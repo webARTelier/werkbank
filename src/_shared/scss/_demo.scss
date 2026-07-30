@@ -46,6 +46,17 @@ body {
 
 .shell {
   width: min(100%, 1100px);
+
+  // The shell is a grid item (see body), and a grid item starts with
+  // "min-width: auto" — an automatic minimum equal to its own min-content.
+  // That outranks the width above: any demo holding something that cannot
+  // get narrower than the page (a wide bar, a table, a long code line)
+  // made the shell grow past it and took the whole page with it, so the
+  // page became scrollable sideways. Pinning the minimum to zero lets the
+  // width rule stand and leaves the too-wide content to deal with its own
+  // overflow inside the panel, where it belongs.
+  min-width: 0;
+
   background: linear-gradient(145deg, rgba(15, 23, 42, 0.9), rgba(2, 8, 23, 0.95));
   border: 1px solid var(--border);
   box-shadow: var(--shadow);

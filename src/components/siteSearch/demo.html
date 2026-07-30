@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>siteSearch – Demo</title>
+  <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
+  <link rel="stylesheet" href="../../../dist/css/siteSearch.min.css" />
+  <script type="module" src="../../../dist/js/boot.min.js"></script>
+
+  <!-- for development only -->
+  <script type="module" src="../../../src/_shared/js/dev_pageInfo.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_a11yInspector.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_qrCode.js"></script>
+  <!-- end for development only -->
+
+  <!--
+      DEMO-ONLY STYLES
+      ----------------------------------------------------------------------
+      The site header the search sits in and the page rhythm. None of it is
+      part of the component — the toggle, the field and the expansion ship
+      in siteSearch.min.css.
+  -->
+
+  <style>
+    .demoExample {
+      margin-block-start: var(--space-xl);
+    }
+
+    .demoExample > h2 {
+      margin-block-end: var(--space-s);
+    }
+
+    /* A page header to put the search in. The search is the last item, so
+       the free space in the middle is what the field grows into — which is
+       the whole reason a real header anchors it at its inline-end.
+
+       "flex-wrap: wrap" is the one part of this that is not demo dressing:
+       the expanded field takes real space in the header, and where the line
+       has less room than that, the search has to be able to drop onto its
+       own line. Without it the header (and, if an ancestor may grow with it,
+       the page) is pushed wider for as long as the field is out — 253px of
+       sideways scrolling at a 320px viewport, measured. The alternative the
+       component used to take was to clip the field away instead, which is
+       worse: see the root rule in siteSearch.scss. */
+    .demoBar {
+      border: 1px solid var(--color-border);
+      border-radius: var(--borderRadius);
+      padding: var(--space-2xs) var(--space-s);
+
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-m);
+
+      background-color: var(--color-bg-surface);
+    }
+
+    .demoBar__brand {
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .demoBar__nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-s);
+
+      font-size: 0.9rem;
+    }
+
+    .demoBar__nav a {
+      color: var(--color-text-secondary);
+      text-decoration: none;
+    }
+
+    /* Pushes the search to the end of the bar. Together with the wrap above,
+       these are the two lines a consuming project has to write itself — the
+       component has no opinion about where in your header it sits, only that
+       the header can give the field its room. */
+    .demoBar .m-siteSearch {
+      margin-inline-start: auto;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <main class="shell">
+
+    <section class="hero">
+      <a class="back" href="../../../index.html">← Overview</a>
+      <h1>siteSearch</h1>
+      <p>Site search that expands out of a toggle — and an ordinary, working
+        search form in the page without JavaScript.</p>
+    </section>
+
+    <section class="stage" aria-label="Live demo">
+
+      <!--
+          One instance per element with data-js-module="siteSearch" — the
+          module is initialised on the <search> landmark itself.
+
+          Wiring
+            - The root is a <search>: the search landmark is what the
+              platform already has for this, so the component does not
+              invent one.
+            - Inside it, two children, and their order is the contract: the
+              toggle (data-sitesearch-toggle) immediately followed by the
+              form (data-sitesearch-form). The stylesheet reaches the
+              collapsed field from the toggle's aria-expanded through the
+              adjacent-sibling combinator, so nothing may come between them.
+            - The form is an ordinary GET form: a visually hidden <label
+              for>, the field (data-sitesearch-input) and a submit button.
+              These demo forms have no action, so they submit to this very
+              page — watch the ?q= appear in the address bar.
+
+          What the platform does
+            - <search> is the landmark, <form> builds the query string and
+              navigates, <input type="search"> brings the search key on a
+              mobile keyboard and a clear button in Chromium and WebKit,
+              <label for> names the field. The expansion is a plain CSS
+              transition in both directions: the element is rendered the
+              whole time, only its inline size changes — no top layer, no
+              @starting-style, nothing to time from script.
+
+          What the module adds
+            - The disclosure itself: aria-expanded on the toggle is the
+              single source of truth and the styling hook at once.
+            - The focus into the field on open, and back onto the toggle
+              before the field is hidden again — a collapsed form is
+              visibility: hidden, so a focus left inside it would be dropped
+              on <body>.
+            - Two kinds of dismissal. The toggle and Escape are the reader
+              asking, and always close. A press outside, or the focus
+              leaving, closes only while the field is empty: a typed query
+              is not swept out of sight by a click somewhere else.
+
+          Progressive enhancement
+            - The collapsed rendering starts at the aria-expanded only this
+              module writes, and the toggle is scoped to
+              data-sitesearch-ready, which it sets only once the field can
+              be expanded again. Until then (and in the last example, which
+              carries no data-js-module at all) the search form is simply in
+              the page: visible, focusable, submittable, no dead control.
+        -->
+
+      <p class="stage__intro">
+        <strong>The search is in the page, not in a widget.</strong> It is
+        authored as a complete <code>&lt;search&gt;</code> landmark with a real
+        GET form, and the module folds that form into the toggle next to it.
+        Without JavaScript — and for the moment before the lazily loaded chunk
+        arrives — the search bar simply sits in the header, which is the layout
+        a wide header would want anyway.
+      </p>
+
+
+      <!-- 1) The default: the field unrolls towards the inline-end -->
+      <div class="demoExample">
+        <h2>The default</h2>
+
+        <p class="stage__intro">
+          Press the magnifier and the field unrolls out of it. <kbd>Esc</kbd>
+          closes it again and puts the focus back on the toggle, and so does
+          pressing the toggle a second time. Click somewhere else on the page
+          while the field is <em>empty</em> and it closes too — but type
+          something first and it stays: nobody asked for it to close, so a
+          query is not swept out of sight by a click elsewhere. Submitting
+          reloads this page with a <code>?q=</code> in the address bar, because
+          the form is a plain GET and nothing here intercepts it.
+        </p>
+
+        <div class="demoBar">
+          <span class="demoBar__brand">Acme</span>
+
+          <nav class="demoBar__nav" aria-label="Demo">
+            <a href="#in-page-target">Products</a>
+            <a href="#in-page-target">Docs</a>
+            <a href="#in-page-target">Contact</a>
+          </nav>
+
+          <search class="m-siteSearch" data-js-module="siteSearch">
+
+            <button class="m-siteSearch__toggle" type="button" data-sitesearch-toggle>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-4.35-4.35" />
+              </svg>
+              <span class="m-siteSearch__toggleLabel">Search</span>
+            </button>
+
+            <form class="m-siteSearch__form" method="get" data-sitesearch-form>
+              <div class="m-siteSearch__field">
+                <label class="m-siteSearch__label" for="demoSearch-input">Search this site</label>
+                <input
+                  class="m-siteSearch__input"
+                  type="search"
+                  id="demoSearch-input"
+                  name="q"
+                  placeholder="Search…"
+                  data-sitesearch-input
+                >
+                <button class="m-siteSearch__submit" type="submit">Search</button>
+              </div>
+            </form>
+
+          </search>
+        </div>
+
+        <p class="stage__intro">
+          The toggle comes <em>before</em> the field in the markup, and stays
+          there in both variants: it is the control, the field is the region it
+          expands, so the tab order has to reach the control first. It is also
+          what lets the stylesheet pair the two with an adjacent-sibling
+          combinator instead of <code>:has()</code> — supported everywhere, so
+          a field can never be left standing open next to a toggle claiming it
+          is collapsed.
+        </p>
+      </div>
+
+
+      <!-- 2) The variant: the field unrolls towards the inline-start -->
+      <div class="demoExample">
+        <h2>Unrolling the other way (<code>data-sitesearch-side="start"</code>)</h2>
+
+        <p class="stage__intro">
+          The same component with the field growing towards the
+          inline-<em>start</em> of the toggle, which is what a header with the
+          toggle pinned at its far end wants: the search opens into the header
+          instead of pushing the toggle along. Style only — the script never
+          reads the attribute, the markup order is unchanged, and in a
+          right-to-left writing direction it mirrors on its own.
+        </p>
+
+        <div class="demoBar">
+          <span class="demoBar__brand">Acme</span>
+
+          <nav class="demoBar__nav" aria-label="Demo (inline-start variant)">
+            <a href="#in-page-target">Products</a>
+            <a href="#in-page-target">Docs</a>
+          </nav>
+
+          <search
+            class="m-siteSearch"
+            data-js-module="siteSearch"
+            data-sitesearch-side="start"
+          >
+
+            <button class="m-siteSearch__toggle" type="button" data-sitesearch-toggle>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-4.35-4.35" />
+              </svg>
+              <span class="m-siteSearch__toggleLabel">Search</span>
+            </button>
+
+            <form class="m-siteSearch__form" method="get" data-sitesearch-form>
+              <div class="m-siteSearch__field">
+                <label class="m-siteSearch__label" for="demoSearchStart-input">Search this site</label>
+                <input
+                  class="m-siteSearch__input"
+                  type="search"
+                  id="demoSearchStart-input"
+                  name="q"
+                  placeholder="Search…"
+                  data-sitesearch-input
+                >
+                <button class="m-siteSearch__submit" type="submit">Search</button>
+              </div>
+            </form>
+
+          </search>
+        </div>
+      </div>
+
+
+      <!-- 3) The base layer: what everyone gets before/without the module -->
+      <div class="demoExample">
+        <h2>Without JavaScript (the base layer)</h2>
+
+        <p class="stage__intro">
+          This search carries no <code>data-js-module</code>, so the module
+          never touches it — exactly what every visitor sees with JavaScript
+          off, and what everyone sees for the moment before the chunk has
+          loaded. The form is simply in the header: the field labelled and
+          focusable, the submit button working, a plain GET to the search page.
+          The toggle is not there at all, because a control that folds the
+          field away would have nothing to fold it back out with.
+        </p>
+
+        <div class="demoBar">
+          <span class="demoBar__brand">Acme</span>
+
+          <search class="m-siteSearch">
+
+            <button class="m-siteSearch__toggle" type="button" data-sitesearch-toggle>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-4.35-4.35" />
+              </svg>
+              <span class="m-siteSearch__toggleLabel">Search</span>
+            </button>
+
+            <form class="m-siteSearch__form" method="get" data-sitesearch-form>
+              <div class="m-siteSearch__field">
+                <label class="m-siteSearch__label" for="demoSearchBase-input">Search this site</label>
+                <input
+                  class="m-siteSearch__input"
+                  type="search"
+                  id="demoSearchBase-input"
+                  name="q"
+                  placeholder="Search…"
+                  data-sitesearch-input
+                >
+                <button class="m-siteSearch__submit" type="submit">Search</button>
+              </div>
+            </form>
+
+          </search>
+        </div>
+      </div>
+
+
+      <h2 id="in-page-target">The in-page target</h2>
+      <p>
+        The header links above point here — they are only there to give the
+        bars something to be a header for. Following one moves the focus out of
+        the component, which is one of the two incidental dismissals: it closes
+        an open field, but only while nothing has been typed into it.
+      </p>
+
+    </section>
+
+  </main>
+
+</body>
+
+</html>

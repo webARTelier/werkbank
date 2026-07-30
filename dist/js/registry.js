@@ -20,6 +20,7 @@ export const registry = {
   resolveLocale: () => import('./modules/resolveLocale.min.js'),
   scaleSVG: () => import('./modules/scaleSVG.min.js'),
   scrollSpy: () => import('./modules/scrollSpy.min.js'),
+  siteSearch: () => import('./modules/siteSearch.min.js'),
   stickyObserver: () => import('./modules/stickyObserver.min.js'),
   tabs: () => import('./modules/tabs.min.js'),
   video: () => import('./modules/video.min.js')

@@ -1,0 +1,141 @@
+<!--
+  siteSearch — copy-paste snippet
+  ============================================================================
+  Copy the block below into your own project.
+
+  1) In <head> (or before </body>): load the shared styles, this component's
+     styles and the boot script. boot.min.js lazily loads the siteSearch
+     module as soon as it finds data-js-module="siteSearch" in the DOM — you
+     do not import siteSearch.js yourself. Adjust the paths to where you
+     serve /dist.
+
+       <link rel="stylesheet" href="/dist/css/shared.min.css" />
+       <link rel="stylesheet" href="/dist/css/siteSearch.min.css" />
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+  2) Drop the markup below where the search belongs in the page — inside the
+     site header, typically, anchored at its inline-end (a
+     "margin-inline-start: auto" in a flex header does it) so the field grows
+     into the header instead of pushing everything along.
+
+     Give that flex header a "flex-wrap: wrap" as well. It is not cosmetic:
+     the expanded field takes real space, and where the line has less room
+     than the field needs, the search has to be able to drop onto its own
+     line — otherwise the header is pushed wider for as long as the field is
+     out, and where an ancestor may grow with it, the page scrolls sideways.
+
+  Wiring
+    - The root is a <search data-js-module="siteSearch">: the search landmark
+      is what the platform already has for exactly this, so the component
+      does not invent one. An engine that predates <search> (before autumn
+      2023) exposes the element as generic; add role="search" there — it is
+      allowed on <search>, being the role the element already implies.
+    - Inside it, two children and their order is the contract: the toggle
+      (data-sitesearch-toggle) immediately followed by the form
+      (data-sitesearch-form). The stylesheet reaches the collapsed field
+      from the toggle's aria-expanded through the adjacent-sibling
+      combinator, so nothing may come between them. Markup that breaks it is
+      reported and left alone — with the search form still in the page.
+    - The toggle is a real <button type="button">. It needs no id, no
+      aria-* and no href: the module adds aria-expanded and aria-controls
+      and keeps them in sync. What it does need is the text node inside it:
+      the magnifier is aria-hidden, so that (visually hidden) label is the
+      button's whole accessible name. Dropping it leaves a control announced
+      as nothing at all, which the module reports.
+    - The form is an ordinary GET form pointing at your search page, holding
+      a <label for> (visually hidden), the field itself
+      (data-sitesearch-input) and a submit button. It works without a line
+      of JavaScript.
+    - The field's id below is a placeholder. If a page carries more than one
+      search, give each one a unique id: <label for> is resolved
+      document-wide and the first match wins, so a second copy of this
+      snippet leaves its own field nameless while its label points at the
+      first one. The module reports it, but the pairing has to hold without
+      JavaScript, so the markup is where it is fixed.
+    - The field wrapper (m-siteSearch__field) is not decoration: it keeps
+      the control at full width while the form around it grows, so the
+      search bar is revealed in one piece instead of being squeezed into
+      shape. Keep it if you restyle.
+
+  Notes / Configuration
+    - Without JavaScript, or before the module has loaded, the search form is
+      simply in the page: visible, focusable, submittable — and the toggle is
+      hidden, because a control that folds a field away does nothing until
+      the script that operates it has arrived. Both halves hang off
+      data-sitesearch-ready, which the module sets only once the field can be
+      expanded again.
+    - data-sitesearch-side="start" (on the root, optional) unrolls the field
+      towards the inline-start of the toggle — for a toggle at the far end of
+      a header. Style only, and mirrored on its own in a right-to-left
+      writing direction. The DOM order stays as it is: the toggle keeps
+      coming before the region it controls, so the tab order reaches the
+      control first.
+    - The toggle keeps the same accessible name in both states ("Search"
+      here). aria-expanded is what tells the state; a control that renames
+      itself would take away the name a voice-control user just spoke.
+    - Two kinds of dismissal. Pressing the toggle again and Escape close the
+      field and hand the focus back to the toggle — that is the reader
+      asking. A press outside the component, or the focus leaving it, closes
+      it only while the field is empty: a query someone has typed is not
+      swept out of sight by a click somewhere else. Nothing is lost either
+      way; the value survives the collapse and comes back with the field.
+    - Escape is consumed while the field is open, so the native
+      clear-on-Escape of <input type="search"> does not fire there. The
+      type's own clear button (Chromium, WebKit) still does it. An Escape
+      that cancels an IME candidate list belongs to the composition and is
+      left alone — the field stays open and keeps what is being typed.
+    - Colors, spacing, sizing and animation are --siteSearch-* custom
+      properties on the root, all declared at the top of siteSearch.scss.
+      The expansion respects prefers-reduced-motion.
+    - The expanded field takes real space in the header — that is the point
+      of an inline expander rather than a popover. Anchor the component
+      where you want that space to come from, and let the header wrap (see
+      step 2): the component keeps the room the field needs instead of
+      clipping the field away, so a header that cannot wrap grows sideways
+      instead.
+    - Suggestions, recent searches and autocompletion are deliberately not
+      here: that is a combobox, a different widget with a different ARIA
+      pattern. This component owns the toggle, the field and its dismissal,
+      nothing else.
+-->
+
+
+
+<search class="m-siteSearch" data-js-module="siteSearch">
+
+  <!--
+    The toggle. Hidden by the stylesheet until the module has taken over,
+    so it can never be a control with nothing to do.
+
+    Magnifier icon: inlined from
+    src/_shared/media/img/icons/search.svg (the canonical source). It is
+    embedded rather than <img>-referenced so stroke="currentColor" inherits
+    the button colour (and its hover state). aria-hidden keeps it silent —
+    the visually hidden label names the control, and does so even if this
+    stylesheet never loads.
+  -->
+  <button class="m-siteSearch__toggle" type="button" data-sitesearch-toggle>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-4.35-4.35" />
+    </svg>
+    <span class="m-siteSearch__toggleLabel">Search</span>
+  </button>
+
+  <!-- The form. Must be the toggle's next element sibling. -->
+  <form class="m-siteSearch__form" action="/search" method="get" data-sitesearch-form>
+    <div class="m-siteSearch__field">
+      <label class="m-siteSearch__label" for="siteSearch-input">Search this site</label>
+      <input
+        class="m-siteSearch__input"
+        type="search"
+        id="siteSearch-input"
+        name="q"
+        placeholder="Search…"
+        data-sitesearch-input
+      >
+      <button class="m-siteSearch__submit" type="submit">Search</button>
+    </div>
+  </form>
+
+</search>

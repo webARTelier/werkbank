@@ -233,6 +233,12 @@ Boot (`_shared/js/boot.js`) lazily imports the module when it sees
 - **Focus ring is opt-in per element** via the `focus-ring()` mixin
   (`@use "focus" as *;`). Pick the tone by the element's own surface (the theme
   is dark → almost always `light`). See the focus-ring section in `CLAUDE.md`.
+- **Hiding a label visually** goes through the `visually-hidden` mixin
+  (`@use "visuallyHidden" as *;`) — never a local copy of the recipe. It is
+  for text that must keep naming a control whose glyph is `aria-hidden`
+  (`siteSearch`, `backToTop --iconOnly`, `offCanvasNav`'s icon-only burger),
+  not a way to hide something: that is `display`/`visibility`, which take the
+  element out of the accessibility tree too.
 - Animation/transition is a **pure CSS progressive enhancement**
   (`@starting-style`, `allow-discrete`); older engines just snap. Always add a
   `@media (prefers-reduced-motion: reduce)` block that makes it instant.
@@ -291,6 +297,8 @@ paragraphs, and several live examples exercising each mode of the component.
   `dev_qrCode`.
 - **SCSS tokens** (`_shared/scss/`): `_foundations` (space/animation/radius),
   `_colors_primitives` + `_colors_semantic`, `_focus` (mixin only),
+  `_visuallyHidden` (mixin only — `visually-hidden`, for the text node that
+  names an icon-only control),
   `_breakpoints` / `_mediaqueries`, `_functions`.
 - **Shared media** (`_shared/media/img/`): `icons/`, `system/`. Note: the build
   does **not** copy `media` into `dist`, so reference icons inline

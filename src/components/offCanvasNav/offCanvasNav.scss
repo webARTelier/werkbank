@@ -57,6 +57,7 @@
 
 @use "focus" as *;
 @use "mediaqueries" as *;
+@use "visuallyHidden" as *;
 
 
 
@@ -653,18 +654,7 @@
   padding: var(--offCanvasNavToggle-padding-block);
 
   .m-offCanvasNavToggle__label {
-    position: absolute;
-
-    margin: -1px;
-    border: 0;
-    padding: 0;
-    inline-size: 1px;
-    block-size: 1px;
-    overflow: hidden;
-
-    white-space: nowrap;
-
-    clip-path: inset(50%);
+    @include visually-hidden;
   }
 }
 

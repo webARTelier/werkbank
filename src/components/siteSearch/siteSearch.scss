@@ -1,0 +1,447 @@
+// =============================================================
+// siteSearch — search form expanding out of a toggle
+// =============================================================
+//
+// One piece of markup, two renderings — and the boundary between them is
+// what the component is about:
+//
+// 1. The flow rendering is what the <search> landmark is without this
+//    component's JavaScript: a toggle-less block holding a complete search
+//    form — labelled field, submit button, GET to the search page. It is
+//    the layout a header with room for a search bar would want anyway, and
+//    every visitor gets it before the lazily loaded chunk arrives.
+// 2. The collapsed rendering starts at the moment the toggle carries an
+//    aria-expanded, which only siteSearch.js writes. The toggle itself is
+//    scoped to "data-sitesearch-ready", set by the same script — so the
+//    field can never be folded away without the control that expands it,
+//    and the control can never appear without the script that operates it.
+//
+// The animation, both ways, is one transition on one box: the form. There
+// is no top layer, no @starting-style and nothing to time from script — the
+// element is rendered the whole time, only its inline size changes.
+//
+// Contract with the JS
+//   - "aria-expanded" on the toggle is the state, the whole state and the
+//     only state. The collapsed form is reached from it through the
+//     adjacent-sibling combinator, which is why the form has to be the
+//     toggle's next element sibling (dropdownNav pairs its panels the same
+//     way and for the same reason: unlike :has(), the combinator is
+//     supported everywhere, so a field can never be left standing open next
+//     to a toggle claiming it is collapsed).
+//   - "data-sitesearch-ready" on the root means "the module has taken
+//     over". Only one rule reads it: the one that reveals the toggle.
+//   - "data-sitesearch-side" is style-only; the script never reads it.
+//   - "data-sitesearch-toggle" / "-form" / "-input" are the script's hooks.
+//     Only the first two are styled from here, and only in the state rule
+//     that has to pair them; everything else goes through the classes.
+//   - No state class, no inline styles.
+//
+// The "m-siteSearch*" classes (BEM "m-" prefix) are used for styling only.
+// siteSearch.js does NOT hook onto them; it targets the root via
+// data-js-module="siteSearch" and the data-sitesearch-* attributes.
+// Restyle freely without touching the behaviour.
+
+@use "focus" as *;
+@use "visuallyHidden" as *;
+
+
+
+// -------------------------------------------------------------
+// Custom properties: the component's override surface, all of it,
+// in one place.
+//
+// They live on the component root rather than in :root, so they stay scoped
+// to the component and a single instance can be retuned in place.
+// -------------------------------------------------------------
+.m-siteSearch {
+
+  // Animation maps to the shared animation tokens
+  // (see _shared/scss/_foundations.scss). Half the shared duration: a field
+  // unrolling next to its own toggle is a small move, timed like the other
+  // small ones in this collection (popover, dropdownNav).
+  --siteSearch-duration: calc(var(--an-duration) / 2);
+  --siteSearch-easing: var(--an-ease);
+
+  // Sizing. The expanded field, capped against the viewport: 18rem is wider
+  // than a phone screen, and a header control that cannot fit its own
+  // viewport is worse than a short one.
+  --siteSearch-inline-size: min(18rem, 60vw);
+  --siteSearch-toggle-size: 2.25rem; // hit area of the toggle
+  --siteSearch-icon-size: 1.1rem; // the magnifier glyph inside it
+
+  // Spacing maps to the shared spacing scale
+  // (see _shared/scss/_foundations.scss).
+  --siteSearch-gap: var(--space-2xs); // between the toggle and the field
+  --siteSearch-input-padding: var(--space-2xs) var(--space-xs);
+  --siteSearch-submit-padding: var(--space-2xs) var(--space-s);
+
+  // The box the transition actually animates: the field plus the gap that
+  // separates it from the toggle. Deriving it is what lets the gap travel
+  // with the field instead of standing there next to a collapsed one —
+  // there is only ever one animated property (see the form rule).
+  --siteSearch-form-inline-size:
+    calc(var(--siteSearch-inline-size) + var(--siteSearch-gap));
+
+  // Where the focus ring of the controls *inside* the form sits. Inset,
+  // because the form is a clipping box by necessity — that is how the field
+  // is revealed — so an outset ring would be cut away at its edges. Same
+  // trade adaptiveScrollFade makes for its mask; the toggle, which sits
+  // outside the clip, keeps the normal outset ring.
+  --siteSearch-ring-offset: calc(-1 * var(--outlineOffset));
+
+  // Type
+  --siteSearch-font-size: 0.9375rem;
+
+  // Colors map to the shared semantic tokens
+  // (see _shared/scss/_colors_semantic.scss).
+  --siteSearch-text-color: var(--color-text);
+  --siteSearch-muted-color: var(--color-text-muted);
+  --siteSearch-border-color: var(--color-border);
+  --siteSearch-border-color-strong: var(--color-border-strong);
+  --siteSearch-bg-color: var(--color-bg-surface);
+  --siteSearch-bg-color-hover: var(--color-bg-overlay);
+  --siteSearch-accent-color: var(--color-accent);
+
+  // The hover *deepens* the accent instead of lightening it, which on a
+  // dark theme is the less obvious of the two directions and the only
+  // correct one here: the button carries white text at 5.7:1 on the plain
+  // accent, so mixing towards white eats the contrast (82% white-ward
+  // measures 4.13:1 — below AA, verified with axe-core), while mixing
+  // towards the page colour lifts it to about 7:1.
+  --siteSearch-accent-color-hover:
+    color-mix(in srgb, var(--color-accent) 85%, var(--c-blue-black));
+  --siteSearch-on-accent-color: var(--color-text-on-accent);
+  --siteSearch-radius: var(--borderRadius);
+}
+
+
+
+// -------------------------------------------------------------
+// The component root: the <search> landmark, holding the toggle
+// and the form.
+// -------------------------------------------------------------
+.m-siteSearch {
+
+  // No floor of its own, and that is the deliberate part: the
+  // "min-inline-size: auto" every flex item starts with already says the
+  // right thing in both states, because the automatic minimum is derived
+  // from the form's own inline size. Collapsed, that size is 0, so the
+  // minimum is the toggle alone and a tight header may squeeze the
+  // component down to it. Expanded, it is the whole field, so nothing can
+  // take the field away again while it is out. Measured on the demo header:
+  // 36px closed, 332px open, at every viewport.
+  //
+  // An explicit "min-inline-size: var(--siteSearch-toggle-size)" used to
+  // stand here and looks like the same sentence; it is not. It held the
+  // floor at the toggle in *both* states, so a header with less room than
+  // the field just clipped the field away: below ~520px viewport the search
+  // bar was a few pixels wide, and below ~400px pressing the toggle did
+  // nothing visible at all — while aria-expanded said "true" and the focus
+  // sat in a zero-width input. That is a control with no perceivable effect
+  // and an invisible focus (WCAG 1.4.10, 2.4.7), which is worse than the
+  // sideways scrolling it was meant to fix.
+  //
+  // So the space the field needs is taken from the header again — which
+  // means the header has to be able to give it: a flex header needs
+  // "flex-wrap: wrap" so the search can drop onto its own line instead of
+  // pushing the page wider (see the readme; the demo header does it in one
+  // line). Capping the field against the viewport is the other half —
+  // --siteSearch-inline-size is a min() against 60vw for exactly this, so
+  // the component never asks for more than the viewport has.
+
+  display: inline-flex;
+  align-items: center;
+
+  font-family: system-ui, sans-serif;
+  font-size: var(--siteSearch-font-size);
+}
+
+
+
+// The field unrolls towards the inline-start instead — the layout a header
+// wants when the toggle sits at its far end and the page is on the other
+// side. Style only: the DOM order is deliberately left alone, so the toggle
+// still comes before the region it controls and the tab order reaches the
+// control first.
+.m-siteSearch[data-sitesearch-side='start'] {
+  flex-direction: row-reverse;
+}
+
+
+
+// -------------------------------------------------------------
+// The toggle.
+// -------------------------------------------------------------
+.m-siteSearch__toggle {
+
+  // Page chrome on a dark surface -> the light (bright) ring. Outset, the
+  // normal way round: unlike the controls in the form, the toggle sits
+  // outside the clipping box.
+  @include focus-ring(light);
+
+  & {
+    cursor: pointer;
+
+    border: 1px solid var(--siteSearch-border-color);
+    border-radius: var(--siteSearch-radius);
+    padding: 0;
+    inline-size: var(--siteSearch-toggle-size);
+    block-size: var(--siteSearch-toggle-size);
+
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+
+    line-height: 1;
+
+    color: inherit;
+    background-color: transparent;
+    transition:
+      border-color var(--siteSearch-duration) var(--siteSearch-easing),
+      background-color var(--siteSearch-duration) var(--siteSearch-easing);
+  }
+
+  // The inline magnifier inherits the button's colour via
+  // stroke="currentColor".
+  svg {
+    inline-size: var(--siteSearch-icon-size);
+    block-size: var(--siteSearch-icon-size);
+  }
+
+  &:hover {
+    background-color: var(--siteSearch-bg-color-hover);
+  }
+
+  // Pressed: the field is out. aria-expanded is the state (see the header),
+  // so the open look needs no hook of its own — and because it is ARIA
+  // rather than decoration, the two can never disagree.
+  &[aria-expanded='true'] {
+    border-color: var(--siteSearch-border-color-strong);
+    background-color: var(--siteSearch-bg-color-hover);
+  }
+}
+
+
+
+// The toggle exists only for as long as there is a script to operate it.
+// Without the module the form is already in the page, so a control that
+// folds it away would be a control that does nothing — and one that folds
+// it away for good if the chunk never arrives.
+.m-siteSearch:not([data-sitesearch-ready]) .m-siteSearch__toggle {
+  display: none;
+}
+
+
+
+// The toggle's accessible name. A real text node rather than an aria-label,
+// because it still names the control if this stylesheet never arrives — and
+// the glyph next to it is aria-hidden, so it is the only name there is. The
+// field's label below is hidden for the same reason.
+.m-siteSearch__toggleLabel {
+  @include visually-hidden;
+}
+
+
+
+// -------------------------------------------------------------
+// The form: the box the animation moves.
+//
+// Everything inside it keeps its size (see the field below); the form is
+// the only thing that grows, and it clips whatever does not fit yet.
+// -------------------------------------------------------------
+.m-siteSearch__form {
+  inline-size: var(--siteSearch-form-inline-size);
+
+  // The safety valve, not the normal path. In an ordinary header the root
+  // now keeps the room the expanded field needs (see the root rule), so the
+  // form is never asked to shrink. Where a project *hard*-limits the
+  // component — a max-inline-size on the root, a fixed grid track — the
+  // form's own automatic minimum would be the rigid field inside it ("never
+  // shrink below your own content") and the component would overflow its
+  // box instead. This says it may give way, and the clipping box then
+  // simply clips a little more, which is what it is there for. Note what
+  // that costs when it happens: a clipped field is a field the reader
+  // cannot fully see, so cap --siteSearch-inline-size for such a header
+  // rather than letting it be clipped at every width.
+  min-inline-size: 0;
+
+  // "clip", not "hidden", and this one is load-bearing. The collapsed field
+  // is reachable overflow, so "hidden" would make the form a scroll
+  // container holding it — and the focus this module puts into the input on
+  // open would have the browser scroll that container to reveal it, which
+  // cancels the expansion pixel for pixel: the field is simply there, fully
+  // open, on the first frame. (offCanvasNav's panel learned the same thing
+  // the same way.) "clip" clips identically and creates no scroll
+  // container, so there is nothing to scroll.
+  overflow: clip;
+
+  display: flex;
+  justify-content: start;
+}
+
+
+.m-siteSearch[data-sitesearch-side='start'] .m-siteSearch__form {
+
+  // The field is anchored at the edge facing the toggle, so growing the
+  // form reveals it away from that edge instead of towards it.
+  justify-content: end;
+}
+
+
+// Collapsed. The state is aria-expanded on the toggle and the adjacent
+// sibling is what reaches the form from it — see the contract in the file
+// header for why the pairing is a combinator and not :has().
+//
+// visibility, not display: it takes the field out of the tab order and out
+// of the accessibility tree just as thoroughly, and it is the one of the
+// two that can be transitioned — going to hidden it flips at the *end* of
+// the collapse, so the field animates shut instead of vanishing halfway
+// through.
+//
+// Deliberately not scoped to data-sitesearch-ready, unlike the animation
+// below: this is the state the module writes first, and it has to land
+// before the transitions exist (see them for the whole story).
+[data-sitesearch-toggle][aria-expanded='false'] + [data-sitesearch-form] {
+  visibility: hidden;
+  inline-size: 0;
+}
+
+
+
+// ----- the animation -----
+//
+// Scoped to data-sitesearch-ready, and that is not decoration: the field is
+// expanded in the page until the module folds it away, so a transition that
+// already existed at that moment would have every page load open with the
+// search bar animating itself shut. The module writes the collapsed state
+// first, has the browser apply it while nothing is transitionable yet, and
+// only then flags itself ready — at which point these rules arrive with
+// nothing left to animate. The first fold is instant; every fold a reader
+// causes runs through here.
+//
+// Two rules, because the two directions do not transition the same set. A
+// transition takes its timing from the state it animates *to*, so this one
+// is the opening — and it deliberately leaves visibility out: at the start
+// of a transition a property still holds its old value, so a field
+// transitioning to visible is hidden on that first frame, and the focus the
+// module puts into it would land on nothing (an element that is not visible
+// cannot be focused). Opening therefore flips visibility at once.
+.m-siteSearch[data-sitesearch-ready] .m-siteSearch__form {
+  transition: inline-size var(--siteSearch-duration) var(--siteSearch-easing);
+}
+
+
+// The closing direction, and here visibility belongs in the list: it is
+// what holds the field on screen while it rolls up, instead of blanking it
+// on the first frame.
+.m-siteSearch[data-sitesearch-ready]
+[data-sitesearch-toggle][aria-expanded='false'] + [data-sitesearch-form] {
+  transition:
+    inline-size var(--siteSearch-duration) var(--siteSearch-easing),
+    visibility var(--siteSearch-duration) var(--siteSearch-easing);
+}
+
+
+
+// The field keeps its full width at every stage of the animation, so the
+// whole control is revealed in one piece instead of being squeezed out of
+// shape on the way. Its margin is the gap to the toggle and travels with it
+// — which is why the form is exactly one gap wider than the field.
+.m-siteSearch__field {
+  flex: none;
+
+  margin-inline-start: var(--siteSearch-gap);
+  inline-size: var(--siteSearch-inline-size);
+
+  display: flex;
+}
+
+
+.m-siteSearch[data-sitesearch-side='start'] .m-siteSearch__field {
+  margin-inline: 0 var(--siteSearch-gap);
+}
+
+
+
+.m-siteSearch__label {
+  @include visually-hidden;
+}
+
+
+
+.m-siteSearch__input {
+
+  // Inside the clipping form -> the ring is drawn inset (see the token).
+  @include focus-ring(light, var(--siteSearch-ring-offset));
+
+  & {
+    flex: 1 1 auto;
+
+    border: 1px solid var(--siteSearch-border-color);
+    border-inline-end: 0;
+    border-start-start-radius: var(--siteSearch-radius);
+    border-end-start-radius: var(--siteSearch-radius);
+    padding: var(--siteSearch-input-padding);
+    min-inline-size: 0;
+
+    font: inherit;
+
+    color: var(--siteSearch-text-color);
+    background-color: var(--siteSearch-bg-color);
+  }
+
+  &::placeholder {
+    color: var(--siteSearch-muted-color);
+  }
+}
+
+
+
+// The submit button carries visible text rather than a second magnifier:
+// the toggle already owns that glyph, and two of them next to each other
+// would say the same thing twice while naming two different controls.
+.m-siteSearch__submit {
+  @include focus-ring(light, var(--siteSearch-ring-offset));
+
+  & {
+    cursor: pointer;
+
+    flex: none;
+
+    border: 1px solid var(--siteSearch-accent-color);
+    border-start-end-radius: var(--siteSearch-radius);
+    border-end-end-radius: var(--siteSearch-radius);
+    padding: var(--siteSearch-submit-padding);
+
+    font: inherit;
+    font-weight: 600;
+    white-space: nowrap;
+
+    color: var(--siteSearch-on-accent-color);
+    background-color: var(--siteSearch-accent-color);
+    transition:
+      background-color var(--siteSearch-duration) var(--siteSearch-easing);
+  }
+
+  &:hover {
+    border-color: var(--siteSearch-accent-color-hover);
+    background-color: var(--siteSearch-accent-color-hover);
+  }
+}
+
+
+
+// -------------------------------------------------------------
+// Respect reduced motion: the field appears and disappears
+// instantly. !important (rather than zeroing the duration token)
+// so it also beats a transition a project declared itself.
+// -------------------------------------------------------------
+@media (prefers-reduced-motion: reduce) {
+
+  .m-siteSearch__toggle,
+  .m-siteSearch__form,
+  .m-siteSearch__submit {
+    transition-duration: 0.01ms !important;
+  }
+}

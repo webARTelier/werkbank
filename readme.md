@@ -89,6 +89,7 @@ components downloads two chunks — nothing else.
 | `popover`            | Anchor-positioned popover on the native Popover API.                |
 | `scaleSVG`           | Scales SVGs from their `viewBox`.                                   |
 | `scrollSpy`          | IntersectionObserver-driven TOC highlight via `aria-current`.       |
+| `siteSearch`         | Site search form expanding out of a toggle, on `<search>`.          |
 | `stickyObserver`     | Sentinel-driven "is stuck" class toggle for `position: sticky`.     |
 | `tabs`               | ARIA tabs enhancement of an anchor-link table of contents.          |
 | `video`              | CMS-maintainable video embeds with responsive sources.              |

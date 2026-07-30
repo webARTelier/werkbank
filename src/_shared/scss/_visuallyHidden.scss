@@ -1,0 +1,44 @@
+/* ==========================================================================
+   Core Settings: _visuallyHidden.scss
+   Takes an element out of the visual layout while leaving it in the
+   accessibility tree, exposed as a mixin.
+
+     @use "visuallyHidden" as *;
+     .m-thing__label { @include visually-hidden; }
+
+   This is for text that has to keep naming a control: the label of an
+   icon-only button whose glyph is aria-hidden, a <label> for a field whose
+   purpose the layout already makes obvious. It is NOT a way to hide
+   something — "display: none" and "visibility: hidden" do that, and they
+   take the element out of the accessibility tree with it.
+
+   Why a text node and not an aria-label: the name still reads when the
+   stylesheet never arrives, which is exactly the situation this mixin's
+   absence describes.
+
+   Why this recipe rather than a shorter one: the element stays rendered as a
+   1px box, because a zero-size or display: none box is dropped from the
+   accessibility tree; clip-path keeps that box from painting; overflow keeps
+   the text inside it; white-space stops a long string from being wrapped
+   into a tall column; and the margin/border/padding declarations neutralise
+   an inherited box model, the negative margin cancelling the pixel the box
+   itself still occupies where a project positions it statically.
+
+   Note: this partial emits no CSS on its own — it only defines the mixin, so
+   it is @used by the components that hide a label, not by shared.scss.
+   ========================================================================== */
+
+@mixin visually-hidden {
+  position: absolute;
+
+  margin: -1px;
+  border: 0;
+  padding: 0;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+
+  white-space: nowrap;
+
+  clip-path: inset(50%);
+}

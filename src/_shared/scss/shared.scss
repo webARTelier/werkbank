@@ -7,6 +7,7 @@
 @use "colors_semantic";
 @use "demo";
 
-// NB: "focus" is intentionally not @used here — it only defines the
-// focus-ring() mixin (no CSS output) and is @used by the components that
-// apply a focus ring (see _shared/scss/_focus.scss).
+// NB: "focus" and "visuallyHidden" are intentionally not @used here — they
+// only define mixins (no CSS output) and are @used by the components that
+// apply a focus ring or hide a label visually (see _shared/scss/_focus.scss,
+// _shared/scss/_visuallyHidden.scss).
