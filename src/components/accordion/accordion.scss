@@ -41,6 +41,9 @@
   --accordion-padding-inline: var(--space-s);
   --accordion-padding-block: var(--space-xs);
 
+  // Sizing
+  --accordion-arrow-size: 0.6rem; // side length of the chevron square
+
   // Colors map to the shared semantic tokens
   // (see _shared/scss/_colors_semantic.scss).
   --accordion-border-color: var(--color-border);
@@ -108,8 +111,8 @@
     border-right: 2px solid currentColor;
     border-bottom: 2px solid currentColor;
 
-    width: 0.6rem;
-    height: 0.6rem;
+    width: var(--accordion-arrow-size);
+    height: var(--accordion-arrow-size);
 
     content: "";
 

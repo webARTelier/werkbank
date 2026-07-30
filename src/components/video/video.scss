@@ -57,11 +57,20 @@
   // Half the shared animation duration: a hover response, not a scene
   // transition.
   --video-an-duration: calc(var(--an-duration) / 2);
+  --video-an-easing: var(--an-ease);
 
-  // Scrim behind the facade's no-JS fallback link so it stays readable on
-  // arbitrary poster footage. Deliberately anchored to plain black, not a
-  // theme surface token: it sits on user media, not on the page's own
-  // surfaces (the button SVGs bake the same darkened disc in).
+  // The facade's no-JS fallback link. Placement and box map to the shared
+  // spacing/radius tokens (_shared/scss/_foundations.scss); the colour to
+  // the shared semantic tokens.
+  --video-fallback-inset: var(--space-s);
+  --video-fallback-padding: var(--space-3xs) var(--space-xs);
+  --video-fallback-radius: var(--borderRadius);
+  --video-fallback-color: var(--color-text-light);
+
+  // Scrim behind that link so it stays readable on arbitrary poster
+  // footage. Deliberately anchored to plain black, not a theme surface
+  // token: it sits on user media, not on the page's own surfaces (the
+  // button SVGs bake the same darkened disc in).
   --video-scrim-color: rgba(0, 0, 0, 0.55);
 
   position: relative;
@@ -124,7 +133,7 @@
     background-color: transparent;
 
     opacity: var(--video-toggle-opacity);
-    transition: opacity var(--video-an-duration) var(--an-ease);
+    transition: opacity var(--video-an-duration) var(--video-an-easing);
   }
 
   &:hover,
@@ -173,15 +182,15 @@
 
   & {
     position: absolute;
-    inset-block-end: var(--space-s);
+    inset-block-end: var(--video-fallback-inset);
     inset-inline: 0;
 
     margin-inline: auto;
-    border-radius: var(--borderRadius);
-    padding: var(--space-3xs) var(--space-xs);
+    border-radius: var(--video-fallback-radius);
+    padding: var(--video-fallback-padding);
     inline-size: fit-content;
 
-    color: var(--color-text-light);
+    color: var(--video-fallback-color);
     background-color: var(--video-scrim-color);
   }
 }

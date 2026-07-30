@@ -90,6 +90,8 @@
   // level, never wider than the viewport — a drawer that covers the page
   // completely leaves nothing to tap back to.
   --offCanvasNav-inline-size: min(26rem, 88vw);
+  --offCanvasNav-close-size: 2rem; // hit area of the header's close button
+  --offCanvasNav-close-icon-size: 1.1rem; // the "×" glyph inside it
 
   // Spacing maps to the shared spacing scale
   // (see _shared/scss/_foundations.scss).
@@ -467,8 +469,8 @@
     border: 1px solid transparent;
     border-radius: var(--offCanvasNav-radius);
     padding: 0;
-    inline-size: 2rem;
-    block-size: 2rem;
+    inline-size: var(--offCanvasNav-close-size);
+    block-size: var(--offCanvasNav-close-size);
 
     display: inline-flex;
     align-items: center;
@@ -483,8 +485,8 @@
   // The inline "×" icon inherits the button's colour via
   // stroke="currentColor", so the hover recolour applies to the glyph too.
   svg {
-    inline-size: 1.1rem;
-    block-size: 1.1rem;
+    inline-size: var(--offCanvasNav-close-icon-size);
+    block-size: var(--offCanvasNav-close-icon-size);
   }
 
   &:hover {

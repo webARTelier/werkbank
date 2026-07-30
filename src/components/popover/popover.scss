@@ -61,6 +61,8 @@
 
   // Sizing
   --popover-max-inline: 22rem;
+  --popover-close-size: 1.75rem; // hit area of the header's close button
+  --popover-close-icon-size: 1rem; // the "×" glyph inside it
 
   // Spacing maps to the shared spacing scale
   // (see _shared/scss/_foundations.scss).
@@ -239,8 +241,8 @@
     align-items: center;
     justify-content: center;
 
-    width: 1.75rem;
-    height: 1.75rem;
+    width: var(--popover-close-size);
+    height: var(--popover-close-size);
     padding: 0;
     border: 1px solid transparent;
     border-radius: var(--popover-radius);
@@ -256,8 +258,8 @@
   // stroke="currentColor", so the hover recolour below applies to the
   // glyph too.
   svg {
-    width: 1rem;
-    height: 1rem;
+    width: var(--popover-close-icon-size);
+    height: var(--popover-close-icon-size);
   }
 
   &:hover {

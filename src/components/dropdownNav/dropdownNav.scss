@@ -72,14 +72,17 @@
   --dropdownNav-gap: var(--space-3xs); // gap between items
   --dropdownNav-padding-block: var(--space-2xs);
   --dropdownNav-padding-inline: var(--space-xs);
+  --dropdownNav-control-gap: var(--space-2xs); // gap label <-> chevron
   --dropdownNav-panel-padding: var(--space-s);
   --dropdownNav-panel-gap: var(--space-m); // gap between mega columns
   --dropdownNav-panel-indent: var(--space-s); // indent of a stacked submenu
+  --dropdownNav-panelTitle-gap: var(--space-2xs); // gap title <-> its links
 
   // Sizing
   --dropdownNav-panel-min-inline: 14rem;
   --dropdownNav-panel-max-inline: 26rem;
   --dropdownNav-panel-column-min: 12rem;
+  --dropdownNav-chevron-size: 0.5rem; // side length of the chevron square
 
   // How much vertical room the flyout leaves for whatever sits above it.
   // CSS cannot know where in the viewport the nav ends up, so this is the
@@ -146,7 +149,7 @@
 
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2xs);
+  gap: var(--dropdownNav-control-gap);
 
   font-family: inherit;
   font-size: 1rem;
@@ -194,7 +197,7 @@
 // Heading inside a (mega) panel, so a screen-reader user can navigate the
 // columns by heading instead of walking every link.
 .m-dropdownNav__panelTitle {
-  margin: 0 0 var(--space-2xs);
+  margin: 0 0 var(--dropdownNav-panelTitle-gap);
 
   font-size: 0.8125rem;
   font-weight: 600;
@@ -247,8 +250,8 @@
 
     border-inline-end: 2px solid currentColor;
     border-block-end: 2px solid currentColor;
-    inline-size: 0.5rem;
-    block-size: 0.5rem;
+    inline-size: var(--dropdownNav-chevron-size);
+    block-size: var(--dropdownNav-chevron-size);
 
     content: "";
 

@@ -31,16 +31,26 @@
   // (see _shared/scss/_foundations.scss).
   --countdown-gap: var(--space-s); // gap between the units
   --countdown-value-label-gap: var(--space-3xs); // gap value <-> label
+  --countdown-toggle-padding: var(--space-3xs) var(--space-xs);
+  --countdown-toggle-radius: var(--borderRadius);
 
   // Type scale
   --countdown-value-size: clamp(2.5rem, 8vw, 4.5rem);
   --countdown-label-size: var(--space-xs);
+  --countdown-toggle-size: var(--space-xs);
 
   // Colors map to the shared semantic tokens
   // (see _shared/scss/_colors_semantic.scss).
   --countdown-value-color: var(--color-text);
   --countdown-label-color: var(--color-text-muted);
   --countdown-separator-color: var(--color-text-muted);
+
+  // The toggle is understated at rest and only firms up on hover.
+  --countdown-toggle-color: var(--color-text-secondary);
+  --countdown-toggle-color-hover: var(--color-text);
+  --countdown-toggle-bg-color: var(--color-bg-overlay);
+  --countdown-toggle-border-color: var(--color-border);
+  --countdown-toggle-border-color-hover: var(--color-border-strong);
 
   display: flex;
   flex-direction: column;
@@ -130,22 +140,22 @@
   @include focus-ring(light);
 
   & {
-    padding: var(--space-3xs) var(--space-xs);
-    border: 1px solid var(--color-border);
-    border-radius: var(--borderRadius);
+    padding: var(--countdown-toggle-padding);
+    border: 1px solid var(--countdown-toggle-border-color);
+    border-radius: var(--countdown-toggle-radius);
 
-    background-color: var(--color-bg-overlay);
-    color: var(--color-text-secondary);
+    background-color: var(--countdown-toggle-bg-color);
+    color: var(--countdown-toggle-color);
     font: inherit;
-    font-size: var(--space-xs);
+    font-size: var(--countdown-toggle-size);
     line-height: 1.4;
 
     cursor: pointer;
   }
 
   &:hover {
-    color: var(--color-text);
-    border-color: var(--color-border-strong);
+    color: var(--countdown-toggle-color-hover);
+    border-color: var(--countdown-toggle-border-color-hover);
   }
 }
 

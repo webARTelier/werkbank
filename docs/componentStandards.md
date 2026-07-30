@@ -212,6 +212,20 @@ Boot (`_shared/js/boot.js`) lazily imports the module when it sees
   `_colors_semantic.scss`). Only a component that owns no root element to scope
   them to keeps them in `:root` — see the comments in `formValidation.scss` and
   `marquee.scss`.
+- **All of them in ONE block at the top of the partial**, right after the
+  `@use` lines — that block *is* the documented override surface, so a
+  maintainer reads every knob in one place instead of hunting the file.
+  Group them by kind with a short comment per group (Animation / Sizing /
+  Spacing / Type scale / Colors) and name what a value is for where the name
+  cannot say it (`--accordion-gap: var(--space-2xs); // gap between items`).
+  Consequently **no rule further down references a shared token directly** —
+  it goes through a `--<name>-*` property declared up there (`dateInputFormat`
+  and `offCanvasNav` are the reference files). Two things legitimately sit
+  outside that block: **per-variant overrides** of an already-declared
+  property (`.m-backToTop--iconOnly { --backToTop-padding: … }`) and
+  **state values the JS writes or a state rule flips** — those belong next
+  to the rule that explains them (`--scrollFade-top`,
+  `--offCanvasNav-panel-offset`, `--popover-fallback-*`).
 - **BEM with an `m-` prefix** for styling classes (`.m-dialog__panel`); the JS
   must **not** hook onto `m-*` classes — it targets the element via
   `data-js-module` and behavioural `data-*` attributes. State classes the JS

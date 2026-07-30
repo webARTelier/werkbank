@@ -52,11 +52,14 @@
   // Sizing
   --dialog-width: clamp(18rem, 90vw, 34rem);
   --dialog-max-block: min(85vh, 48rem);
+  --dialog-close-size: 2rem; // hit area of the header's close button
+  --dialog-close-icon-size: 1.1rem; // the "×" glyph inside it
 
   // Spacing maps to the shared spacing scale
   // (see _shared/scss/_foundations.scss).
   --dialog-padding: var(--space-m);
   --dialog-gap: var(--space-s); // gap between header / body / footer
+  --dialog-footer-gap: var(--space-2xs); // gap between the action buttons
 
   // The distance the panel travels while opening / closing (subtle lift). Two
   // knobs because the two ends live in different rules: the enter offset is
@@ -226,7 +229,7 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: var(--space-2xs);
+  gap: var(--dialog-footer-gap);
 }
 
 
@@ -245,8 +248,8 @@
     align-items: center;
     justify-content: center;
 
-    width: 2rem;
-    height: 2rem;
+    width: var(--dialog-close-size);
+    height: var(--dialog-close-size);
     padding: 0;
     border: 1px solid transparent;
     border-radius: var(--dialog-radius);
@@ -261,8 +264,8 @@
   // The inline "×" icon inherits the button's color via stroke="currentColor",
   // so the hover recolour below (and its transition) apply to the glyph too.
   svg {
-    width: 1.1rem;
-    height: 1.1rem;
+    width: var(--dialog-close-icon-size);
+    height: var(--dialog-close-icon-size);
   }
 
   &:hover {
