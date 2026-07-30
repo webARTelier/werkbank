@@ -226,6 +226,7 @@ class Tabs {
     }
 
     this.items.forEach(({ tab, panel, id }) => {
+
       // An <li> wrapping a tab is presentational inside a tablist.
       const listItem = tab.closest('li');
       if (listItem && this.list.contains(listItem)) {
@@ -297,6 +298,7 @@ class Tabs {
     if (!currentItem) return;
 
     if (e.key === ' ') {
+
       // A link has no native Space activation (Space scrolls the page),
       // so select explicitly.
       e.preventDefault();

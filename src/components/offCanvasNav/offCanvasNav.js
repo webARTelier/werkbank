@@ -532,6 +532,7 @@ class OffCanvasNav {
     try {
       id = decodeURIComponent(raw);
     } catch {
+
       // Not decodable, so the raw fragment is the best guess there is.
     }
 
@@ -614,6 +615,7 @@ class OffCanvasNav {
 
 
   startListening = () => {
+
     // The trigger lives outside the dialog by definition, so both of its
     // listeners sit on the document.
     document.addEventListener('click', this.handleTriggerClick);

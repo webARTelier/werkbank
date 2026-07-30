@@ -384,6 +384,7 @@ class Countdown {
   // mirrors the current countdown values into cloned marquee instances.
   // No-op in the common case where the countdown runs without a marquee.
   syncMirrors = ({ d, h, m, s }) => {
+
     // The marquee is detected via its module attribute, not a styling
     // class — classes stay free for the consuming project's CSS.
     const marquee = this.module.closest("[data-js-module~='marquee']");

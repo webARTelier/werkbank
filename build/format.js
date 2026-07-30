@@ -88,6 +88,7 @@ function urlToPath(url) {
     }
     if (url && url.href) return require("url").fileURLToPath(url.href)
   } catch {
+
     /* ignore */
   }
   return typeof url === "string" ? url : null

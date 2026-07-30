@@ -143,6 +143,12 @@ Boot (`_shared/js/boot.js`) lazily imports the module when it sees
   apostrophe). Every statement ends with a semicolon. Constants use camelCase
   like any other binding (no `UPPER_SNAKE_CASE`); avoid `else` — return early
   with guard clauses instead (see the code-style-guide skill).
+- **One blank line before a leading comment inside a block.** When a block
+  opens with a comment, a blank line separates it from the opening line —
+  in every block (function/method/class body, `if` branch, loop, `switch` case,
+  `try`/`catch`, callback, object literal) and without exception, including a
+  block whose only content is that comment. Same rule as in SCSS — see the
+  code-style-guide skill (JavaScript › *Comments*).
 - Top of file: a **block header comment** (`/** … */`) that states, in prose:
   1. what the component does and *why it is needed* (the gap it closes);
   2. **what the platform already does** so the script does not reimplement it;

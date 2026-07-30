@@ -29,6 +29,7 @@ function outNameFor(entry) {
 function makeLogger() {
   return {
     warn(message, options) {
+
       // Suppress legacy-js-api noise defensively; keep all other warnings full.
       if (options && options.deprecation && options.deprecationType &&
           options.deprecationType.id === "legacy-js-api") {

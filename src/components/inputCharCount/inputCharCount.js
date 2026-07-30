@@ -248,6 +248,7 @@ class InputCharCount {
 
 
   handleInput = () => {
+
     // Visible feedback is instant; the spoken announcement is debounced so a
     // screen reader is not interrupted on every keystroke.
     this.renderVisible();

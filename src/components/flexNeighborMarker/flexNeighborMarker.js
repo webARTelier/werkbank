@@ -159,6 +159,7 @@ class FlexNeighborMarker {
       const row = rows.find((candidate) => Math.abs(candidate.top - top) <= this.tolerance);
 
       if (row) {
+
         // Keep a running average of the row's top so accumulated
         // sub-pixel drift across a wide row cannot push a later
         // item past the tolerance window.

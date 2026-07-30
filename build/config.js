@@ -23,6 +23,7 @@ module.exports = {
   },
 
   scss: {
+
     // Non-partial entries compiled to dist/css/<name>.min.css.
     // Vendor files keep the .min suffix too (e.g. vendor/foo.scss -> foo.min.css).
     entries: [
@@ -56,6 +57,7 @@ module.exports = {
   },
 
   js: {
+
     // Rollup input map: output-name -> source file.
     // Component modules + shared helpers that the registry loads on demand.
     // "boot" is the page bootstrapper and lands at dist/js/boot.min.js;
@@ -105,6 +107,7 @@ module.exports = {
   },
 
   registry: {
+
     // Written to dist/js/registry.js, generated from the files in dist/js/modules.
     outFile: p("dist", "js", "registry.js"),
     modulesDir: p("dist", "js", "modules"),

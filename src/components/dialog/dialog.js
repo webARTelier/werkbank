@@ -367,6 +367,7 @@ class Dialog {
 
 
   close = () => {
+
     // Funnels through the native "close" event, so handleClose does the
     // teardown regardless of how the dialog was closed.
     if (this.dialog.open) this.dialog.close();

@@ -333,6 +333,7 @@ class FormValidation {
 
 
   setup = () => {
+
     // Take over the messaging from JS: suppress the native bubbles so we can
     // show persistent inline messages instead. Set only now, so a no-JS page
     // keeps the browser's own validation (progressive enhancement — see file

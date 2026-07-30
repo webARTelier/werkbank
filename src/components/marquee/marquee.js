@@ -573,6 +573,7 @@ class Marquee {
 
 
   handleFocusOut = (event) => {
+
     // Focus moving between elements inside the track is not a reason to
     // resume.
     if (event.relatedTarget && this.container.contains(event.relatedTarget)) return;

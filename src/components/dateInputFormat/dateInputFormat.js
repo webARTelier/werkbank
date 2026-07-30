@@ -264,6 +264,7 @@ class DateInputFormat {
 
 
   enhance = () => {
+
     // Touch-keyboard hint — never clobber an author-set inputmode.
     if (!this.input.hasAttribute('inputmode')) {
       this.input.setAttribute('inputmode', this.config.inputMode);
@@ -304,6 +305,7 @@ class DateInputFormat {
 
 
   handleInput = (event) => {
+
     // Let IME composition finish before we rewrite the value; normalize() on
     // blur (and the next input event) tidies up afterwards.
     if (event.isComposing) return;

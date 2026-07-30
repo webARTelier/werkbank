@@ -404,6 +404,7 @@ class DropdownNav {
     const toggle = this.createToggle(panel.id, isSplit);
 
     if (isSplit) {
+
       // The link keeps its own job (go to the landing page); the toggle is
       // an extra control right after it, so it ends up between label and
       // panel — exactly where the stylesheet expects it.
@@ -412,6 +413,7 @@ class DropdownNav {
     }
 
     if (!isSplit) {
+
       // An inert label becomes the button's content instead of being
       // replaced by it: the author's element (with its classes, ids and
       // any other markup) survives, and its text is the button's
@@ -664,6 +666,7 @@ class DropdownNav {
     const isRtl = window.getComputedStyle(this.root).direction === 'rtl';
 
     this.records.forEach(({ item, panel }) => {
+
       // A mega panel spans the nav, so there is no other side to move it
       // to — flipping it would only break its layout.
       if (item.hasAttribute(megaAttr)) return;

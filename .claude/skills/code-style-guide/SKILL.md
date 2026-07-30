@@ -81,6 +81,8 @@ is stated as an actionable instruction; ✅ / ❌ mark do / don't.
 - **Wrap comment *text* at 78 characters** per line so it never wraps awkwardly
   in a narrow editor pane. Applies to JS block/line comments, SCSS comments and
   HTML comment banners. The code itself is **not** hard-wrapped.
+- **One blank line before a leading comment inside a block** — the same rule in
+  both languages: see JavaScript › *Comments* and SASS/CSS › *Comments*.
 
 ### Whitespace
 - **One** blank line to separate block elements where it improves readability.
@@ -179,6 +181,49 @@ List attributes in this sequence:
   escaping (e.g. a string that itself contains an apostrophe). Use **template
   literals** for interpolation, not string concatenation.
 - Terminate statements with a **semicolon**.
+
+### Comments
+- **One blank line before a leading comment inside a block.** When a block opens
+  with a comment, separate it from the opening line with a blank line, so the
+  comment reads as its own unit instead of sticking to the `function` / `if` /
+  `catch` line. Mirrors SASS/CSS › *Comments*.
+
+```js
+// ❌ comment glued to the opening line
+handleInput = (event) => {
+  // Let IME composition finish before we rewrite the value.
+  if (event.isComposing) return;
+};
+
+// ✅ blank line between the opening line and the leading comment
+handleInput = (event) => {
+
+  // Let IME composition finish before we rewrite the value.
+  if (event.isComposing) return;
+};
+```
+
+- Applies to **every** block that opens with a comment: function, method and
+  class bodies, `if` / `else if` branches, loops, `switch` cases, `try` /
+  `catch` / `finally`, callback bodies and object / array literals.
+- **No exception for a comment-only block.** A block whose entire content is
+  the comment — an intentionally empty `catch`, a deliberate no-op branch —
+  keeps the blank line as well, so the shape stays uniform and adding code
+  later changes nothing.
+
+```js
+try {
+  id = decodeURIComponent(raw);
+} catch {
+
+  // Not decodable, so the raw fragment is the best guess there is.
+}
+```
+
+- A comment that sits *between* statements needs no extra line: it belongs to
+  the group it introduces and rides on that group's blank line.
+- The file-level block header (`/** … */`) is not inside a block and is
+  unaffected.
 
 ### Control flow
 - **Do not use `else`.** Return early with guard clauses and let the happy
@@ -329,7 +374,8 @@ Prefix every class by its role:
 - **One blank line before a leading comment inside a block.** When a
   declaration block opens with a comment, separate it from the opening brace
   with a blank line, so the comment reads as its own unit instead of sticking
-  to the selector line.
+  to the selector line. The same rule holds in JS (see JavaScript ›
+  *Comments*).
 
 ```scss
 // ❌ comment glued to the selector line
