@@ -1,0 +1,701 @@
+// =============================================================
+// offCanvasNav — burger menu / off-canvas drawer on <dialog>
+// =============================================================
+//
+// One piece of markup, two renderings — and the boundary between them is the
+// whole point of the component:
+//
+// 1. The flow rendering styles the <dialog> as what it is without this
+//    component's JavaScript: a plain block in the page holding the
+//    navigation. Every link is visible and reachable. It is *also* the
+//    rendering above the navigation breakpoint, where the page has room for
+//    its full navigation and the burger is gone — so the navigation never
+//    has to be authored (or maintained) twice.
+// 2. The drawer rendering is scoped to "data-offcanvasnav-ready", which
+//    offCanvasNav.js sets on the dialog only once it can actually be opened.
+//    The navigation can therefore never be collapsed into a drawer without a
+//    control that opens it again.
+//
+// Two blocks, one stylesheet
+//   The drawer is "m-offCanvasNav", the burger is "m-offCanvasNavToggle".
+//   They are separate blocks because the burger is a page control that lives
+//   *outside* the dialog — usually in the site header, and there may be more
+//   than one of them — so it can never be an element of the drawer it opens.
+//   They ship together because neither is any use without the other.
+//
+// Contract with the JS
+//   - offCanvasNav.js sets "data-offcanvasnav-ready" on the <dialog> and on
+//     every trigger it has wired up. Everything that hides the navigation
+//     hangs off that attribute.
+//   - The open state is the native "[open]" attribute. The *exit* is
+//     "data-offcanvasnav-closing", set by the script while the drawer is
+//     still open but already on its way out — see the exit block below for
+//     why the closing animation cannot be left to the dialog's own removal.
+//     No state class, no inline styles.
+//   - "data-offcanvasnav-open" on a trigger means "the drawer is open". It is
+//     purely presentational — it exists so the burger can morph into a cross
+//     — and carries no meaning for assistive tech (that is aria-haspopup /
+//     aria-controls on the trigger).
+//   - "data-offcanvasnav-always" is read by both sides: here it keeps the
+//     drawer rendering above the navigation breakpoint, and the script mirrors
+//     it from the dialog onto the trigger so the burger survives up there too.
+//     The script is the only place that knows which trigger belongs to which
+//     drawer, so the stylesheet could not pair them by itself.
+//   - "data-offcanvasnav-toggle" is the script's trigger hook and is read
+//     here for one rule only: hiding the control above the navigation
+//     breakpoint, where there is no drawer to open. That rule deliberately
+//     does not go through the styling class — see it further down.
+//   - "data-offcanvasnav-side" is style-only; the script never reads it.
+//   - "data-offcanvasnav-panel" is the script's handle on the panel and is
+//     never styled from here — the panel is styled by its class, like
+//     everything else.
+//
+// The "m-offCanvasNav*" classes (BEM "m-" prefix) are used for styling only.
+// offCanvasNav.js does NOT hook onto them; it targets the <dialog> via
+// data-js-module="offCanvasNav" and the data-offcanvasnav-* attributes.
+// Restyle freely without touching the behaviour.
+
+@use "focus" as *;
+@use "mediaqueries" as *;
+
+
+
+// -------------------------------------------------------------
+// Custom properties: the component's override surface, all of it,
+// in one place.
+//
+// They live on the two component roots rather than in :root, so they stay
+// scoped to the component and a single instance can be retuned in place.
+// The burger is a root of its own (see the header) and therefore carries
+// its own set — it is outside the drawer and inherits nothing from it.
+//
+// Only the declarations live here; what the two roots actually look like
+// follows further down, after the mixins the drawer is built from.
+// -------------------------------------------------------------
+.m-offCanvasNav {
+
+  // Animation maps to the shared animation tokens
+  // (see _shared/scss/_foundations.scss). Opening and closing are timed
+  // separately: --an-ease is an ease-OUT (fast start, slow settle), which is
+  // what an entrance wants — reused for the exit it front-loads the movement
+  // so hard that the drawer reads as a snap. So the exit gets an
+  // accelerating curve over a shorter duration: appear eagerly, leave
+  // briskly without lingering over the page.
+  --offCanvasNav-duration: var(--an-duration);
+  --offCanvasNav-easing: var(--an-ease);
+  --offCanvasNav-duration-exit: calc(var(--offCanvasNav-duration) * 0.6);
+  --offCanvasNav-easing-exit: cubic-bezier(0.4, 0, 1, 1);
+
+  // Sizing. Wide enough for a stacked navigation with room for a nested
+  // level, never wider than the viewport — a drawer that covers the page
+  // completely leaves nothing to tap back to.
+  --offCanvasNav-inline-size: min(26rem, 88vw);
+
+  // Spacing maps to the shared spacing scale
+  // (see _shared/scss/_foundations.scss).
+  --offCanvasNav-padding: var(--space-s);
+  --offCanvasNav-gap: var(--space-s); // gap between header and body
+
+  // How much room the focus ring of the navigation inside the drawer needs:
+  // the 2px outline of focus-ring() plus its offset. Read by the scrolling
+  // drawer body, which would otherwise clip it — see the body rule for the
+  // whole story. Derived rather than hard-coded so a project that retunes
+  // --outlineOffset does not have to remember this too.
+  --offCanvasNav-ringSpace: calc(2px + var(--outlineOffset));
+
+  // Colors map to the shared semantic tokens
+  // (see _shared/scss/_colors_semantic.scss).
+  --offCanvasNav-text-color: var(--color-text);
+  --offCanvasNav-muted-color: var(--color-text-muted);
+  --offCanvasNav-border-color: var(--color-border);
+  --offCanvasNav-bg-color: var(--color-bg-elevated);
+  --offCanvasNav-backdrop-color:
+    color-mix(in srgb, var(--c-blue-black) 70%, transparent);
+  --offCanvasNav-shadow: 0 24px 60px var(--color-shadow);
+  --offCanvasNav-radius: var(--borderRadius);
+}
+
+
+
+.m-offCanvasNavToggle {
+
+  // Half the shared duration: three bars folding into a cross is a small
+  // move next to the drawer itself, and it has to be over by the time the
+  // panel has arrived.
+  --offCanvasNavToggle-duration: calc(var(--an-duration) / 2);
+  --offCanvasNavToggle-easing: var(--an-ease);
+
+  // The burger glyph. The gap is what the outer bars travel when they fold
+  // into the cross, so bar height and gap are read together.
+  --offCanvasNavToggle-bar-inline: 1.125rem;
+  --offCanvasNavToggle-bar-block: 2px;
+  --offCanvasNavToggle-bar-gap: 6px;
+
+  // Spacing maps to the shared spacing scale
+  // (see _shared/scss/_foundations.scss).
+  --offCanvasNavToggle-padding-block: var(--space-2xs);
+  --offCanvasNavToggle-padding-inline: var(--space-xs);
+  --offCanvasNavToggle-gap: var(--space-2xs); // gap between glyph and label
+
+  // Colors map to the shared semantic tokens
+  // (see _shared/scss/_colors_semantic.scss).
+  --offCanvasNavToggle-border-color: var(--color-border);
+  --offCanvasNavToggle-bg-color-hover: var(--color-bg-overlay);
+  --offCanvasNavToggle-radius: var(--borderRadius);
+}
+
+
+
+// -------------------------------------------------------------
+// The two renderings, as mixins: the drawer one is needed twice
+// (below the navigation breakpoint, and at every width for a
+// drawer carrying data-offcanvasnav-always), and emitting it
+// from one place is what keeps those two in step.
+// -------------------------------------------------------------
+
+// The navigation as a block of the page. No JavaScript needed, nothing
+// hidden — and the layout the wide viewport gets as well.
+@mixin flowRendering {
+
+  // Beats the UA's "dialog:not([open]) { display: none }": without the
+  // script (or above the breakpoint) the dialog is not a dialog at all.
+  display: block;
+  position: static;
+  inset: auto;
+
+  margin: 0;
+  border: 0;
+  padding: 0;
+  inline-size: auto;
+  max-inline-size: none;
+  block-size: auto;
+  max-block-size: none;
+  overflow: visible;
+
+  // The UA paints a dialog on its own canvas surface; in the flow it is a
+  // transparent block that inherits the page's colours.
+  color: inherit;
+  background-color: transparent;
+
+  // The drawer's chrome belongs to the drawer: in the flow the title would
+  // be a stray heading above the navigation, and the close control a control
+  // with nothing to close.
+  .m-offCanvasNav__header {
+    display: none;
+  }
+}
+
+
+// The navigation as a drawer sliding in over the page.
+@mixin drawerRendering {
+
+  // A chrome-free box over the whole viewport. Everything visible lives in
+  // the inner panel, which is what lets offCanvasNav.js recognise a light
+  // dismiss without any coordinate math: a click whose target is the dialog
+  // itself can only have landed beside the panel (same trick as dialog).
+  position: fixed;
+  inset: 0;
+
+  margin: 0;
+  border: 0;
+  padding: 0;
+  inline-size: 100%;
+  max-inline-size: none;
+  block-size: 100%;
+  max-block-size: none;
+
+  // "clip", not "hidden", and this one is load-bearing. With side="end" the
+  // closed panel rests beyond the dialog's inline-end edge, which is
+  // *reachable* overflow — so "hidden" makes the dialog a scroll container
+  // that holds it. showModal() then focuses the autofocus control inside
+  // that panel, the browser scrolls it into view, and that scroll offset
+  // cancels the slide-in pixel for pixel: the drawer is simply there, fully
+  // open, on the first frame. "clip" clips identically but creates no scroll
+  // container, so there is nothing to scroll. side="start" never showed the
+  // bug — overflow past the inline-start edge is unreachable, so there was
+  // nowhere to scroll to.
+  overflow: clip;
+
+  color: var(--offCanvasNav-text-color);
+  background-color: transparent;
+
+  // Closed means gone: the flow rendering above switched the UA's
+  // "dialog:not([open])" rule off, and a closed drawer has to be out of the
+  // flow, out of the tab order and out of the accessibility tree.
+  &:not([open]) {
+    display: none;
+  }
+
+  // ----- the panel: the visible drawer -----
+  //
+  // Closed, the panel rests one panel width outside its own edge; opening
+  // moves it in to 0. That is done with a *logical* inset and not with a
+  // translate, because there is no logical translate: a physical translateX
+  // would send the panel across the viewport instead of out of its own edge
+  // as soon as the writing direction is right-to-left, and :dir() cannot
+  // stand in for it either (the build lowers it to a language list for older
+  // engines, which does not see dir="rtl" at all). Which of the two insets
+  // carries the offset is the only thing the side decides, so both sides read
+  // the same property and opening stays one rule.
+  //
+  // This rule carries the *entrance* timing: it is the one in effect while
+  // [open] is being added, and a transition takes its timing from the state
+  // it animates to.
+  .m-offCanvasNav__panel {
+    --offCanvasNav-panel-offset: calc(var(--offCanvasNav-inline-size) * -1);
+
+    position: absolute;
+    inset-block: 0;
+    inset-inline: var(--offCanvasNav-panel-offset) auto;
+
+    padding: var(--offCanvasNav-padding);
+    inline-size: var(--offCanvasNav-inline-size);
+    max-inline-size: 100%;
+
+    // Only the body scrolls (see below), so the title and the close control
+    // stay put while a long menu is scrolled. "clip" for the same reason as
+    // on the dialog above: this box is never meant to scroll, and a scroll
+    // container nobody scrolls on purpose is one the browser scrolls for you.
+    overflow: clip;
+
+    background-color: var(--offCanvasNav-bg-color);
+    box-shadow: var(--offCanvasNav-shadow);
+
+    transition:
+      inset-inline-start var(--offCanvasNav-duration) var(--offCanvasNav-easing),
+      inset-inline-end var(--offCanvasNav-duration) var(--offCanvasNav-easing);
+  }
+
+  &[data-offcanvasnav-side='end'] .m-offCanvasNav__panel {
+    inset-inline: auto var(--offCanvasNav-panel-offset);
+  }
+
+  &[open] .m-offCanvasNav__panel {
+    --offCanvasNav-panel-offset: 0px;
+  }
+
+  // The frame the panel comes in from. Without it there is no before-change
+  // style to transition away from — the drawer was not rendered a moment ago
+  // — and the panel would simply appear in place.
+  @starting-style {
+
+    &[open] .m-offCanvasNav__panel {
+      --offCanvasNav-panel-offset: calc(var(--offCanvasNav-inline-size) * -1);
+    }
+  }
+
+
+  // A forced-colors context (the Windows contrast themes) drops box shadows
+  // and repaints every background in the system Canvas colour — so the panel
+  // and the page behind it end up the same colour and the drawer loses its
+  // only edge, the shadow. A border is the one separation that survives, and
+  // it is drawn on all four sides because which one faces the page depends on
+  // data-offcanvasnav-side; the other three sit on the viewport edge, where
+  // they cost nothing.
+  @media (forced-colors: active) {
+
+    .m-offCanvasNav__panel {
+      border: 1px solid CanvasText;
+    }
+  }
+
+
+  // ----- the exit -----
+  //
+  // The drawer is still open here: offCanvasNav.js sets this attribute,
+  // waits for the transition below and only then closes the dialog. The
+  // obvious alternative — close first and hold the dialog in the top layer
+  // with allow-discrete on display/overlay — animates in Chromium and in
+  // nothing else: "overlay" is a Chromium-only property today, so Firefox
+  // and Safari drop the dialog out of the top layer the moment it closes
+  // and the panel is gone before it can move. Animating while the dialog is
+  // genuinely open needs none of that and plays the same everywhere.
+  //
+  // Being a state of [open], these rules also outweigh the entrance ones
+  // above without a specificity trick.
+  &[open][data-offcanvasnav-closing] .m-offCanvasNav__panel {
+    --offCanvasNav-panel-offset: calc(var(--offCanvasNav-inline-size) * -1);
+
+    transition:
+      inset-inline-start var(--offCanvasNav-duration-exit)
+      var(--offCanvasNav-easing-exit),
+      inset-inline-end var(--offCanvasNav-duration-exit)
+      var(--offCanvasNav-easing-exit);
+  }
+
+
+  // ----- the drawer's own chrome -----
+  .m-offCanvasNav__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--offCanvasNav-gap);
+  }
+
+  .m-offCanvasNav__body {
+    flex: 1 1 auto;
+    min-block-size: 0;
+
+    // "overflow-y: auto" below makes this a scroll container, and a scroll
+    // container clips on *both* axes, at its padding box. The navigation
+    // links inside fill its full inline size, so their focus ring — drawn
+    // outside the link's own box — was cut away on the left and the right
+    // entirely, and on the first item at the top as well. So the box is
+    // inset by exactly the ring's outset and that inset is handed straight
+    // back as a negative margin: the content stays where it was to the pixel,
+    // and the ring has somewhere to sit. There is room for it because the
+    // panel's padding and the gap above are both wider than the ring.
+    margin: calc(var(--offCanvasNav-ringSpace) * -1);
+    padding: var(--offCanvasNav-ringSpace);
+
+    overflow-y: auto;
+
+    // Same reason, for a ring that has been scrolled to the very edge of the
+    // container: scrolling stops that much short of the content's end.
+    scroll-padding: var(--offCanvasNav-ringSpace);
+
+    // Reaching the end of the menu must not start scrolling the page behind
+    // the drawer.
+    overscroll-behavior: contain;
+  }
+
+
+  // ----- the backdrop -----
+  // Only present for a dialog opened with showModal(). ::backdrop inherits
+  // from its originating element, so the tokens still reach it. Same split
+  // as the panel: this rule is the entrance, the closing state below the
+  // exit.
+  &::backdrop {
+    opacity: 0;
+
+    background-color: var(--offCanvasNav-backdrop-color);
+
+    // Progressive: modern engines support backdrop-filter here.
+    backdrop-filter: blur(2px);
+    transition: opacity var(--offCanvasNav-duration) var(--offCanvasNav-easing);
+  }
+
+  &[open]::backdrop {
+    opacity: 1;
+  }
+
+  @starting-style {
+
+    &[open]::backdrop {
+      opacity: 0;
+    }
+  }
+
+  &[open][data-offcanvasnav-closing]::backdrop {
+    opacity: 0;
+
+    transition:
+      opacity var(--offCanvasNav-duration-exit) var(--offCanvasNav-easing-exit);
+  }
+}
+
+
+
+// -------------------------------------------------------------
+// The component root: the <dialog>.
+// -------------------------------------------------------------
+.m-offCanvasNav {
+  font-family: system-ui, sans-serif;
+
+  // The default: the navigation is part of the page (see the mixin).
+  @include flowRendering;
+}
+
+
+
+// The drawer, once the script has taken over — below the navigation
+// breakpoint, where the page has no room for the full navigation.
+.m-offCanvasNav[data-offcanvasnav-ready] {
+
+  @include vp-nav-collapsed {
+    @include drawerRendering;
+  }
+}
+
+
+
+// Opted in with data-offcanvasnav-always: the drawer is the navigation at
+// every viewport width. Higher specificity than the block above, so its
+// rules also win where that one does not apply.
+.m-offCanvasNav[data-offcanvasnav-ready][data-offcanvasnav-always] {
+  @include drawerRendering;
+}
+
+
+
+// -------------------------------------------------------------
+// Panel contents. Shared by both renderings; whatever is specific
+// to the drawer lives in the mixin above.
+// -------------------------------------------------------------
+.m-offCanvasNav__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--offCanvasNav-gap);
+}
+
+
+
+.m-offCanvasNav__title {
+  margin: 0;
+
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.3;
+
+  color: var(--offCanvasNav-text-color);
+}
+
+
+
+// Close affordance in the drawer header. A real <button> so it is focusable
+// and operable by keyboard and AT out of the box.
+.m-offCanvasNav__close {
+
+  // The drawer is a dark elevated surface -> the light (bright) ring.
+  @include focus-ring(light);
+
+  & {
+    flex-shrink: 0;
+
+    cursor: pointer;
+
+    border: 1px solid transparent;
+    border-radius: var(--offCanvasNav-radius);
+    padding: 0;
+    inline-size: 2rem;
+    block-size: 2rem;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    line-height: 1;
+
+    color: var(--offCanvasNav-muted-color);
+    background-color: transparent;
+  }
+
+  // The inline "×" icon inherits the button's colour via
+  // stroke="currentColor", so the hover recolour applies to the glyph too.
+  svg {
+    inline-size: 1.1rem;
+    block-size: 1.1rem;
+  }
+
+  &:hover {
+    color: var(--offCanvasNav-text-color);
+    border-color: var(--offCanvasNav-border-color);
+  }
+}
+
+
+
+// -------------------------------------------------------------
+// The burger control: a block of its own.
+//
+// It is a page control, not part of the drawer — it sits outside the
+// <dialog>, a page may carry several of them, and each one only names the
+// drawer it opens (data-offcanvasnav-toggle="<dialogId>"). Authored as a
+// link to the navigation, which is a control with a job before the module
+// exists (see offCanvasNav.js); the module then gives it role="button",
+// because that is what it has become.
+// -------------------------------------------------------------
+.m-offCanvasNavToggle {
+
+  // Page chrome on a dark surface -> the light (bright) ring.
+  @include focus-ring(light);
+
+  & {
+    cursor: pointer;
+
+    border: 1px solid var(--offCanvasNavToggle-border-color);
+    border-radius: var(--offCanvasNavToggle-radius);
+    padding:
+      var(--offCanvasNavToggle-padding-block)
+      var(--offCanvasNavToggle-padding-inline);
+
+    display: inline-flex;
+    align-items: center;
+    gap: var(--offCanvasNavToggle-gap);
+
+    font-family: inherit;
+    font-size: 1rem;
+    line-height: 1.3;
+    text-decoration: none;
+
+    color: inherit;
+    background-color: transparent;
+  }
+
+  &:hover {
+    background-color: var(--offCanvasNavToggle-bg-color-hover);
+  }
+}
+
+
+
+// Above the navigation breakpoint the page shows its full navigation again,
+// so the burger has nothing left to do. Unless the drawer opted into
+// "always" — the script mirrors that attribute from the dialog onto the
+// trigger, because only the script knows which trigger belongs to which
+// drawer.
+//
+// Keyed on the trigger *attribute*, not on the styling class: hiding the
+// control up there is not decoration, it is the other half of "there is no
+// drawer above the breakpoint", so it has to reach every control that claims
+// to open one — including a trigger a project styled entirely by itself. The
+// script refuses to open the drawer in that state anyway (see open() in
+// offCanvasNav.js), so a trigger this rule missed would fall back to being
+// the link it was authored as.
+@include vp-nav-expanded {
+
+  [data-offcanvasnav-toggle]:not([data-offcanvasnav-always]) {
+    display: none;
+  }
+}
+
+
+
+// The three bars: the element itself is the middle one, its pseudo-elements
+// the outer two. Purely decorative — the control is named by its label (or,
+// in the icon-only variant, by that label kept for AT only).
+.m-offCanvasNavToggle__burger {
+  position: relative;
+  flex-shrink: 0;
+
+  inline-size: var(--offCanvasNavToggle-bar-inline);
+  block-size: var(--offCanvasNavToggle-bar-block);
+
+  background-color: currentColor;
+  transition:
+    background-color var(--offCanvasNavToggle-duration)
+    var(--offCanvasNavToggle-easing);
+
+  &::before,
+  &::after {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline: 0;
+
+    block-size: var(--offCanvasNavToggle-bar-block);
+
+    content: "";
+
+    background-color: currentColor;
+    transition:
+      translate var(--offCanvasNavToggle-duration)
+      var(--offCanvasNavToggle-easing),
+      rotate var(--offCanvasNavToggle-duration)
+      var(--offCanvasNavToggle-easing);
+  }
+
+  &::before {
+    translate: 0 calc(var(--offCanvasNavToggle-bar-gap) * -1);
+  }
+
+  &::after {
+    translate: 0 var(--offCanvasNavToggle-bar-gap);
+  }
+}
+
+
+
+// Open: the outer bars meet in the middle and cross, the middle one fades
+// out from under them. The script clears the attribute as soon as the
+// drawer starts leaving, so the cross unfolds while the panel slides out
+// instead of snapping back afterwards.
+.m-offCanvasNavToggle[data-offcanvasnav-open] .m-offCanvasNavToggle__burger {
+  background-color: transparent;
+
+  &::before {
+    translate: 0 0;
+    rotate: 45deg;
+  }
+
+  &::after {
+    translate: 0 0;
+    rotate: -45deg;
+  }
+}
+
+
+
+// The three bars are drawn as background fills, and a forced-colors context
+// (the Windows contrast themes) replaces every background colour with the
+// system Canvas — so the whole glyph disappears into the button, which in the
+// icon-only variant below leaves a control with nothing visible in it at all.
+// CanvasText is the system's own foreground colour, so the bars come back in
+// the user's chosen palette instead of ours.
+@media (forced-colors: active) {
+
+  .m-offCanvasNavToggle__burger {
+
+    &,
+    &::before,
+    &::after {
+      background-color: CanvasText;
+    }
+  }
+}
+
+
+
+// Icon-only burger: the label stays in the markup as the control's
+// accessible name and is only taken out of the visual layout.
+.m-offCanvasNavToggle--iconOnly {
+  padding: var(--offCanvasNavToggle-padding-block);
+
+  .m-offCanvasNavToggle__label {
+    position: absolute;
+
+    margin: -1px;
+    border: 0;
+    padding: 0;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+
+    white-space: nowrap;
+
+    clip-path: inset(50%);
+  }
+}
+
+
+
+// Body scroll lock, toggled by offCanvasNav.js while the drawer is open. A
+// modal dialog makes the page behind it inert but does not stop it from
+// scrolling, so we suppress it here. dialog declares the identical rule and
+// shares the class, so the two can be open at once — this component ships it
+// as well so it also works in a project that does not use dialog.
+body.is-scrollLocked {
+  overflow: hidden;
+}
+
+
+
+// -------------------------------------------------------------
+// Respect reduced motion: the drawer appears and disappears
+// instantly. !important (rather than zeroing the duration tokens)
+// so it also beats the transitions declared on the
+// higher-specificity state rules above.
+//
+// The exit reads its length back from the panel's computed
+// transition-duration (see offCanvasNav.js), so flattening it here
+// is all it takes for the script to close the drawer at once too.
+// -------------------------------------------------------------
+@media (prefers-reduced-motion: reduce) {
+
+  .m-offCanvasNav::backdrop,
+  .m-offCanvasNav__panel,
+  .m-offCanvasNavToggle__burger,
+  .m-offCanvasNavToggle__burger::before,
+  .m-offCanvasNavToggle__burger::after {
+    transition-duration: 0.01ms !important;
+  }
+}

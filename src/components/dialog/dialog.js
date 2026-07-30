@@ -276,8 +276,39 @@ class Dialog {
   // the dialog (see setup()).
   handleTriggerClick = (event) => {
     if (!this.triggerSelector) return;
-    if (!event.target.closest(this.triggerSelector)) return;
+
+    const trigger = event.target.closest(this.triggerSelector);
+    if (!trigger) return;
+
+    this.adoptFocus(trigger);
     this.open();
+  };
+
+
+
+  // Both the native restoration (modal) and restoreFocus below (non-modal)
+  // hand the focus back to whatever had it when the dialog opened, so that
+  // route needs an element to go back to — and a clicked control does not get
+  // the focus in every engine: WebKit follows the macOS convention and leaves
+  // it where it was, i.e. on <body>, so a dialog opened with the mouse has
+  // nothing to restore to. So the focus goes onto the trigger first, but only
+  // where the click left it nowhere: an engine that focuses its clicked
+  // controls needs no help (the call would be a no-op), and a project that
+  // moves the focus itself during the same click keeps it. preventScroll
+  // because this is bookkeeping, not navigation — the control was just
+  // clicked, so it is in view anyway. Keyboard activation needs none of it:
+  // there the trigger has the focus by definition.
+  //
+  // In WebKit the restored focus then draws its ring, because WebKit reads a
+  // programmatic focus as a keyboard one. Deliberate: the focus really is on
+  // the trigger afterwards, so showing it is honest — hiding an indicator for
+  // a focus position we just placed would be the wrong end of the trade.
+  // offCanvasNav carries the same one-liner, for the same reason.
+  adoptFocus = (trigger) => {
+    const active = document.activeElement;
+    if (active && active !== document.body) return;
+
+    trigger.focus({ preventScroll: true });
   };
 
 
@@ -309,7 +340,10 @@ class Dialog {
     if (this.dialog.open) return;
 
     // Remembered so we can restore focus if the native restoration does not
-    // (only relevant for non-modal dialogs — see handleClose).
+    // (only relevant for non-modal dialogs — see handleClose). On the trigger
+    // route this is the trigger itself, because handleTriggerClick focuses it
+    // first — otherwise a mouse click would leave <body> here in engines that
+    // do not focus a clicked control, i.e. nothing worth restoring.
     this.lastFocused = document.activeElement;
 
     // showModal() is what enables the native focus trap + backdrop; show()
@@ -354,8 +388,10 @@ class Dialog {
 
   // Modal dialogs restore focus to the opener natively, so by the time this
   // runs the focus is already back and activeElement is no longer <body>; we
-  // then do nothing. Non-modal dialogs get no native restoration, so if focus
-  // was left on a now-hidden node it falls to <body> and we put it back.
+  // then do nothing. (That the platform *has* an opener to go back to on the
+  // mouse route is what the focus call in handleTriggerClick is for.)
+  // Non-modal dialogs get no native restoration, so if focus was left on a
+  // now-hidden node it falls to <body> and we put it back.
   restoreFocus = () => {
     const active = document.activeElement;
     const focusLost = !active || active === document.body;
@@ -522,16 +558,33 @@ class Dialog {
 
   // Optional teardown for hosts that mount/unmount this subtree repeatedly
   // instead of doing a full page (re)load — see destroyModulesInScope() in
-  // boot.js. Forces the dialog closed first, which runs the existing single
-  // close funnel (unlockScroll, stopMedia, resize listener, scroll
+  // boot.js. Forces the dialog closed first and puts it through the existing
+  // single close funnel (unlockScroll, stopMedia, resize listener, scroll
   // observers), then removes the delegated trigger listener and the
   // dialog's own listeners.
   destroy = () => {
-    if (this.dialog.open) this.dialog.close();
+    const wasOpen = this.dialog.open;
+    if (wasOpen) this.dialog.close();
+
+    // Nowhere to put the focus in a teardown, so restoreFocus() has nothing
+    // to do — cleared before the funnel runs below so it stays out of the
+    // way of whatever the host is doing with the page.
+    this.lastFocused = null;
+
     document.removeEventListener('click', this.handleTriggerClick);
     this.dialog.removeEventListener('click', this.handleDialogClick);
     this.dialog.removeEventListener('cancel', this.handleCancel);
     this.dialog.removeEventListener('close', this.handleClose);
+
+    // close() does not dispatch "close" then and there — it queues a task —
+    // so the listener removed a line ago would have swallowed the funnel.
+    // For a dialog torn down while it was open that would leak: the page
+    // would stay scroll-locked and openCount would never come back down,
+    // so no later dialog could unlock it either. Hence the funnel by hand,
+    // after the listener is gone so the queued event cannot run it twice
+    // (unlockScroll counts, and must not count this close down twice).
+    if (wasOpen) this.handleClose();
+
     this.unobserveScrollRegion();
   };
 }

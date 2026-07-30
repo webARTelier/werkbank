@@ -89,6 +89,12 @@
  * On the nav element (data-js-module="dropdownNav"), all optional:
  * - data-dropdownnav-hover           open submenus on hover as well
  *                                    (fine pointers, flyout layout only)
+ * - data-dropdownnav-stacked         keep the stacked layout at every
+ *                                    viewport width, for a nav that sits
+ *                                    in a narrow box on a wide page (an
+ *                                    offCanvasNav drawer). Turns hover
+ *                                    opening and the collision flip off
+ *                                    with it — both belong to the flyout.
  * - data-dropdownnav-submenu-label   accessible-name template for the
  *                                    split toggle; "{label}" is replaced
  *                                    by the item's label text.
@@ -159,6 +165,14 @@ const defaults = {
 
   // Presence on the nav opts into hover opening (fine pointers only).
   hoverAttr: 'data-dropdownnav-hover',
+
+  // Presence on the nav pins it to the stacked layout at every viewport
+  // width (see the stylesheet). Read here because the two behaviours that
+  // only exist in the flyout layout — hover opening and the collision
+  // flip — have to follow it, otherwise a pinned nav on a wide viewport
+  // would open submenus on hover that no longer float, and mark panels as
+  // flipped that no longer have a side.
+  stackedAttr: 'data-dropdownnav-stacked',
 
   // Overrides the accessible-name template of the split toggles.
   submenuLabelAttr: 'data-dropdownnav-submenu-label',
@@ -258,7 +272,8 @@ class DropdownNav {
     this.reporter = reporter;
     this.records = [];
 
-    this.useHover = root.hasAttribute(params.hoverAttr);
+    this.isStacked = root.hasAttribute(params.stackedAttr);
+    this.useHover = root.hasAttribute(params.hoverAttr) && !this.isStacked;
     this.hoverQuery =
       window.matchMedia(hoverMediaQuery(params.navBreakpointProp));
     this.expandedQuery =
@@ -635,8 +650,10 @@ class DropdownNav {
     const { flipAttr, megaAttr, viewportMargin } = this.params;
 
     // In the stacked layout the panels sit in the flow and the flip rules
-    // do not apply — so any attribute left from a wider viewport goes.
-    if (!this.expandedQuery.matches) {
+    // do not apply — so any attribute left from a wider viewport goes. A
+    // nav pinned to that layout never leaves it, whatever the viewport
+    // says.
+    if (this.isStacked || !this.expandedQuery.matches) {
       this.records.forEach(({ panel }) => panel.removeAttribute(flipAttr));
       return;
     }

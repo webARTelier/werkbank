@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>offCanvasNav – Demo</title>
+  <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
+  <link rel="stylesheet" href="../../../dist/css/offCanvasNav.min.css" />
+  <link rel="stylesheet" href="../../../dist/css/dropdownNav.min.css" />
+  <script type="module" src="../../../dist/js/boot.min.js"></script>
+
+  <!-- for development only -->
+  <script type="module" src="../../../src/_shared/js/dev_pageInfo.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_a11yInspector.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_qrCode.js"></script>
+  <!-- end for development only -->
+
+  <!--
+      DEMO-ONLY STYLES
+      ----------------------------------------------------------------------
+      The site header the burger sits in, the page rhythm and the note that
+      reports which layout is active. None of it is part of the component —
+      the drawer, the burger and the slide-in ship in offCanvasNav.min.css.
+  -->
+
+  <style>
+    .demoExample {
+      margin-block-start: var(--space-xl);
+    }
+
+    .demoExample > h2 {
+      margin-block-end: var(--space-s);
+    }
+
+    /* A page header to put the burger in. Below the navigation breakpoint
+       the burger sits next to the brand; above it, the navigation itself is
+       in the flow here, so the bar stacks. */
+    .demoBar {
+      border: 1px solid var(--color-border);
+      border-radius: var(--borderRadius);
+      padding: var(--space-2xs) var(--space-s);
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-l);
+
+      background-color: var(--color-bg-surface);
+    }
+
+    .demoBar__brand {
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    @media (width >= 1250px) {
+      .demoBar--responsive {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+
+    /* The base-layer example has its navigation in the flow at every width,
+       so its bar wraps: brand and burger share the first row, the navigation
+       takes the next one. */
+    .demoBar--stacked {
+      flex-wrap: wrap;
+    }
+
+    .demoBar--stacked > .m-offCanvasNav {
+      flex-basis: 100%;
+    }
+
+    /* Which rendering applies is decided by a media query alone — this note
+       reports it back without a line of JavaScript. */
+    .layoutNote {
+      margin-block-start: var(--space-m);
+      border: 1px solid var(--color-border);
+      border-inline-start: 3px solid var(--color-accent-secondary);
+      border-radius: var(--borderRadius);
+      padding: var(--space-xs) var(--space-s);
+
+      color: var(--color-text-secondary);
+    }
+
+    .layoutNote--expanded {
+      display: none;
+    }
+
+    @media (width >= 1250px) {
+      .layoutNote--expanded {
+        display: block;
+      }
+
+      .layoutNote--collapsed {
+        display: none;
+      }
+    }
+
+    /* The breakpoint-scoped variant needs a narrow *viewport*, not a narrow
+       box — so it gets a frame with a viewport of its own. */
+    .demoFrame {
+      border: 1px solid var(--color-border);
+      border-radius: var(--borderRadius);
+      inline-size: 420px;
+      max-inline-size: 100%;
+      block-size: 26rem;
+
+      background-color: var(--color-bg);
+
+      color-scheme: dark;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <main class="shell">
+
+    <section class="hero">
+      <a class="back" href="../../../index.html">← Overview</a>
+      <h1>offCanvasNav</h1>
+      <p>Burger menu that slides the site navigation in over the page — built
+        on the native <code>&lt;dialog&gt;</code>, and a plain block in the
+        page without JavaScript.</p>
+    </section>
+
+    <section class="stage" aria-label="Live demo">
+
+      <!--
+          One instance per element with data-js-module="offCanvasNav" — the
+          module is initialised on the <dialog> itself.
+
+          Wiring
+            - The drawer is a <dialog> with a unique id and an accessible
+              name (aria-labelledby -> its title). Inside it, one panel
+              holds a header (title + close control carrying
+              data-offcanvasnav-close) and a body holding the navigation.
+            - The burger is a block of its own (m-offCanvasNavToggle), not
+              an element of the drawer: it lives outside the <dialog>, a
+              page may carry several of them, and each one names its drawer
+              by id — data-offcanvasnav-toggle="<that id>". It is authored
+              as <a href="#<that id>"> — a working link to the navigation
+              before this module exists. The module prevents the jump, sets
+              role="button", aria-haspopup="dialog" and aria-controls, and
+              adds the Space key a link does not have.
+            - The navigation inside is a dropdownNav: submenus are none of
+              offCanvasNav's business, and its stacked layout is exactly the
+              one a drawer wants.
+            - The first example carries data-offcanvasnav-always, so it is a
+              drawer at every viewport width (which is what makes it
+              operable on this wide page). The second one is the default:
+              drawer below --bp-navigation, plain navigation above it.
+            - Which is also what decides data-dropdownnav-stacked on the nav
+              inside. dropdownNav picks its layout by viewport width, and
+              that is only a stand-in for the room the nav has — a stand-in
+              that fails inside a 26rem drawer on a wide page. So the first
+              example pins its nav to the stacked layout, and the second one
+              must not: above the breakpoint its navigation goes back into
+              the page, where the bar layout is the right one.
+
+          What the platform does
+            - showModal() puts the drawer in the top layer, keeps the focus
+              inside it, makes the page behind it inert, paints the
+              ::backdrop, closes on Escape and hands the focus back to the
+              burger. The slide-in is CSS: @starting-style provides the
+              frame the panel comes in from.
+
+          What the module adds
+            - The burger (delegated, so one inserted later still works), the
+              light dismiss beside the panel, the body scroll lock, closing
+              on a link that stays on this document, and closing when the
+              viewport grows past the navigation breakpoint — a drawer left
+              open there would cover a page that shows its full navigation
+              anyway, with the focus trapped inside it.
+            - Where the focus goes on those last two. The platform always
+              returns it to the burger, which is wrong for both: after an
+              in-page link the reader is at the jump target, and above the
+              breakpoint the burger is hidden, so the focus would land on
+              <body>. It goes to the target, and to the panel, instead.
+            - role="generic" on the <dialog> while the navigation is a plain
+              block in the page, removed again for the drawer. A <dialog> is
+              exposed as a dialog whether it is open or not, so without this
+              the whole navigation would sit in a "dialog" up here.
+            - The exit. It is the one half of the animation CSS cannot do
+              alone: a closed dialog leaves the top layer at once in every
+              engine without the "overlay" property, taking the panel off
+              the screen before it could move. So every route out — the
+              close control, Escape, a press beside the panel, a link, the
+              breakpoint — marks the drawer with data-offcanvasnav-closing,
+              lets it slide out while it is still open, and closes it after.
+
+          Progressive enhancement
+            - The drawer rules are scoped to data-offcanvasnav-ready, which
+              the module sets only once the drawer can be opened. Until then
+              (and in the last example, which carries no data-js-module at
+              all) the <dialog> is a plain block in the flow: the whole
+              navigation visible, nothing hidden, no dead control.
+        -->
+
+      <p class="stage__intro">
+        <strong>The navigation is in the page, not in a widget.</strong> It is
+        authored inside a <code>&lt;dialog&gt;</code>, and the stylesheet
+        renders that as an ordinary block until the module has taken over —
+        so without JavaScript, and above the navigation breakpoint, the full
+        navigation simply sits in the header. Below the breakpoint the same
+        markup becomes a drawer that <code>showModal()</code> opens in the top
+        layer.
+      </p>
+
+      <p class="layoutNote layoutNote--expanded">
+        ▸ This viewport is at or above the navigation breakpoint
+        (<code>--bp-navigation</code>, 1250px): the second example below shows
+        its navigation in the flow and hides its burger. The first one carries
+        <code>data-offcanvasnav-always</code>, so it stays a drawer here.
+      </p>
+      <p class="layoutNote layoutNote--collapsed">
+        ▾ This viewport is below the navigation breakpoint
+        (<code>--bp-navigation</code>, 1250px): both examples below are
+        drawers. Widen the window past 1250px and the second one hands its
+        navigation back to the page.
+      </p>
+
+
+      <!-- 1) The full pattern, kept a drawer at every width so it can be
+              operated on this page -->
+      <div class="demoExample">
+        <h2>The drawer (<code>data-offcanvasnav-always</code>)</h2>
+
+        <p class="stage__intro">
+          Open it and try everything the platform gives you for free:
+          <kbd>Tab</kbd> cycles inside the drawer and cannot leave it,
+          <kbd>Esc</kbd> closes it, and the focus returns to the burger
+          afterwards. The page behind is inert and cannot be scrolled. A press
+          beside the panel closes it too — that part is the module's, and it
+          needs no coordinate math: the <code>&lt;dialog&gt;</code> is a
+          transparent box over the whole viewport, so a click on <em>it</em>
+          can only have landed next to the panel.
+        </p>
+
+        <div class="demoBar">
+          <span class="demoBar__brand">Acme</span>
+
+          <a class="m-offCanvasNavToggle" href="#demoDrawer" data-offcanvasnav-toggle="demoDrawer">
+            <span class="m-offCanvasNavToggle__burger" aria-hidden="true"></span>
+            <span class="m-offCanvasNavToggle__label">Menu</span>
+          </a>
+        </div>
+
+        <dialog
+          id="demoDrawer"
+          class="m-offCanvasNav"
+          data-js-module="offCanvasNav"
+          data-offcanvasnav-always
+          aria-labelledby="demoDrawer-title"
+        >
+          <div class="m-offCanvasNav__panel" data-offcanvasnav-panel>
+
+            <header class="m-offCanvasNav__header">
+              <h2 class="m-offCanvasNav__title" id="demoDrawer-title">Menu</h2>
+              <button
+                type="button"
+                class="m-offCanvasNav__close"
+                data-offcanvasnav-close
+                aria-label="Close menu"
+                autofocus
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+                  <path d="M6 6 18 18M18 6 6 18" />
+                </svg>
+              </button>
+            </header>
+
+            <div class="m-offCanvasNav__body">
+
+              <!-- The navigation itself: a dropdownNav, which brings its own
+                   disclosure buttons for the submenus -->
+              <nav class="m-dropdownNav" aria-label="Main" data-js-module="dropdownNav" data-dropdownnav-stacked>
+                <ul class="m-dropdownNav__list">
+
+                  <li class="m-dropdownNav__item">
+                    <a class="m-dropdownNav__link" href="#in-page-target" aria-current="page">Home</a>
+                  </li>
+
+                  <li class="m-dropdownNav__item" data-dropdownnav-item>
+                    <a class="m-dropdownNav__link" href="#in-page-target" data-dropdownnav-label>Products</a>
+
+                    <div class="m-dropdownNav__panel" data-dropdownnav-panel>
+                      <ul class="m-dropdownNav__subList">
+                        <li class="m-dropdownNav__item">
+                          <a class="m-dropdownNav__link" href="#in-page-target">Hardware</a>
+                        </li>
+
+                        <li class="m-dropdownNav__item" data-dropdownnav-item>
+                          <span class="m-dropdownNav__label" data-dropdownnav-label>Software</span>
+
+                          <div class="m-dropdownNav__panel" data-dropdownnav-panel>
+                            <ul class="m-dropdownNav__subList">
+                              <li class="m-dropdownNav__item">
+                                <a class="m-dropdownNav__link" href="#in-page-target">Desktop</a>
+                              </li>
+                              <li class="m-dropdownNav__item">
+                                <a class="m-dropdownNav__link" href="#in-page-target">Mobile</a>
+                              </li>
+                            </ul>
+                          </div>
+                        </li>
+
+                        <li class="m-dropdownNav__item">
+                          <a class="m-dropdownNav__link" href="#in-page-target">Accessories</a>
+                        </li>
+                      </ul>
+                    </div>
+                  </li>
+
+                  <li class="m-dropdownNav__item" data-dropdownnav-item>
+                    <span class="m-dropdownNav__label" data-dropdownnav-label>Company</span>
+
+                    <div class="m-dropdownNav__panel" data-dropdownnav-panel>
+                      <ul class="m-dropdownNav__subList">
+                        <li class="m-dropdownNav__item">
+                          <a class="m-dropdownNav__link" href="#in-page-target">About us</a>
+                        </li>
+                        <li class="m-dropdownNav__item">
+                          <a class="m-dropdownNav__link" href="#in-page-target">Careers</a>
+                        </li>
+                        <li class="m-dropdownNav__item">
+                          <a class="m-dropdownNav__link" href="#in-page-target">Press</a>
+                        </li>
+                      </ul>
+                    </div>
+                  </li>
+
+                  <li class="m-dropdownNav__item">
+                    <a class="m-dropdownNav__link" href="https://example.com/">External link</a>
+                  </li>
+
+                </ul>
+              </nav>
+
+            </div>
+
+          </div>
+        </dialog>
+
+        <p class="stage__intro">
+          Every link in there points at <a href="#in-page-target">a target on
+          this page</a>, so activating one closes the drawer: a menu left
+          standing would cover the very place the reader just jumped to. The
+          last entry points at another site instead and is left alone — there
+          the browser replaces the page anyway. The submenu buttons are
+          <code>dropdownNav</code>'s and are not links at all, so they only
+          unfold their panel.
+        </p>
+      </div>
+
+
+      <!-- 2) The default: drawer below the breakpoint, plain nav above it -->
+      <div class="demoExample">
+        <h2>Breakpoint-scoped (the default)</h2>
+
+        <p class="stage__intro">
+          The same component without <code>data-offcanvasnav-always</code>.
+          Above <code>--bp-navigation</code> its burger is hidden and the
+          navigation is rendered in the flow — the header below then shows the
+          menu itself. Resize this window across 1250px to watch it change
+          sides; with the drawer open, crossing the breakpoint closes it,
+          because from there up the page shows the navigation anyway.
+        </p>
+
+        <div class="demoBar demoBar--responsive">
+          <span class="demoBar__brand">Acme</span>
+
+          <a class="m-offCanvasNavToggle" href="#demoDrawerResponsive" data-offcanvasnav-toggle="demoDrawerResponsive">
+            <span class="m-offCanvasNavToggle__burger" aria-hidden="true"></span>
+            <span class="m-offCanvasNavToggle__label">Menu</span>
+          </a>
+
+          <dialog
+            id="demoDrawerResponsive"
+            class="m-offCanvasNav"
+            data-js-module="offCanvasNav"
+            data-offcanvasnav-side="end"
+            aria-labelledby="demoDrawerResponsive-title"
+          >
+            <div class="m-offCanvasNav__panel" data-offcanvasnav-panel>
+
+              <header class="m-offCanvasNav__header">
+                <h2 class="m-offCanvasNav__title" id="demoDrawerResponsive-title">Menu</h2>
+                <button
+                  type="button"
+                  class="m-offCanvasNav__close"
+                  data-offcanvasnav-close
+                  aria-label="Close menu"
+                  autofocus
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+                    <path d="M6 6 18 18M18 6 6 18" />
+                  </svg>
+                </button>
+              </header>
+
+              <div class="m-offCanvasNav__body">
+                <nav class="m-dropdownNav" aria-label="Main (breakpoint-scoped)" data-js-module="dropdownNav">
+                  <ul class="m-dropdownNav__list">
+
+                    <li class="m-dropdownNav__item">
+                      <a class="m-dropdownNav__link" href="#in-page-target">Home</a>
+                    </li>
+
+                    <li class="m-dropdownNav__item" data-dropdownnav-item>
+                      <a class="m-dropdownNav__link" href="#in-page-target" data-dropdownnav-label>Docs</a>
+
+                      <div class="m-dropdownNav__panel" data-dropdownnav-panel>
+                        <ul class="m-dropdownNav__subList">
+                          <li class="m-dropdownNav__item">
+                            <a class="m-dropdownNav__link" href="#in-page-target">Getting started</a>
+                          </li>
+                          <li class="m-dropdownNav__item">
+                            <a class="m-dropdownNav__link" href="#in-page-target">Reference</a>
+                          </li>
+                        </ul>
+                      </div>
+                    </li>
+
+                    <li class="m-dropdownNav__item">
+                      <a class="m-dropdownNav__link" href="#in-page-target">Contact</a>
+                    </li>
+
+                  </ul>
+                </nav>
+              </div>
+
+            </div>
+          </dialog>
+        </div>
+
+        <p class="stage__intro">
+          This one comes in from the other edge
+          (<code>data-offcanvasnav-side="end"</code>) — style only, and
+          mirrored on its own in a right-to-left writing direction, because
+          the panel is anchored with logical properties. The frame below has a
+          viewport of its own, so it shows the drawer state of this variant
+          however wide this window happens to be.
+        </p>
+
+        <iframe
+          class="demoFrame"
+          title="The breakpoint-scoped drawer in a viewport below the breakpoint"
+          srcdoc="
+            <!doctype html>
+            <html lang='en'>
+            <head>
+              <meta charset='utf-8'>
+              <meta name='viewport' content='width=device-width, initial-scale=1'>
+              <link rel='stylesheet' href='../../../dist/css/shared.min.css'>
+              <link rel='stylesheet' href='../../../dist/css/offCanvasNav.min.css'>
+              <link rel='stylesheet' href='../../../dist/css/dropdownNav.min.css'>
+              <script type='module' src='../../../dist/js/boot.min.js'></script>
+              <style>
+                /* The shared demo background is a pair of radial gradients
+                   sized to the body box, which would tile down this short
+                   frame — so this viewport takes the flat page colour.
+                   place-items comes with the shared body rule for its grid
+                   centring and is reset along with display. */
+                body {
+                  display: block;
+                  place-items: normal;
+                  padding: 16px;
+                  min-height: 0;
+                  background: var(--color-bg);
+                }
+              </style>
+            </head>
+            <body>
+              <header style='display:flex;align-items:center;justify-content:space-between;gap:16px'>
+                <strong>Acme</strong>
+                <a class='m-offCanvasNavToggle' href='#frameDrawer' data-offcanvasnav-toggle='frameDrawer'>
+                  <span class='m-offCanvasNavToggle__burger' aria-hidden='true'></span>
+                  <span class='m-offCanvasNavToggle__label'>Menu</span>
+                </a>
+              </header>
+
+              <p style='color:#94a3b8;line-height:1.5'>
+                A viewport of its own, below the navigation breakpoint — so this
+                is the drawer variant. It comes in from the inline-end edge.
+              </p>
+
+              <dialog id='frameDrawer' class='m-offCanvasNav' data-js-module='offCanvasNav'
+                      data-offcanvasnav-side='end' aria-labelledby='frameDrawer-title'>
+                <div class='m-offCanvasNav__panel' data-offcanvasnav-panel>
+                  <header class='m-offCanvasNav__header'>
+                    <h2 class='m-offCanvasNav__title' id='frameDrawer-title'>Menu</h2>
+                    <button type='button' class='m-offCanvasNav__close' data-offcanvasnav-close
+                            aria-label='Close menu' autofocus>
+                      <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' aria-hidden='true' focusable='false'>
+                        <path d='M6 6 18 18M18 6 6 18' />
+                      </svg>
+                    </button>
+                  </header>
+                  <div class='m-offCanvasNav__body'>
+                    <nav class='m-dropdownNav' aria-label='Main' data-js-module='dropdownNav'>
+                      <ul class='m-dropdownNav__list'>
+                        <li class='m-dropdownNav__item'>
+                          <a class='m-dropdownNav__link' href='#' aria-current='page'>Home</a>
+                        </li>
+                        <li class='m-dropdownNav__item' data-dropdownnav-item>
+                          <a class='m-dropdownNav__link' href='#' data-dropdownnav-label>Products</a>
+                          <div class='m-dropdownNav__panel' data-dropdownnav-panel>
+                            <ul class='m-dropdownNav__subList'>
+                              <li class='m-dropdownNav__item'>
+                                <a class='m-dropdownNav__link' href='#'>Hardware</a>
+                              </li>
+                              <li class='m-dropdownNav__item'>
+                                <a class='m-dropdownNav__link' href='#'>Software</a>
+                              </li>
+                            </ul>
+                          </div>
+                        </li>
+                        <li class='m-dropdownNav__item'>
+                          <a class='m-dropdownNav__link' href='#'>Contact</a>
+                        </li>
+                      </ul>
+                    </nav>
+                  </div>
+                </div>
+              </dialog>
+            </body>
+            </html>
+          "
+        ></iframe>
+      </div>
+
+
+      <!-- 3) The base layer: what everyone gets before/without the module -->
+      <div class="demoExample">
+        <h2>Without JavaScript (the base layer)</h2>
+
+        <p class="stage__intro">
+          This drawer carries no <code>data-js-module</code>, so the module
+          never touches it — exactly what every visitor sees with JavaScript
+          off, and what everyone sees for the moment before the chunk has
+          loaded. The <code>&lt;dialog&gt;</code> is rendered as the block it
+          is: the navigation complete and visible, its own header (title and
+          close control) left out, because a close control with nothing to
+          close would be a dead control. The burger next to the brand is a
+          plain link to that navigation, and it does exactly that.
+        </p>
+
+        <div class="demoBar demoBar--stacked">
+          <span class="demoBar__brand">Acme</span>
+
+          <a class="m-offCanvasNavToggle" href="#demoDrawerBase" data-offcanvasnav-toggle="demoDrawerBase">
+            <span class="m-offCanvasNavToggle__burger" aria-hidden="true"></span>
+            <span class="m-offCanvasNavToggle__label">Menu</span>
+          </a>
+
+          <dialog
+            id="demoDrawerBase"
+            class="m-offCanvasNav"
+            aria-labelledby="demoDrawerBase-title"
+          >
+            <div class="m-offCanvasNav__panel" data-offcanvasnav-panel>
+
+              <header class="m-offCanvasNav__header">
+                <h2 class="m-offCanvasNav__title" id="demoDrawerBase-title">Menu</h2>
+                <button
+                  type="button"
+                  class="m-offCanvasNav__close"
+                  data-offcanvasnav-close
+                  aria-label="Close menu"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+                    <path d="M6 6 18 18M18 6 6 18" />
+                  </svg>
+                </button>
+              </header>
+
+              <div class="m-offCanvasNav__body">
+                <nav class="m-dropdownNav" aria-label="Main (unenhanced)">
+                  <ul class="m-dropdownNav__list">
+
+                    <li class="m-dropdownNav__item">
+                      <a class="m-dropdownNav__link" href="#in-page-target">Home</a>
+                    </li>
+
+                    <li class="m-dropdownNav__item" data-dropdownnav-item>
+                      <a class="m-dropdownNav__link" href="#in-page-target" data-dropdownnav-label>Products</a>
+
+                      <div class="m-dropdownNav__panel" data-dropdownnav-panel>
+                        <ul class="m-dropdownNav__subList">
+                          <li class="m-dropdownNav__item">
+                            <a class="m-dropdownNav__link" href="#in-page-target">Hardware</a>
+                          </li>
+                          <li class="m-dropdownNav__item">
+                            <a class="m-dropdownNav__link" href="#in-page-target">Software</a>
+                          </li>
+                        </ul>
+                      </div>
+                    </li>
+
+                    <li class="m-dropdownNav__item">
+                      <a class="m-dropdownNav__link" href="#in-page-target">Contact</a>
+                    </li>
+
+                  </ul>
+                </nav>
+              </div>
+
+            </div>
+          </dialog>
+        </div>
+      </div>
+
+
+      <h2 id="in-page-target">The in-page target</h2>
+      <p>
+        The links in the drawers above point here. Activating one closes the
+        drawer and lets the browser do the jumping — the module only gets out
+        of the way, it never scrolls anything itself. Because the fragment
+        resolves to this heading, the browser also makes it the sequential
+        focus navigation starting point, so the next <kbd>Tab</kbd> continues
+        here rather than back at the burger.
+      </p>
+
+    </section>
+
+  </main>
+
+</body>
+
+</html>

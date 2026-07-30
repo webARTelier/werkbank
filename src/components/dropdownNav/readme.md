@@ -35,6 +35,7 @@ All optional. On the nav element:
 | Attribute | Effect |
 | --------- | ------ |
 | `data-dropdownnav-hover` | Additionally open submenus on hover, with a short grace period before closing so a diagonal mouse path across a gap does not shut the panel. Only where there is something to hover over: fine pointers, and only in the flyout layout. The breakpoint is not duplicated in the script — it reads the shared `--bp-navigation` token, so the hover condition and the CSS layout can never drift apart. |
+| `data-dropdownnav-stacked` | Keep the stacked layout at **every** viewport width. The bar layout is a function of the room the *nav* has, and the viewport is only a stand-in for that — one that stops working as soon as the nav sits in a narrow box on a wide page. An `offCanvasNav` drawer is the case this exists for: it stays 26rem wide however wide the window is, so a nav inside it must not turn into a horizontal bar. Hover opening and the collision flip are switched off with it; both only exist in the flyout layout. |
 | `data-dropdownnav-submenu-label` | Accessible-name template for the split toggles; `{label}` is replaced by the item's label text. Default: `Show submenu for {label}`. |
 
 On an item (style only — the JS is not involved):

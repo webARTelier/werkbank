@@ -46,6 +46,12 @@
       submenus on hover, with a short grace period before closing. Only on
       fine pointers and only in the flyout layout: the script reads the
       shared --bp-navigation token instead of repeating the breakpoint.
+    - data-dropdownnav-stacked (on the nav, optional) keeps the stacked
+      layout at every viewport width. For a nav that sits in a narrow box
+      on a wide page — an offCanvasNav drawer is the case it exists for —
+      where the viewport is no longer a measure of the room the nav has.
+      Hover opening and the collision flip go with it: both belong to the
+      flyout layout.
     - data-dropdownnav-submenu-label (on the nav, optional) sets the
       accessible-name template of the inserted chevron buttons; "{label}"
       is replaced by the item's label text. Default:

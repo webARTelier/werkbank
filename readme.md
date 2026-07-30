@@ -85,6 +85,7 @@ components downloads two chunks — nothing else.
 | `inlineSVG`          | Replaces `<img>` SVG references with inline SVG.                    |
 | `inputCharCount`     | Character-count display for inputs and textareas.                   |
 | `marquee`            | Infinitely scrolling content strip (news ticker).                   |
+| `offCanvasNav`       | Burger menu / off-canvas drawer on the native `<dialog>`.           |
 | `popover`            | Anchor-positioned popover on the native Popover API.                |
 | `scaleSVG`           | Scales SVGs from their `viewBox`.                                   |
 | `scrollSpy`          | IntersectionObserver-driven TOC highlight via `aria-current`.       |

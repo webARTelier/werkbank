@@ -307,11 +307,13 @@
 
 
 // -------------------------------------------------------------
-// Enhanced layer: only once dropdownNav.js has upgraded the markup.
-// Below the navigation breakpoint the nav stays a stacked list and
-// only gains the collapsing (accordion-like) submenus.
+// Enhanced layer: only once dropdownNav.js has upgraded the markup. It
+// comes in two renderings — the stacked list that only gains collapsing
+// (accordion-like) submenus, and the flyout bar further down — and which
+// one applies is decided by the navigation breakpoint, or pinned to the
+// stacked one by data-dropdownnav-stacked (see the two blocks below).
 //
-// The block is keyed on the module attribute as well, not on
+// All three blocks are keyed on the module attribute as well, not on
 // "data-js-enhanced" alone: other components (accordion) set the same
 // attribute, and a dropdownNav sitting inside one of those would
 // otherwise pick up the bar layout below without ever having been
@@ -320,17 +322,52 @@
 // -------------------------------------------------------------
 [data-js-module*="dropdownNav"][data-js-enhanced] {
 
-  // Closed submenu. Collapsed viewport: simply out of the flow, so the
-  // items below move up. Expanded viewport: faded out and, crucially,
-  // visibility: hidden — which also removes its links from the tab order
-  // and the accessibility tree.
+  // Closed submenu in the stacked layout: simply out of the flow, so the
+  // items below move up.
   [data-dropdownnav-toggle][aria-expanded='false'] + [data-dropdownnav-panel] {
 
     @include vp-nav-collapsed {
       display: none;
     }
+  }
+}
 
-    @include vp-nav-expanded {
+
+
+// -------------------------------------------------------------
+// Pinned to the stacked layout with data-dropdownnav-stacked: the
+// nav keeps the collapsed rendering at every viewport width.
+//
+// The bar layout is a function of the room the *nav* has, and the
+// viewport is only a stand-in for that. It stops being one as soon as
+// the nav sits in a narrow box on a wide page — an offCanvasNav drawer
+// is the case this exists for — where the viewport says "bar" and the
+// 22rem it actually has says otherwise. The attribute is style-only in
+// spirit, but dropdownNav.js reads it too: hover opening and the
+// collision flip only exist in the flyout layout.
+// -------------------------------------------------------------
+[data-js-module*="dropdownNav"][data-js-enhanced][data-dropdownnav-stacked] {
+
+  [data-dropdownnav-toggle][aria-expanded='false'] + [data-dropdownnav-panel] {
+    display: none;
+  }
+}
+
+
+
+// -------------------------------------------------------------
+// Flyout layer: from the navigation breakpoint up the nav becomes a
+// horizontal bar and the submenus become floating panels — unless it
+// is pinned to the stacked layout (see above).
+// -------------------------------------------------------------
+[data-js-module*="dropdownNav"][data-js-enhanced]:not([data-dropdownnav-stacked]) {
+
+  @include vp-nav-expanded {
+
+    // Closed submenu: faded out and, crucially, visibility: hidden —
+    // which also removes its links from the tab order and the
+    // accessibility tree.
+    [data-dropdownnav-toggle][aria-expanded='false'] + [data-dropdownnav-panel] {
       visibility: hidden;
       opacity: 0;
 
@@ -344,12 +381,6 @@
         translate var(--dropdownNav-duration) var(--dropdownNav-easing),
         visibility 0s linear var(--dropdownNav-duration);
     }
-  }
-
-
-  // Expanded viewport: the nav becomes a horizontal bar and the submenus
-  // become floating panels.
-  @include vp-nav-expanded {
 
     .m-dropdownNav__list {
       flex-direction: row;
