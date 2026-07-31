@@ -1,5 +1,5 @@
 // =============================================================
-// tabs — behaviour-only, ships no styles
+// tabs — behaviour only, plus the one block CSS has to own
 // =============================================================
 //
 // The module upgrades an anchor-link table of contents into an ARIA tabs
@@ -9,4 +9,55 @@
 //   [data-tabs-tab][aria-selected='true']   the active tab
 //   [data-tabs-panel][hidden]               inactive panels (display:none
 //                                           comes free from `hidden`)
-// This stub exists only so the build has a stylesheet to compile.
+//
+// What this file does ship is the pre-enhancement state below. That is not
+// a visual, and it is not the project's to write: it has to be in force
+// before the module exists, and getting it wrong makes content unreachable
+// rather than ugly. Same reason marquee ships its clipping row — structure
+// the behaviour cannot work without, not design.
+
+// -------------------------------------------------------------
+// The pre-enhancement state (see
+// _shared/scss/_progressiveEnhancement.scss).
+//
+// Without it every page load paints all panels stacked one under the other
+// — the honest no-JS rendering — and then collapses them to one the moment
+// the module lands, a round trip later. On a tabs widget that is the most
+// violent flash in the set: the page is several screens too long, and then
+// it snaps.
+//
+// So the panels start in their enhanced resting position instead: one
+// visible, the rest out of the flow. Which one is visible is decided the
+// same way the module decides it, and that is what makes hiding the others
+// survivable. The tabs are in-page anchor links, so a URL fragment naming a
+// panel makes it :target — and a targeted panel is exempt here, exactly as
+// the module would select it on load. If this component's chunk never
+// arrives, the list above the panels is still a working table of contents:
+// every panel stays one click away, and the widget degrades to the document
+// it was authored as.
+//
+// Written out rather than through the shared pre-enhancement() mixin, and
+// this is the one component where that is right. The mixin guards with
+// ":not([<attr>])" on the element being styled, which assumes the flag and
+// the rule share a subject. Here they do not: the flag lands on the
+// container, the rules select panels, and tabs has no root class of its own
+// to nest them under (matching data-js-module with *= would be guesswork
+// about a comma-separated list). So the guard is ":not([data-tabs-ready] *)"
+// — "not inside a container the module has reached" — which needs no
+// container selector at all. Same two conditions as the mixin, same meaning.
+// -------------------------------------------------------------
+@media (scripting: enabled) {
+
+  // Every panel that has another panel before it: the first one is the
+  // module's default selection, so it is the one that stays.
+  [data-tabs-panel] ~ [data-tabs-panel]:not([data-tabs-ready] *):not(:target) {
+    display: none;
+  }
+
+  // ... unless a fragment names a later panel, in which case the first one
+  // steps aside for it. Written as "has a targeted panel after me", so it
+  // needs no assumption about which element comes first.
+  [data-tabs-panel]:not([data-tabs-ready] *):has(~ [data-tabs-panel]:target) {
+    display: none;
+  }
+}

@@ -143,31 +143,55 @@ from.
 
 See `backToTop.html` for a ready-to-copy snippet.
 
-### Starting hidden (opt-in)
+### Starting hidden (the default)
 Progressive enhancement cuts both ways here: because the hidden state is
-something the *script* adds, the control is visible for the moment between
-first paint and the lazily loaded module taking over. If you prefer no flash
-over a control that survives a broken script, start it hidden wherever
-scripting is on:
+something the *script* adds, the control would be visible for the whole moment
+between first paint and the lazily loaded module taking over — every page load
+would start with a back-to-top button in the corner and take it away again.
+The stylesheet therefore ships a **pre-enhancement state** that starts the
+control hidden wherever scripting is enabled:
 
 ```css
 @media (scripting: enabled) {
   .m-backToTop:not([data-backtotop-ready]) {
     opacity: 0;
     visibility: hidden;
+    translate: 0 var(--backToTop-enter-shift);
   }
 }
 ```
 
 `data-backtotop-ready` is the second attribute the module writes, and unlike
 `data-backtotop-hidden` it is not a state: it is set once, together with the
-first state write, and only says *the module has taken over*. That indirection
-is necessary — the absence of `data-backtotop-hidden` means **both** "scrolled
-far enough, show it" and "not initialised yet", so a rule keyed off it would
-hide the control exactly when it should appear.
+first state write, and only says *the module has settled this*. That
+indirection is necessary — the absence of `data-backtotop-hidden` means
+**both** "scrolled far enough, show it" and "not initialised yet", so a rule
+keyed off it would hide the control exactly when it should appear.
 
-With this in place a script that never runs (a JS error, `boot.min.js` not
-loaded) leaves the control invisible — which is the trade-off you are making.
+The module also sets it on its own when it bails out (markup that is not an
+in-page anchor link, or an engine without `IntersectionObserver`), so those
+cases fall back to the always-visible jump link the markup authored rather
+than to an invisible control.
+
+What this costs: a script that never runs at all — a JS error, `boot.min.js`
+not loaded, the chunk 404ing — leaves the control invisible. That is the
+mildest failure in the set, which is why this component ships the pre-state on
+by default: all that is lost is a shortcut to a place the reader can still
+scroll to. To take the opposite trade — a control that survives a broken
+script, at the price of a flash on every load — switch the block off:
+
+```css
+@media (scripting: enabled) {
+  .m-backToTop:not([data-backtotop-ready]) {
+    opacity: 1;
+    visibility: visible;
+    translate: 0;
+  }
+}
+```
+
+See [`docs/preEnhancement.md`](../../../docs/preEnhancement.md) for the
+strategy this is part of.
 
 ## Accessibility
 The control is a real link with a real accessible name, so it is reachable and

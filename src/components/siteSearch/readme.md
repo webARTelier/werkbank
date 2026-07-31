@@ -67,13 +67,25 @@ Both halves of the second rendering hang off `data-sitesearch-ready`, which the 
 
 **The fold on load does not animate, and that is deliberate.** The field is in the page until the module collapses it, so writing the collapsed state and the ready flag in one go would leave the browser a single style change to look at — wide, no transition → narrow, with a transition — and every page load would open with the search bar folding itself away. The module writes the collapsed state, forces a style flush, and only then flags itself ready: the first fold is instant, and only the ones a reader actually causes animate.
 
-**The flash before the module loads.** Because the form is in the page until then, the expanded search bar is briefly visible — measured on the demo page, the field folds away about 110 ms after navigation starts on a local server and about 790 ms on a throttled *Fast 3G* connection. It is most obvious right after a search is submitted, since the form is a plain GET and the result page starts over with the same flash. `offCanvasNav` makes the identical trade for the same reason. A project that prefers no flash — at the price of no search at all if the script fails to load — can hide it while scripting is available:
+**The flash before the module loads.** Because the form is in the page until then, the expanded search bar is briefly visible — measured on the demo page, the field folds away about 110 ms after navigation starts on a local server and about 790 ms on a throttled *Fast 3G* connection. It is most obvious right after a search is submitted, since the form is a plain GET and the result page starts over with the same flash.
 
-```css
-@media (scripting: enabled) {
-  .m-siteSearch:not([data-sitesearch-ready]) .m-siteSearch__form { display: none; }
+**This component ships no pre-enhancement state**, and that is a deliberate exception to what `tabs`, `offCanvasNav` and `backToTop` do. Hiding the field up front would mean showing the toggle up front, and the toggle is a `<button type="button">` that does nothing until the module wires it: a chunk that never arrives would leave the site with no search at all, behind a dead control. The other three all have a way out — `:target` for the two built on in-page links, nothing-to-lose for `backToTop` — and this one has none. See [`docs/preEnhancement.md`](../../../docs/preEnhancement.md) §2 for the rule.
+
+A project that would rather take the flash out and accept that risk can opt in, in a stylesheet loaded **after** `siteSearch.min.css` (it has to outrank the shipped rule that hides the toggle, which it matches exactly):
+
+```scss
+@use "progressiveEnhancement" as *;
+
+.m-siteSearch {
+
+  @include pre-enhancement("data-sitesearch-ready") {
+    .m-siteSearch__toggle { display: inline-flex; }
+    .m-siteSearch__form   { visibility: hidden; inline-size: 0; }
+  }
 }
 ```
+
+Note that it must reveal the toggle as well as collapse the form. Collapsing the form alone would hide the search entirely, since the shipped stylesheet keeps the toggle hidden until `data-sitesearch-ready` arrives.
 
 ## What the platform does, and what the module adds
 `<search>` is the landmark, `<form>` builds the query string and does the navigating, `<input type="search">` brings the search key on a mobile keyboard and a clear button in Chromium and WebKit, `<label for>` names the field. The expansion itself is a **pure CSS transition in both directions** — the element is rendered the whole time, only its inline size changes, so there is no top layer, no `@starting-style` and nothing to time from script. None of that is reimplemented. The module adds five things:

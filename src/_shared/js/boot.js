@@ -53,56 +53,82 @@ function parseModuleNames(el) {
 
 
 
+// Load and init one module on one element. The double-init flag is set
+// synchronously, before the first await, so two initModulesInScope() calls
+// racing over the same element cannot both get past it.
+async function initModule(el, name) {
+  const load = registry[name];
+
+  // warn if module is not registered
+  if (!load) {
+    services.reporter.report(
+      'loader',
+      `module "${name}" not found in registry.`, { el }
+    );
+    return;
+  }
+
+  // prevent double init
+  const key = `jsInit_${name}`;
+  if (el.dataset[key] === '1') return;
+  el.dataset[key] = '1';
+
+  try {
+    const mod = await load();
+
+    if (typeof mod.init !== 'function') {
+      services.reporter.report(
+        'loader',
+        `module "${name}" init failed.`, { el, mod }
+      );
+      return;
+    }
+
+    const cleanup = await Promise.resolve(mod.init(el, services));
+
+    if (typeof cleanup === 'function') {
+      if (!cleanups.has(el)) cleanups.set(el, new Map());
+      cleanups.get(el).set(name, cleanup);
+    }
+  }
+
+  catch (err) {
+    services.reporter.report(
+      'loader',
+      `failed to load module "${name}".`, { el, err }
+    );
+  }
+}
+
+
+
+// The modules ON one element run in source order: "a,b" may well mean that
+// b expects the markup a produced, and only the author of that attribute
+// knows. Between elements there is no such relationship, so they do not
+// wait for each other — see initModulesInScope.
+async function initElement(el) {
+  for (const name of parseModuleNames(el)) {
+    await initModule(el, name);
+  }
+}
+
+
+
 async function initModulesInScope(scope = document) {
   const nodes = scope.querySelectorAll('[data-js-module]');
 
-  for (const el of nodes) {
-    const names = parseModuleNames(el);
-
-    for (const name of names) {
-      const load = registry[name];
-
-      // warn if module is not registered
-      if (!load) {
-        services.reporter.report(
-          'loader',
-          `module "${name}" not found in registry.`, { el }
-        );
-        continue;
-      }
-
-      // prevent double init
-      const key = `jsInit_${name}`;
-      if (el.dataset[key] === '1') continue;
-      el.dataset[key] = '1';
-
-      try {
-        const mod = await load();
-
-        if (typeof mod.init !== 'function') {
-          services.reporter.report(
-            'loader',
-            `module "${name}" init failed.`, { el, mod }
-          );
-          continue;
-        }
-
-        const cleanup = await Promise.resolve(mod.init(el, services));
-
-        if (typeof cleanup === 'function') {
-          if (!cleanups.has(el)) cleanups.set(el, new Map());
-          cleanups.get(el).set(name, cleanup);
-        }
-      }
-
-      catch (err) {
-        services.reporter.report(
-          'loader',
-          `failed to load module "${name}".`, { el, err }
-        );
-      }
-    }
-  }
+  // Concurrently, and that is not a micro-optimisation: every module is a
+  // separate lazily imported chunk, so awaiting one element before starting
+  // the next turns n independent fetches into n round trips laid end to end.
+  // The last component on the page would then be enhanced n round trips
+  // after the first paint, which is exactly the window the pre-enhancement
+  // state in the stylesheets exists to cover (see
+  // _shared/scss/_progressiveEnhancement.scss). Shortening it is the other
+  // half of the same job.
+  //
+  // initElement never rejects — initModule catches per module and reports —
+  // so one broken module still cannot abort the rest of the page.
+  await Promise.all(Array.from(nodes, (el) => initElement(el)));
 }
 
 

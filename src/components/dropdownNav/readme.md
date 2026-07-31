@@ -62,6 +62,21 @@ This applies to the **leaf** panels only. A panel that itself owns a flyout is m
 
 Colors, spacing, sizing and animation are `--dropdownNav-*` custom properties, declared on the `.m-dropdownNav` root (see `dropdownNav.scss`) — override them there, in your own CSS or inline on the nav element.
 
+**The flash before the module loads.** The nav is a nested list with every submenu open until the script collapses it, so a page load paints the full list and then snaps to the bar. **This component ships no pre-enhancement state to cover that**, unlike `tabs`, `offCanvasNav` and `backToTop`. The reason is the disclosure buttons: the script *injects* them, so before it runs there is no control that could reopen a collapsed submenu, and — unlike the two navigation components built on in-page links — no fragment to fall back on either. Hiding the submenus up front would mean a chunk that never arrives loses most of the navigation. See [`docs/preEnhancement.md`](../../../docs/preEnhancement.md) §2 for the rule that decides this.
+
+A project willing to take that trade can opt in:
+
+```scss
+@use "progressiveEnhancement" as *;
+
+.m-dropdownNav {
+
+  @include pre-enhancement("data-dropdownnav-ready") {
+    [data-dropdownnav-panel] { display: none; }
+  }
+}
+```
+
 ## Accessibility
 Follows the ARIA APG **disclosure navigation** pattern, not `role="menubar"`: site navigation is a list of links, so the links stay real links in the natural tab order and each submenu is owned by a `<button aria-expanded aria-controls>`. A menubar would replace `Tab` with arrow keys and promise application-menu behaviour the component does not have.
 
@@ -74,7 +89,7 @@ Follows the ARIA APG **disclosure navigation** pattern, not `role="menubar"`: si
 - Links and toggles use the shared `focus-ring()` mixin (`light` tone). The open/close animation is a pure CSS enhancement and respects `prefers-reduced-motion` (duration **and** delay, since the delay is what holds the panel visible during the fade-out).
 
 ## Integration
-The JS exports `init(el, services)` and does not self-initialize. It is loaded on demand by `boot.js` for every element carrying `data-js-module="dropdownNav"` — one instance per nav. It sets no inline styles. The state it writes is `aria-expanded` on the toggles it injected (both the ARIA contract and the stylesheet's hook), `data-js-enhanced` on the nav once the upgrade succeeded, and two purely descriptive attributes the stylesheet keys its geometry off: `data-dropdownnav-flip` and `data-dropdownnav-parent`.
+The JS exports `init(el, services)` and does not self-initialize. It is loaded on demand by `boot.js` for every element carrying `data-js-module="dropdownNav"` — one instance per nav. It sets no inline styles. The state it writes is `aria-expanded` on the toggles it injected (both the ARIA contract and the stylesheet's hook), `data-dropdownnav-ready` on the nav once the upgrade succeeded, and two purely descriptive attributes the stylesheet keys its geometry off: `data-dropdownnav-flip` and `data-dropdownnav-parent`.
 
 `init` returns a cleanup function (see `destroyModulesInScope()` in `boot.js`) for hosts that mount/unmount the same subtree repeatedly. It removes the three document-level dismissal listeners and the `resize` listener, clears a pending hover timer and takes the injected buttons and the script-set attributes back out, so the markup is handed back exactly as it was authored.
 

@@ -121,9 +121,12 @@ const defaults = {
   hiddenAttribute: 'data-backtotop-hidden',
 
   // set on the control together with the first state write: the module
-  // is live. NOT a state — it is the "the script has taken over" marker
-  // the optional start-hidden CSS needs, because the absence of
-  // hiddenAttribute means both "visible" and "not initialised yet"
+  // is live. NOT a state — it is the "the script has settled this" marker
+  // the pre-enhancement CSS keys off, because the absence of
+  // hiddenAttribute means both "visible" and "not initialised yet". Also
+  // set on its own when the module bails, where it means the opposite
+  // ("nothing is coming") but has to have the same effect: lift the
+  // pre-enhancement state (see releasePreEnhancement)
   readyAttribute: 'data-backtotop-ready',
 
   // marker attribute on the injected sentinel: it makes the node
@@ -177,13 +180,19 @@ class BackToTop {
     // Markup that could not work unenhanced is reported and left alone:
     // hiding a control that leads nowhere would only make the broken
     // wiring harder to notice.
-    if (!this.checkControl()) return;
+    if (!this.checkControl()) {
+      this.releasePreEnhancement();
+      return;
+    }
 
     // Very old engines without IntersectionObserver stay unenhanced —
     // the control keeps its base look and works as the jump link it
     // already is. Bail before touching the DOM so no orphaned sentinel
     // is injected.
-    if (!('IntersectionObserver' in window)) return;
+    if (!('IntersectionObserver' in window)) {
+      this.releasePreEnhancement();
+      return;
+    }
 
     this.sentinel = this.injectSentinel();
     this.observe();
@@ -284,6 +293,23 @@ class BackToTop {
     });
 
     this.observer.observe(this.sentinel);
+  };
+
+
+
+  // Called from the two bail-outs in the constructor, and the only
+  // reason the ready marker is ever written without a state beside it.
+  //
+  // The pre-enhancement rule in backToTop.scss keeps the control off
+  // screen until this module reports in, so that a page load does not
+  // start with a visible control and take it away again. When the module
+  // bails, nothing is ever going to report in — and the two comments
+  // above the bail-outs describe a control that is still there: a jump
+  // link that works, or broken wiring that should be easy to spot.
+  // Neither survives being left hidden, so the marker goes on and the
+  // control is simply the one the markup authored.
+  releasePreEnhancement = () => {
+    this.control.toggleAttribute(defaults.readyAttribute, true);
   };
 
 

@@ -13,6 +13,14 @@
  * ARIA promises behaviour that does not exist. Fragment URLs stay shareable
  * in both worlds.
  *
+ * Where scripting IS enabled, tabs.scss collapses the panels to one before
+ * this script has loaded (the pre-enhancement state — see the stylesheet and
+ * docs/preEnhancement.md), so the page never paints the full stack and then
+ * snaps. That state lifts on data-tabs-ready, which the constructor sets
+ * before anything else — so markup this script bails on falls back to the
+ * plain stacked document rather than staying collapsed. A panel named by
+ * the URL fragment is exempt from it either way.
+ *
  * What the script adds
  * --------------------
  * 1. Roles and ARIA at runtime: role="tablist" / "tab" / "tabpanel",
@@ -73,6 +81,13 @@ const defaults = {
 
   // presence mirrors the selected tab into the URL fragment
   deeplinkAttr: 'data-tabs-deeplink',
+
+  // "This container is no longer waiting for a script." Set on the
+  // container by the constructor, which is what lifts the pre-enhancement
+  // state in tabs.scss — including when the constructor then bails on
+  // unusable markup. Only ever WRITTEN, never read back; see the
+  // constructor for why it goes first.
+  readyAttr: 'data-tabs-ready',
 };
 
 
@@ -107,6 +122,22 @@ class Tabs {
     this.reporter = reporter;
     this.items = [];
     this.selectedItem = null;
+
+    // First, not last, and the difference matters in both directions.
+    //
+    // The pre-enhancement rules in tabs.scss keep all but one panel out of
+    // the flow until this attribute appears; the panels only get their real
+    // `hidden` state further down. Setting it up front is safe because
+    // everything in this constructor runs in one synchronous task — the
+    // browser cannot paint the moment in between, so there is no frame in
+    // which the panels are all visible.
+    //
+    // What it buys is the bail-outs below. If the markup has no list or no
+    // usable tabs, this widget never happens, and leaving the pre-state in
+    // force would hide panels behind a widget that does not exist — with
+    // not even a table of contents to reach them by. Lifting it here means
+    // a bail always lands on the plain stacked document instead.
+    container.setAttribute(params.readyAttr, '');
 
     this.list = container.querySelector(params.listSelector);
     if (!this.list) {
@@ -394,6 +425,8 @@ class Tabs {
     this.list?.removeEventListener('click', this.handleClick);
     this.list?.removeEventListener('keydown', this.handleKeydown);
     window.removeEventListener('hashchange', this.handleHashChange);
+
+    this.container.removeAttribute(this.params.readyAttr);
   };
 }
 

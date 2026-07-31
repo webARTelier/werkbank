@@ -80,29 +80,22 @@
       scrolled less than the threshold it carries the attribute
       data-backtotop-hidden, and the stylesheet hides it. Without JS the
       attribute never appears and the control is simply always visible.
-      (A second attribute, data-backtotop-ready, marks that the module is
-      live; only the optional start-hidden rule below needs it.)
-    - That baseline also means the control IS briefly visible on a freshly
-      loaded page, until the lazily loaded module takes over. If you prefer
-      no flash over a control that survives a broken script, start it
-      hidden wherever scripting is on:
+    - Where scripting IS enabled, that baseline would mean a visible
+      control on every freshly loaded page, taken away again once the
+      lazily loaded module reports in. The stylesheet therefore ships a
+      pre-enhancement state: the control starts hidden until the module
+      sets its second attribute, data-backtotop-ready. That attribute is
+      what such a rule has to key off — a missing data-backtotop-hidden
+      means both "scrolled far enough" and "not initialised yet", so it
+      would hide the control exactly when it should appear. The module
+      also sets it when it bails out (markup that is not an in-page anchor
+      link, or an engine without IntersectionObserver), so those cases
+      fall back to the always-visible jump link.
 
-        @media (scripting: enabled) {
-          .m-backToTop:not([data-backtotop-ready]) {
-            opacity: 0;
-            visibility: hidden;
-          }
-        }
-
-      data-backtotop-ready is the module's second attribute: set once with
-      the first state write, it only means "the module has taken over" —
-      which is what such a rule has to key off. Keying it off a missing
-      data-backtotop-hidden instead would hide the control exactly when it
-      should appear, since that absence means both "scrolled far enough"
-      and "not initialised yet".
-
-      Careful: with this in place a script that never runs (JS error, boot
-      not loaded) leaves the control invisible.
+      What it costs: a script that never runs at all (JS error, boot not
+      loaded) leaves the control invisible — the mildest failure there is
+      here, since the reader can still scroll. The readme shows how to
+      take the opposite trade. See also docs/preEnhancement.md.
     - The stylesheet drops the control in @media print: it is fixed and
       permanently on screen, so it would otherwise be printed over the
       content — and a jump link means nothing on paper.

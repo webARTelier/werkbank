@@ -1,0 +1,42 @@
+/* ==========================================================================
+   Core Settings: _progressiveEnhancement.scss
+   The pre-enhancement state — what a component looks like in the gap between
+   the first paint and init(), exposed as a mixin.
+
+     @use "progressiveEnhancement" as *;
+     .m-thing {
+       @include pre-enhancement("data-thing-ready") {
+         &:not(:target) { display: none; }
+       }
+     }
+
+   boot.min.js is a deferred module script and each component is a second,
+   lazily imported chunk, so the first paint is always the unenhanced markup.
+   Rather than let the reader watch it change, the stylesheet states the
+   enhanced resting position up front — under two conditions, both
+   load-bearing:
+
+   - "@media (scripting: enabled)" — for a reader with scripting off the
+     unenhanced markup is not a transitional state but the final one.
+   - ":not([<name>-ready])" — the component's own ready attribute, set by its
+     init(). The loader's "data-js-init_<name>" cannot stand in for it: that
+     one is written BEFORE the chunk is imported.
+
+   And one rule about what may go in the block: whatever it declares is
+   permanent if the chunk never arrives, so it may hide something only when
+   that something stays reachable without the script. Full reasoning, the
+   decision table and the cases that deliberately ship nothing are in
+   docs/preEnhancement.md.
+
+   Note: this partial emits no CSS on its own — it only defines the mixin, so
+   it is @used by the components that declare a pre-enhancement state, not by
+   shared.scss.
+   ========================================================================== */
+
+@mixin pre-enhancement($ready-attr) {
+  @media (scripting: enabled) {
+    &:not([#{$ready-attr}]) {
+      @content;
+    }
+  }
+}

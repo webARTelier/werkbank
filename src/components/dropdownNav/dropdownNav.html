@@ -19,7 +19,7 @@
      navigation. The module upgrades it in place to the ARIA disclosure
      navigation pattern: it inserts one <button aria-expanded aria-controls>
      per submenu and the stylesheet starts collapsing the panels only once
-     that has happened (data-js-enhanced on the nav).
+     that has happened (data-dropdownnav-ready on the nav).
 
   Wiring
     - The nav carries data-js-module="dropdownNav" and — as a landmark —
@@ -39,6 +39,24 @@
     - Without JavaScript, or before the module has loaded, the nav is a
       nested list with every submenu open. Nothing is hidden and no control
       exists that would do nothing.
+    - That means a visible flash: the full nested list paints first and
+      collapses once the module lands. This component ships NO
+      pre-enhancement state to cover it, and the reason is the disclosure
+      buttons — the script INJECTS them, so before it runs there is no
+      control that could reopen a collapsed submenu, and no fragment to
+      fall back on either (unlike tabs or offCanvasNav). Hiding the
+      submenus up front would therefore make a chunk that never arrives
+      lose most of the navigation. A project willing to take that trade can
+      opt in (see docs/preEnhancement.md):
+
+        @use "progressiveEnhancement" as *;
+
+        .m-dropdownNav {
+
+          @include pre-enhancement("data-dropdownnav-ready") {
+            [data-dropdownnav-panel] { display: none; }
+          }
+        }
     - Below the navigation breakpoint (--bp-navigation, 1250px) the nav
       stays a stacked list and the submenus behave like an accordion; above
       it, the nav becomes a bar with floating panels.

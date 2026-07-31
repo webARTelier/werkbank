@@ -15,6 +15,11 @@
 //    offCanvasNav.js sets on the dialog only once it can actually be opened.
 //    The navigation can therefore never be collapsed into a drawer without a
 //    control that opens it again.
+// 3. Between the two sits a third, short-lived rendering nobody authored:
+//    the gap before the module has loaded, in which the flow rendering
+//    paints a full navigation that is about to become a burger. The
+//    pre-enhancement block further down covers it — see there for why
+//    hiding the navigation is safe in exactly that window.
 //
 // Two blocks, one stylesheet
 //   The drawer is "m-offCanvasNav", the burger is "m-offCanvasNavToggle".
@@ -57,6 +62,7 @@
 
 @use "focus" as *;
 @use "mediaqueries" as *;
+@use "progressiveEnhancement" as *;
 @use "visuallyHidden" as *;
 
 
@@ -427,6 +433,67 @@
 // rules also win where that one does not apply.
 .m-offCanvasNav[data-offcanvasnav-ready][data-offcanvasnav-always] {
   @include drawerRendering;
+}
+
+
+
+// -------------------------------------------------------------
+// The pre-enhancement state (see
+// _shared/scss/_progressiveEnhancement.scss).
+//
+// The two blocks above are the drawer once the module is live. Before it
+// is — and boot.js needs two round trips to get there, one for itself and
+// one for this component's chunk — the flow rendering is what paints, so a
+// narrow viewport opens every page with the full navigation expanded down
+// the screen and then folds it into a burger. That is the flash, and it is
+// the whole menu.
+//
+// Scoped to the same two conditions as the drawer, and both matter. Below
+// the navigation breakpoint only: above it the flow rendering is not a
+// transitional state at all, it is the final one, and hiding the
+// navigation there would blank the site header on every load. And with
+// data-offcanvasnav-always the drawer is the navigation at every width, so
+// the pre-state has to follow it up there.
+//
+// ":not(:target)" is what makes hiding the navigation survivable. The
+// burger is authored as a link to the drawer's id, so if this component's
+// chunk never arrives, following it still makes the <dialog> the URL
+// fragment's target — and a target is exempt here, so the navigation
+// simply appears as the block of the page it is without any script. The
+// menu can therefore never end up both hidden and unreachable, which is
+// the one thing a pre-enhancement state must not do.
+//
+// "[id]" is the other half of that guarantee, and it is not defensive
+// styling for its own sake: a fragment can only ever target an element
+// that has an id, so without one the escape hatch above does not exist.
+// It happens to be the module's only bail-out too — offCanvasNav.js gives
+// up on a <dialog> with no id, because no trigger can address it either,
+// and leaves the navigation in the page as a plain block. Requiring the id
+// here makes this rule apply in exactly the cases where the module can
+// succeed AND where a failure stays recoverable.
+// -------------------------------------------------------------
+.m-offCanvasNav[id] {
+
+  @include pre-enhancement("data-offcanvasnav-ready") {
+
+    @include vp-nav-collapsed {
+
+      &:not(:target) {
+        display: none;
+      }
+    }
+  }
+}
+
+
+.m-offCanvasNav[id][data-offcanvasnav-always] {
+
+  @include pre-enhancement("data-offcanvasnav-ready") {
+
+    &:not(:target) {
+      display: none;
+    }
+  }
 }
 
 

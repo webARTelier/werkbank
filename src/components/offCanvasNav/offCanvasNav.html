@@ -112,14 +112,15 @@
       prefers-reduced-motion. The drawer also honours a forced-colors context
       (the Windows contrast themes), where the panel gets a border and the
       burger bars are repainted in the system colours.
-    - Because the navigation is in the page until the module has loaded, a
-      long menu is briefly visible on a narrow viewport. A project that
-      prefers no flash — at the price of no navigation at all if the script
-      fails to load — can hide it while scripting is available:
-
-        @media (scripting: enabled) {
-          .m-offCanvasNav:not([data-offcanvasnav-ready]) { display: none; }
-        }
+    - The navigation is in the page until the module has loaded, so a narrow
+      viewport would open every page with the whole menu expanded and then
+      fold it into the burger. offCanvasNav.scss ships a pre-enhancement
+      block that covers that gap: below the navigation breakpoint, and only
+      where scripting is enabled, the drawer starts hidden until
+      data-offcanvasnav-ready arrives. It stays reachable meanwhile because
+      the burger is a link to it — a drawer that is the URL fragment's
+      target is exempt from the rule, so a chunk that never loads leaves the
+      navigation one click away rather than gone. See docs/preEnhancement.md.
 -->
 
 

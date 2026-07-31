@@ -12,7 +12,7 @@
  * a sitemap-like navigation that is fully usable and completely honest: no
  * ARIA promises behaviour that is not there, and no control exists that
  * would do nothing when clicked. The stylesheet keeps that flat rendering
- * until this script sets data-js-enhanced on the nav, so the dropdown
+ * until this script sets data-dropdownnav-ready on the nav, so the dropdown
  * layout and the collapsed panels only ever appear together with the code
  * that can open them again.
  *
@@ -180,7 +180,7 @@ const defaults = {
   // Set on the nav once the markup has been upgraded. The stylesheet only
   // switches to the dropdown layout when it is present, so the plain
   // nested list stays visible for everyone without this script.
-  enhancedAttr: 'data-js-enhanced',
+  readyAttr: 'data-dropdownnav-ready',
 
   // Default accessible name of a split toggle; '{label}' is replaced by
   // the item's label text.
@@ -303,7 +303,7 @@ class DropdownNav {
     // this attribute, so the panels have no flyout geometry to measure
     // until it is there. Had the enhancement bailed above, the markup
     // stays the plain nested list it is without this script.
-    this.root.setAttribute(params.enhancedAttr, '');
+    this.root.setAttribute(params.readyAttr, '');
 
     this.evaluateFlips();
   }
@@ -832,7 +832,7 @@ class DropdownNav {
     });
 
     this.records = [];
-    this.root.removeAttribute(this.params.enhancedAttr);
+    this.root.removeAttribute(this.params.readyAttr);
   };
 }
 

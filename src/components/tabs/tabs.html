@@ -46,13 +46,21 @@
                                         fragment
 
   Styling
-    - tabs.min.css is an empty stub by design (behaviour-only component).
-      Style the widget in your project via the ARIA the JS maintains:
+    - tabs.min.css ships no design (behaviour-only component). Style the
+      widget in your project via the ARIA the JS maintains:
         [data-tabs-tab][aria-selected='true']   the active tab
         [data-tabs-panel][hidden]               inactive panels (display:none
                                                 comes free from `hidden`)
       Style the tabs' own :focus-visible ring in your project too. The demo
       (demo.html) shows one complete example design.
+    - The one thing it does ship is the pre-enhancement state: where
+      scripting is enabled, the panels start collapsed to one BEFORE the
+      module has loaded, so the page does not paint every panel stacked and
+      then snap to a single one a round trip later. It lifts as soon as the
+      module sets data-tabs-ready. Nothing is lost if the chunk never
+      arrives — a panel named by the URL fragment is exempt from the rule,
+      so the list of jump links above still reaches all of them. See
+      docs/preEnhancement.md.
 -->
 
 

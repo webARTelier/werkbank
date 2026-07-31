@@ -208,6 +208,10 @@ component's `demo.html` in the browser.
 - [`docs/componentStandards.md`](docs/componentStandards.md) — the authoring
   checklist every component follows (file set, `init` contract, JS/SCSS
   style, accessibility, demo/readme structure).
+- [`docs/preEnhancement.md`](docs/preEnhancement.md) — how the flash between
+  the first paint and `init()` is handled: the `data-<name>-ready` attribute,
+  the `pre-enhancement()` mixin, and the rule that decides which components
+  are allowed to hide something before their script has arrived.
 - [`CLAUDE.md`](CLAUDE.md) — naming conventions, DI vs. direct import, and
   the focus-ring convention.
 

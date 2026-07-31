@@ -67,13 +67,21 @@ The same markup is rendered two ways, and the boundary between them is the point
 
 So one piece of markup serves both layouts: the navigation is never authored, or maintained, twice. Every rule that collapses the navigation is scoped to `data-offcanvasnav-ready`, which the module sets only once the drawer can actually be opened — "collapsed into a drawer" and "there is a control that opens it" always arrive together.
 
-**The flash before the module loads.** Because the navigation is in the page until then, a long menu is briefly visible on a narrow viewport. A project that prefers no flash — at the price of no navigation at all if the script fails to load — can hide it while scripting is available:
+**The flash before the module loads.** The navigation is in the page until then, so a narrow viewport would open every page with the whole menu expanded down the screen and then fold it into the burger. The stylesheet ships a **pre-enhancement state** that covers exactly that gap:
 
 ```css
-@media (scripting: enabled) {
-  .m-offCanvasNav:not([data-offcanvasnav-ready]) { display: none; }
+@media (scripting: enabled) and (width < 1250px) {
+  .m-offCanvasNav[id]:not([data-offcanvasnav-ready]):not(:target) { display: none; }
 }
 ```
+
+Three qualifiers, all load-bearing:
+
+- **Below the navigation breakpoint only** (and at every width for a drawer with `data-offcanvasnav-always`, which is the second block). Above it, the flow rendering is not a transitional state but the final one — hiding the navigation there would blank the site header on every load.
+- **`:not(:target)`** is what makes hiding the navigation survivable. The burger is authored as a link to the drawer's id, so if this component's chunk never arrives, following it still makes the `<dialog>` the fragment's target — and a target is exempt, so the navigation appears as the plain block of the page it is without any script. It can never end up both hidden and unreachable.
+- **`[id]`** because a fragment can only target an element that has one. It is also the module's only bail-out (`offCanvasNav.js` gives up on a `<dialog>` with no id, since no trigger can address it either), so the rule applies in exactly the cases where the module can succeed *and* a failure stays recoverable.
+
+See [`docs/preEnhancement.md`](../../../docs/preEnhancement.md) for the strategy this is part of.
 
 ## Composition
 Submenus are not this component's business. Put a **`dropdownNav`** in the drawer body and it brings its own disclosure buttons; its stacked layout is exactly the one a drawer wants, so the submenus behave like an accordion inside it. Any other `<nav>` works as well — offCanvasNav owns the drawer, its trigger and its dismissal, nothing else. Above the breakpoint both components hand the same markup back to the page: offCanvasNav renders it in the flow, dropdownNav turns it into its horizontal bar with flyouts.

@@ -19,13 +19,15 @@
   <!--
       DEMO-ONLY STYLES
       ----------------------------------------------------------------------
-      tabs ships an empty stub stylesheet (behaviour-only component).
-      Everything below is ONE example of how a consuming project styles the
-      widget; none of it is part of the component. The styling hooks are the
-      ARIA attributes the JS maintains — [aria-selected='true'] on the active
-      tab, `hidden` on the inactive panels — plus the data-* attributes for
-      element selection. (Tokens like --space-* / --color-* come from
-      shared.min.css.)
+      tabs ships no design (behaviour-only component) — its stylesheet
+      carries only the pre-enhancement state, which collapses the panels to
+      one before the module has loaded so this page does not paint the whole
+      stack and then snap. Everything below is ONE example of how a consuming
+      project styles the widget; none of it is part of the component. The
+      styling hooks are the ARIA attributes the JS maintains —
+      [aria-selected='true'] on the active tab, `hidden` on the inactive
+      panels — plus the data-* attributes for element selection. (Tokens like
+      --space-* / --color-* come from shared.min.css.)
   -->
 
   <style>

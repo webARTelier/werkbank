@@ -53,6 +53,43 @@ every page, so anything it imports for the `services` object lands in the
 always-loaded `boot.min.js` — defeating the per-component lazy loading. Utilities
 also have no config/shared state, so DI would add indirection without benefit.
 
+## Pre-enhancement state (the gap before `init()`)
+
+`boot.min.js` is a deferred module script and each component is a second,
+lazily imported chunk, so the **first paint is always the unenhanced markup**.
+Where that differs visibly from the enhanced rendering, the component states
+the enhanced resting position in CSS up front instead of letting the reader
+watch it change. See `docs/preEnhancement.md` for the full strategy; the parts
+to know before touching a component:
+
+- **One attribute per component: `data-<name>-ready`** (lowercase), held in
+  `defaults` as `readyAttr`, set on the root by `init()`, removed by the
+  cleanup function. Only ever written, never read back. There is deliberately
+  **no** generic flag — an element can carry several modules and components
+  nest, so a shared name cannot say who set it (`data-js-enhanced` used to,
+  and `dropdownNav` needed a `[data-js-module*=…]` qualifier to work around
+  it). The loader's `data-js-init_<name>` is not a substitute: it is written
+  *before* the chunk is imported.
+- **One mixin: `_shared/scss/_progressiveEnhancement.scss`.**
+
+  ```scss
+  @use "progressiveEnhancement" as *;
+  .m-thing { @include pre-enhancement("data-thing-ready") { … } }
+  ```
+
+  It wraps the rules in `@media (scripting: enabled)` — a reader with
+  scripting off must never see a transitional state — and in
+  `:not([data-thing-ready])`. It assumes the flag and the rule share a
+  subject; `tabs` is the one component where they cannot, and writes the same
+  two conditions out with a `:not([data-tabs-ready] *)` guard instead.
+- **The block only ships when it is survivable.** Whatever it declares is
+  permanent if the chunk 404s. It may hide something only when nothing is
+  lost (`backToTop`), a `:target` escape keeps it reachable (`tabs`,
+  `offCanvasNav`), or the module lifts the state on its own bail-outs.
+  Otherwise it stays a documented opt-in in the component's snippet
+  (`siteSearch`, `dropdownNav`) — hiding content behind a control the script
+  never delivered is the one outcome the convention exists to prevent.
+
 ## Focus ring (keyboard focus indicator)
 
 The keyboard `:focus-visible` ring is **opt-in per element**, not a global rule.

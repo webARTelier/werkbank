@@ -9,13 +9,13 @@
 //    nested list of links, every submenu visible, indented one level per
 //    depth. That is also the layout used below the navigation breakpoint,
 //    where the enhanced nav behaves like a stacked accordion.
-// 2. The enhanced layer is scoped to "data-js-enhanced", which dropdownNav.js
+// 2. The enhanced layer is scoped to "data-dropdownnav-ready", which dropdownNav.js
 //    sets on the nav only after it has successfully inserted the disclosure
 //    buttons. Panels can therefore never be collapsed without a control to
 //    open them again.
 //
 // Contract with the JS
-//   - dropdownNav.js sets "data-js-enhanced" on the nav element.
+//   - dropdownNav.js sets "data-dropdownnav-ready" on the nav element.
 //   - Per item it injects a <button data-dropdownnav-toggle="split|label">
 //     between the label and the panel and keeps its aria-expanded in sync.
 //     That ARIA state is the *only* open/closed hook — the script writes no
@@ -316,14 +316,16 @@
 // one applies is decided by the navigation breakpoint, or pinned to the
 // stacked one by data-dropdownnav-stacked (see the two blocks below).
 //
-// All three blocks are keyed on the module attribute as well, not on
-// "data-js-enhanced" alone: other components (accordion) set the same
-// attribute, and a dropdownNav sitting inside one of those would
-// otherwise pick up the bar layout below without ever having been
-// enhanced itself. Matched with *= because data-js-module holds a
-// comma-separated list ("accordion,dropdownNav"), which ~= cannot split.
+// The ready attribute is the component's own ("data-dropdownnav-ready",
+// see docs/preEnhancement.md), which is the whole reason these blocks can
+// key on it alone. They used to carry a "[data-js-module*='dropdownNav']"
+// qualifier as well, because the flag was a generic "data-js-enhanced" that
+// other components set too — so a dropdownNav nested inside one of them
+// picked up the bar layout below without ever having been enhanced itself.
+// A per-component name cannot be claimed by anyone else, and the qualifier
+// went with it.
 // -------------------------------------------------------------
-[data-js-module*="dropdownNav"][data-js-enhanced] {
+[data-dropdownnav-ready] {
 
   // Closed submenu in the stacked layout: simply out of the flow, so the
   // items below move up.
@@ -349,7 +351,7 @@
 // spirit, but dropdownNav.js reads it too: hover opening and the
 // collision flip only exist in the flyout layout.
 // -------------------------------------------------------------
-[data-js-module*="dropdownNav"][data-js-enhanced][data-dropdownnav-stacked] {
+[data-dropdownnav-ready][data-dropdownnav-stacked] {
 
   [data-dropdownnav-toggle][aria-expanded='false'] + [data-dropdownnav-panel] {
     display: none;
@@ -363,7 +365,7 @@
 // horizontal bar and the submenus become floating panels — unless it
 // is pinned to the stacked layout (see above).
 // -------------------------------------------------------------
-[data-js-module*="dropdownNav"][data-js-enhanced]:not([data-dropdownnav-stacked]) {
+[data-dropdownnav-ready]:not([data-dropdownnav-stacked]) {
 
   @include vp-nav-expanded {
 
@@ -523,7 +525,7 @@
 @media (prefers-reduced-motion: reduce) {
 
   [data-dropdownnav-toggle]::after,
-  [data-js-module*="dropdownNav"][data-js-enhanced] [data-dropdownnav-panel] {
+  [data-dropdownnav-ready] [data-dropdownnav-panel] {
     transition-duration: 0.01ms !important;
     transition-delay: 0s !important;
   }

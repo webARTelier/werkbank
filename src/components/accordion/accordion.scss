@@ -16,8 +16,12 @@
 // The "m-accordion*" classes (BEM "m-" prefix) are used for styling only.
 // accordion.js does NOT hook onto them; it targets separate data attributes
 // in the markup ("data-accordion-item", "data-accordion-panel"). When the JS
-// fallback runs it also sets "data-js-enhanced" on the container and wraps
-// each panel in an element carrying "data-accordion-wrapper".
+// fallback runs it also sets "data-accordion-ready" on the container and
+// wraps each panel in an element carrying "data-accordion-wrapper".
+//
+// No pre-enhancement block here (see docs/preEnhancement.md): a <details>
+// renders closed with or without this script, so there is no flash to cover
+// — the ready attribute exists to pick the animation, not to hide anything.
 
 @use "focus" as *;
 
@@ -175,10 +179,10 @@
 
 // -------------------------------------------------------------
 // Fallback animation via CSS grid (for JS-driven browsers).
-// The JS sets the "data-js-enhanced" attribute on the container and
+// The JS sets the "data-accordion-ready" attribute on the container and
 // wraps each panel in an element carrying "data-accordion-wrapper".
 // -------------------------------------------------------------
-[data-js-enhanced] .m-accordion__item {
+[data-accordion-ready] .m-accordion__item {
 
   // The wrapper the JS inserts around the panel content
   >[data-accordion-wrapper] {
@@ -232,11 +236,11 @@
 // -------------------------------------------------------------
 // Native animation for browsers that support ::details-content
 // (currently Chromium-only). Only active when the JS did NOT take
-// over (i.e. no "data-js-enhanced" attribute on the container) and the
-// browser supports the required properties.
+// over (i.e. no "data-accordion-ready" attribute on the container) and
+// the browser supports the required properties.
 // -------------------------------------------------------------
 @supports (interpolate-size: allow-keywords) {
-  .m-accordion:not([data-js-enhanced]) {
+  .m-accordion:not([data-accordion-ready]) {
     
     .m-accordion__item {
       interpolate-size: allow-keywords;
@@ -270,7 +274,7 @@
 
   .m-accordion__trigger::after,
   .m-accordion__item::details-content,
-  [data-js-enhanced] .m-accordion__item>[data-accordion-wrapper] {
+  [data-accordion-ready] .m-accordion__item>[data-accordion-wrapper] {
     transition-duration: 0.01ms !important;
   }
 }

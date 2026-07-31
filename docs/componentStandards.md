@@ -4,7 +4,9 @@ Distilled from the reworked components (`accordion`, `adaptiveScrollFade`,
 `countdown`, `dateInputFormat`, `dialog`, `flexNeighborMarker`,
 `formValidation`). This is the checklist to follow when building or reworking a
 component, so it does not have to be re-derived each time. Read it together with
-the top-level `CLAUDE.md` (naming, DI-vs-import, focus-ring conventions).
+the top-level `CLAUDE.md` (naming, DI-vs-import, focus-ring conventions) and
+[`preEnhancement.md`](preEnhancement.md) (the ready attribute and the state
+that covers the gap between the first paint and `init()`).
 
 > **Comment line length.** Keep the *text* of code comments within **78
 > characters** per line so they never wrap awkwardly in a narrow editor pane.
@@ -60,7 +62,13 @@ component's own lazy chunk instead.
 
 **Per-element init** (`initModulesInScope(scope = document)`):
 
-1. Query `scope` for `[data-js-module]` elements.
+1. Query `scope` for `[data-js-module]` elements. The elements are processed
+   **concurrently** (`Promise.all`) — every module is its own lazily imported
+   chunk, so awaiting one element before starting the next would lay n
+   independent fetches end to end and enhance the last component n round trips
+   after the first paint. The modules **on one element** still run in source
+   order: `data-js-module="a,b"` may mean that `b` expects the markup `a`
+   produced.
 2. For each element, parse the attribute as a **comma-separated** list of module
    names (`'accordion,slider'` → `['accordion', 'slider']`), trimmed, empties
    dropped.
@@ -124,6 +132,16 @@ Boot (`_shared/js/boot.js`) lazily imports the module when it sees
   component name used as the console prefix; use the **camelCase module name**
   (e.g. `'inlineSVG'`), not a lowercased form (the lowercase prefixes in
   `CLAUDE.md`'s "still open" list are legacy, not the target).
+- **Own a ready attribute if the component has a pre-enhancement state.**
+  `data-<name>-ready` (lowercase), held in `defaults` as `readyAttr`, set on
+  the component root by `init()` and removed again by the cleanup function.
+  It is only ever *written*, never read back. The stylesheet keys its
+  pre-enhancement block off its absence, so the moment it is set matters: set
+  it when the component can actually operate the state it declares — and, if
+  `init()` can bail on unusable markup, set it on those paths too, so a bail
+  never leaves content hidden behind a widget that does not exist. Never
+  reuse the loader's `data-js-init_<name>`: that one is written *before* the
+  chunk is imported. See [`preEnhancement.md`](preEnhancement.md) §3.
 - **Optionally return a cleanup function** — `init` may `return () => { ... }`.
   The loader stores it and calls it from `destroyModulesInScope()` (§2). This
   matters only for state that outlives the component's own subtree: listeners
@@ -230,6 +248,17 @@ Boot (`_shared/js/boot.js`) lazily imports the module when it sees
   must **not** hook onto `m-*` classes — it targets the element via
   `data-js-module` and behavioural `data-*` attributes. State classes the JS
   writes (`is-invalid`, `has-neighbor`, `is-scrollLocked`) are the styling hook.
+- **Declare the pre-enhancement state** if the first paint differs visibly
+  from the enhanced one. `@use "progressiveEnhancement" as *;` and wrap the
+  rules in `pre-enhancement("data-<name>-ready")`. The mixin assumes the flag
+  and the rule share a subject; where they cannot (`tabs` has no root class to
+  nest its panel rules under), write the same two conditions out with a
+  `:not([data-<name>-ready] *)` guard and say why. The block only ever ships
+  when it is **survivable** — nothing
+  lost, a `:target` escape hatch, or a bail-out that lifts the state — because
+  a chunk that never arrives makes it permanent. Where it is not, document the
+  rule in the snippet as an opt-in instead of shipping it. Full decision table
+  and the reasoning in [`preEnhancement.md`](preEnhancement.md).
 - **Focus ring is opt-in per element** via the `focus-ring()` mixin
   (`@use "focus" as *;`). Pick the tone by the element's own surface (the theme
   is dark → almost always `light`). See the focus-ring section in `CLAUDE.md`.
@@ -245,10 +274,13 @@ Boot (`_shared/js/boot.js`) lazily imports the module when it sees
 - Use **logical properties** (`inset-inline-end`, `inline-size`) so RTL /
   vertical writing modes stay correct.
 - **Behaviour-only components ship a stub stylesheet** and leave visuals
-  (including focus) to the consuming project (`tabs`, `formValidation`,
+  (including focus) to the consuming project (`formValidation`,
   `inputCharCount`, `inlineSVG`, `scaleSVG`). A component may also ship *only*
-  the rules it cannot work without (e.g. `marquee`'s clipping flex row) and
-  still leave every visual to the project.
+  the rules it cannot work without and still leave every visual to the
+  project: `marquee`'s clipping flex row, `tabs`' pre-enhancement block. Both
+  are structure, not design — the project could not write either one later,
+  and in the `tabs` case getting it wrong makes content unreachable rather
+  than ugly.
 
 
 ## 7. `<name>.html` (copy-paste snippet)
@@ -260,7 +292,10 @@ A leading comment banner titled `<name> — copy-paste snippet`, with:
 2. how to place the markup and wire it (`data-js-module`, the behavioural
    `data-*` attributes);
 3. a **Notes / Configuration** section covering progressive-enhancement
-   behaviour and every optional attribute with its default.
+   behaviour and every optional attribute with its default. Where the
+   component ships a pre-enhancement state, say what it hides and what
+   happens if the chunk never arrives; where it deliberately does not, give
+   the opt-in rule and name the trade.
 
 Then the actual, minimal ready-to-paste markup.
 
@@ -298,7 +333,8 @@ paragraphs, and several live examples exercising each mode of the component.
 - **SCSS tokens** (`_shared/scss/`): `_foundations` (space/animation/radius),
   `_colors_primitives` + `_colors_semantic`, `_focus` (mixin only),
   `_visuallyHidden` (mixin only — `visually-hidden`, for the text node that
-  names an icon-only control),
+  names an icon-only control), `_progressiveEnhancement` (mixin only —
+  `pre-enhancement`, the state that covers the gap before `init()`),
   `_breakpoints` / `_mediaqueries`, `_functions`.
 - **Shared media** (`_shared/media/img/`): `icons/`, `system/`. Note: the build
   does **not** copy `media` into `dist`, so reference icons inline

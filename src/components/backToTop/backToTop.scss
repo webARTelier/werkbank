@@ -14,19 +14,17 @@
 //   - A second attribute comes with the first state write and is NOT a
 //     state:
 //       data-backtotop-ready -> the lazily loaded module has taken over
-//     Nothing in this file keys off it; it exists because the absence of
-//     data-backtotop-hidden means both "visible" and "not initialised
-//     yet", so it is the only thing the optional start-hidden CSS in the
-//     readme can hang on.
+//     It exists because the absence of data-backtotop-hidden means both
+//     "visible" and "not initialised yet", and the pre-enhancement block
+//     below has to tell those two apart.
 //   - The script sets no inline styles and runs no animations, so
 //     everything visual — including the appear/disappear transition and
 //     its prefers-reduced-motion escape — lives here.
 //   - NO attribute means visible. That is the progressive-enhancement
-//     baseline: without JavaScript (and in the moment before the lazy
-//     module takes over) the control is a plain, always visible jump
-//     link, never a dead control. See the readme for the
-//     `@media (scripting: enabled)` opt-out for projects that would
-//     rather start hidden.
+//     baseline: without JavaScript the control is a plain, always visible
+//     jump link, never a dead control. The moment BEFORE the lazy module
+//     takes over is not that baseline though — see the pre-enhancement
+//     block below, and the readme for how to trade it back.
 //   - `visibility: hidden` (not opacity alone) does the hiding, so the
 //     hidden control leaves the tab order and the accessibility tree —
 //     there is no invisible tab stop at the top of the page. visibility
@@ -62,6 +60,7 @@
 
 @use "focus" as *;
 @use "mediaqueries" as *;
+@use "progressiveEnhancement" as *;
 @use "visuallyHidden" as *;
 
 
@@ -167,6 +166,30 @@
   // The :focus-visible exception keeps a control that still holds
   // keyboard focus on screen (see the contract above).
   &[data-backtotop-hidden]:not(:focus-visible) {
+    opacity: 0;
+    visibility: hidden;
+    translate: 0 var(--backToTop-enter-shift);
+  }
+
+  // The pre-enhancement state: the same "not on screen" the rule above
+  // describes, for the gap between the first paint and the module taking
+  // over (see _shared/scss/_progressiveEnhancement.scss). Without it every
+  // page load starts with the control on screen and takes it away again a
+  // round trip later, because "no data-backtotop-hidden" means both
+  // "visible" and "nobody has looked yet" — which is what the ready
+  // attribute is here to tell apart.
+  //
+  // Safe to ship on by default, and this is the component that makes the
+  // criterion concrete: if the chunk never arrives, all that is lost is a
+  // shortcut to a place the reader can still scroll to. Nothing becomes
+  // unreachable, so there is nothing to weigh against the flash. (The
+  // reverse trade — a control that survives a broken script at the price of
+  // a flash on every load — is one rule away; see the readme.)
+  //
+  // Declaring the shift too, rather than opacity/visibility alone, is what
+  // makes the first appearance the ordinary one: a page restored mid-scroll
+  // then slides the control in exactly like a page scrolled by hand.
+  @include pre-enhancement("data-backtotop-ready") {
     opacity: 0;
     visibility: hidden;
     translate: 0 var(--backToTop-enter-shift);

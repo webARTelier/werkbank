@@ -64,6 +64,27 @@
       the script that operates it has arrived. Both halves hang off
       data-sitesearch-ready, which the module sets only once the field can be
       expanded again.
+    - This component ships NO pre-enhancement state, so the field is visible
+      for the moment before the module loads and then folds shut. That is
+      deliberate: hiding it up front would need the toggle up front too, and
+      the toggle is a <button> that does nothing without the script — so a
+      chunk that never arrives would leave the site with no search at all,
+      behind a dead control. Unlike tabs or offCanvasNav there is no
+      fragment to fall back on. A project that would rather take that trade
+      can opt in with this, in a stylesheet loaded AFTER siteSearch.min.css
+      (it has to outrank the shipped rule that hides the toggle, and it
+      matches it exactly). docs/preEnhancement.md explains what the trade
+      signs up for:
+
+        @use "progressiveEnhancement" as *;
+
+        .m-siteSearch {
+
+          @include pre-enhancement("data-sitesearch-ready") {
+            .m-siteSearch__toggle { display: inline-flex; }
+            .m-siteSearch__form   { visibility: hidden; inline-size: 0; }
+          }
+        }
     - data-sitesearch-side="start" (on the root, optional) unrolls the field
       towards the inline-start of the toggle — for a toggle at the far end of
       a header. Style only, and mirrored on its own in a right-to-left

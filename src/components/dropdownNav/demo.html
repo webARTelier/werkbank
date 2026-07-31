@@ -150,7 +150,7 @@
             - Without JS every submenu is simply visible: a sitemap-like
               navigation with no hidden content and no dead controls. The
               stylesheet only collapses panels once the module has set
-              data-js-enhanced on the nav — so a panel can never be closed
+              data-dropdownnav-ready on the nav — so a panel can never be closed
               without a button to open it again.
 
           Accessibility
@@ -590,7 +590,7 @@
           no chevron that would do nothing when clicked, no ARIA promising
           behaviour that is not there. The stylesheet only starts
           collapsing panels once the script has set
-          <code>data-js-enhanced</code>, so “collapsed” and “can be
+          <code>data-dropdownnav-ready</code>, so “collapsed” and “can be
           expanded again” always arrive together.
         </p>
 

@@ -50,7 +50,14 @@ const defaults = {
   panelSelector: '[data-accordion-panel]',
   wrapperAttr: 'data-accordion-wrapper',
   clipAttr: 'data-accordion-clip',
-  enhancedAttr: 'data-js-enhanced',
+
+  // "The module has taken over." Set on the container the moment the
+  // fallback enhancement starts; the stylesheet switches from the native
+  // animation to the grid one on it. The standard ready attribute every
+  // component owns (see docs/preEnhancement.md) — accordion needs no
+  // pre-enhancement state of its own, because a <details> renders closed
+  // with or without this script, but the name stays the shared one.
+  readyAttr: 'data-accordion-ready',
 };
 
 
@@ -78,7 +85,7 @@ class AccordionEnhancer {
     this.panelSelector = params.panelSelector;
     this.wrapperAttr = params.wrapperAttr;
     this.clipAttr = params.clipAttr;
-    this.enhancedAttr = params.enhancedAttr;
+    this.readyAttr = params.readyAttr;
 
     this.enhance();
   }
@@ -87,7 +94,7 @@ class AccordionEnhancer {
 
   // wraps every item in the container so it can be animated
   enhance = () => {
-    this.container.setAttribute(this.enhancedAttr, '');
+    this.container.setAttribute(this.readyAttr, '');
 
     // Per-item records, so we can coordinate grouped (single-open)
     // behaviour ourselves instead of leaving it to the browser.

@@ -8,8 +8,8 @@ roving-tabindex keyboard support.
 
 ## Files needed to copy
 - `tabs.html` – markup
-- `tabs.scss` – styles (source; compiled to `dist/css/tabs.min.css` — an empty
-  stub by design, see *Styling*)
+- `tabs.scss` – styles (source; compiled to `dist/css/tabs.min.css` — no design
+  by design, but not empty: it carries the pre-enhancement state, see *Styling*)
 - `tabs.js` – behavior
 
 There is **no vendor dependency** and no bundled shared utility.
@@ -73,10 +73,9 @@ panel id.
   reported rather than silently shipped unnamed.
 
 ## Styling
-The component ships an **empty stub stylesheet** — it is behaviour-only, and
-every visual (including the focus ring) belongs to the consuming project. The
-styling hooks are the ARIA attributes the JS maintains; no state class is
-written:
+The component ships **no design** — it is behaviour-only, and every visual
+(including the focus ring) belongs to the consuming project. The styling hooks
+are the ARIA attributes the JS maintains; no state class is written:
 
 ```css
 [data-tabs-tab][aria-selected='true'] { /* active tab */ }
@@ -84,6 +83,16 @@ written:
 ```
 
 `demo.html` shows one complete example design (horizontal and vertical).
+
+The stylesheet is not empty, though. It ships the **pre-enhancement state**:
+where scripting is enabled, the panels are collapsed to one before the module
+has loaded, so the page does not paint every panel stacked and then snap to a
+single one a round trip later. The rule lifts the moment the module sets
+`data-tabs-ready` on the wrapper. It cannot be left to the project, because it
+has to be in force before any script runs — and it is safe to ship because a
+panel named by the URL fragment is exempt (`:target`), so the jump-link list
+above still reaches every panel if the chunk never arrives. See
+[`docs/preEnhancement.md`](../../../docs/preEnhancement.md).
 
 ## Integration
 The JS exports `init(el, services)` and does not self-initialize. It is loaded
