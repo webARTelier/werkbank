@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>lightbox – Demo</title>
+  <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
+  <link rel="stylesheet" href="../../../dist/css/lightbox.min.css" />
+  <script type="module" src="../../../dist/js/boot.min.js"></script>
+
+  <!-- for development only -->
+  <script type="module" src="../../../src/_shared/js/dev_pageInfo.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_a11yInspector.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_qrCode.js"></script>
+  <!-- end for development only -->
+
+  <!--
+      DEMO-ONLY STYLES
+      ----------------------------------------------------------------------
+      lightbox.min.css ships the gallery grid and the whole viewer. What is
+      left to the page is the space between the examples and the prose
+      around them — that is all the .demo* rules below are. (Tokens like
+      --space-* / --color-* come from shared.min.css.)
+  -->
+
+  <style>
+    .demo {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2xl);
+    }
+
+    .demo__example {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-s);
+    }
+
+    .demo__example h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      color: var(--color-text);
+    }
+
+    /* The openers are the project's controls, not the component's: it ships
+       no styles for them (see the comment at the example). */
+    .demo__openers {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-2xs);
+      margin: 0;
+    }
+
+    .demo__opener {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2xs);
+      min-height: 2.75rem;
+      padding: 0 var(--space-s);
+      border: 1px solid var(--color-border);
+      border-radius: var(--borderRadius);
+      color: var(--color-text);
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .demo__opener:hover {
+      border-color: var(--color-border-strong);
+      background-color: var(--color-bg-overlay);
+    }
+
+    .demo__opener:focus-visible {
+      outline: 2px solid var(--color-focus-ring-light);
+      outline-offset: var(--outlineOffset);
+    }
+
+    .demo__opener svg {
+      width: 1.15rem;
+      height: 1.15rem;
+    }
+
+    /* Icon-only: a square target, named by aria-label in the markup. */
+    .demo__opener--iconOnly {
+      justify-content: center;
+      width: 2.75rem;
+      padding: 0;
+    }
+
+    /* The single-image example sits in prose, the way a figure in an
+       article would. */
+    .demo__prose {
+      max-width: 60ch;
+      color: var(--color-text-muted);
+      line-height: 1.6;
+    }
+
+    .demo__prose .m-lightbox {
+      margin: var(--space-s) 0 0;
+      max-width: 22rem;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <main class="shell">
+
+    <section class="hero">
+      <a class="back" href="../../../index.html">← Overview</a>
+      <h1>lightbox</h1>
+      <p>Image and gallery viewer: a list of links to full-size images, opened in place in a native &lt;dialog&gt;.</p>
+    </section>
+
+    <section class="stage" aria-label="Live demo">
+
+      <!--
+          One viewer per gallery, enabled with data-js-module="lightbox" on
+          the gallery root.
+
+          Wiring
+            - Every item is an <a data-lightbox-item href="<full image>">.
+              That href is what the viewer shows — and where a click without
+              the module, or a middle-click, still goes.
+            - data-lightbox-srcset / -sizes give the VIEWER its own
+              responsive candidate list; the thumbnails carry their own
+              srcset/sizes as usual, plus width/height so the grid reserves
+              their box before the pixels arrive.
+            - The caption comes from the tile's <figcaption> (examples 1
+              and 3) or from data-lightbox-caption on the link (example 4).
+            - Example 2 opens the first gallery from controls that are not
+              images and not even inside it: data-lightbox-open names the
+              gallery by id, data-lightbox-index picks the image.
+            - Example 3 puts the module on a single link: that link is the
+              whole set, so the viewer ships without navigation.
+            - Example 4 adds data-lightbox-loop, so stepping past an end
+              wraps around instead of stopping.
+
+          Progressive enhancement
+            - The gallery renders the same before and after the module
+              arrives — a set of links to images — so there is no
+              pre-enhancement state to cover and nothing is hidden behind a
+              control the script has to deliver first.
+            - Per press, too: a click the viewer cannot fulfil (an empty or
+              filtered-out set, an item whose href has gone) is handed back
+              to the link rather than cancelled into a viewer that never
+              opens. Modified and non-primary presses are left alone for the
+              same reason.
+            - The viewer is a native <dialog> opened with showModal(): the
+              top layer, the focus trap, the inert page behind it,
+              ::backdrop, Escape and the focus returning to the thumbnail
+              are all the browser's. Opening and closing are animated by
+              CSS alone, each with its own duration/easing; the close needs
+              the Chromium-only "overlay" property to stay in the top layer
+              while it fades — elsewhere it closes instantly, which is the
+              intended fallback.
+
+          Accessibility
+            - The viewer is named by data-lightbox-label (or its default),
+              its controls by real text nodes next to aria-hidden glyphs,
+              and the full-size image by the thumbnail's own alt.
+            - Every trigger — thumbnail or separate opener — is given
+              aria-haspopup="dialog" and an aria-controls pointing at the
+              viewer, so it says that it opens an overlay before it is
+              pressed. An icon-only opener still needs a name of its own:
+              the one in example 2 carries an aria-label.
+            - A visually hidden live region announces every change ("Image 3
+              of 6, …"), because swapping the src of an <img> inside an open
+              dialog is silent. The visible counter is aria-hidden so the
+              position is not read out twice.
+            - Arrow keys step through the set, Home/End jump to the ends —
+              except while the viewer is scrollable (high zoom, long
+              caption), where those two keys belong to the scroll. At the
+              ends of a non-looping gallery the controls are marked
+              aria-disabled rather than [disabled], which would drop the
+              focus a reader had just moved there.
+            - The picture keeps a floor (--lightbox-stage-min-size): a long
+              caption takes room from it, but never all of it, and past that
+              point the viewer scrolls instead (WCAG 1.4.10).
+            - In a forced-colors context (the Windows contrast themes) the
+              two states that live in a colour difference are said again in
+              system colours: the disabled navigation in GrayText, the
+              spinner's leading edge in Highlight.
+            - A press beside the picture closes the viewer, but only one
+              that also began there — dragging a photograph aside does not
+              dismiss it mid-gesture.
+
+          Note on the images
+            - They come from picsum.photos, at several widths per photo, so
+              the srcset/sizes lists are real rather than illustrative. The
+              alt texts describe what those photos actually show.
+        -->
+
+
+
+      <div class="demo">
+
+        <!-- Example 1: a gallery of six, captions from the tiles -->
+        <section class="demo__example">
+          <h2>Gallery</h2>
+          <p class="stage__intro">
+            <strong>Six images, no loop:</strong> open one and step through
+            the set with the side controls or the arrow keys. At the first
+            and last image the control that would lead nowhere is
+            <code>aria-disabled</code> — it keeps its place, its name and its
+            tab stop. The caption under each thumbnail is the same text the
+            viewer shows.
+          </p>
+
+          <div class="m-lightbox" id="lightbox-gallery" data-js-module="lightbox">
+            <ul class="m-lightbox__grid" role="list">
+
+              <li>
+                <figure class="m-lightbox__tile">
+                  <a class="m-lightbox__link" data-lightbox-item href="https://picsum.photos/id/1015/1600/1067" data-lightbox-srcset="https://picsum.photos/id/1015/1200/800 1200w, https://picsum.photos/id/1015/1600/1067 1600w, https://picsum.photos/id/1015/2000/1333 2000w" data-lightbox-sizes="(min-width: 60rem) 85vw, 100vw">
+                    <img class="m-lightbox__thumb" src="https://picsum.photos/id/1015/600/400" srcset="https://picsum.photos/id/1015/400/267 400w, https://picsum.photos/id/1015/600/400 600w, https://picsum.photos/id/1015/900/600 900w" sizes="(min-width: 60rem) 30vw, (min-width: 40rem) 45vw, 90vw" width="600" height="400" alt="View from a rocky cliff edge over a deep blue fjord between green mountains" loading="lazy" decoding="async" />
+                  </a>
+                  <figcaption class="m-lightbox__caption">Cliff edge above the fjord</figcaption>
+                </figure>
+              </li>
+
+              <li>
+                <figure class="m-lightbox__tile">
+                  <a class="m-lightbox__link" data-lightbox-item href="https://picsum.photos/id/1018/1600/1067" data-lightbox-srcset="https://picsum.photos/id/1018/1200/800 1200w, https://picsum.photos/id/1018/1600/1067 1600w, https://picsum.photos/id/1018/2000/1333 2000w" data-lightbox-sizes="(min-width: 60rem) 85vw, 100vw">
+                    <img class="m-lightbox__thumb" src="https://picsum.photos/id/1018/600/400" srcset="https://picsum.photos/id/1018/400/267 400w, https://picsum.photos/id/1018/600/400 600w, https://picsum.photos/id/1018/900/600 900w" sizes="(min-width: 60rem) 30vw, (min-width: 40rem) 45vw, 90vw" width="600" height="400" alt="A single-track road winding through steep green hills under a low grey sky" loading="lazy" decoding="async" />
+                  </a>
+                  <figcaption class="m-lightbox__caption">Road through the green hills</figcaption>
+                </figure>
+              </li>
+
+              <li>
+                <figure class="m-lightbox__tile">
+                  <a class="m-lightbox__link" data-lightbox-item href="https://picsum.photos/id/1039/1600/1067" data-lightbox-srcset="https://picsum.photos/id/1039/1200/800 1200w, https://picsum.photos/id/1039/1600/1067 1600w, https://picsum.photos/id/1039/2000/1333 2000w" data-lightbox-sizes="(min-width: 60rem) 85vw, 100vw">
+                    <img class="m-lightbox__thumb" src="https://picsum.photos/id/1039/600/400" srcset="https://picsum.photos/id/1039/400/267 400w, https://picsum.photos/id/1039/600/400 600w, https://picsum.photos/id/1039/900/600 900w" sizes="(min-width: 60rem) 30vw, (min-width: 40rem) 45vw, 90vw" width="600" height="400" alt="A waterfall dropping into a mossy gorge surrounded by misty conifer forest" loading="lazy" decoding="async" />
+                  </a>
+                  <figcaption class="m-lightbox__caption">Waterfall in the mist</figcaption>
+                </figure>
+              </li>
+
+              <li>
+                <figure class="m-lightbox__tile">
+                  <a class="m-lightbox__link" data-lightbox-item href="https://picsum.photos/id/1043/1600/1067" data-lightbox-srcset="https://picsum.photos/id/1043/1200/800 1200w, https://picsum.photos/id/1043/1600/1067 1600w, https://picsum.photos/id/1043/2000/1333 2000w" data-lightbox-sizes="(min-width: 60rem) 85vw, 100vw">
+                    <img class="m-lightbox__thumb" src="https://picsum.photos/id/1043/600/400" srcset="https://picsum.photos/id/1043/400/267 400w, https://picsum.photos/id/1043/600/400 600w, https://picsum.photos/id/1043/900/600 900w" sizes="(min-width: 60rem) 30vw, (min-width: 40rem) 45vw, 90vw" width="600" height="400" alt="Granite cliffs above a pine forest, mirrored in a calm river in the foreground" loading="lazy" decoding="async" />
+                  </a>
+                  <figcaption class="m-lightbox__caption">Granite walls over the river</figcaption>
+                </figure>
+              </li>
+
+              <li>
+                <figure class="m-lightbox__tile">
+                  <a class="m-lightbox__link" data-lightbox-item href="https://picsum.photos/id/1050/1600/1067" data-lightbox-srcset="https://picsum.photos/id/1050/1200/800 1200w, https://picsum.photos/id/1050/1600/1067 1600w, https://picsum.photos/id/1050/2000/1333 2000w" data-lightbox-sizes="(min-width: 60rem) 85vw, 100vw">
+                    <img class="m-lightbox__thumb" src="https://picsum.photos/id/1050/600/400" srcset="https://picsum.photos/id/1050/400/267 400w, https://picsum.photos/id/1050/600/400 600w, https://picsum.photos/id/1050/900/600 900w" sizes="(min-width: 60rem) 30vw, (min-width: 40rem) 45vw, 90vw" width="600" height="400" alt="Pale sea stacks in turquoise surf below a cliff-lined coast" loading="lazy" decoding="async" />
+                  </a>
+                  <figcaption class="m-lightbox__caption">Sea stacks in the surf</figcaption>
+                </figure>
+              </li>
+
+              <li>
+                <figure class="m-lightbox__tile">
+                  <a class="m-lightbox__link" data-lightbox-item href="https://picsum.photos/id/1057/1600/1067" data-lightbox-srcset="https://picsum.photos/id/1057/1200/800 1200w, https://picsum.photos/id/1057/1600/1067 1600w, https://picsum.photos/id/1057/2000/1333 2000w" data-lightbox-sizes="(min-width: 60rem) 85vw, 100vw">
+                    <img class="m-lightbox__thumb" src="https://picsum.photos/id/1057/600/400" srcset="https://picsum.photos/id/1057/400/267 400w, https://picsum.photos/id/1057/600/400 600w, https://picsum.photos/id/1057/900/600 900w" sizes="(min-width: 60rem) 30vw, (min-width: 40rem) 45vw, 90vw" width="600" height="400" alt="A wooded hillside falling into the sea in warm evening light" loading="lazy" decoding="async" />
+                  </a>
+                  <figcaption class="m-lightbox__caption">Coast road at golden hour</figcaption>
+                </figure>
+              </li>
+
+            </ul>
+          </div>
+        </section>
+
+
+
+        <!-- Example 2: openers that are not the pictures -->
+        <section class="demo__example">
+          <h2>Opened from a separate control</h2>
+          <p class="stage__intro">
+            <strong><code>data-lightbox-open</code>:</strong> these three
+            controls are not images and are not even inside the gallery — they
+            open the one above, which carries
+            <code>id="lightbox-gallery"</code>. The third one adds
+            <code>data-lightbox-index="3"</code> and starts at the waterfall;
+            the index is counted from 1, the way the counter in the viewer
+            counts. An opener inside its own gallery can leave the value empty
+            and needs no id at all.
+          </p>
+
+          <!--
+              Authored as <a href>, not as <button>: without the module the
+              first two still lead to the picture and the third one jumps to
+              the gallery in the page. A <button> here would be a control
+              that does nothing until the chunk arrives. The component ships
+              no styles for these (dialog leaves its triggers to the project
+              too) — .demo__opener below is the project side of that.
+          -->
+          <p class="demo__openers">
+            <a class="demo__opener" data-lightbox-open="lightbox-gallery" href="https://picsum.photos/id/1015/1600/1067">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-4.35-4.35M11 8v6M8 11h6" />
+              </svg>
+              View all 6 photos
+            </a>
+
+            <a class="demo__opener demo__opener--iconOnly" data-lightbox-open="lightbox-gallery" href="https://picsum.photos/id/1015/1600/1067" aria-label="View all 6 photos">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-4.35-4.35M11 8v6M8 11h6" />
+              </svg>
+            </a>
+
+            <a class="demo__opener" data-lightbox-open="lightbox-gallery" data-lightbox-index="3" href="#lightbox-gallery">
+              Jump to the waterfall
+            </a>
+          </p>
+        </section>
+
+
+
+        <!-- Example 3: a single image inside prose -->
+        <section class="demo__example">
+          <h2>Single image</h2>
+          <p class="stage__intro">
+            <strong>The module on the link itself:</strong> that one link is
+            the whole set, so the viewer opens without navigation controls
+            and without a counter — only the picture, its caption and the way
+            out.
+          </p>
+
+          <div class="demo__prose">
+            <p>
+              A figure in the middle of an article is the other half of this
+              component: nothing about it is a gallery, it just wants to be
+              readable at full size.
+            </p>
+            <figure class="m-lightbox m-lightbox__tile">
+              <a class="m-lightbox__link" data-js-module="lightbox" data-lightbox-item href="https://picsum.photos/id/1067/1600/1067" data-lightbox-srcset="https://picsum.photos/id/1067/1200/800 1200w, https://picsum.photos/id/1067/1600/1067 1600w, https://picsum.photos/id/1067/2000/1333 2000w" data-lightbox-sizes="(min-width: 60rem) 85vw, 100vw">
+                <img class="m-lightbox__thumb" src="https://picsum.photos/id/1067/600/400" srcset="https://picsum.photos/id/1067/400/267 400w, https://picsum.photos/id/1067/600/400 600w" sizes="(min-width: 40rem) 22rem, 90vw" width="600" height="400" alt="A city skyline at sunset seen from high above, with a lake on the horizon" loading="lazy" decoding="async" />
+              </a>
+              <figcaption class="m-lightbox__caption">Downtown from the observation deck</figcaption>
+            </figure>
+          </div>
+        </section>
+
+
+
+        <!-- Example 4: looping, captions as attributes, German labels -->
+        <section class="demo__example">
+          <h2>Looping, and in another language</h2>
+          <p class="stage__intro">
+            <strong><code>data-lightbox-loop</code>:</strong> stepping past an
+            end wraps around, so neither control is ever disabled. The
+            captions come from <code>data-lightbox-caption</code> on the links
+            instead of from the tiles — and every string of the generated
+            chrome is set in German here, including the counter and the
+            announcement template. The gallery carries <code>lang="de"</code>,
+            which the module mirrors onto the injected viewer: it lives on
+            <code>&lt;body&gt;</code>, so it would otherwise be pronounced as
+            English.
+          </p>
+
+          <div
+            class="m-lightbox"
+            lang="de"
+            data-js-module="lightbox"
+            data-lightbox-loop
+            data-lightbox-label="Bildansicht"
+            data-lightbox-close-label="Ansicht schließen"
+            data-lightbox-prev-label="Vorheriges Bild"
+            data-lightbox-next-label="Nächstes Bild"
+            data-lightbox-counter="{index} von {total}"
+            data-lightbox-status="Bild {index} von {total}, {label}"
+          >
+            <ul class="m-lightbox__grid" role="list">
+
+              <li>
+                <figure class="m-lightbox__tile">
+                  <a class="m-lightbox__link" data-lightbox-item href="https://picsum.photos/id/1074/1600/1067" data-lightbox-srcset="https://picsum.photos/id/1074/1200/800 1200w, https://picsum.photos/id/1074/1600/1067 1600w, https://picsum.photos/id/1074/2000/1333 2000w" data-lightbox-sizes="(min-width: 60rem) 85vw, 100vw" data-lightbox-caption="Löwin, aus der Nähe">
+                    <img class="m-lightbox__thumb" src="https://picsum.photos/id/1074/600/400" srcset="https://picsum.photos/id/1074/400/267 400w, https://picsum.photos/id/1074/600/400 600w, https://picsum.photos/id/1074/900/600 900w" sizes="(min-width: 60rem) 30vw, (min-width: 40rem) 45vw, 90vw" width="600" height="400" alt="Nahaufnahme einer Löwin, die in die Kamera blickt" loading="lazy" decoding="async" />
+                  </a>
+                </figure>
+              </li>
+
+              <li>
+                <figure class="m-lightbox__tile">
+                  <a class="m-lightbox__link" data-lightbox-item href="https://picsum.photos/id/1020/1600/1067" data-lightbox-srcset="https://picsum.photos/id/1020/1200/800 1200w, https://picsum.photos/id/1020/1600/1067 1600w, https://picsum.photos/id/1020/2000/1333 2000w" data-lightbox-sizes="(min-width: 60rem) 85vw, 100vw" data-lightbox-caption="Braunbär auf dem Felsgrat">
+                    <img class="m-lightbox__thumb" src="https://picsum.photos/id/1020/600/400" srcset="https://picsum.photos/id/1020/400/267 400w, https://picsum.photos/id/1020/600/400 600w, https://picsum.photos/id/1020/900/600 900w" sizes="(min-width: 60rem) 30vw, (min-width: 40rem) 45vw, 90vw" width="600" height="400" alt="Ein Braunbär auf einem Felsgrat vor schneebedeckten Hängen" loading="lazy" decoding="async" />
+                  </a>
+                </figure>
+              </li>
+
+              <li>
+                <figure class="m-lightbox__tile">
+                  <a class="m-lightbox__link" data-lightbox-item href="https://picsum.photos/id/1024/1600/1067" data-lightbox-srcset="https://picsum.photos/id/1024/1200/800 1200w, https://picsum.photos/id/1024/1600/1067 1600w, https://picsum.photos/id/1024/2000/1333 2000w" data-lightbox-sizes="(min-width: 60rem) 85vw, 100vw" data-lightbox-caption="Geier im Landeanflug">
+                    <img class="m-lightbox__thumb" src="https://picsum.photos/id/1024/600/400" srcset="https://picsum.photos/id/1024/400/267 400w, https://picsum.photos/id/1024/600/400 600w, https://picsum.photos/id/1024/900/600 900w" sizes="(min-width: 60rem) 30vw, (min-width: 40rem) 45vw, 90vw" width="600" height="400" alt="Ein Geier mit weit ausgebreiteten Flügeln kurz vor der Landung" loading="lazy" decoding="async" />
+                  </a>
+                </figure>
+              </li>
+
+            </ul>
+          </div>
+        </section>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</body>
+
+</html>

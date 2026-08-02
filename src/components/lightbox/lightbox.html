@@ -1,0 +1,223 @@
+<!--
+  lightbox — copy-paste snippet
+  ============================================================================
+  Copy the block(s) below into your own project.
+
+  1) In <head> (or before </body>): load the shared styles, this component's
+     styles and the boot script. boot.min.js lazily loads the lightbox module
+     as soon as it finds data-js-module="lightbox" in the DOM — you do not
+     import lightbox.js yourself. Adjust the paths to where you serve /dist.
+
+       <link rel="stylesheet" href="/dist/css/shared.min.css" />
+       <link rel="stylesheet" href="/dist/css/lightbox.min.css" />
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+  2) Drop the markup below where the gallery should appear. It is a plain list
+     of links to full-size images: without the module those links simply open
+     the images, so nothing is hidden behind a control the script has to
+     deliver. The module builds one <dialog> viewer per gallery and opens it
+     in place instead.
+
+  Wiring
+    - The gallery root carries data-js-module="lightbox".
+    - Every item is an <a data-lightbox-item href="<full-size image>">. The
+      href is both what the viewer shows and where a reader without the
+      module (or one who opens the link in a new tab) ends up, so it must
+      point at the image itself, not at a page about it.
+    - For a single image, put data-js-module="lightbox" on the link itself —
+      it is then the whole set, and the viewer ships without navigation and
+      without a counter. Keep .m-lightbox on an ancestor: that is where the
+      custom properties live.
+    - The text alternative comes from the <img> inside the link, so give
+      every thumbnail a real alt; the viewer shows the same picture and
+      therefore uses the same description.
+    - The caption is optional and can come from either side: the
+      <figcaption> of the tile (real page content, reused) or
+      data-lightbox-caption on the link.
+    - A control that is not one of the pictures can open the viewer too: give
+      it data-lightbox-open. Two ways to point at the gallery:
+        data-lightbox-open="<gallery id>"   from anywhere on the page
+        data-lightbox-open                  (empty) the gallery it sits in,
+                                            which needs no id — one less id
+                                            to keep unique in a CMS that can
+                                            place the same element twice
+      data-lightbox-index="3" picks the image to start at, counted from 1
+      like the counter in the viewer. Prefer an <a href> over a <button>
+      here, for the same reason the items are links: point it at the image,
+      or at the gallery's own #fragment, and it is a control with a job
+      before the script arrives. The component ships no styles for these —
+      they are your controls, the way dialog leaves its triggers to you.
+
+  Notes / Configuration
+    - Progressive enhancement: the markup renders the same before and after
+      the module arrives, so the component ships no pre-enhancement state —
+      there is nothing to cover. If the chunk never arrives, the gallery is
+      a working set of image links. The same rule holds per press: a click
+      the viewer cannot fulfil (an empty or filtered-out set, an item whose
+      href has gone) is handed back to the link instead of being cancelled
+      into a viewer that never opens.
+    - Responsive images: the thumbnails use srcset/sizes as usual, and the
+      viewer takes its own candidate list from data-lightbox-srcset /
+      data-lightbox-sizes on the link (the href stays the fallback). Give
+      the thumbnails width/height so the grid reserves their box.
+    - Keyboard: the arrows step through the set (following the writing
+      direction), Home/End jump to the ends, Escape closes — the last one is
+      the platform's, along with the focus trap and the focus returning to
+      the trigger. Where the viewer itself has become scrollable (high zoom,
+      or a caption long enough to push the picture down to its floor),
+      Home/End are left to that scroll instead: there they are the only way
+      to its ends, and the set is still one arrow key away.
+    - Every trigger (thumbnail or opener) is given aria-haspopup="dialog"
+      and an aria-controls pointing at the viewer. An icon-only opener still
+      needs a name of its own — an aria-label, or a visually hidden text
+      node inside it.
+    - data-lightbox-loop on the root makes the navigation wrap around. By
+      default the ends are walls, and the controls there are marked
+      aria-disabled (never [disabled], which would drop the focus).
+    - Every string of the generated chrome is configurable on the root, for
+      a page that is not in English:
+        data-lightbox-label="Bildansicht"           (name of the viewer)
+        data-lightbox-close-label="Ansicht schließen"
+        data-lightbox-prev-label="Vorheriges Bild"
+        data-lightbox-next-label="Nächstes Bild"
+        data-lightbox-counter="{index} / {total}"   (visible counter)
+        data-lightbox-status="Bild {index} von {total}, {label}"
+      In the two templates {index} and {total} are the position, and {label}
+      is the caption or the alt text — an empty one takes the punctuation
+      before it with it.
+    - A press beside the picture closes the viewer (the backdrop, the figure
+      and the letterboxing around the image) — but only one that also began
+      there, so dragging a photograph aside does not dismiss it mid-gesture.
+    - Motion and contrast are honoured: prefers-reduced-motion makes the
+      viewer appear and disappear instantly and stops the spinner, and in a
+      forced-colors context the disabled navigation and the spinner are
+      repainted in system colours so both keep saying what they mean.
+    - A lang on (or above) the gallery root is mirrored onto the injected
+      viewer, so a gallery in another language than the page is pronounced
+      correctly: the viewer lives on <body> and would otherwise inherit the
+      document's language.
+    - Theming goes through the --lightbox-* custom properties. They are
+      declared twice, on .m-lightbox for the gallery and on
+      [data-lightbox-ui="viewer"] for the injected viewer: the viewer lives
+      on <body>, outside the gallery's subtree, so an override for it has to
+      name that surface.
+-->
+
+
+
+<div class="m-lightbox" id="gallery-harbour" data-js-module="lightbox">
+
+  <ul class="m-lightbox__grid" role="list">
+
+    <li>
+      <figure class="m-lightbox__tile">
+        <a
+          class="m-lightbox__link"
+          data-lightbox-item
+          href="/media/gallery/harbour-1600.jpg"
+          data-lightbox-srcset="
+            /media/gallery/harbour-1200.jpg 1200w,
+            /media/gallery/harbour-1600.jpg 1600w,
+            /media/gallery/harbour-2000.jpg 2000w"
+          data-lightbox-sizes="(min-width: 60rem) 90vw, 100vw"
+        >
+          <img
+            class="m-lightbox__thumb"
+            src="/media/gallery/harbour-600.jpg"
+            srcset="
+              /media/gallery/harbour-400.jpg 400w,
+              /media/gallery/harbour-600.jpg 600w,
+              /media/gallery/harbour-900.jpg 900w"
+            sizes="(min-width: 60rem) 30vw, (min-width: 40rem) 45vw, 90vw"
+            width="600"
+            height="400"
+            alt="Fishing boats moored along a stone quay at low tide"
+            loading="lazy"
+            decoding="async"
+          />
+        </a>
+        <figcaption class="m-lightbox__caption">
+          The old harbour, shortly before sunrise
+        </figcaption>
+      </figure>
+    </li>
+
+    <li>
+      <figure class="m-lightbox__tile">
+        <a
+          class="m-lightbox__link"
+          data-lightbox-item
+          href="/media/gallery/market-1600.jpg"
+        >
+          <img
+            class="m-lightbox__thumb"
+            src="/media/gallery/market-600.jpg"
+            width="600"
+            height="400"
+            alt="A market stall stacked with crates of strawberries"
+            loading="lazy"
+            decoding="async"
+          />
+        </a>
+      </figure>
+    </li>
+
+  </ul>
+
+  <!--
+    An opener inside the gallery: no value needed, because "the gallery I am
+    inside" is unambiguous — and no id has to stay unique for it either.
+    Without the module the href still leads to the first picture.
+  -->
+  <a data-lightbox-open href="/media/gallery/harbour-1600.jpg">
+    View all photos
+  </a>
+
+</div>
+
+
+
+<!--
+  An opener anywhere else on the page names the gallery by id, and may pick
+  the image it starts at (counted from 1). An icon-only one needs a name:
+  an aria-label, or a visually hidden text node inside it.
+-->
+<a
+  data-lightbox-open="gallery-harbour"
+  data-lightbox-index="2"
+  href="/media/gallery/market-1600.jpg"
+  aria-label="View the strawberry stall photo"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+    <circle cx="11" cy="11" r="7" />
+    <path d="m20 20-4.35-4.35M11 8v6M8 11h6" />
+  </svg>
+</a>
+
+
+
+<!--
+  A single image: the module sits on the link, which is then the whole set —
+  the viewer ships without navigation and without a counter. The .m-lightbox
+  class still goes on an ancestor, because that is where the component's
+  custom properties are declared.
+-->
+<figure class="m-lightbox">
+  <a
+    class="m-lightbox__link"
+    data-js-module="lightbox"
+    data-lightbox-item
+    href="/media/gallery/skyline-1600.jpg"
+    data-lightbox-caption="Downtown from the observation deck"
+  >
+    <img
+      class="m-lightbox__thumb"
+      src="/media/gallery/skyline-600.jpg"
+      width="600"
+      height="400"
+      alt="A city skyline at sunset, seen from above"
+      loading="lazy"
+      decoding="async"
+    />
+  </a>
+</figure>

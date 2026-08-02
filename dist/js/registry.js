@@ -13,6 +13,7 @@ export const registry = {
   getCssCustomProperty: () => import('./modules/getCssCustomProperty.min.js'),
   inlineSVG: () => import('./modules/inlineSVG.min.js'),
   inputCharCount: () => import('./modules/inputCharCount.min.js'),
+  lightbox: () => import('./modules/lightbox.min.js'),
   marquee: () => import('./modules/marquee.min.js'),
   offCanvasNav: () => import('./modules/offCanvasNav.min.js'),
   popover: () => import('./modules/popover.min.js'),

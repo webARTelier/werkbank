@@ -196,6 +196,7 @@ of them, and the wrong one for most.
 | `dropdownNav` | full nested list, then a bar with flyouts | documented opt-in | the disclosure buttons are injected by the script; nothing reopens a collapsed submenu without it |
 | `accordion` | none | not needed | `<details>` renders closed either way; its ready attribute only picks the animation |
 | `dialog`, `popover` | none | not needed | closed at rest, and the behaviour is native |
+| `lightbox` | none | not needed | the gallery is a list of links to the images either way; the viewer is closed at rest and does not exist in the markup at all — the script injects it |
 | `marquee` | none | not needed | the clipping row is plain CSS from the first paint; the strip is just static until it runs |
 | `video` | none | not needed | the JS-only toggle ships with `hidden` in the markup and the script reveals it — the same idea, expressed in HTML |
 | `stickyObserver`, `scrollSpy`, `flexNeighborMarker`, `adaptiveScrollFade` | additive marker/fade appears | not needed | nothing is hidden, and the result depends on measurement CSS cannot anticipate |

@@ -110,7 +110,15 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('button, a').forEach((el) => {
       const text = el.textContent.trim();
       const hasLabel = el.getAttribute('aria-label') || el.getAttribute('title');
-      if (text === '' && !hasLabel) {
+
+      // An image inside the control names it too: the accessible-name
+      // computation takes the alt text of an <img> descendant, which is how a
+      // thumbnail link (lightbox) or an image button is named — without it
+      // every image-only link reads as a false positive here.
+      const hasImageName = [...el.querySelectorAll('img')].some(
+        (img) => (img.getAttribute('alt') ?? '').trim() !== ''
+      );
+      if (text === '' && !hasLabel && !hasImageName) {
         highlightElement(el, 'Interactive element with no accessible name');
         findings.push({ type: `${el.tagName.toLowerCase()} (missing label)`, element: el });
       }

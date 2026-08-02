@@ -76,6 +76,7 @@ components downloads two chunks — nothing else.
 | -------------------- | ------------------------------------------------------------------- |
 | `accordion`          | Expand/collapse panels on native `<details>`/`<summary>`.           |
 | `adaptiveScrollFade` | Fade-out edges on scrollable containers, only where overflow is.    |
+| `backToTop`          | Jump back to the top, shown once the page is scrolled far enough.   |
 | `countdown`          | Live countdown to a target date/time.                               |
 | `dateInputFormat`    | Auto-formats a text field into a grouped date mask (`DD.MM.YYYY`).  |
 | `dialog`             | Modal dialogs on the native `<dialog>` element.                     |
@@ -84,6 +85,7 @@ components downloads two chunks — nothing else.
 | `formValidation`     | Inline validation messages on the Constraint Validation API.        |
 | `inlineSVG`          | Replaces `<img>` SVG references with inline SVG.                    |
 | `inputCharCount`     | Character-count display for inputs and textareas.                   |
+| `lightbox`           | Image/gallery viewer on the native `<dialog>`, from image links.    |
 | `marquee`            | Infinitely scrolling content strip (news ticker).                   |
 | `offCanvasNav`       | Burger menu / off-canvas drawer on the native `<dialog>`.           |
 | `popover`            | Anchor-positioned popover on the native Popover API.                |
