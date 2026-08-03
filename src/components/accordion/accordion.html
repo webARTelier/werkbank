@@ -5,7 +5,7 @@
 
   1) In <head> (or before </body>): load the shared styles, this component's
      styles and the boot script. boot.min.js lazily loads the accordion module
-     as soon as it finds data-js-module="accordion" in the DOM — you do not
+     as soon as it finds data-js-behavior="accordion" in the DOM — you do not
      import accordion.js yourself. Adjust the paths to where you serve /dist.
 
        <link rel="stylesheet" href="/dist/css/shared.min.css" />
@@ -28,7 +28,7 @@
 -->
 
 <!-- Single-open: same name="" on all items -> only one open at a time -->
-<div class="m-accordion" data-js-module="accordion">
+<div class="m-accordion" data-js-behavior="accordion">
 
   <details class="m-accordion__item" data-accordion-item name="accordion-single">
     <summary class="m-accordion__trigger">
@@ -53,7 +53,7 @@
 
 
 <!-- Multi-open: omit name -> panels toggle independently -->
-<div class="m-accordion" data-js-module="accordion">
+<div class="m-accordion" data-js-behavior="accordion">
 
   <details class="m-accordion__item" data-accordion-item>
     <summary class="m-accordion__trigger">

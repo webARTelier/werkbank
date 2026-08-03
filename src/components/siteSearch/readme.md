@@ -13,7 +13,7 @@ No shared JS utility is bundled into this module; `siteSearch.js` stands on its 
 Author the complete search where it belongs in the page — inside the site header — as a `<search>` landmark holding a toggle and the form it expands:
 
 ```html
-<search class="m-siteSearch" data-js-module="siteSearch">
+<search class="m-siteSearch" data-js-behavior="siteSearch">
 
   <button class="m-siteSearch__toggle" type="button" data-sitesearch-toggle>
     …magnifier…<span class="m-siteSearch__toggleLabel">Search</span>
@@ -109,7 +109,7 @@ Note that it must reveal the toggle as well as collapse the form. Collapsing the
 - Two names in one component ("Search" on the toggle, "Search" on the submit) are deliberate: they are two controls that genuinely do the same thing at two stages, and each is unambiguous where it stands — the toggle is announced as a collapsed disclosure, the submit as a button inside a named search field.
 
 ## Integration
-The JS exports `init(el, services)` and does not self-initialize. It is loaded on demand by `boot.js` for every element carrying `data-js-module="siteSearch"` — one instance per search — and reports (without enhancing) if it is put on a non-element node. It sets no inline styles. What it writes is `data-sitesearch-ready` on the root, `aria-expanded` and `aria-controls` on the toggle, and an `id` on the form if it had none.
+The JS exports `init(el, services)` and does not self-initialize. It is loaded on demand by `boot.js` for every element carrying `data-js-behavior="siteSearch"` — one instance per search — and reports (without enhancing) if it is put on a non-element node. It sets no inline styles. What it writes is `data-sitesearch-ready` on the root, `aria-expanded` and `aria-controls` on the toggle, and an `id` on the form if it had none.
 
 `init` returns a cleanup function (see `destroyModulesInScope()` in `boot.js`) for hosts that mount/unmount the same subtree repeatedly. It removes the document listeners and takes every attribute above back off — which hands the markup back exactly as it was authored, including the expanded search form: without `aria-expanded` the collapse rule stops matching, so the field is in the page again, in precisely the state a visitor without this module gets.
 

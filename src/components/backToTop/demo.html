@@ -79,7 +79,7 @@
           a short slide) and its transition off that attribute.
 
           Wiring — two instances, two modes
-            - Bottom right, icon + label: data-js-module="backToTop" and
+            - Bottom right, icon + label: data-js-behavior="backToTop" and
               nothing else, so the threshold is the default ONE VIEWPORT
               HEIGHT. Its href points at #pageTop, the hero section at
               the top of this page: a fragment that RESOLVES also becomes
@@ -291,7 +291,7 @@
 
     <!-- Instance 1: default threshold (one viewport height), icon + label,
          href resolving to a real element at the top of the page -->
-    <a class="m-backToTop" href="#pageTop" data-js-module="backToTop">
+    <a class="m-backToTop" href="#pageTop" data-js-behavior="backToTop">
       <svg class="m-backToTop__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
         <path d="M12 19V5" />
         <path d="m5 12 7-7 7 7" />
@@ -302,7 +302,7 @@
     <!-- Instance 2: appears after 200px already, label hidden visually (the
          accessible name survives), moved to the opposite corner by demo CSS -->
     <a class="m-backToTop m-backToTop--iconOnly u-cornerInlineStart" href="#top"
-       data-js-module="backToTop" data-backtotop-threshold="200">
+       data-js-behavior="backToTop" data-backtotop-threshold="200">
       <svg class="m-backToTop__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
         <path d="M12 19V5" />
         <path d="m5 12 7-7 7 7" />

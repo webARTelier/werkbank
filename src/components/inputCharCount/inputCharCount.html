@@ -5,15 +5,15 @@
 
   1) In <head> (or before </body>): load the shared styles, this component's
      stylesheet and the boot script. boot.min.js lazily loads the
-     inputCharCount module as soon as it finds data-js-module="inputCharCount"
-     in the DOM — you do not import inputCharCount.js yourself. Adjust the
-     paths to where you serve /dist.
+     inputCharCount module as soon as it finds
+     data-js-behavior="inputCharCount" in the DOM — you do not import
+     inputCharCount.js yourself. Adjust the paths to where you serve /dist.
 
        <link rel="stylesheet" href="/dist/css/shared.min.css" />
        <link rel="stylesheet" href="/dist/css/inputCharCount.min.css" />
        <script type="module" src="/dist/js/boot.min.js"></script>
 
-  2) Put data-js-module="inputCharCount" on EACH <input> / <textarea> that
+  2) Put data-js-behavior="inputCharCount" on EACH <input> / <textarea> that
      should show a counter (one counter per field). The module injects two
      siblings right after the field: a visible counter (.icc-counter,
      aria-hidden) and a visually-hidden status region announced to assistive
@@ -21,8 +21,9 @@
      still works, and a maxlength is still enforced by the browser.
 
   Wiring
-    - data-js-module="inputCharCount" goes on the field itself, not a wrapper.
-      (Combine with other modules via a comma: data-js-module="a,inputCharCount".)
+    - data-js-behavior="inputCharCount" goes on the field itself, not a
+      wrapper. (Combine with other modules via a comma:
+      data-js-behavior="a,inputCharCount".)
     - Add a native maxlength to switch from a plain count to "used / max" and
       to enable the is-atLimit state; the browser then also enforces the limit
       with or without JS.
@@ -61,7 +62,7 @@
   class="c-input"
   id="icc-bio"
   name="bio"
-  data-js-module="inputCharCount"
+  data-js-behavior="inputCharCount"
 ></textarea>
 
 
@@ -73,7 +74,7 @@
   id="icc-title"
   name="title"
   maxlength="60"
-  data-js-module="inputCharCount"
+  data-js-behavior="inputCharCount"
 />
 
 
@@ -85,5 +86,5 @@
   name="tweet"
   maxlength="280"
   data-icc-countdown
-  data-js-module="inputCharCount"
+  data-js-behavior="inputCharCount"
 ></textarea>

@@ -14,10 +14,10 @@ and nobody hand-computes pixel values in markup or CSS.
 - `scaleSVG.js` – behavior
 
 ## Usage
-Put `data-js-module="scaleSVG"` on an inline `<svg data-scale="…">`, or on any
-container that holds one or more of them — every `svg[data-scale]` inside the
-boot scope is sized. `data-scale` doubles as the opt-in marker: an SVG without
-it is never touched.
+Put `data-js-behavior="scaleSVG"` on an inline `<svg data-scale="…">`, or on
+any container that holds one or more of them — every `svg[data-scale]` inside
+the boot scope is sized. `data-scale` doubles as the opt-in marker: an SVG
+without it is never touched.
 
 - `data-scale="<factor>"` — multiplier for the viewBox size: `0.5` halves it,
   `3` triples it. A bare `data-scale` (no value) sizes the SVG to its natural
@@ -34,7 +34,7 @@ it is never touched.
 See `scaleSVG.html` for a ready-to-copy snippet.
 
 ### Combining with inlineSVG
-`data-js-module="inlineSVG,scaleSVG"` together with `data-scale` on an
+`data-js-behavior="inlineSVG,scaleSVG"` together with `data-scale` on an
 `<img src="….svg">` (a bare `data-scale` — natural size — works here too)
 first inlines the file
 ([`inlineSVG`](../inlineSVG/readme.md) carries `data-scale` over onto the
@@ -68,7 +68,8 @@ svg[data-scale] { max-width: 100%; height: auto; }
 
 ## Integration
 The JS exports `init(el, services)` and does not self-initialize. It is loaded
-on demand by `boot.js` for every element carrying `data-js-module="scaleSVG"`.
+on demand by `boot.js` for every element carrying
+`data-js-behavior="scaleSVG"`.
 
 It is a stateless DOM transform (plain functions, no instance) and sets no
 inline styles — the size goes into the SVG's `width`/`height` presentation

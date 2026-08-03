@@ -50,7 +50,7 @@
  *   announcing every loop would be pure noise.
  *
  * Configuration (all optional; on the element carrying
- * data-js-module="marquee")
+ * data-js-behavior="marquee")
  * --------------------------------------------------------------------------
  * - `data-marquee-direction="left|right"` visual scroll direction
  *                                         (default "left"). Works in RTL

@@ -5,7 +5,7 @@
 
   1) In <head> (or before </body>): load the shared styles, this component's
      styles and the boot script. boot.min.js lazily loads the stickyObserver
-     module as soon as it finds data-js-module="stickyObserver" in the DOM —
+     module as soon as it finds data-js-behavior="stickyObserver" in the DOM —
      you do not import stickyObserver.js yourself. Adjust the paths to where
      you serve /dist.
 
@@ -13,7 +13,7 @@
        <link rel="stylesheet" href="/dist/css/stickyObserver.min.css" />
        <script type="module" src="/dist/js/boot.min.js"></script>
 
-  2) Put data-js-module="stickyObserver" on the position: sticky element
+  2) Put data-js-behavior="stickyObserver" on the position: sticky element
      itself. While the element is pinned it carries the class "is-stuck"
      (removed again on the way back).
        - Detection uses a SENTINEL in the flow above the element. By default
@@ -71,7 +71,7 @@
 
 <!-- Basic: the sticky element is the module element; the sentinel is
      injected automatically -->
-<header class="m-stickyBar" data-js-module="stickyObserver">
+<header class="m-stickyBar" data-js-behavior="stickyObserver">
   <strong>Sticky bar</strong> — gains its surface while pinned
 </header>
 
@@ -83,7 +83,7 @@
      CSS: the script reads the bar's computed `top` by itself. -->
 <section id="heroSection">…</section>
 <header class="m-stickyBar" style="--stickyBar-offset: 16px;"
-        data-js-module="stickyObserver"
+        data-js-behavior="stickyObserver"
         data-sticky-sentinel="#heroSection">
   <strong>Offset bar</strong> — pins 16px below the viewport top
 </header>
@@ -94,7 +94,7 @@
      (styling owned by your project), so it pins against that box's top
      edge — data-sticky-root points the observer at the same box. -->
 <div id="scrollBox">
-  <header class="m-stickyBar" data-js-module="stickyObserver"
+  <header class="m-stickyBar" data-js-behavior="stickyObserver"
           data-sticky-root="#scrollBox">
     <strong>Container bar</strong> — pins inside the scroll box
   </header>

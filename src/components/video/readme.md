@@ -26,7 +26,7 @@ root fills that container and the media covers it with `object-fit: cover`.
 Caveat: `object-fit` cannot reach *into* the YouTube iframe — footage whose
 ratio differs from the container letterboxes there.
 
-Three variants, all with `data-js-module="video"` on the module
+Three variants, all with `data-js-behavior="video"` on the module
 element (see `video.html` for ready-to-paste markup):
 
 ### A) Self-hosted, click-to-play (default)
@@ -48,7 +48,7 @@ opt-in). The corner placement of the toggle is the author-set
 ### C) YouTube, click-to-load facade
 
 ```html
-<div class="m-video" data-js-module="video"
+<div class="m-video" data-js-behavior="video"
   data-video-youtube="https://www.youtube.com/watch?v=…"
   data-video-title="What the video shows">
 ```
@@ -94,7 +94,7 @@ chosen source.
 ## Integration
 
 The JS exports `init(el, services)` and is loaded lazily by `boot.js` when it
-finds `data-js-module="video"`. It sets no inline styles: it toggles
+finds `data-js-behavior="video"`. It sets no inline styles: it toggles
 `hidden` on its elements, writes `is-playing` on the module element and stamps
 the injected iframe with `[data-video-embed]` — the hooks the
 stylesheet keys on. `services.reporter` is optional (used only for warnings,

@@ -35,7 +35,7 @@
             type, paste or edit.
 
             Wiring
-              - data-js-module="dateInputFormat" boots the module. It may
+              - data-js-behavior="dateInputFormat" boots the module. It may
                 sit on the <input> (Example 1) or on a wrapper that holds one
                 or more fields (Example 2).
               - data-dateinputformat marks the <input> to format.
@@ -77,7 +77,7 @@
             autocomplete="bday"
             placeholder="DD.MM.YYYY"
             aria-describedby="date-single-hint"
-            data-js-module="dateInputFormat"
+            data-js-behavior="dateInputFormat"
             data-dateinputformat
           />
           <span class="m-dateField__hint" id="date-single-hint">Format: DD.MM.YYYY</span>
@@ -85,11 +85,11 @@
 
         <!-- Example 2: attribute on a wrapper — formats every field inside -->
         <p class="stage__intro" style="margin-top: var(--space-xl);">
-          <strong>Wrapper scope:</strong> <code>data-js-module</code> sits on the
+          <strong>Wrapper scope:</strong> <code>data-js-behavior</code> sits on the
           surrounding element, so every <code>data-dateinputformat</code> field
           inside it is formatted.
         </p>
-        <div data-js-module="dateInputFormat">
+        <div data-js-behavior="dateInputFormat">
           <p class="m-dateField">
             <label class="m-dateField__label" for="date-from">From</label>
             <input
@@ -130,7 +130,7 @@
             type="text"
             placeholder="MM/DD/YYYY"
             aria-describedby="date-us-hint"
-            data-js-module="dateInputFormat"
+            data-js-behavior="dateInputFormat"
             data-dateinputformat="MM/DD/YYYY"
           />
           <span class="m-dateField__hint" id="date-us-hint">Format: MM/DD/YYYY</span>

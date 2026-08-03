@@ -23,11 +23,11 @@ enhancement.
   copy it along when pasting the JS into a plain project
 
 ## Usage
-Put `data-js-module="backToTop"` on the control and place it at the **end** of
-the page. It is fixed-positioned, so its position in the markup only decides
-the reading and tab order — and "back to top" belongs last. The end of your
-`<footer>` is a good spot: it keeps the control inside a landmark, which a
-direct child of `<body>` is not (axe's best-practice `region` rule reports
+Put `data-js-behavior="backToTop"` on the control and place it at the **end**
+of the page. It is fixed-positioned, so its position in the markup only
+decides the reading and tab order — and "back to top" belongs last. The end of
+your `<footer>` is a good spot: it keeps the control inside a landmark, which
+a direct child of `<body>` is not (axe's best-practice `region` rule reports
 content outside landmarks; wrapping it in the footer or a labelled `<nav>`
 answers that).
 
@@ -245,7 +245,7 @@ retune `--backToTop-border-color`.
 ## Integration
 The JS exports `init(el, services)` and does not self-initialize. It is loaded
 on demand by `boot.js` for every element carrying
-`data-js-module="backToTop"`, and it returns a cleanup function that
+`data-js-behavior="backToTop"`, and it returns a cleanup function that
 `destroyModulesInScope()` calls: the observer and the resize listener are
 dropped, the sentinel — which lives in `document.body`, outside the module's
 own subtree — is removed, and both attributes are cleared so a later `init()`

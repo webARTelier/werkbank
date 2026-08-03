@@ -54,7 +54,7 @@
 //
 // The "m-backToTop*" classes (BEM "m-" prefix) are styling only.
 // backToTop.js does NOT hook onto them; it targets the control via
-// data-js-module="backToTop" and writes the data attribute above. Restyle
+// data-js-behavior="backToTop" and writes the data attribute above. Restyle
 // or replace all of it freely — only keep the hidden state hiding, and
 // keep it hiding with `visibility`.
 

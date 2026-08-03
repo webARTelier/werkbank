@@ -125,7 +125,7 @@
  *
  * Configuration
  * -------------
- * On the <dialog> (data-js-module="offCanvasNav"):
+ * On the <dialog> (data-js-behavior="offCanvasNav"):
  * - id                              required; the triggers address the
  *                                   drawer by it. Without one the markup is
  *                                   left completely alone.

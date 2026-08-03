@@ -30,7 +30,7 @@ Folder and file names are written in **camelCase**.
 - The relative imports in the components (e.g. `import ... from './debounce.js'`)
   are relative to the **build output** (`_shared/js/modules/`), not to the physical
   folder structure. Renaming the component folders therefore does not break these imports.
-- Module IDs in `data-js-module="…"` in the markup correspond to the registry keys
+- Module IDs in `data-js-behavior="…"` in the markup correspond to the registry keys
   (= the camelCase module names).
 
 ## Dependencies: DI vs. direct import
@@ -67,7 +67,7 @@ to know before touching a component:
   cleanup function. Only ever written, never read back. There is deliberately
   **no** generic flag — an element can carry several modules and components
   nest, so a shared name cannot say who set it (`data-js-enhanced` used to,
-  and `dropdownNav` needed a `[data-js-module*=…]` qualifier to work around
+  and `dropdownNav` needed a `[data-js-behavior*=…]` qualifier to work around
   it). The loader's `data-js-init_<name>` is not a substitute: it is written
   *before* the chunk is imported.
 - **One mixin: `_shared/scss/_progressiveEnhancement.scss`.**

@@ -5,7 +5,7 @@
 
   1) In <head> (or before </body>): load the shared styles, this component's
      styles and the boot script. boot.min.js lazily loads the lightbox module
-     as soon as it finds data-js-module="lightbox" in the DOM — you do not
+     as soon as it finds data-js-behavior="lightbox" in the DOM — you do not
      import lightbox.js yourself. Adjust the paths to where you serve /dist.
 
        <link rel="stylesheet" href="/dist/css/shared.min.css" />
@@ -19,12 +19,12 @@
      in place instead.
 
   Wiring
-    - The gallery root carries data-js-module="lightbox".
+    - The gallery root carries data-js-behavior="lightbox".
     - Every item is an <a data-lightbox-item href="<full-size image>">. The
       href is both what the viewer shows and where a reader without the
       module (or one who opens the link in a new tab) ends up, so it must
       point at the image itself, not at a page about it.
-    - For a single image, put data-js-module="lightbox" on the link itself —
+    - For a single image, put data-js-behavior="lightbox" on the link itself —
       it is then the whole set, and the viewer ships without navigation and
       without a counter. Keep .m-lightbox on an ancestor: that is where the
       custom properties live.
@@ -105,7 +105,7 @@
 
 
 
-<div class="m-lightbox" id="gallery-harbour" data-js-module="lightbox">
+<div class="m-lightbox" id="gallery-harbour" data-js-behavior="lightbox">
 
   <ul class="m-lightbox__grid" role="list">
 
@@ -205,7 +205,7 @@
 <figure class="m-lightbox">
   <a
     class="m-lightbox__link"
-    data-js-module="lightbox"
+    data-js-behavior="lightbox"
     data-lightbox-item
     href="/media/gallery/skyline-1600.jpg"
     data-lightbox-caption="Downtown from the observation deck"

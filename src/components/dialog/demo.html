@@ -34,7 +34,7 @@
           Dialog based on the native <dialog> element.
 
           Wiring
-            - data-js-module="dialog" boots the module on the <dialog>.
+            - data-js-behavior="dialog" boots the module on the <dialog>.
             - An open trigger anywhere carries data-open-dialog="<dialog id>".
             - A close control inside carries data-close-dialog.
             - Modal by default (showModal); add data-dialog-nonmodal for show().
@@ -70,7 +70,7 @@
       </p>
       <button type="button" data-open-dialog="dialog-modal">Open modal dialog</button>
 
-      <dialog id="dialog-modal" class="m-dialog" data-js-module="dialog" aria-labelledby="dialog-modal-title">
+      <dialog id="dialog-modal" class="m-dialog" data-js-behavior="dialog" aria-labelledby="dialog-modal-title">
         <div class="m-dialog__panel">
           <header class="m-dialog__header">
             <h2 class="m-dialog__title" id="dialog-modal-title">Subscribe</h2>
@@ -105,7 +105,7 @@
       </p>
       <button type="button" data-open-dialog="dialog-static">Open static dialog</button>
 
-      <dialog id="dialog-static" class="m-dialog" data-js-module="dialog" data-dialog-static aria-labelledby="dialog-static-title">
+      <dialog id="dialog-static" class="m-dialog" data-js-behavior="dialog" data-dialog-static aria-labelledby="dialog-static-title">
         <div class="m-dialog__panel">
           <header class="m-dialog__header">
             <h2 class="m-dialog__title" id="dialog-static-title">Delete file?</h2>
@@ -140,7 +140,7 @@
       </p>
       <button type="button" data-open-dialog="dialog-nonmodal">Open non-modal dialog</button>
 
-      <dialog id="dialog-nonmodal" class="m-dialog" data-js-module="dialog" data-dialog-nonmodal aria-labelledby="dialog-nonmodal-title">
+      <dialog id="dialog-nonmodal" class="m-dialog" data-js-behavior="dialog" data-dialog-nonmodal aria-labelledby="dialog-nonmodal-title">
         <div class="m-dialog__panel">
           <header class="m-dialog__header">
             <h2 class="m-dialog__title" id="dialog-nonmodal-title">Quick note</h2>

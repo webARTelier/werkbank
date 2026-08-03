@@ -5,7 +5,7 @@
 
   1) In <head> (or before </body>): load the shared styles, this component's
      styles and the boot script. boot.min.js lazily loads the popover module
-     as soon as it finds data-js-module="popover" in the DOM — you do not
+     as soon as it finds data-js-behavior="popover" in the DOM — you do not
      import popover.js yourself. Adjust the paths to where you serve /dist.
 
        <link rel="stylesheet" href="/dist/css/shared.min.css" />
@@ -23,7 +23,7 @@
 
   Wiring
     - The popover is an element with the popover attribute, a unique id and
-      data-js-module="popover".
+      data-js-behavior="popover".
     - A trigger anywhere on the page carries popovertarget="<that id>" —
       native wiring, no data attributes needed. The trigger doubles as the
       popover's anchor.
@@ -56,6 +56,6 @@
 
 
 <!-- The popover: placed below the trigger by default -->
-<div id="popover-example" class="m-popover" popover data-js-module="popover">
+<div id="popover-example" class="m-popover" popover data-js-behavior="popover">
   <p>Popover content goes here.</p>
 </div>

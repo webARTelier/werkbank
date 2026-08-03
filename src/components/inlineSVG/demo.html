@@ -75,11 +75,11 @@
 
         <!--
             Each <img> below points at a shared icon file and carries
-            data-js-module="inlineSVG". On boot the module fetches the file
+            data-js-behavior="inlineSVG". On boot the module fetches the file
             and swaps the <img> for an inline <svg>.
 
             Wiring
-              - data-js-module="inlineSVG" on an <img> (or a container).
+              - data-js-behavior="inlineSVG" on an <img> (or a container).
               - The icons are the shared source files under
                 src/_shared/media/img/, whose stroke is currentColor.
 
@@ -107,17 +107,17 @@
 
         <div class="demo-iconRow">
           <span class="demo-swatch demo-swatch--accent">
-            <img data-js-module="inlineSVG"
+            <img data-js-behavior="inlineSVG"
                  src="../../_shared/media/img/system/warning.svg"
                  alt="Warning" />
           </span>
           <span class="demo-swatch demo-swatch--error">
-            <img data-js-module="inlineSVG"
+            <img data-js-behavior="inlineSVG"
                  src="../../_shared/media/img/system/warning.svg"
                  alt="Warning" />
           </span>
           <span class="demo-swatch demo-swatch--muted">
-            <img data-js-module="inlineSVG"
+            <img data-js-behavior="inlineSVG"
                  src="../../_shared/media/img/system/warning.svg"
                  alt="Warning" />
           </span>
@@ -133,7 +133,7 @@
 
         <div class="demo-iconRow">
           <span class="demo-swatch demo-swatch--hover">
-            <img data-js-module="inlineSVG"
+            <img data-js-behavior="inlineSVG"
                  src="../../_shared/media/img/icons/close.svg"
                  alt="Close" />
             <span>Close</span>
@@ -144,13 +144,13 @@
 
         <p class="stage__intro" style="margin-top: var(--space-xl);">
           <strong>One container, many icons.</strong> Putting
-          <code>data-js-module="inlineSVG"</code> on a wrapper inlines every
+          <code>data-js-behavior="inlineSVG"</code> on a wrapper inlines every
           <code>&lt;img&gt;</code> inside it. The chevron below is
           <strong>decorative</strong> (<code>alt=""</code>), so its inlined SVG
           is hidden from assistive tech.
         </p>
 
-        <div class="demo-iconRow" data-js-module="inlineSVG">
+        <div class="demo-iconRow" data-js-behavior="inlineSVG">
           <span class="demo-swatch demo-swatch--accent">
             <img src="../../_shared/media/img/system/chevronDown.svg" alt="" />
           </span>

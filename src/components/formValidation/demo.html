@@ -436,7 +436,8 @@
           Form validated by the native constraints declared in the markup.
 
           Wiring
-            - data-js-module="formValidation" boots the module on the <form>.
+            - data-js-behavior="formValidation" boots the module on the
+              <form>.
             - Each control (or radio/checkbox group) is wrapped in a
               [data-fv-item] container that receives .is-invalid and holds the
               .fv-error message.
@@ -499,7 +500,7 @@
         custom message.
       </p>
 
-      <form class="c-form" data-js-module="formValidation" action="#" method="post">
+      <form class="c-form" data-js-behavior="formValidation" action="#" method="post">
 
         <!-- Required text + minimum length -> valueMissing / tooShort -->
         <div class="c-form__item" data-fv-item>

@@ -11,7 +11,7 @@ beyond an edge, that edge fades out to signal "there is more to scroll".
 
 ## Usage
 The scrollable container itself gets `class="m-scrollFade"` and
-`data-js-module="adaptiveScrollFade"`. `overflow-y: auto` is applied by the
+`data-js-behavior="adaptiveScrollFade"`. `overflow-y: auto` is applied by the
 class; you only have to give the element a **constrained height** (e.g.
 `max-block-size`/`height`) so its content can overflow.
 
@@ -53,7 +53,7 @@ focusable, and stays role-less to avoid an unlabelled landmark.
 ## Integration
 The JS exports `init(el, services)` and does not self-initialize. It is loaded on
 demand by `boot.js` for every element carrying
-`data-js-module="adaptiveScrollFade"`.
+`data-js-behavior="adaptiveScrollFade"`.
 
 The script sets **no inline styles**. It only toggles the `data-fade-top` /
 `data-fade-bottom` state attributes; the mask gradient itself lives in the SCSS

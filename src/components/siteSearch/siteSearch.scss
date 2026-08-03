@@ -38,7 +38,7 @@
 //
 // The "m-siteSearch*" classes (BEM "m-" prefix) are used for styling only.
 // siteSearch.js does NOT hook onto them; it targets the root via
-// data-js-module="siteSearch" and the data-sitesearch-* attributes.
+// data-js-behavior="siteSearch" and the data-sitesearch-* attributes.
 // Restyle freely without touching the behaviour.
 
 @use "focus" as *;

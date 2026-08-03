@@ -86,7 +86,7 @@
  *
  * Configuration
  * -------------
- * On the nav element (data-js-module="dropdownNav"), all optional:
+ * On the nav element (data-js-behavior="dropdownNav"), all optional:
  * - data-dropdownnav-hover           open submenus on hover as well
  *                                    (fine pointers, flyout layout only)
  * - data-dropdownnav-stacked         keep the stacked layout at every

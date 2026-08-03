@@ -85,7 +85,7 @@
  *
  * Configuration
  * -------------
- * None. Put data-js-module="inlineSVG" directly on an <img> whose src is an
+ * None. Put data-js-behavior="inlineSVG" directly on an <img> whose src is an
  * .svg file, or on any container holding such <img> elements; every matching
  * image inside the boot scope is converted. Non-.svg and cross-origin images
  * are ignored.

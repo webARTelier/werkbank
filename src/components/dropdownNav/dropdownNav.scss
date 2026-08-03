@@ -39,7 +39,7 @@
 //
 // The "m-dropdownNav*" classes (BEM "m-" prefix) are used for styling only.
 // dropdownNav.js does NOT hook onto them; it targets the nav via
-// data-js-module="dropdownNav" and the data-dropdownnav-* attributes.
+// data-js-behavior="dropdownNav" and the data-dropdownnav-* attributes.
 // Restyle freely without touching the behaviour. Note that the rules keyed
 // on the injected data-dropdownnav-* elements read their --dropdownNav-*
 // values from the nav, so keep "m-dropdownNav" on it (or declare the
@@ -318,7 +318,7 @@
 //
 // The ready attribute is the component's own ("data-dropdownnav-ready",
 // see docs/preEnhancement.md), which is the whole reason these blocks can
-// key on it alone. They used to carry a "[data-js-module*='dropdownNav']"
+// key on it alone. They used to carry a "[data-js-behavior*='dropdownNav']"
 // qualifier as well, because the flag was a generic "data-js-enhanced" that
 // other components set too — so a dropdownNav nested inside one of them
 // picked up the bar layout below without ever having been enhanced itself.

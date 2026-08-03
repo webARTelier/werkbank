@@ -35,7 +35,7 @@
             has hidden content beyond it fades out to hint "there is more".
 
             Wiring
-              - data-js-module="adaptiveScrollFade" boots the module on the box.
+              - data-js-behavior="adaptiveScrollFade" boots the module on the box.
               - .m-scrollFade supplies overflow-y: auto; give the box a
                 constrained height (below via max-block-size) so it can overflow
                 — that overflow is what the fade reacts to.
@@ -70,7 +70,7 @@
         </p>
 
         <!-- Demo-only sizing: height tracks the viewport, capped so Full-HD shows all text; shorter viewports overflow and fade -->
-        <div class="m-scrollFade" data-js-module="adaptiveScrollFade"
+        <div class="m-scrollFade" data-js-behavior="adaptiveScrollFade"
              aria-label="About this component"
              style="max-block-size: min(32rem, calc(100dvh - 27rem));">
           <p>

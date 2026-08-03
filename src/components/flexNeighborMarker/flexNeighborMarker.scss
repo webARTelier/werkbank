@@ -18,7 +18,7 @@
 //
 // The "m-flexNeighbor" class (BEM "m-" prefix) is styling only — a convenience
 // flex container so the demo/snippet works out of the box. The JS hooks onto
-// the element via data-js-module and toggles the class above; it does not need
+// the element via data-js-behavior and toggles the class above; it does not need
 // or read "m-flexNeighbor", so you may lay the container out however you like.
 
 // Convenience container: a wrapping flex row with the shared gap. Optional —

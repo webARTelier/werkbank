@@ -22,7 +22,7 @@
 //
 // The "m-popover*" classes (BEM "m-" prefix) are used for styling only.
 // popover.js does NOT hook onto them; it targets the element via
-// data-js-module="popover" and the data-popover-position attribute.
+// data-js-behavior="popover" and the data-popover-position attribute.
 // Restyle freely without touching the behaviour.
 
 @use "focus" as *;

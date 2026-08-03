@@ -47,7 +47,7 @@
  * aria-labelledby on the list element); a missing name is reported rather
  * than silently shipped.
  *
- * Configuration (all optional, on the data-js-module element)
+ * Configuration (all optional, on the data-js-behavior element)
  * -----------------------------------------------------------
  * - data-tabs-manual                  select on Enter/Space instead of on
  *                                     focus ("manual activation")

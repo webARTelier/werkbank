@@ -3,11 +3,11 @@
  * ----------------------------------------------------------------------------
  * Minimal module loader:
  * - loads global modules on demand for every page
- * - loads page modules on demand based on data-js-module
+ * - loads page modules on demand based on data-js-behavior
  * - optionally tears modules back down again via destroyModulesInScope()
  *
  * markup example:
- * <section data-js-module="accordion,slider"></section>
+ * <section data-js-behavior="accordion,slider"></section>
  *
  * Teardown contract: init(el, services) may optionally return a cleanup
  * function (`() => { ... }`). This is for hosts that mount/unmount the same
@@ -45,7 +45,7 @@ const cleanups = new WeakMap();
 
 
 function parseModuleNames(el) {
-  return (el.dataset.jsModule || '')
+  return (el.dataset.jsBehavior || '')
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
@@ -115,7 +115,7 @@ async function initElement(el) {
 
 
 async function initModulesInScope(scope = document) {
-  const nodes = scope.querySelectorAll('[data-js-module]');
+  const nodes = scope.querySelectorAll('[data-js-behavior]');
 
   // Concurrently, and that is not a micro-optimisation: every module is a
   // separate lazily imported chunk, so awaiting one element before starting
@@ -138,7 +138,7 @@ async function initModulesInScope(scope = document) {
 // element can run init() again. For hosts that mount/unmount the same
 // subtree repeatedly instead of doing a full page (re)load.
 function destroyModulesInScope(scope = document) {
-  const nodes = scope.querySelectorAll('[data-js-module]');
+  const nodes = scope.querySelectorAll('[data-js-behavior]');
 
   for (const el of nodes) {
     const stored = cleanups.get(el);

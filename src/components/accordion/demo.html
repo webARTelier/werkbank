@@ -34,7 +34,7 @@
           Accordion based on native <details>/<summary>.
 
           Wiring
-            - data-js-module="accordion" boots the module on the container.
+            - data-js-behavior="accordion" boots the module on the container.
             - Each item is a <details data-accordion-item> holding a <summary>
               and a <div data-accordion-panel>.
             - Single-open (only one panel open at a time): give every <details>
@@ -58,7 +58,7 @@
         <code>name</code> attribute, so only one panel can be open at a
         time — opening one automatically closes the others.
       </p>
-      <div class="m-accordion" data-js-module="accordion">
+      <div class="m-accordion" data-js-behavior="accordion">
 
         <details class="m-accordion__item" data-accordion-item name="accordion-single">
           <summary class="m-accordion__trigger">
@@ -109,7 +109,7 @@
         omitted, so each panel toggles independently and several panels can
         stay open at the same time.
       </p>
-      <div class="m-accordion" data-js-module="accordion">
+      <div class="m-accordion" data-js-behavior="accordion">
         <details class="m-accordion__item" data-accordion-item>
           <summary class="m-accordion__trigger">
             <h2 class="m-accordion__title">Panel A</h2>

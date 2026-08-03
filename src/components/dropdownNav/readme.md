@@ -12,7 +12,7 @@ Multi-level dropdown and mega-menu navigation built on the ARIA disclosure patte
 Author the navigation as what it is without JavaScript: a `<nav>` with a nested list of links. Every submenu is simply visible, so the nav reads like a sitemap — usable, and honest: nothing is hidden, and no control exists that would do nothing when clicked. The module upgrades that markup in place.
 
 ```html
-<nav class="m-dropdownNav" aria-label="Main" data-js-module="dropdownNav">
+<nav class="m-dropdownNav" aria-label="Main" data-js-behavior="dropdownNav">
   <ul class="m-dropdownNav__list">
     <li class="m-dropdownNav__item" data-dropdownnav-item>
       <a class="m-dropdownNav__link" href="/products" data-dropdownnav-label>Products</a>
@@ -89,7 +89,7 @@ Follows the ARIA APG **disclosure navigation** pattern, not `role="menubar"`: si
 - Links and toggles use the shared `focus-ring()` mixin (`light` tone). The open/close animation is a pure CSS enhancement and respects `prefers-reduced-motion` (duration **and** delay, since the delay is what holds the panel visible during the fade-out).
 
 ## Integration
-The JS exports `init(el, services)` and does not self-initialize. It is loaded on demand by `boot.js` for every element carrying `data-js-module="dropdownNav"` — one instance per nav. It sets no inline styles. The state it writes is `aria-expanded` on the toggles it injected (both the ARIA contract and the stylesheet's hook), `data-dropdownnav-ready` on the nav once the upgrade succeeded, and two purely descriptive attributes the stylesheet keys its geometry off: `data-dropdownnav-flip` and `data-dropdownnav-parent`.
+The JS exports `init(el, services)` and does not self-initialize. It is loaded on demand by `boot.js` for every element carrying `data-js-behavior="dropdownNav"` — one instance per nav. It sets no inline styles. The state it writes is `aria-expanded` on the toggles it injected (both the ARIA contract and the stylesheet's hook), `data-dropdownnav-ready` on the nav once the upgrade succeeded, and two purely descriptive attributes the stylesheet keys its geometry off: `data-dropdownnav-flip` and `data-dropdownnav-parent`.
 
 `init` returns a cleanup function (see `destroyModulesInScope()` in `boot.js`) for hosts that mount/unmount the same subtree repeatedly. It removes the three document-level dismissal listeners and the `resize` listener, clears a pending hover timer and takes the injected buttons and the script-set attributes back out, so the markup is handed back exactly as it was authored.
 

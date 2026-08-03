@@ -5,7 +5,7 @@
 
   1) In <head> (or before </body>): load the shared styles, this component's
      styles and the boot script. boot.min.js lazily loads the siteSearch
-     module as soon as it finds data-js-module="siteSearch" in the DOM — you
+     module as soon as it finds data-js-behavior="siteSearch" in the DOM — you
      do not import siteSearch.js yourself. Adjust the paths to where you
      serve /dist.
 
@@ -25,11 +25,11 @@
      out, and where an ancestor may grow with it, the page scrolls sideways.
 
   Wiring
-    - The root is a <search data-js-module="siteSearch">: the search landmark
-      is what the platform already has for exactly this, so the component
-      does not invent one. An engine that predates <search> (before autumn
-      2023) exposes the element as generic; add role="search" there — it is
-      allowed on <search>, being the role the element already implies.
+    - The root is a <search data-js-behavior="siteSearch">: the search
+      landmark is what the platform already has for exactly this, so the
+      component does not invent one. An engine that predates <search> (before
+      autumn 2023) exposes the element as generic; add role="search" there —
+      it is allowed on <search>, being the role the element already implies.
     - Inside it, two children and their order is the contract: the toggle
       (data-sitesearch-toggle) immediately followed by the form
       (data-sitesearch-form). The stylesheet reaches the collapsed field
@@ -122,7 +122,7 @@
 
 
 
-<search class="m-siteSearch" data-js-module="siteSearch">
+<search class="m-siteSearch" data-js-behavior="siteSearch">
 
   <!--
     The toggle. Hidden by the stylesheet until the module has taken over,

@@ -14,7 +14,7 @@ from the DOM — none of which is possible while the SVG is sealed inside an
 - `inlineSVG.js` – behavior
 
 ## Usage
-Put `data-js-module="inlineSVG"` directly on an `<img>` whose `src` is an `.svg`
+Put `data-js-behavior="inlineSVG"` directly on an `<img>` whose `src` is an `.svg`
 file, or on any container that holds one or more such images — every matching
 `<img>` inside the boot scope is converted. Non-`.svg` and cross-origin sources
 are ignored and left as plain images.
@@ -56,8 +56,8 @@ original `id` or styled class — recolour via `currentColor` or structural
 selectors, which is the intended styling surface anyway.
 
 You can chain it with `scaleSVG` in one attribute
-(`data-js-module="inlineSVG,scaleSVG"` + `data-scale`) to inline the file and
-then size it from its `viewBox`.
+(`data-js-behavior="inlineSVG,scaleSVG"` + `data-scale`) to inline the file
+and then size it from its `viewBox`.
 
 See `inlineSVG.html` for a ready-to-copy snippet.
 
@@ -83,7 +83,7 @@ intentional.
 
 ## Integration
 The JS exports `init(el, services)` and does not self-initialize. It is loaded on
-demand by `boot.js` for every element carrying `data-js-module="inlineSVG"`.
+demand by `boot.js` for every element carrying `data-js-behavior="inlineSVG"`.
 
 It is a stateless DOM transform (plain functions, no instance) and sets no inline
 styles — the visual result is a normal `<svg>` for your project to style.

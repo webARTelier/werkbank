@@ -55,7 +55,7 @@
  * - `maxlength` stays the real limit (enforced by the platform even without
  *   this script); `is-atLimit` is presentational only.
  *
- * Configuration (all optional; put `data-js-module="inputCharCount"` on the
+ * Configuration (all optional; put `data-js-behavior="inputCharCount"` on the
  * <input>/<textarea> itself)
  * --------------------------------------------------------------------------
  * - `maxlength` (native)        enables the "used / max" display, the

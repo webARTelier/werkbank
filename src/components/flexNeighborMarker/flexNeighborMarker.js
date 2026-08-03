@@ -106,7 +106,7 @@ class FlexNeighborMarker {
   // those are the containers (the module element is then a wrapper
   // around several). Otherwise — the common single-container case —
   // the module element itself is the container, so no extra
-  // attribute is needed beyond data-js-module.
+  // attribute is needed beyond data-js-behavior.
   resolveContainers = () => {
     const marked = [];
     if (this.module.matches(defaults.containerSelector)) marked.push(this.module);

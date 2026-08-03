@@ -40,7 +40,7 @@
             hairline, shadow) and its transition off that class.
 
             Wiring — three instances, three modes
-              - Bar one: data-js-module="stickyObserver" on the bar, nothing
+              - Bar one: data-js-behavior="stickyObserver" on the bar, nothing
                 else. The script injects a zero-size, aria-hidden sentinel
                 <div> directly before the bar (inspect the DOM to see it).
               - Bar two: data-sticky-sentinel="#surfaceTrigger" points at an
@@ -86,7 +86,7 @@
         <!-- Instance 1: auto-injected sentinel — the bar is the module
              element, no extra markup -->
         <div>
-          <header class="m-stickyBar" data-js-module="stickyObserver">
+          <header class="m-stickyBar" data-js-behavior="stickyObserver">
             <strong>Bar one</strong> — auto-injected sentinel, pinned while it
             shows its surface
           </header>
@@ -94,7 +94,7 @@
           <p>
             Keep scrolling — this text exists so the section is long enough
             for the bar above to actually pin. That bar carries nothing but
-            <code>data-js-module="stickyObserver"</code>: the tiny sentinel
+            <code>data-js-behavior="stickyObserver"</code>: the tiny sentinel
             element the observer watches was injected by the script right
             before the bar. Open the inspector and you will find it — an
             empty, zero-size <code>&lt;div&gt;</code> with
@@ -123,7 +123,7 @@
         <!-- Instance 2: author-placed sentinel — the trigger is the
              paragraph BELOW the bar, decoupled from the pinning -->
         <div>
-          <header class="m-stickyBar" data-js-module="stickyObserver"
+          <header class="m-stickyBar" data-js-behavior="stickyObserver"
                   data-sticky-sentinel="#surfaceTrigger">
             <strong>Bar two</strong> — author-placed sentinel, surface appears
             when the trigger paragraph is gone
@@ -181,7 +181,7 @@
           <div id="demoScrollBox"
                style="max-block-size: 45vh; overflow: auto;
                       border: 1px solid var(--color-border-subtle);">
-            <header class="m-stickyBar" data-js-module="stickyObserver"
+            <header class="m-stickyBar" data-js-behavior="stickyObserver"
                     data-sticky-root="#demoScrollBox">
               <strong>Bar three</strong> — pins inside this scroll container
             </header>

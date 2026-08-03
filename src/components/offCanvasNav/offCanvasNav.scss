@@ -57,7 +57,7 @@
 //
 // The "m-offCanvasNav*" classes (BEM "m-" prefix) are used for styling only.
 // offCanvasNav.js does NOT hook onto them; it targets the <dialog> via
-// data-js-module="offCanvasNav" and the data-offcanvasnav-* attributes.
+// data-js-behavior="offCanvasNav" and the data-offcanvasnav-* attributes.
 // Restyle freely without touching the behaviour.
 
 @use "focus" as *;

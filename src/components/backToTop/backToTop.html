@@ -5,7 +5,7 @@
 
   1) In <head> (or before </body>): load the shared styles, this component's
      styles and the boot script. boot.min.js lazily loads the backToTop
-     module as soon as it finds data-js-module="backToTop" in the DOM — you
+     module as soon as it finds data-js-behavior="backToTop" in the DOM — you
      do not import backToTop.js yourself. Adjust the paths to where you
      serve /dist.
 
@@ -143,7 +143,7 @@
 <footer>
   …your footer content…
 
-  <a class="m-backToTop" href="#top" data-js-module="backToTop">
+  <a class="m-backToTop" href="#top" data-js-behavior="backToTop">
     <svg class="m-backToTop__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
       <path d="M12 19V5" />
       <path d="m5 12 7-7 7 7" />
@@ -160,7 +160,7 @@
      the next Tab continues at the top of the page, not at the control. -->
 <a id="pageTop" class="c-skipLink" href="#main">Skip to content</a>
 …page…
-<a class="m-backToTop" href="#pageTop" data-js-module="backToTop">
+<a class="m-backToTop" href="#pageTop" data-js-behavior="backToTop">
   <!-- icon + label as in the basic example above -->
 </a>
 
@@ -170,6 +170,6 @@
      names the control, and the threshold is an explicit 400px instead of
      one viewport height. -->
 <a class="m-backToTop m-backToTop--iconOnly" href="#top"
-   data-js-module="backToTop" data-backtotop-threshold="400">
+   data-js-behavior="backToTop" data-backtotop-threshold="400">
   <!-- icon + label as in the basic example above -->
 </a>

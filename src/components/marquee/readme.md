@@ -15,7 +15,7 @@ readable row.
 There is **no vendor dependency**.
 
 ## Usage
-Put `data-js-module="marquee"` on the module element. Inside it:
+Put `data-js-behavior="marquee"` on the module element. Inside it:
 
 - `[data-marquee-container]` — the clipping viewport (a flex row),
 - exactly **one** `[data-marquee-animated]` — the track that scrolls and gets
@@ -25,7 +25,7 @@ Put `data-js-module="marquee"` on the module element. Inside it:
   wires it as a pause/play toggle.
 
 ```html
-<div class="m-marquee" data-js-module="marquee">
+<div class="m-marquee" data-js-behavior="marquee">
   <button class="m-marquee__toggle" type="button" data-marquee-toggle hidden>
     Pause
   </button>
@@ -98,7 +98,7 @@ example design.
 ## Integration
 The JS exports `init(el, services)` and does not self-initialize. It is
 loaded on demand by `boot.js` for every element carrying
-`data-js-module="marquee"` — one controller instance per element. It sets no
+`data-js-behavior="marquee"` — one controller instance per element. It sets no
 inline styles; motion runs on Web Animations API `Animation` objects, state
 is expressed through the `is-running` / `is-paused` classes.
 
@@ -108,7 +108,7 @@ option values, missing pause toggle). Without it the module degrades
 silently.
 
 The `countdown` component detects a surrounding marquee (via
-`data-js-module`) and mirrors its live values into the cloned tracks — see
+`data-js-behavior`) and mirrors its live values into the cloned tracks — see
 `countdown/readme.md`. The seamless loop relies on every track being an
 exact, equal-width copy, so the marquee re-clones whenever the source
 track's width changes (e.g. once, after a nested countdown injects its pause

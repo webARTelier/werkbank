@@ -17,7 +17,7 @@ as it is fixed.
 There is **no vendor dependency**: validation is done entirely by the platform.
 
 ## Usage
-Put `data-js-module="formValidation"` on the `<form>`. Declare the rules with the
+Put `data-js-behavior="formValidation"` on the `<form>`. Declare the rules with the
 native validation attributes you already know — the module never invents rules,
 it only presents the browser's verdict:
 
@@ -188,7 +188,7 @@ patterns worth copying:
 
 ## Integration
 The JS exports `init(el, services)` and does not self-initialize. It is loaded on
-demand by `boot.js` for every `<form>` carrying `data-js-module="formValidation"` —
+demand by `boot.js` for every `<form>` carrying `data-js-behavior="formValidation"` —
 one controller instance per form.
 
 `services.reporter` (dependency injection via `boot.js`) is **optional** — it is

@@ -38,7 +38,7 @@
  *    to be swapped for an inline <svg> is watched with a MutationObserver
  *    (bounded by observeForMs) and the replacement is sized the moment it
  *    appears. When boot hands the module an <img> that inlineSVG has
- *    already replaced — the chained data-js-module="inlineSVG,scaleSVG"
+ *    already replaced — the chained data-js-behavior="inlineSVG,scaleSVG"
  *    wiring — the not-yet-sized candidates are picked up document-wide
  *    instead (see init).
  *
@@ -235,7 +235,7 @@ export function init(el, services = {}) {
     return;
   }
 
-  // Chained wiring (data-js-module="inlineSVG,scaleSVG" on one <img>):
+  // Chained wiring (data-js-behavior="inlineSVG,scaleSVG" on one <img>):
   // boot awaits inlineSVG's init before calling this one, so the <img> it
   // hands over has already been swapped out of the document. The
   // replacement is unreachable from the detached node, but it carries the

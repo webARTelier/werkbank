@@ -8,7 +8,7 @@ Live countdown to a target date.
 - `countdown.js` – behavior
 
 ## Usage
-The root element gets `data-js-module="countdown"` as well as `data-countdown-date` with the target date (e.g. `2026-12-31T23:59:59+01:00`, optionally on a child element too). Inside it are the output elements with `data-countdown-days`, `data-countdown-hours`, `data-countdown-minutes` and optionally `data-countdown-seconds`, which are updated every second.
+The root element gets `data-js-behavior="countdown"` as well as `data-countdown-date` with the target date (e.g. `2026-12-31T23:59:59+01:00`, optionally on a child element too). Inside it are the output elements with `data-countdown-days`, `data-countdown-hours`, `data-countdown-minutes` and optionally `data-countdown-seconds`, which are updated every second.
 
 Optional attributes:
 - `data-countdown-label` — names what the countdown counts to (e.g. `the New Year`). It is woven into the screen-reader sentence and the "finished" announcement.

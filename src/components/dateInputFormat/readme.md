@@ -9,7 +9,7 @@ default) while the user types, pastes or edits.
 - `dateInputFormat.js` – behavior
 
 ## Usage
-Put `data-js-module="dateInputFormat"` on the field itself or on a wrapper, and
+Put `data-js-behavior="dateInputFormat"` on the field itself or on a wrapper, and
 `data-dateinputformat` on each `<input>` to format. When the attribute sits on a
 wrapper, every `[data-dateinputformat]` inside it is formatted. Use
 `type="text"` (or `type="tel"` / `type="search"`) — `type="date"` / `number`
@@ -74,7 +74,7 @@ pattern derives `groups`, `separator` and `order` from the pattern itself.)
 
 ## Integration
 The JS exports `init(el, services)` and does not self-initialize. It is loaded on
-demand by `boot.js` for every element carrying `data-js-module="dateInputFormat"`.
+demand by `boot.js` for every element carrying `data-js-behavior="dateInputFormat"`.
 
 `services.reporter` (dependency injection via `boot.js`) is **optional** — it is
 used to warn when the module is initialized on a non-element node, when no

@@ -5,7 +5,7 @@
 
   1) In <head> (or before </body>): load the shared styles, this component's
      styles and the boot script. boot.min.js lazily loads the countdown module
-     as soon as it finds data-js-module="countdown" in the DOM — you do not
+     as soon as it finds data-js-behavior="countdown" in the DOM — you do not
      import countdown.js yourself. Adjust the paths to where you serve /dist.
 
        <link rel="stylesheet" href="/dist/css/shared.min.css" />
@@ -40,7 +40,7 @@
 
 <div
   class="m-countdown"
-  data-js-module="countdown"
+  data-js-behavior="countdown"
   data-countdown-date="2026-12-31T23:59:59+01:00"
   data-countdown-label="the New Year"
 >

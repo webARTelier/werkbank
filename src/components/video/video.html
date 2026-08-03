@@ -6,7 +6,7 @@
   1) In <head> (or before </body>): load the shared styles, this component's
      stylesheet and the boot script. boot.min.js lazily loads the
      video module as soon as it finds
-     data-js-module="video" in the DOM — you do not import
+     data-js-behavior="video" in the DOM — you do not import
      video.js yourself. Adjust the paths to where you serve /dist.
 
        <link rel="stylesheet" href="/dist/css/shared.min.css" />
@@ -52,8 +52,8 @@
     newly chosen source.
 
   Wiring
-    - data-js-module="video" goes on the module element.
-      (Combine with other modules via a comma: data-js-module="a,b".)
+    - data-js-behavior="video" goes on the module element.
+      (Combine with other modules via a comma: data-js-behavior="a,b".)
     - The <button data-video-toggle hidden> keeps its `hidden`
       attribute: the script reveals it once it is functional, so a page
       without JS never shows a dead control. Leave the button empty of
@@ -96,7 +96,7 @@
 
 <!-- A) Self-hosted, click-to-play. Media container: e.g. 16 / 9. -->
 <div class="your-media-container">
-  <div class="m-video" data-js-module="video">
+  <div class="m-video" data-js-behavior="video">
 
     <video class="m-video__video" poster="/media/videoPoster.jpg" controls preload="metadata" playsinline>
       <source src="/media/video-portrait-720.mp4" media="(max-width: 767px)">
@@ -121,7 +121,7 @@
      persistent play/pause toggle sits in the corner (--ambient).
      Media container: ambient loops often run wider, e.g. 21 / 9. -->
 <div class="your-media-container">
-  <div class="m-video m-video--ambient" data-js-module="video">
+  <div class="m-video m-video--ambient" data-js-behavior="video">
 
     <video class="m-video__video" autoplay muted loop playsinline preload="auto">
       <source src="/media/ambient-1920.mp4" media="(min-width: 990px)">
@@ -148,7 +148,7 @@
 <!-- C) YouTube click-to-load facade: locally hosted poster, no request to
      Google before the click. Media container: e.g. 16 / 9. -->
 <div class="your-media-container">
-  <div class="m-video" data-js-module="video" data-video-youtube="https://www.youtube.com/watch?v=a3ICNMQW7Ok" data-video-title="What the video shows">
+  <div class="m-video" data-js-behavior="video" data-video-youtube="https://www.youtube.com/watch?v=a3ICNMQW7Ok" data-video-title="What the video shows">
 
     <img class="m-video__poster" src="/media/videoPoster.jpg" alt="" data-video-poster>
 

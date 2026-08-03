@@ -15,7 +15,7 @@ roving-tabindex keyboard support.
 There is **no vendor dependency** and no bundled shared utility.
 
 ## Usage
-Put `data-js-module="tabs"` on a wrapper containing:
+Put `data-js-behavior="tabs"` on a wrapper containing:
 
 - a list with `data-tabs-list` (give it an `aria-label`) of in-page anchor
   links with `data-tabs-tab` and `href="#<panel id>"`, and
@@ -27,7 +27,7 @@ no tab points to is reported as orphaned; a second tab pointing to an
 already-paired panel is ignored and reported as a duplicate.
 
 ```html
-<div data-js-module="tabs">
+<div data-js-behavior="tabs">
   <ul aria-label="Example tabs" data-tabs-list>
     <li><a href="#panel-a" data-tabs-tab>First</a></li>
     <li><a href="#panel-b" data-tabs-tab>Second</a></li>
@@ -37,7 +37,7 @@ already-paired panel is ignored and reported as a duplicate.
 </div>
 ```
 
-### Options (all optional; on the `data-js-module` element)
+### Options (all optional; on the `data-js-behavior` element)
 
 | Attribute | Effect |
 |---|---|
@@ -96,7 +96,7 @@ above still reaches every panel if the chunk never arrives. See
 
 ## Integration
 The JS exports `init(el, services)` and does not self-initialize. It is loaded
-on demand by `boot.js` for every element carrying `data-js-module="tabs"` —
+on demand by `boot.js` for every element carrying `data-js-behavior="tabs"` —
 one widget instance per wrapper; multiple instances per page work
 independently (panel ids are document-unique). It sets no inline styles.
 

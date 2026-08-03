@@ -82,7 +82,7 @@
  *
  * Configuration
  * -------------
- * On the root (data-js-module="siteSearch"):
+ * On the root (data-js-behavior="siteSearch"):
  * - data-sitesearch-side="start"   style only: the field unrolls towards
  *                                  the inline-start of the toggle, for a
  *                                  toggle sitting at the end of a header

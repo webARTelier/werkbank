@@ -5,7 +5,7 @@
 
   1) In <head> (or before </body>): load the shared styles, this component's
      validation-state styles and the boot script. boot.min.js lazily loads
-     the formValidation module as soon as it finds data-js-module="formValidation"
+     the formValidation module as soon as it finds data-js-behavior="formValidation"
      in the DOM — you do not import formValidation.js yourself. Adjust the paths
      to where you serve /dist.
 
@@ -20,7 +20,7 @@
      browser then shows its own bubbles), so the constraints are never optional.
 
   Wiring
-    - The <form> carries data-js-module="formValidation". Do NOT add `novalidate`
+    - The <form> carries data-js-behavior="formValidation". Do NOT add `novalidate`
       yourself — the module sets it from JS so the no-JS path keeps native
       validation.
     - Wrap each control (or each radio/checkbox group) in an element carrying
@@ -80,7 +80,7 @@
 
 
 
-<form class="c-form" data-js-module="formValidation" action="#" method="post">
+<form class="c-form" data-js-behavior="formValidation" action="#" method="post">
 
   <!-- Text field: required + minimum length -->
   <div class="c-form__item" data-fv-item>

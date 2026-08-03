@@ -112,7 +112,7 @@
     <section class="stage" aria-label="Live demo">
 
       <!--
-          A counter per field, enabled with data-js-module="inputCharCount"
+          A counter per field, enabled with data-js-behavior="inputCharCount"
           on the field itself.
 
           Wiring
@@ -150,21 +150,21 @@
         <div class="c-form__item">
           <label class="c-label" for="icc-bio">Short bio (no limit)</label>
           <textarea class="c-input" id="icc-bio" name="bio" placeholder="Tell us about yourself…"
-            data-js-module="inputCharCount"></textarea>
+            data-js-behavior="inputCharCount"></textarea>
         </div>
 
         <!-- Used / max: a native maxlength enables "used / max" + is-atLimit -->
         <div class="c-form__item">
           <label class="c-label" for="icc-title">Title (max 60)</label>
           <input class="c-input" type="text" id="icc-title" name="title" maxlength="60"
-            placeholder="A short, punchy title" data-js-module="inputCharCount" />
+            placeholder="A short, punchy title" data-js-behavior="inputCharCount" />
         </div>
 
         <!-- Countdown: show the remaining budget instead of the used count -->
         <div class="c-form__item">
           <label class="c-label" for="icc-tweet">Message (countdown from 280)</label>
           <textarea class="c-input" id="icc-tweet" name="tweet" maxlength="280" data-icc-countdown
-            placeholder="What's happening?" data-js-module="inputCharCount"></textarea>
+            placeholder="What's happening?" data-js-behavior="inputCharCount"></textarea>
         </div>
 
         <!-- Per-field visible override via data-icc-text (tokens interpolated) -->
@@ -172,7 +172,7 @@
           <label class="c-label" for="icc-code">Coupon code (max 12, custom wording)</label>
           <input class="c-input" type="text" id="icc-code" name="code" maxlength="12"
             data-icc-text="{count}/{max} used · {remaining} to go" placeholder="e.g. SUMMER25"
-            data-js-module="inputCharCount" />
+            data-js-behavior="inputCharCount" />
         </div>
 
       </form>

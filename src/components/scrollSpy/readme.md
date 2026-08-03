@@ -18,7 +18,7 @@ per frame.
 There is **no vendor dependency**.
 
 ## Usage
-Put `data-js-module="scrollSpy"` on the table of contents (a `<nav>` with an
+Put `data-js-behavior="scrollSpy"` on the table of contents (a `<nav>` with an
 `aria-label` is the natural fit). Every in-page anchor link inside it
 (`href="#<target id>"`) becomes a spy link; the sections it points to need
 nothing but their `id` (the `tabindex="-1"` in the snippet is a focus
@@ -27,7 +27,7 @@ wiring — no extra pairing attribute, and the TOC may live anywhere on the
 page (sticky sidebar, header, …).
 
 ```html
-<nav aria-label="On this page" data-js-module="scrollSpy">
+<nav aria-label="On this page" data-js-behavior="scrollSpy">
   <ul>
     <li><a href="#introduction">Introduction</a></li>
     <li><a href="#usage">Usage</a></li>
@@ -85,7 +85,7 @@ Anchor navigation stays native — the module never intercepts clicks. Smooth
 scrolling belongs to the consuming project
 (`scroll-behavior: smooth` behind a `prefers-reduced-motion` check).
 
-### Options (all optional; on the `data-js-module` element)
+### Options (all optional; on the `data-js-behavior` element)
 
 | Attribute | Effect |
 |---|---|
@@ -131,7 +131,7 @@ nested list, plus a scroll-container instance).
 ## Integration
 The JS exports `init(el, services)` and does not self-initialize. It is
 loaded on demand by `boot.js` for every element carrying
-`data-js-module="scrollSpy"` — one instance per TOC; multiple instances per
+`data-js-behavior="scrollSpy"` — one instance per TOC; multiple instances per
 page work independently (target ids are document-unique). It sets no inline
 styles; beside the injected end sentinel its only DOM write is the
 `aria-current` attribute.

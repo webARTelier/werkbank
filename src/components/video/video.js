@@ -63,7 +63,7 @@
  * - Reduced motion starts ambient videos paused (see above).
  *
  * Configuration (on the element carrying
- * data-js-module="video")
+ * data-js-behavior="video")
  * --------------------------------------------------------------------------
  * - `data-video-youtube="URL-or-id"` switches the module into
  *                                        facade mode. Accepts a full

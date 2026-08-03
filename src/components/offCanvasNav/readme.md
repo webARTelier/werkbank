@@ -19,7 +19,7 @@ Author the navigation where it belongs in the page — inside the site header �
   <span class="m-offCanvasNavToggle__label">Menu</span>
 </a>
 
-<dialog id="siteNav" class="m-offCanvasNav" data-js-module="offCanvasNav"
+<dialog id="siteNav" class="m-offCanvasNav" data-js-behavior="offCanvasNav"
         aria-labelledby="siteNav-title">
   <div class="m-offCanvasNav__panel" data-offcanvasnav-panel>
     <header class="m-offCanvasNav__header">
@@ -28,7 +28,7 @@ Author the navigation where it belongs in the page — inside the site header �
               aria-label="Close menu" autofocus>…×…</button>
     </header>
     <div class="m-offCanvasNav__body">
-      <nav aria-label="Main" data-js-module="dropdownNav" data-dropdownnav-stacked>…the site navigation…</nav>
+      <nav aria-label="Main" data-js-behavior="dropdownNav" data-dropdownnav-stacked>…the site navigation…</nav>
     </div>
   </div>
 </dialog>
@@ -124,7 +124,7 @@ Neither the breakpoint nor the exit timing is duplicated in the script. The brea
 - Both the slide-in and the slide-out respect `prefers-reduced-motion`; flattening the transition in CSS is enough, because the script reads the exit length back from it. The entrance is a pure CSS enhancement (`@starting-style` provides the frame the panel comes in from); the exit needs the script for one thing only — keeping the dialog open while it plays.
 
 ## Integration
-The JS exports `init(el, services)` and does not self-initialize. It is loaded on demand by `boot.js` for every `<dialog>` carrying `data-js-module="offCanvasNav"` — one instance per drawer — and reports (without enhancing) if it is put on anything else. It sets no inline styles. What it writes is `data-offcanvasnav-ready` on the dialog, `data-offcanvasnav-closing` on it while the exit plays, `role="generic"` on it while the flow rendering applies (left alone if the dialog was authored with a role of its own), a temporary `tabindex="-1"` on an element it has to move the focus to, and on each trigger `aria-haspopup`, `aria-controls`, `role="button"` (links only), `data-offcanvasnav-ready`, the mirrored `data-offcanvasnav-always` and, while the drawer is open, `data-offcanvasnav-open`. The open state itself is the native `[open]` attribute.
+The JS exports `init(el, services)` and does not self-initialize. It is loaded on demand by `boot.js` for every `<dialog>` carrying `data-js-behavior="offCanvasNav"` — one instance per drawer — and reports (without enhancing) if it is put on anything else. It sets no inline styles. What it writes is `data-offcanvasnav-ready` on the dialog, `data-offcanvasnav-closing` on it while the exit plays, `role="generic"` on it while the flow rendering applies (left alone if the dialog was authored with a role of its own), a temporary `tabindex="-1"` on an element it has to move the focus to, and on each trigger `aria-haspopup`, `aria-controls`, `role="button"` (links only), `data-offcanvasnav-ready`, the mirrored `data-offcanvasnav-always` and, while the drawer is open, `data-offcanvasnav-open`. The open state itself is the native `[open]` attribute.
 
 Every path out of the drawer funnels through the native `close` event — the close control, a press beside the panel, <kbd>Esc</kbd>, an in-page link, the breakpoint, a programmatic `close()` — so there is exactly one place that unlocks the page and resets the triggers, and no path can bypass it. Everything except a direct `close()` from outside takes the animated route to it (see point 7 above).
 

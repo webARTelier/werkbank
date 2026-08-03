@@ -5,7 +5,7 @@
 
   1) In <head> (or before </body>): load the shared styles, this component's
      styles and the boot script. boot.min.js lazily loads the dialog module as
-     soon as it finds data-js-module="dialog" in the DOM — you do not import
+     soon as it finds data-js-behavior="dialog" in the DOM — you do not import
      dialog.js yourself. Adjust the paths to where you serve /dist.
 
        <link rel="stylesheet" href="/dist/css/shared.min.css" />
@@ -19,7 +19,7 @@
      media on close.
 
   Wiring
-    - The dialog is a <dialog data-js-module="dialog"> with a unique id.
+    - The dialog is a <dialog data-js-behavior="dialog"> with a unique id.
     - An open trigger anywhere on the page carries data-open-dialog="<that id>".
     - A close control inside the dialog carries data-close-dialog (any element;
       a <form method="dialog"> submit closes it natively too).
@@ -50,7 +50,7 @@
 <dialog
   id="dialog-example"
   class="m-dialog"
-  data-js-module="dialog"
+  data-js-behavior="dialog"
   aria-labelledby="dialog-example-title"
 >
   <div class="m-dialog__panel">

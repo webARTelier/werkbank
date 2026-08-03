@@ -139,7 +139,7 @@
 
     /*
       Example 6: a countdown living inside the ticker. The countdown is a
-      real module (data-js-module="countdown"); the marquee clones its
+      real module (data-js-behavior="countdown"); the marquee clones its
       track and countdown.js mirrors the live values into the (inert)
       clones — the documented marquee↔countdown integration. countdown.min.css
       renders the countdown as a big vertical block by default; the rules
@@ -196,7 +196,7 @@
 
       <!--
           One marquee per module element, enabled with
-          data-js-module="marquee" on the wrapper.
+          data-js-behavior="marquee" on the wrapper.
 
           Wiring
             - Inside the wrapper: [data-marquee-container] (the clipping
@@ -235,7 +235,7 @@
             No options set: scrolls to the left, always, at the default
             80&nbsp;px/s. The link inside shows the focus pause.
           </p>
-          <div class="m-marquee" data-js-module="marquee">
+          <div class="m-marquee" data-js-behavior="marquee">
             <button class="m-marquee__toggle" type="button" data-marquee-toggle hidden>
               Pause
             </button>
@@ -256,7 +256,7 @@
             <code>data-marquee-speed="40"</code> and a per-instance
             <code>--marquee-gap</code> override.
           </p>
-          <div class="m-marquee" style="--marquee-gap: 8rem" data-js-module="marquee"
+          <div class="m-marquee" style="--marquee-gap: 8rem" data-js-behavior="marquee"
             data-marquee-direction="right" data-marquee-speed="40">
             <button class="m-marquee__toggle" type="button" data-marquee-toggle hidden>
               Pause
@@ -280,7 +280,7 @@
             again.
           </p>
           <div class="resizer">
-            <div class="m-marquee" data-js-module="marquee" data-marquee-start="overflow"
+            <div class="m-marquee" data-js-behavior="marquee" data-marquee-start="overflow"
               data-marquee-speed="60">
               <button class="m-marquee__toggle" type="button" data-marquee-toggle hidden>
                 Pause
@@ -308,7 +308,7 @@
             in right-to-left layouts too.
           </p>
           <div dir="rtl">
-            <div class="m-marquee" data-js-module="marquee">
+            <div class="m-marquee" data-js-behavior="marquee">
               <button class="m-marquee__toggle" type="button" data-marquee-toggle hidden>
                 Pause
               </button>
@@ -330,7 +330,7 @@
             pace is pixels-per-second, the longer line simply takes more time
             for a full cycle instead of racing to keep up.
           </p>
-          <div class="m-marquee" data-js-module="marquee" data-marquee-speed="80">
+          <div class="m-marquee" data-js-behavior="marquee" data-marquee-speed="80">
             <button class="m-marquee__toggle" type="button" data-marquee-toggle hidden>
               Pause
             </button>
@@ -340,7 +340,7 @@
               </p>
             </div>
           </div>
-          <div class="m-marquee" data-js-module="marquee" data-marquee-speed="80">
+          <div class="m-marquee" data-js-behavior="marquee" data-marquee-speed="80">
             <button class="m-marquee__toggle" type="button" data-marquee-toggle hidden>
               Pause
             </button>
@@ -367,14 +367,14 @@
             <code>10&nbsp;→&nbsp;9</code> digit change, so the marquee never has
             to re-measure while it runs.
           </p>
-          <div class="m-marquee" data-js-module="marquee" data-marquee-speed="70">
+          <div class="m-marquee" data-js-behavior="marquee" data-marquee-speed="70">
             <button class="m-marquee__toggle" type="button" data-marquee-toggle hidden>
               Pause
             </button>
             <div class="m-marquee__strip" data-marquee-container>
               <div class="m-marquee__track" data-marquee-animated>
                 <span>+++ Sale ends in</span>
-                <div class="m-countdown" data-js-module="countdown"
+                <div class="m-countdown" data-js-behavior="countdown"
                   data-countdown-date="2027-01-01T00:00:00+01:00" data-countdown-label="the sale end">
                   <div class="m-countdown__display" data-countdown-display>
                     <div class="m-countdown__units" data-countdown-units>

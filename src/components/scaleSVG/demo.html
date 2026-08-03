@@ -86,7 +86,8 @@
             result as the width/height presentation attributes.
 
             Wiring
-              - data-js-module="scaleSVG" on the <svg> itself or a container.
+              - data-js-behavior="scaleSVG" on the <svg> itself or a
+                container.
               - data-scale="<factor>" opts the SVG in and sets the factor;
                 a bare data-scale means natural viewBox size (factor 1).
 
@@ -110,7 +111,7 @@
           <code>is-scaled</code> state class the module sets.
         </p>
 
-        <div class="demo-row" data-js-module="scaleSVG">
+        <div class="demo-row" data-js-behavior="scaleSVG">
           <figure class="demo-swatch">
             <svg viewBox="0 0 16 16" width="16" height="16" fill="none"
                  stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -153,7 +154,7 @@
 
         <div class="demo-row">
           <figure class="demo-swatch demo-swatch--secondary">
-            <svg data-js-module="scaleSVG" data-scale="0.25"
+            <svg data-js-behavior="scaleSVG" data-scale="0.25"
                  viewBox="0 0 48 48" width="48" height="48" fill="none"
                  stroke="currentColor" stroke-width="4" stroke-linecap="round"
                  aria-hidden="true" focusable="false">
@@ -163,7 +164,7 @@
             <figcaption>48×48 × 0.25 → 12×12</figcaption>
           </figure>
           <figure class="demo-swatch demo-swatch--secondary">
-            <svg data-js-module="scaleSVG" data-scale="1"
+            <svg data-js-behavior="scaleSVG" data-scale="1"
                  viewBox="0 0 48 48" width="48" height="48" fill="none"
                  stroke="currentColor" stroke-width="4" stroke-linecap="round"
                  aria-hidden="true" focusable="false">
@@ -179,7 +180,7 @@
         <p class="stage__intro" style="margin-top: var(--space-xl);">
           <strong>Chained with inlineSVG.</strong> The
           <code>&lt;img&gt;</code> below carries
-          <code>data-js-module="inlineSVG,scaleSVG"</code>: the file is
+          <code>data-js-behavior="inlineSVG,scaleSVG"</code>: the file is
           fetched and inlined first, then scaleSVG sizes the resulting
           <code>&lt;svg&gt;</code> from its 24×24 viewBox × 3. Its accessible
           name ("Close") comes from the image's <code>alt</code> via
@@ -188,7 +189,7 @@
 
         <div class="demo-row">
           <figure class="demo-swatch demo-swatch--muted">
-            <img data-js-module="inlineSVG,scaleSVG"
+            <img data-js-behavior="inlineSVG,scaleSVG"
                  src="../../_shared/media/img/icons/close.svg"
                  alt="Close"
                  data-scale="3" />

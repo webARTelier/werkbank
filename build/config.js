@@ -116,7 +116,7 @@ module.exports = {
     outFile: p("dist", "js", "registry.js"),
     modulesDir: p("dist", "js", "modules"),
     // Modules initialised once per page (boot.js -> globalRegistry).
-    // (none: dialog is now a per-element module loaded via data-js-module)
+    // (none: dialog is now a per-element module loaded via data-js-behavior)
     globalModules: [],
     // Built module basenames end with this suffix.
     moduleSuffix: ".min.js",

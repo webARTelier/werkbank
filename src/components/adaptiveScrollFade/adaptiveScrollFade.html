@@ -5,7 +5,7 @@
 
   1) In <head> (or before </body>): load the shared styles, this component's
      styles and the boot script. boot.min.js lazily loads the adaptiveScrollFade
-     module as soon as it finds data-js-module="adaptiveScrollFade" in the DOM —
+     module as soon as it finds data-js-behavior="adaptiveScrollFade" in the DOM —
      you do not import adaptiveScrollFade.js yourself. Adjust the paths to where
      you serve /dist.
 
@@ -41,7 +41,7 @@
 
 
 <!-- Basic: default fade depth (--space-xl) -->
-<div class="m-scrollFade" data-js-module="adaptiveScrollFade"
+<div class="m-scrollFade" data-js-behavior="adaptiveScrollFade"
      aria-label="Scrollable content" style="max-block-size: 12rem;">
   <p>First paragraph …</p>
   <p>More content that overflows the fixed height so the box becomes scrollable …</p>
@@ -51,7 +51,7 @@
 
 
 <!-- With optional config: custom fade depth + edge threshold -->
-<div class="m-scrollFade" data-js-module="adaptiveScrollFade"
+<div class="m-scrollFade" data-js-behavior="adaptiveScrollFade"
      aria-label="Scrollable content" data-fade-threshold="2"
      style="max-block-size: 12rem; --scrollFade-size: 24px;">
   <p>First paragraph …</p>

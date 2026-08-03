@@ -9,7 +9,7 @@ Anchor-positioned popover built on the native Popover API — behaviour **and** 
 - `_shared/js/rafThrottle.js` and `_shared/js/getCssCustomProperty.js` – bundled into the module by the build; copy them alongside `popover.js` when pasting into a plain project.
 
 ## Usage
-The popover is an element with the `popover` attribute, a unique `id` and `data-js-module="popover"`. A trigger anywhere on the page carries `popovertarget="<that id>"` — that native attribute wires everything: the browser toggles the popover on click, renders it in the top layer, light-dismisses it (outside click / `Esc`) and exposes the trigger's expanded state to assistive tech.
+The popover is an element with the `popover` attribute, a unique `id` and `data-js-behavior="popover"`. A trigger anywhere on the page carries `popovertarget="<that id>"` — that native attribute wires everything: the browser toggles the popover on click, renders it in the top layer, light-dismisses it (outside click / `Esc`) and exposes the trigger's expanded state to assistive tech.
 
 Placement is pure CSS: the trigger that opened the popover is its **implicit anchor element**, so CSS anchor positioning (`position-area`) places the popover next to it — no `anchor-name` wiring needed. The browser keeps the popover glued to the trigger on scroll/resize and flips it to the opposite side when the viewport runs out of room (`position-try-fallbacks`).
 
@@ -31,7 +31,7 @@ The demo page walks through the anchor-positioning concepts (`anchor-name` / `po
 The browser maps `popovertarget` to the trigger's expanded/collapsed state for AT natively — the JS adds no ARIA. A popover is plain content in the top layer and needs no role or accessible name of its own; widget-like popovers (menus, listboxes, …) should carry their ARIA pattern's roles in the markup. A `popover="manual"` popover must keep a visible close control since light dismiss is disabled. The open/close animation is a pure CSS enhancement (`@starting-style` + `allow-discrete`) and respects `prefers-reduced-motion`. The close button uses the shared `focus-ring()` mixin (`light` tone).
 
 ## Integration
-The JS exports `init(el, services)` and does not self-initialize. It is loaded on demand by `boot.js` for every element carrying `data-js-module="popover"` — one instance per popover. It sets no inline styles; the only style writes are the two `--popover-fallback-*` measurement custom properties (fallback engines only), consumed by the stylesheet.
+The JS exports `init(el, services)` and does not self-initialize. It is loaded on demand by `boot.js` for every element carrying `data-js-behavior="popover"` — one instance per popover. It sets no inline styles; the only style writes are the two `--popover-fallback-*` measurement custom properties (fallback engines only), consumed by the stylesheet.
 
 `services.reporter` (dependency injection via `boot.js`) is **optional** — it is only used for warnings (missing `popover` attribute, missing `id`, no trigger pointing at the popover, unknown placement value). Without it the module degrades silently.
 

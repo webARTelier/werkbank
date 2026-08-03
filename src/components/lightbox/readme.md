@@ -11,7 +11,7 @@ No shared utility is needed — the module imports nothing.
 
 ## Usage
 
-The gallery is a `<div class="m-lightbox" data-js-module="lightbox">` holding one `<a data-lightbox-item href="…">` per image. Anything else on the page can open the viewer too — see [Opening from a separate control](#opening-from-a-separate-control). That href is the full-size file: it is what the viewer shows, and it is where a reader without this module — or one who middle-clicks, opens in a new tab, or saves the image — still ends up. So the gallery is a working document before the script arrives, which is why the component ships **no pre-enhancement state** (see [`docs/preEnhancement.md`](../../../docs/preEnhancement.md)): the markup renders the same either way, and the viewer does not exist at all until the chunk has loaded.
+The gallery is a `<div class="m-lightbox" data-js-behavior="lightbox">` holding one `<a data-lightbox-item href="…">` per image. Anything else on the page can open the viewer too — see [Opening from a separate control](#opening-from-a-separate-control). That href is the full-size file: it is what the viewer shows, and it is where a reader without this module — or one who middle-clicks, opens in a new tab, or saves the image — still ends up. So the gallery is a working document before the script arrives, which is why the component ships **no pre-enhancement state** (see [`docs/preEnhancement.md`](../../../docs/preEnhancement.md)): the markup renders the same either way, and the viewer does not exist at all until the chunk has loaded.
 
 On the gallery root, all optional:
 
@@ -44,7 +44,7 @@ On a separate opener — a control that is not one of the pictures:
 | `data-lightbox-open` | **Required.** Marks the control. Its value names the gallery by `id`; left empty it means "the gallery I am inside". |
 | `data-lightbox-index` | Which image to open, counted from **1** like the counter in the viewer. Defaults to the first. |
 
-**A single image** needs no gallery around it: put `data-js-module="lightbox"` on the link itself and it is the whole set — the viewer then opens without navigation controls and without a counter. Keep `.m-lightbox` on that element or an ancestor, because that is where the custom properties are declared.
+**A single image** needs no gallery around it: put `data-js-behavior="lightbox"` on the link itself and it is the whole set — the viewer then opens without navigation controls and without a counter. Keep `.m-lightbox` on that element or an ancestor, because that is where the custom properties are declared.
 
 **Responsive images** are the platform's job on both sides. The thumbnails carry their own `srcset`/`sizes` (plus `width`/`height`, so the grid reserves the box before the pixels arrive), and the viewer gets its own candidate list from `data-lightbox-srcset`/`data-lightbox-sizes` — the browser picks from it, the module only hands it over. The two neighbours of the current image are preloaded through a detached `Image()` carrying the same `srcset`/`sizes`, so what is warmed is the candidate the viewer will actually ask for. The picture on screen asks for `fetchpriority="high"` and those two for `low`: unranked, the guess about the next press would share the connection with the image the reader is waiting for right now.
 
@@ -56,7 +56,7 @@ Anything can open the viewer, not just the pictures: an icon beside an image, a 
 
 ```html
 <!-- inside the gallery: no value, and no id anywhere -->
-<div class="m-lightbox" data-js-module="lightbox">
+<div class="m-lightbox" data-js-behavior="lightbox">
   …
   <a data-lightbox-open href="/media/gallery/harbour-1600.jpg">View all photos</a>
 </div>
@@ -143,7 +143,7 @@ See `lightbox.html` for a ready-to-copy snippet.
 
 ## Integration
 
-The JS exports `init(el, services)` and does not self-initialize. It is loaded on demand by `boot.js` for every element carrying `data-js-module="lightbox"` — one viewer per gallery. (Unlike a global system, nothing runs on pages that have no gallery.)
+The JS exports `init(el, services)` and does not self-initialize. It is loaded on demand by `boot.js` for every element carrying `data-js-behavior="lightbox"` — one viewer per gallery. (Unlike a global system, nothing runs on pages that have no gallery.)
 
 `services.reporter` (dependency injection via `boot.js`) is **optional** — it is only used for warnings (a gallery with no items, an item without an `href`, an image without a text alternative, an image that failed to load). Without it the module degrades silently.
 

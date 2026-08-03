@@ -32,7 +32,7 @@ readme, and `index.html` at the project root is a gallery linking to all demos.
 
 Where it fits less well: teams deep in React, Vue or Angular that want a
 state-driven design system with component props — there, the HTML-attribute
-approach (`data-js-module="…"`) is more friction than help.
+approach (`data-js-behavior="…"`) is more friction than help.
 
 ## Philosophy
 
@@ -66,7 +66,7 @@ Accessibility is non-negotiable, not a feature flag:
 ### Lean loading
 
 One tiny script, `boot.min.js`, is the only eagerly loaded JS. It scans the
-page for `data-js-module="…"` attributes and lazy-loads each component's
+page for `data-js-behavior="…"` attributes and lazy-loads each component's
 chunk only when the markup actually asks for it. A page that uses two
 components downloads two chunks — nothing else.
 
@@ -139,17 +139,17 @@ loader — then tag your markup:
 <link rel="stylesheet" href="/dist/css/accordion.min.css" />
 <script type="module" src="/dist/js/boot.min.js"></script>
 
-<div data-js-module="accordion">
+<div data-js-behavior="accordion">
   <!-- markup from src/components/accordion/accordion.html -->
 </div>
 ```
 
 That's all the wiring there is:
 
-- `boot.min.js` finds every `[data-js-module]` element and lazy-loads the
+- `boot.min.js` finds every `[data-js-behavior]` element and lazy-loads the
   matching chunk. Never import a component's JS yourself.
 - Multiple modules on one element are comma-separated:
-  `data-js-module="accordion,scrollSpy"`.
+  `data-js-behavior="accordion,scrollSpy"`.
 - Behaviour is configured through `data-*` attributes documented in each
   component's `readme.md` and snippet — all optional where possible.
 - For markup inserted after page load (AJAX, template render), import

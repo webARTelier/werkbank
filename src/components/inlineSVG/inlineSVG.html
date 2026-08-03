@@ -5,18 +5,18 @@
 
   1) In <head> (or before </body>): load the shared styles, this component's
      (empty) styles and the boot script. boot.min.js lazily loads the inlineSVG
-     module as soon as it finds data-js-module="inlineSVG" in the DOM — you do
-     not import inlineSVG.js yourself. Adjust the paths to your /dist.
+     module as soon as it finds data-js-behavior="inlineSVG" in the DOM — you
+     do not import inlineSVG.js yourself. Adjust the paths to your /dist.
 
        <link rel="stylesheet" href="/dist/css/shared.min.css" />
        <link rel="stylesheet" href="/dist/css/inlineSVG.min.css" />
        <script type="module" src="/dist/js/boot.min.js"></script>
 
   2) Point an <img> at an .svg file and mark it (or a container around several
-     such images) with data-js-module="inlineSVG". On boot the module fetches
-     the file and replaces the <img> with a real inline <svg>, so the graphic
-     becomes stylable and scriptable — it can inherit currentColor, be styled
-     by the page's CSS, and expose its inner shapes to the DOM.
+     such images) with data-js-behavior="inlineSVG". On boot the module
+     fetches the file and replaces the <img> with a real inline <svg>, so the
+     graphic becomes stylable and scriptable — it can inherit currentColor, be
+     styled by the page's CSS, and expose its inner shapes to the DOM.
 
   Notes
     - Progressive enhancement: without JavaScript (or if the fetch fails) the
@@ -35,15 +35,15 @@
       same prefix is applied to the class names an embedded <style> targets
       (e.g. Figma's .cls-1) so one SVG's rules cannot bleed onto another's;
       classes the file does not style itself stay intact as CSS hooks.
-    - Combine with scaleSVG (data-js-module="inlineSVG,scaleSVG" + data-scale)
-      to inline and then size the SVG from its viewBox in one go.
+    - Combine with scaleSVG (data-js-behavior="inlineSVG,scaleSVG" +
+      data-scale) to inline and then size the SVG from its viewBox in one go.
 -->
 
 
 
 <!-- Meaningful icon: alt becomes the SVG's accessible name -->
 <img
-  data-js-module="inlineSVG"
+  data-js-behavior="inlineSVG"
   src="/assets/icons/download.svg"
   alt="Download"
   width="24"
@@ -54,7 +54,7 @@
 
 <!-- Decorative icon: alt="" hides the inlined SVG from assistive tech -->
 <img
-  data-js-module="inlineSVG"
+  data-js-behavior="inlineSVG"
   src="/assets/icons/sparkle.svg"
   alt=""
   width="24"
@@ -64,7 +64,7 @@
 
 
 <!-- One container inlines every <img> inside it -->
-<div data-js-module="inlineSVG">
+<div data-js-behavior="inlineSVG">
   <img src="/assets/logos/mark.svg" alt="Acme" />
   <img src="/assets/logos/wordmark.svg" alt="Acme Inc." />
 </div>

@@ -5,7 +5,7 @@
 
   1) In <head> (or before </body>): load the shared styles, this component's
      stylesheet and the boot script. boot.min.js lazily loads the scrollSpy
-     module as soon as it finds data-js-module="scrollSpy" in the DOM — you
+     module as soon as it finds data-js-behavior="scrollSpy" in the DOM — you
      do not import scrollSpy.js yourself. Adjust the paths to where you
      serve /dist.
 
@@ -13,7 +13,7 @@
        <link rel="stylesheet" href="/dist/css/scrollSpy.min.css" />
        <script type="module" src="/dist/js/boot.min.js"></script>
 
-  2) Markup: put data-js-module="scrollSpy" on the table of contents (a
+  2) Markup: put data-js-behavior="scrollSpy" on the table of contents (a
      <nav> with an aria-label is the natural fit). Every in-page anchor
      link inside it (href="#<target id>") becomes a spy link; the sections
      it points to need nothing but their id. The href fragment IS the
@@ -47,7 +47,7 @@
       is IntersectionObserver-driven: no scroll listener, nothing is
       measured per frame.
 
-  Options (all optional; on the data-js-module element)
+  Options (all optional; on the data-js-behavior element)
     - data-spy-offset="96"    px distance of the spy line from the top
                               edge (default: the first target's computed
                               scroll-margin-top, else 0). Set it only
@@ -71,7 +71,7 @@
 
 
 
-<nav aria-label="On this page" data-js-module="scrollSpy">
+<nav aria-label="On this page" data-js-behavior="scrollSpy">
   <ul>
     <li><a href="#spy-introduction">Introduction</a></li>
     <li><a href="#spy-usage">Usage</a></li>

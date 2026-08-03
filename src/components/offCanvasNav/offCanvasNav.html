@@ -5,8 +5,8 @@
 
   1) In <head> (or before </body>): load the shared styles, this component's
      styles and the boot script. boot.min.js lazily loads the offCanvasNav
-     module as soon as it finds data-js-module="offCanvasNav" in the DOM — you
-     do not import offCanvasNav.js yourself. Adjust the paths to where you
+     module as soon as it finds data-js-behavior="offCanvasNav" in the DOM —
+     you do not import offCanvasNav.js yourself. Adjust the paths to where you
      serve /dist.
 
        <link rel="stylesheet" href="/dist/css/shared.min.css" />
@@ -22,8 +22,8 @@
      viewport grows past the navigation breakpoint.
 
   Wiring
-    - The drawer is a <dialog data-js-module="offCanvasNav"> with a unique id
-      and an accessible name (aria-labelledby pointing at its title).
+    - The drawer is a <dialog data-js-behavior="offCanvasNav"> with a unique
+      id and an accessible name (aria-labelledby pointing at its title).
     - Its one child is the panel, carrying data-offcanvasnav-panel: the
       visible drawer, and the element the exit animation moves. Everything
       else goes inside it — that is what makes a press *beside* it a
@@ -142,7 +142,7 @@
 <dialog
   id="siteNav"
   class="m-offCanvasNav"
-  data-js-module="offCanvasNav"
+  data-js-behavior="offCanvasNav"
   aria-labelledby="siteNav-title"
 >
   <div class="m-offCanvasNav__panel" data-offcanvasnav-panel>
@@ -175,7 +175,7 @@
            companion for a menu with submenus. Add data-dropdownnav-stacked
            here if the drawer carries data-offcanvasnav-always — see the
            notes above. -->
-      <nav class="m-dropdownNav" aria-label="Main" data-js-module="dropdownNav">
+      <nav class="m-dropdownNav" aria-label="Main" data-js-behavior="dropdownNav">
         <ul class="m-dropdownNav__list">
 
           <li class="m-dropdownNav__item">

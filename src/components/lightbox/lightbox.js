@@ -110,7 +110,7 @@
  *
  * Configuration
  * -------------
- * On the root (data-js-module="lightbox"):
+ * On the root (data-js-behavior="lightbox"):
  * - data-lightbox-loop            navigation wraps around at both ends
  *                                 instead of stopping (optional)
  * - data-lightbox-label           accessible name of the viewer

@@ -5,8 +5,8 @@
 
   1) In <head> (or before </body>): load the shared styles, this component's
      styles and the boot script. boot.min.js lazily loads the dropdownNav
-     module as soon as it finds data-js-module="dropdownNav" in the DOM — you
-     do not import dropdownNav.js yourself. Adjust the paths to where you
+     module as soon as it finds data-js-behavior="dropdownNav" in the DOM —
+     you do not import dropdownNav.js yourself. Adjust the paths to where you
      serve /dist.
 
        <link rel="stylesheet" href="/dist/css/shared.min.css" />
@@ -22,7 +22,7 @@
      that has happened (data-dropdownnav-ready on the nav).
 
   Wiring
-    - The nav carries data-js-module="dropdownNav" and — as a landmark —
+    - The nav carries data-js-behavior="dropdownNav" and — as a landmark —
       an aria-label.
     - data-dropdownnav-item marks an <li> that owns a submenu.
     - data-dropdownnav-label marks that item's label element. If it is a
@@ -109,7 +109,7 @@
 
 
 
-<nav class="m-dropdownNav" aria-label="Main" data-js-module="dropdownNav">
+<nav class="m-dropdownNav" aria-label="Main" data-js-behavior="dropdownNav">
   <ul class="m-dropdownNav__list">
 
     <!-- A plain item without a submenu: nothing to mark up -->

@@ -132,7 +132,7 @@
     <section class="stage" aria-label="Live demo">
 
       <!--
-          One instance per element with data-js-module="dropdownNav".
+          One instance per element with data-js-behavior="dropdownNav".
 
           Wiring
             - The nav is authored as a nested list of links. An <li> that
@@ -198,7 +198,7 @@
         <div class="demoBar">
           <span class="demoBar__brand">Acme</span>
 
-          <nav class="m-dropdownNav" aria-label="Main" data-js-module="dropdownNav">
+          <nav class="m-dropdownNav" aria-label="Main" data-js-behavior="dropdownNav">
             <ul class="m-dropdownNav__list">
 
               <li class="m-dropdownNav__item">
@@ -340,7 +340,7 @@
           <nav
             class="m-dropdownNav"
             aria-label="Main (hover)"
-            data-js-module="dropdownNav"
+            data-js-behavior="dropdownNav"
             data-dropdownnav-hover
             data-dropdownnav-submenu-label="Open the {label} menu"
           >
@@ -421,7 +421,7 @@
           <nav
             class="m-dropdownNav"
             aria-label="التنقل الرئيسي"
-            data-js-module="dropdownNav"
+            data-js-behavior="dropdownNav"
             data-dropdownnav-submenu-label="افتح قائمة {label}"
           >
             <ul class="m-dropdownNav__list">
@@ -528,7 +528,7 @@
               </style>
             </head>
             <body>
-              <nav class='m-dropdownNav' aria-label='Main' data-js-module='dropdownNav'>
+              <nav class='m-dropdownNav' aria-label='Main' data-js-behavior='dropdownNav'>
                 <ul class='m-dropdownNav__list'>
                   <li class='m-dropdownNav__item'>
                     <a class='m-dropdownNav__link' href='javascript:;' aria-current='page'>Home</a>
@@ -583,7 +583,7 @@
         <h2>Without JavaScript (the base layer)</h2>
 
         <p class="stage__intro">
-          This nav carries no <code>data-js-module</code>, so the module
+          This nav carries no <code>data-js-behavior</code>, so the module
           never touches it — exactly what every visitor sees with
           JavaScript off, and what everyone sees for the moment before the
           chunk has loaded. It is a nested list of links: nothing hidden,

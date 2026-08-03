@@ -5,7 +5,7 @@
 
   1) In <head> (or before </body>): load the shared styles, this component's
      styles and the boot script. boot.min.js lazily loads the flexNeighborMarker
-     module as soon as it finds data-js-module="flexNeighborMarker" in the DOM —
+     module as soon as it finds data-js-behavior="flexNeighborMarker" in the DOM —
      you do not import flexNeighborMarker.js yourself. Adjust the paths to where
      you serve /dist.
 
@@ -14,7 +14,7 @@
        <script type="module" src="/dist/js/boot.min.js"></script>
 
   2) Drop the markup below where the wrapping row should appear.
-       - Put data-js-module="flexNeighborMarker" on the flex container. Its
+       - Put data-js-behavior="flexNeighborMarker" on the flex container. Its
          direct children are the items; whenever an item is followed by a
          sibling in the SAME visual row it receives the class "has-neighbor".
        - .m-flexNeighbor is an optional convenience: a wrapping flex row + gap
@@ -35,14 +35,15 @@
         data-neighbor-class       override the marker class. 
                                   Default: has-neighbor
                                   (restyle to match if you change it)
-        data-neighbor-container   mark descendant containers to scan several at
-                                  once; put data-js-module on a shared wrapper
+        data-neighbor-container   mark descendant containers to scan several
+                                  at once; put data-js-behavior on a shared
+                                  wrapper
 -->
 
 
 
 <!-- Basic: the flex container is the module element -->
-<ul class="m-flexNeighbor" data-js-module="flexNeighborMarker">
+<ul class="m-flexNeighbor" data-js-behavior="flexNeighborMarker">
   <li>First</li>
   <li>Second</li>
   <li>Third</li>
@@ -54,7 +55,7 @@
 
 
 <!-- Advanced: one wrapper drives several flex containers -->
-<div data-js-module="flexNeighborMarker">
+<div data-js-behavior="flexNeighborMarker">
   <ul class="m-flexNeighbor" data-neighbor-container>
     <li>Group A · one</li>
     <li>Group A · two</li>

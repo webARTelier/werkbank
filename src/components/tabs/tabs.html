@@ -5,14 +5,14 @@
 
   1) In <head> (or before </body>): load the shared styles, this component's
      stylesheet and the boot script. boot.min.js lazily loads the tabs module
-     as soon as it finds data-js-module="tabs" in the DOM — you do not import
-     tabs.js yourself. Adjust the paths to where you serve /dist.
+     as soon as it finds data-js-behavior="tabs" in the DOM — you do not
+     import tabs.js yourself. Adjust the paths to where you serve /dist.
 
        <link rel="stylesheet" href="/dist/css/shared.min.css" />
        <link rel="stylesheet" href="/dist/css/tabs.min.css" />
        <script type="module" src="/dist/js/boot.min.js"></script>
 
-  2) Markup: a wrapper with data-js-module="tabs" containing
+  2) Markup: a wrapper with data-js-behavior="tabs" containing
        - a list (data-tabs-list — give it an aria-label) of in-page anchor
          links (data-tabs-tab, href="#<panel id>"), and
        - one content section per link (data-tabs-panel, with the matching
@@ -36,7 +36,7 @@
       URL via history.replaceState (no history spam). Leave it off on pages
       whose hash is owned by something else (e.g. a hash-based SPA router).
 
-  Options (all optional; on the data-js-module element)
+  Options (all optional; on the data-js-behavior element)
     - data-tabs-manual                  select on Enter/Space instead of on
                                         focus ("manual activation"; default
                                         is automatic — focus selects)
@@ -65,7 +65,7 @@
 
 
 
-<div data-js-module="tabs">
+<div data-js-behavior="tabs">
 
   <ul aria-label="Example tabs" data-tabs-list>
     <li><a href="#tabs-panel-overview" data-tabs-tab>Overview</a></li>

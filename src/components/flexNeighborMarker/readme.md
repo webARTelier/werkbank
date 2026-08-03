@@ -18,13 +18,14 @@ this module measures.
   lazy chunk; copy it along when copy-pasting into a plain project)
 
 ## Usage
-Put `data-js-module="flexNeighborMarker"` on the flex container. Its **direct
-children** are the items; each item that has a following sibling in the same
-visual row gets the class `has-neighbor`.
+Put `data-js-behavior="flexNeighborMarker"` on the flex container. Its
+**direct children** are the items; each item that has a following sibling in
+the same visual row gets the class `has-neighbor`.
 
-For several containers at once, put `data-js-module` on a shared wrapper and mark
-each container with `data-neighbor-container`; the module then scans all of them.
-Without any `data-neighbor-container`, the module element itself is the container.
+For several containers at once, put `data-js-behavior` on a shared wrapper and
+mark each container with `data-neighbor-container`; the module then scans all
+of them. Without any `data-neighbor-container`, the module element itself is
+the container.
 
 The shipped stylesheet uses the class to draw a hairline divider between
 row-neighbours — a sensible default and a starting point. `has-neighbor` is a
@@ -54,7 +55,7 @@ technology may depend on the class.
 ## Integration
 The JS exports `init(el, services)` and does not self-initialize. It is loaded on
 demand by `boot.js` for every element carrying
-`data-js-module="flexNeighborMarker"`.
+`data-js-behavior="flexNeighborMarker"`.
 
 The script sets **no inline styles**. It only toggles the `has-neighbor` state
 class (mirrors the accordion's CSS-state approach); the visuals live in the SCSS.

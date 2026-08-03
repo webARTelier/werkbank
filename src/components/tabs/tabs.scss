@@ -41,7 +41,7 @@
 // ":not([<attr>])" on the element being styled, which assumes the flag and
 // the rule share a subject. Here they do not: the flag lands on the
 // container, the rules select panels, and tabs has no root class of its own
-// to nest them under (matching data-js-module with *= would be guesswork
+// to nest them under (matching data-js-behavior with *= would be guesswork
 // about a comma-separated list). So the guard is ":not([data-tabs-ready] *)"
 // — "not inside a container the module has reached" — which needs no
 // container selector at all. Same two conditions as the mixin, same meaning.

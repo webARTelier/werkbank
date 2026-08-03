@@ -41,10 +41,23 @@ is stated as an actionable instruction; ✅ / ❌ mark do / don't.
   styles — so appearance stays owned by CSS.
 
 ### Modules & reuse
-- Treat page elements as **reusable modules**. A module must look consistent
-  regardless of where it sits in the layout.
+- A **module** is a standalone, once-per-page entity (the masthead, the main
+  navigation, the footer, an on-page table of contents). A **component** is a
+  reusable building block that can appear inside any module (a button, a link,
+  a dialog). Modules **compose** components; the precise decision rule and
+  prefixes live in SASS/CSS › *BEM namespacing*.
+- A module (and a component) must look **consistent regardless of where it
+  sits** in the layout. It therefore owns only its *intrinsic* look, never its
+  *position* in a parent. Where it sits — `order`, `flex-basis`, the margins
+  that space it against its neighbours — is the **host's** concern.
+- **Module-in-module (slot rule).** When a module hosts another module, the
+  parent does **not** reach into the child to position it. Instead the parent
+  provides a dedicated **slot element** (a BEM element of the parent, e.g.
+  `m-topbar__nav`) that carries all the positioning, and the child module lives
+  *inside* that slot untouched. So the child stays layout-agnostic and looks
+  the same wherever it is placed.
 - When an element needs to look different in some context, build it as a
-  **modified version** of the same module (a modifier), not a new element.
+  **modified version** of the same block (a modifier), not a new element.
 
 ### Separation of concerns
 - Keep **structure (HTML)**, **appearance (CSS)** and **behaviour (JS)**
@@ -102,7 +115,11 @@ is stated as an actionable instruction; ✅ / ❌ mark do / don't.
 
 ### Data & JS hooks
 - **Use `data-` attributes as JavaScript hooks** — both for selecting elements
-  and for passing data (e.g. `data-js-module="accordion"`, `data-inputcharcount`).
+  and for passing data (e.g. `data-js-behavior="accordion"`,
+  `data-inputcharcount`). `data-js-behavior` names one or more lazily-loaded
+  behaviours to attach; the word "behaviour" is deliberate so the JS hook never
+  clashes with the semantic meaning of *module* (see SASS/CSS › *BEM
+  namespacing*).
 - **Do not use `js-` prefixed classes as hooks.** Classes are for styling only;
   keep the JS binding out of the class list.
 - Never bind behaviour to a styling class either — a `data-` attribute and its
@@ -299,7 +316,12 @@ Accessibility is a baseline requirement, not a per-component afterthought.
 ### Partials & structure
 - Use **partials** to structure SCSS. Partial names start with an underscore
   (`_buttons.scss`).
-- **One partial per UI component.**
+- **One partial per UI component or module.**
+- The **underscore encodes load strategy**, independently of the `m-`/`c-`
+  role: a `_name.scss` **partial** is `@use`d into a bundle (it rides along
+  with whatever includes it — normally the core stylesheet), whereas a
+  non-partial `name.scss` **entry** compiles to its own file for on-demand
+  loading. Both a module and a component may be either.
 
 ### ITCSS architecture
 Group partials in this order (increasing specificity / decreasing reach):
@@ -309,8 +331,13 @@ Group partials in this order (increasing specificity / decreasing reach):
 3. `c_generic` — resets, normalize
 4. `d_base` — bare element styles
 5. `e_objects` — layout objects
-6. `f_components` — UI components
-7. `g_utilities` — helpers, overrides
+6. `f_components` — reusable UI components (`c-`)
+7. `g_modules` — standalone, once-per-page modules (`m-`)
+8. `h_utilities` — helpers, overrides
+
+The folder a class lives in mirrors its semantic role (component vs module),
+**not** how it is bundled — bundling is a separate axis, see *Build / compile
+pipeline* below.
 
 ### BEM namespacing
 Prefix every class by its role:
@@ -318,20 +345,25 @@ Prefix every class by its role:
 | Prefix    | Role       | Notes                                   |
 | --------- | ---------- | --------------------------------------- |
 | `o-`      | object     | abstract, reusable layout               |
-| `m-`      | module     | self-contained UI unit (teaser, facts block) |
-| `c-`      | component  | module-independent reusable building block (button, tag) |
+| `m-`      | module     | standalone, once-per-page entity (topbar, navigation, footer, table of contents) |
+| `c-`      | component  | module-independent reusable building block (button, link, dialog) |
 | `u-`      | utility    | one very specific style                 |
 | `v-`      | vendor     | third-party code                        |
 | `is-`/`has-` | state   | conditional styling                     |
 
 - BEM structure: `block__element--modifier`.
-- **`m-` vs `c-`.** `m-` is a **module** — a self-contained UI unit that
-  stands on its own (`m-teaser`, `m-factsBlock`, `m-hero`). `c-` is a
-  **component** — a module-independent building block that can appear inside
-  *any* module (`c-button`, `c-tag`, `c-copyright`). Modules **compose**
-  components; a component never depends on a specific module. Decision rule:
-  self-contained unit → `m-`; reusable building block used within modules →
+- **`m-` vs `c-` is purely semantic.** `m-` is a **module** — a standalone,
+  once-per-page entity that stands on its own (`m-topbar`, `m-nav`, `m-footer`,
+  `m-toc`). `c-` is a **component** — a module-independent building block that
+  can appear inside *any* module (`c-button`, `c-link`, `c-dialog`). Modules
+  **compose** components; a component never depends on a specific module.
+  Decision rule: standalone unique entity → `m-`; reusable building block →
   `c-`.
+- **The prefix does not decide bundling.** How a style is loaded (core bundle
+  vs its own on-demand file) is an **independent** axis — a `m-` module can
+  live in the core bundle (a site-wide one like `m-topbar`) and a `c-`
+  component can compile to its own on-demand file (a page-specific one like
+  `c-dialog`). See *Build / compile pipeline*.
 - **No `js-` hook classes.** JavaScript binds to `data-` attributes, not to
   classes (see HTML › *Data & JS hooks*).
 
@@ -348,6 +380,25 @@ Prefix every class by its role:
 - Use the predefined **media-query mixins**.
 - Place viewport-dependent styles **directly after** the initial definition of
   the property they override.
+- **Query the capability you actually mean, not a proxy for it.** A
+  viewport-size query must not stand in for a device's interaction ability —
+  e.g. don't gate hover styles behind a width breakpoint; ask whether the
+  device can actually hover (`@media (hover: hover)`, and where relevant
+  `pointer: fine`) instead. Match the query feature to the property you are
+  styling.
+
+```scss
+// ❌ width is a poor proxy — a large touch screen still gets a
+//    hover style it cannot trigger cleanly
+@media (min-width: 60rem) {
+  .c-card:hover { scale: 1.02; }
+}
+
+// ✅ ask the device whether it can actually hover
+@media (hover: hover) {
+  .c-card:hover { scale: 1.02; }
+}
+```
 
 ### Vendor prefixes
 - ❌ Don't write them. The build takes care of prefixing, driven by the
@@ -532,20 +583,28 @@ The build tool should: compile SCSS with **Dart Sass** → autoprefix (targets
 from `browserslist`) → generate a source map → minify. Transfer compression
 (Brotli / gzip) is the server's or CDN's job, not the build's.
 
-**Output split (bundle strategy).** The build emits two kinds of stylesheet:
+**Output split (bundle strategy).** Bundling follows *how often a style is
+needed*, which is **independent** of the `m-`/`c-` role. The build emits:
 
-- **One core stylesheet** bundling everything shared across the whole site —
-  the base styles (ITCSS `c_generic` → `e_objects`), all `c-` **components**
-  and `g_utilities`. It is loaded on every page. (`a_tools` / `b_settings` are
+- **One core stylesheet** bundling everything needed on (almost) every page —
+  the base styles (ITCSS `c_generic` → `e_objects`), all reusable `c-`
+  components, the **site-wide** `m-` modules (masthead, navigation, footer) and
+  `h_utilities`. It is loaded on every page. (`a_tools` / `b_settings` are
   `@use`d for their tools/variables, not emitted as CSS.)
-- **One stylesheet per module** (`m-*`): each module compiles to its own CSS
-  file that the CMS includes **only on the pages that actually use that
-  module**, on demand.
+- **One on-demand stylesheet per page-specific piece**: anything needed only on
+  some pages compiles to its own CSS file that the CMS includes **only on the
+  pages that use it** — whether that piece is a module (`m-toc`) or a component
+  (`c-dialog`).
 
-Because modules load individually, a module's partial must be
-**self-contained**: it may `@use` the shared tools/settings but must not
-depend on another module's styles. Anything reused across modules belongs in a
-`c-` component (in the core bundle), not in one module.
+Which side a piece lands on is expressed by the partial-vs-entry convention
+(see *Partials & structure*): a `_partial.scss` is `@use`d into the core
+bundle; a non-partial `entry.scss` is registered as its own build entry.
+
+Because an on-demand file loads individually, its partial must be
+**self-contained**: it may `@use` the shared tools/settings but must not depend
+on another module's or component's emitted styles. Anything shared across the
+site belongs in the core bundle (a `c-` component, or a site-wide `m-`
+module), not duplicated into a page-specific file.
 
 
 ## File & folder names

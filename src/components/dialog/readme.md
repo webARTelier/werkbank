@@ -9,7 +9,7 @@ Accessible dialog/modal built on the native `<dialog>` element.
 - `_shared/js/rafThrottle.js` – utility imported by the behavior (copy alongside it)
 
 ## Usage
-The dialog is a native `<dialog class="m-dialog" data-js-module="dialog">` with a unique `id`. It relies on the platform for the heavy lifting — the top layer, focus trap, `::backdrop`, `Esc` and focus restoration all come from the browser — so the module is a thin progressive enhancement that wires the outside trigger, adds backdrop-click dismissal, locks body scroll and stops media on close.
+The dialog is a native `<dialog class="m-dialog" data-js-behavior="dialog">` with a unique `id`. It relies on the platform for the heavy lifting — the top layer, focus trap, `::backdrop`, `Esc` and focus restoration all come from the browser — so the module is a thin progressive enhancement that wires the outside trigger, adds backdrop-click dismissal, locks body scroll and stops media on close.
 
 - **Open trigger:** any element carrying `data-open-dialog="<dialog id>"` — it can live anywhere on the page, including markup inserted after the dialog itself was initialized (clicks are handled through a single delegated listener on `document`, not one direct listener per trigger found at init). The JS reflects state into `aria-haspopup` and `aria-controls`. `aria-expanded` is added **only for a non-modal dialog** (a disclosure-like popup); a modal trigger follows the ARIA APG pattern and carries no `aria-expanded`.
 - **Close control:** any element inside the dialog carrying `data-close-dialog` (a `<form method="dialog">` submit closes it natively too).
@@ -40,7 +40,7 @@ The close button's × is an inline SVG copied from `src/_shared/media/img/icons/
 See `dialog.html` for a ready-to-copy snippet.
 
 ## Integration
-The JS exports `init(el, services)` and does not self-initialize. It is loaded on demand by `boot.js` for every `<dialog>` carrying `data-js-module="dialog"` — one controller instance per dialog. (Unlike a global system, nothing runs on pages that have no dialog.)
+The JS exports `init(el, services)` and does not self-initialize. It is loaded on demand by `boot.js` for every `<dialog>` carrying `data-js-behavior="dialog"` — one controller instance per dialog. (Unlike a global system, nothing runs on pages that have no dialog.)
 
 `services.reporter` (dependency injection via `boot.js`) is **optional** — it is only used for warnings (e.g. a dialog without an `id`, or the module placed on a non-`<dialog>` element). Without it the module degrades silently.
 

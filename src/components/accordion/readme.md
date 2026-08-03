@@ -8,7 +8,7 @@ Accordion component with expandable/collapsible panels.
 - `accordion.js` – behavior
 
 ## Usage
-The root element gets `data-js-module="accordion"`. It is built on native `<details>`/`<summary>`, so the base functionality works without JavaScript — the JS only adds the smooth height animation in older browsers.
+The root element gets `data-js-behavior="accordion"`. It is built on native `<details>`/`<summary>`, so the base functionality works without JavaScript — the JS only adds the smooth height animation in older browsers.
 
 - Each panel is a `<details class="m-accordion__item" data-accordion-item>` containing a `<summary class="m-accordion__trigger">` and a `<div class="m-accordion__panel" data-accordion-panel>`.
 - **Single-open mode** (only one panel open at a time): give every `<details>` in a group the same `name` attribute — this groups them natively like radio buttons.
@@ -22,7 +22,7 @@ own outline would be clipped by the item's `overflow: hidden` — using the shar
 project `CLAUDE.md`).
 
 ## Integration
-The JS exports `init(el, services)` and does not self-initialize. It is loaded on demand by `boot.js` for every element carrying `data-js-module="accordion"`.
+The JS exports `init(el, services)` and does not self-initialize. It is loaded on demand by `boot.js` for every element carrying `data-js-behavior="accordion"`.
 
 `services.reporter` (dependency injection via `boot.js`) is **optional** — it is only used for warnings (e.g. empty container). Without it the module degrades silently and the animation still works.
 

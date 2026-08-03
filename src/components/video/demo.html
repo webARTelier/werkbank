@@ -100,7 +100,7 @@
 
       <!--
           One instance per module element, enabled with
-          data-js-module="video" on the wrapper.
+          data-js-behavior="video" on the wrapper.
 
           Wiring
             - Each instance sits inside its own .demo__media container —
@@ -155,7 +155,7 @@
             hands over to the native controls; pausing brings it back.
           </p>
           <div class="demo__media">
-            <div class="m-video" data-js-module="video">
+            <div class="m-video" data-js-behavior="video">
 
               <video class="m-video__video" poster="https://res.cloudinary.com/dxdxjequc/video/upload/so_0,w_1280,h_720,c_fill/v1745751181/greenblob.jpg" controls preload="metadata" playsinline>
                 <source src="https://res.cloudinary.com/dxdxjequc/video/upload/w_3840,h_2160,ar_16:9/v1745751181/greenblob.mp4" media="(min-width: 990px) and (min-resolution: 2dppx)">
@@ -188,7 +188,7 @@
             the toggle is the explicit opt-in.
           </p>
           <div class="demo__media demo__media--wide">
-            <div class="m-video m-video--ambient" data-js-module="video">
+            <div class="m-video m-video--ambient" data-js-behavior="video">
 
               <video class="m-video__video" autoplay muted loop playsinline preload="auto">
                 <source src="https://res.cloudinary.com/dxdxjequc/video/upload/w_1920,h_1080,ar_16:9/v1745751181/greenblob.mp4" media="(min-width: 990px)">
@@ -223,7 +223,7 @@
             carries over.
           </p>
           <div class="demo__media demo__media--artDirection">
-            <div class="m-video" data-js-module="video">
+            <div class="m-video" data-js-behavior="video">
 
               <video class="m-video__video" poster="https://res.cloudinary.com/dxdxjequc/video/upload/so_0,w_1280,h_720,c_fill/v1745751181/greenblob.jpg" controls preload="metadata" playsinline>
                 <source src="https://res.cloudinary.com/dxdxjequc/video/upload/w_360,h_640,c_fill/v1745751181/greenblob.mp4" media="(max-width: 767px)">
@@ -252,7 +252,7 @@
             YouTube. The CMS field accepts the full URL or the bare id.
           </p>
           <div class="demo__media">
-            <div class="m-video" data-js-module="video" data-video-youtube="https://www.youtube.com/watch?v=a3ICNMQW7Ok" data-video-title="YouTube demo video">
+            <div class="m-video" data-js-behavior="video" data-video-youtube="https://www.youtube.com/watch?v=a3ICNMQW7Ok" data-video-title="YouTube demo video">
 
               <img class="m-video__poster" src="../../_shared/media/img/content/videoPosterDemo.svg" alt="" data-video-poster>
 

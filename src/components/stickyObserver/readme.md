@@ -17,9 +17,9 @@ the one bit of information this module adds.
 - `stickyObserver.js` – behavior
 
 ## Usage
-Put `data-js-module="stickyObserver"` on the sticky element. That is all: the
-script injects a zero-size, `aria-hidden` sentinel `<div>` directly before the
-element and toggles `is-stuck` on the element while it is pinned.
+Put `data-js-behavior="stickyObserver"` on the sticky element. That is all:
+the script injects a zero-size, `aria-hidden` sentinel `<div>` directly before
+the element and toggles `is-stuck` on the element while it is pinned.
 
 When the injected sibling is not welcome — inside a flex/grid container with
 `gap` it occupies a slot, it shifts `:first-child` / sibling selectors, and it
@@ -93,7 +93,7 @@ html {
 ## Integration
 The JS exports `init(el, services)` and does not self-initialize. It is loaded
 on demand by `boot.js` for every element carrying
-`data-js-module="stickyObserver"`.
+`data-js-behavior="stickyObserver"`.
 
 The script sets **no inline styles** and runs no animations. It only toggles
 the `is-stuck` state class (mirrors the accordion's CSS-state approach); the

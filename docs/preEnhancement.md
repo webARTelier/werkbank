@@ -21,7 +21,7 @@ them is negotiable:
    cannot run before the document has been parsed — which is after the first
    paint. Making it blocking would be worse than the flash it prevents.
 2. **The component's chunk is a second round trip.** `boot.js` only imports
-   `<name>.min.js` once it has seen `data-js-module="<name>"` in the DOM, so no
+   `<name>.min.js` once it has seen `data-js-behavior="<name>"` in the DOM, so no
    preload scanner ever predicted that request.
 3. **How the loader spends those round trips.** This one was fixable and has
    been fixed — see §5.
@@ -70,8 +70,8 @@ The mixin assumes the flag and the rule share a subject: the component has a
 root of its own, the attribute goes there, and descendants nest inside the
 block as usual. `tabs` is the one case where that does not hold — it is
 behaviour-only, has no root class to nest its panel rules under, and matching
-`data-js-module` with `*=` would be guesswork about a comma-separated list. It
-therefore writes the same two conditions out by hand with a
+`data-js-behavior` with `*=` would be guesswork about a comma-separated
+list. It therefore writes the same two conditions out by hand with a
 `:not([data-tabs-ready] *)` guard ("not inside a container the module has
 reached"), which needs no container selector at all. One exception did not
 warrant a second mixin; see `tabs.scss` for the note that says so in place.
@@ -165,11 +165,11 @@ ever written, never read back** by the JS.
 before this was written down: `data-js-enhanced` (accordion, dropdownNav) and
 `data-<name>-ready` (backToTop, offCanvasNav, siteSearch). The generic one
 loses, and the codebase had already proved it — an element may carry several
-modules (`data-js-module="accordion,dropdownNav"`) and components nest inside
-each other, so a generic flag cannot say who set it. `dropdownNav.scss` had to
-carry a `[data-js-module*="dropdownNav"]` qualifier on three blocks to work
-around exactly that collision. With a per-component name the qualifier is
-unnecessary, and it went.
+modules (`data-js-behavior="accordion,dropdownNav"`) and components nest
+inside each other, so a generic flag cannot say who set it. `dropdownNav.scss`
+had to carry a `[data-js-behavior*="dropdownNav"]` qualifier on three blocks
+to work around exactly that collision. With a per-component name the
+qualifier is unnecessary, and it went.
 
 **Why not the loader's flag.** `boot.js` already writes
 `data-js-init_<name>`, but it writes it *before* importing the chunk, as a
@@ -215,7 +215,7 @@ changing an existing rendering.
 `initModulesInScope()` used to await each element before starting the next, so
 a page with eight components paid eight round trips end to end and the last
 component was enhanced long after the first. Modules **on one element** still
-run in source order — `data-js-module="a,b"` may well mean that `b` expects
+run in source order — `data-js-behavior="a,b"` may well mean that `b` expects
 what `a` produced — but elements no longer wait for each other:
 
 ```js

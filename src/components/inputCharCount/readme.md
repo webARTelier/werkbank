@@ -16,7 +16,7 @@ of its own.
 There is **no vendor dependency**.
 
 ## Usage
-Put `data-js-module="inputCharCount"` on **each** `<input>` / `<textarea>` that
+Put `data-js-behavior="inputCharCount"` on **each** `<input>` / `<textarea>` that
 should show a counter (one counter per field — it goes on the field itself, not
 a wrapper). The module injects two siblings right after the field: a visible
 counter (`.icc-counter`, `aria-hidden`) and a visually-hidden status region for
@@ -38,7 +38,7 @@ constraint count — so the counter stays consistent with the platform.
 ```html
 <label for="tweet">Message</label>
 <textarea id="tweet" maxlength="280" data-icc-countdown
-          data-js-module="inputCharCount"></textarea>
+          data-js-behavior="inputCharCount"></textarea>
 ```
 
 ## Accessibility
@@ -88,8 +88,8 @@ design.
 ## Integration
 The JS exports `init(el, services)` and does not self-initialize. It is loaded
 on demand by `boot.js` for every `<input>` / `<textarea>` carrying
-`data-js-module="inputCharCount"` — one controller instance per field. It sets
-no inline styles.
+`data-js-behavior="inputCharCount"` — one controller instance per field. It
+sets no inline styles.
 
 `services.reporter` (dependency injection via `boot.js`) is **optional** — it is
 only used to warn about author mistakes (module on a non-field element,

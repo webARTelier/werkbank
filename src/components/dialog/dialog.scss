@@ -17,8 +17,8 @@
 //
 // The "m-dialog*" classes (BEM "m-" prefix) are used for styling only.
 // dialog.js does NOT hook onto them; it targets the <dialog> element (via
-// data-js-module="dialog") and the behavioural data attributes in the markup
-// ("data-open-dialog", "data-close-dialog", "data-dialog-static",
+// data-js-behavior="dialog") and the behavioural data attributes in the
+// markup ("data-open-dialog", "data-close-dialog", "data-dialog-static",
 // "data-dialog-nonmodal"). Restyle freely without touching the behaviour.
 
 @use "focus" as *;

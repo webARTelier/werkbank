@@ -160,7 +160,7 @@
     <section class="stage" aria-label="Live demo">
 
       <!--
-          One spy instance per element with data-js-module="scrollSpy".
+          One spy instance per element with data-js-behavior="scrollSpy".
 
           Wiring
             - The module element is the TOC itself (here a <nav> with an
@@ -209,7 +209,7 @@
         <div class="m-spy">
 
           <nav class="m-spy__toc" aria-label="On this page"
-               data-js-module="scrollSpy">
+               data-js-behavior="scrollSpy">
             <ul class="m-spy__list">
               <li class="m-spy__item">
                 <a class="m-spy__link" href="#spy-concept">Concept</a>
@@ -349,7 +349,7 @@
           only the targets must sit inside the root.
         </p>
 
-        <nav aria-label="In the box" data-js-module="scrollSpy"
+        <nav aria-label="In the box" data-js-behavior="scrollSpy"
              data-spy-root="#spyDemoBox" data-spy-offset="24">
           <ul class="m-spy__list">
             <li class="m-spy__item">
@@ -430,7 +430,7 @@
 
         <p>
           Everything the two instances above need is one attribute on the
-          TOC: <code>data-js-module="scrollSpy"</code>. The boot script
+          TOC: <code>data-js-behavior="scrollSpy"</code>. The boot script
           lazy-loads the module when it finds that attribute; the module
           collects the in-page anchor links, resolves their targets via
           the href fragments and starts observing. There is nothing to

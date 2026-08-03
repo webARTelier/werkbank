@@ -131,7 +131,7 @@
     <section class="stage" aria-label="Live demo">
 
       <!--
-          One instance per element with data-js-module="offCanvasNav" — the
+          One instance per element with data-js-behavior="offCanvasNav" — the
           module is initialised on the <dialog> itself.
 
           Wiring
@@ -196,7 +196,7 @@
           Progressive enhancement
             - The drawer rules are scoped to data-offcanvasnav-ready, which
               the module sets only once the drawer can be opened. Until then
-              (and in the last example, which carries no data-js-module at
+              (and in the last example, which carries no data-js-behavior at
               all) the <dialog> is a plain block in the flow: the whole
               navigation visible, nothing hidden, no dead control.
         -->
@@ -253,7 +253,7 @@
         <dialog
           id="demoDrawer"
           class="m-offCanvasNav"
-          data-js-module="offCanvasNav"
+          data-js-behavior="offCanvasNav"
           data-offcanvasnav-always
           aria-labelledby="demoDrawer-title"
         >
@@ -278,7 +278,7 @@
 
               <!-- The navigation itself: a dropdownNav, which brings its own
                    disclosure buttons for the submenus -->
-              <nav class="m-dropdownNav" aria-label="Main" data-js-module="dropdownNav" data-dropdownnav-stacked>
+              <nav class="m-dropdownNav" aria-label="Main" data-js-behavior="dropdownNav" data-dropdownnav-stacked>
                 <ul class="m-dropdownNav__list">
 
                   <li class="m-dropdownNav__item">
@@ -382,7 +382,7 @@
           <dialog
             id="demoDrawerResponsive"
             class="m-offCanvasNav"
-            data-js-module="offCanvasNav"
+            data-js-behavior="offCanvasNav"
             data-offcanvasnav-side="end"
             aria-labelledby="demoDrawerResponsive-title"
           >
@@ -404,7 +404,7 @@
               </header>
 
               <div class="m-offCanvasNav__body">
-                <nav class="m-dropdownNav" aria-label="Main (breakpoint-scoped)" data-js-module="dropdownNav">
+                <nav class="m-dropdownNav" aria-label="Main (breakpoint-scoped)" data-js-behavior="dropdownNav">
                   <ul class="m-dropdownNav__list">
 
                     <li class="m-dropdownNav__item">
@@ -489,7 +489,7 @@
                 is the drawer variant. It comes in from the inline-end edge.
               </p>
 
-              <dialog id='frameDrawer' class='m-offCanvasNav' data-js-module='offCanvasNav'
+              <dialog id='frameDrawer' class='m-offCanvasNav' data-js-behavior='offCanvasNav'
                       data-offcanvasnav-side='end' aria-labelledby='frameDrawer-title'>
                 <div class='m-offCanvasNav__panel' data-offcanvasnav-panel>
                   <header class='m-offCanvasNav__header'>
@@ -502,7 +502,7 @@
                     </button>
                   </header>
                   <div class='m-offCanvasNav__body'>
-                    <nav class='m-dropdownNav' aria-label='Main' data-js-module='dropdownNav'>
+                    <nav class='m-dropdownNav' aria-label='Main' data-js-behavior='dropdownNav'>
                       <ul class='m-dropdownNav__list'>
                         <li class='m-dropdownNav__item'>
                           <a class='m-dropdownNav__link' href='#' aria-current='page'>Home</a>
@@ -540,7 +540,7 @@
         <h2>Without JavaScript (the base layer)</h2>
 
         <p class="stage__intro">
-          This drawer carries no <code>data-js-module</code>, so the module
+          This drawer carries no <code>data-js-behavior</code>, so the module
           never touches it — exactly what every visitor sees with JavaScript
           off, and what everyone sees for the moment before the chunk has
           loaded. The <code>&lt;dialog&gt;</code> is rendered as the block it
