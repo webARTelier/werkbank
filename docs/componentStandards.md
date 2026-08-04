@@ -248,6 +248,58 @@ Boot (`_shared/js/boot.js`) lazily imports the module when it sees
   must **not** hook onto `m-*` classes — it targets the element via
   `data-js-behavior` and behavioural `data-*` attributes. State classes the JS
   writes (`is-invalid`, `has-neighbor`, `is-scrollLocked`) are the styling hook.
+- **Elements and modifiers are written inside the block, as `&__x` / `&--y`:**
+
+  ```scss
+  .m-dialog {
+    --dialog-radius: var(--borderRadius);   // the token block, first
+    …
+
+
+
+    &__panel { … }
+
+
+
+    &--wide &__panel { … }
+
+
+
+    & [hidden] { … }
+  }
+  ```
+
+  **Every selector block on this first level opens on three blank lines** — the
+  same wide gap that separates top-level rules, because each is a part of the
+  component in its own right and the gaps are what make the outline scannable.
+  A leading comment belongs to its block, so the gap goes above the comment.
+  Everything **deeper** stays at one blank line (concern groups, `&:hover` /
+  `&::before`, state and media-query blocks inside a part), and three things on
+  the first level do too: a block that is the **first** thing in its parent, the
+  `& { … }` wrapper holding the component's own declarations after an
+  `@include`, and at-rule blocks (`@media`, the viewport mixins,
+  `@starting-style`).
+
+  This is concatenation, not descendant nesting: `&__panel` compiles to
+  `.m-dialog__panel`, so the emitted selector and its specificity are exactly
+  those of the flat form — which is the point of BEM. It keeps everything the
+  block owns in one place and reads as the component's outline. What stays
+  **outside** is what cannot be expressed relative to the block: rules on
+  script-injected nodes (`[data-lightbox-ui='viewer']`,
+  `[data-dropdownnav-toggle]`) and any selector list mixing the two
+  (`dropdownNav`'s link/label/toggle rule) — nesting a foreign selector under
+  the block would silently turn it into a descendant. Where such a rule sits
+  between block rules, the block is written in more than one `.m-block { }`
+  section rather than moving rules across it: source order is cascade order.
+- **A nested module gets a container from the outer one**, named
+  `m-<outer>__<inner>` and shipped by the outer module's markup. That element
+  carries the placement, and the inner module is retuned by setting its
+  `--<inner>-*` knobs on its root from inside it
+  (`.m-marquee__countdown > .m-countdown { --countdown-direction: row; }` —
+  it must be the root, because a knob declared there beats the same property
+  inherited from an ancestor). The inner module's internals are off limits;
+  needing them means it is missing a knob. See the nesting section in
+  `CLAUDE.md`.
 - **Declare the pre-enhancement state** if the first paint differs visibly
   from the enhanced one. `@use "progressiveEnhancement" as *;` and wrap the
   rules in `pre-enhancement("data-<name>-ready")`. The mixin assumes the flag
@@ -273,6 +325,14 @@ Boot (`_shared/js/boot.js`) lazily imports the module when it sees
   `@media (prefers-reduced-motion: reduce)` block that makes it instant.
 - Use **logical properties** (`inset-inline-end`, `inline-size`) so RTL /
   vertical writing modes stay correct.
+- **Media takes its box from its container.** An `<img>`/`<video>` gets
+  `display: block; inline-size: 100%; block-size: 100%; object-fit: cover` and
+  no dimensions of its own — the size and the `aspect-ratio` come from the
+  container the consuming project styles, which is also what reserves the
+  layout space before the image arrives. Say so in the snippet (§7): those
+  container styles are part of the wiring. `video` is the reference file; the
+  named exceptions (`contain` for a surface that must show the whole frame,
+  iframes, SVG) are in the media-sizing section of `CLAUDE.md`.
 - **Behaviour-only components ship a stub stylesheet** and leave visuals
   (including focus) to the consuming project (`formValidation`,
   `inputCharCount`, `inlineSVG`, `scaleSVG`). A component may also ship *only*
@@ -290,7 +350,8 @@ A leading comment banner titled `<name> — copy-paste snippet`, with:
    `boot.min.js`) and the note that boot lazy-loads the module — the author
    never imports `<name>.js`;
 2. how to place the markup and wire it (`data-js-behavior`, the behavioural
-   `data-*` attributes);
+   `data-*` attributes) — including, where the component renders media, the
+   container styles the project has to supply (see §6 and `CLAUDE.md`);
 3. a **Notes / Configuration** section covering progressive-enhancement
    behaviour and every optional attribute with its default. Where the
    component ships a pre-enhancement state, say what it hides and what

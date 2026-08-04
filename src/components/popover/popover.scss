@@ -95,9 +95,13 @@
   background-color: var(--popover-bg-color);
   box-shadow: var(--popover-shadow);
 
+
+
   > :first-child {
     margin-block-start: 0;
   }
+
+
 
   > :last-child {
     margin-block-end: 0;
@@ -126,20 +130,26 @@
     // When the preferred side runs out of viewport the browser flips the
     // popover to the opposite side — re-evaluated on scroll and resize.
     position-try-fallbacks: flip-block;
-  }
 
-  .m-popover[data-popover-position='top'] {
-    position-area: top;
-  }
 
-  .m-popover[data-popover-position='right'] {
-    position-area: right;
-    position-try-fallbacks: flip-inline;
-  }
 
-  .m-popover[data-popover-position='left'] {
-    position-area: left;
-    position-try-fallbacks: flip-inline;
+    &[data-popover-position='top'] {
+      position-area: top;
+    }
+
+
+
+    &[data-popover-position='right'] {
+      position-area: right;
+      position-try-fallbacks: flip-inline;
+    }
+
+
+
+    &[data-popover-position='left'] {
+      position-area: left;
+      position-try-fallbacks: flip-inline;
+    }
   }
 }
 
@@ -151,12 +161,14 @@
 // into the actual fixed position. Until the class is present (or without
 // JS at all) the UA's centered default keeps the popover perfectly usable.
 @supports not ((anchor-name: --a) and (position-area: bottom)) {
+  .m-popover {
 
-  .m-popover.is-jsAnchored {
-    inset: auto;
-    top: var(--popover-fallback-top);
-    left: var(--popover-fallback-left);
-    margin: 0;
+    &.is-jsAnchored {
+      inset: auto;
+      top: var(--popover-fallback-top);
+      left: var(--popover-fallback-left);
+      margin: 0;
+    }
   }
 }
 
@@ -186,6 +198,8 @@
       overlay var(--popover-duration) allow-discrete,
       display var(--popover-duration) allow-discrete;
 
+
+
     &:popover-open {
       opacity: 1;
       scale: 1;
@@ -205,66 +219,69 @@
 
 
 
-.m-popover__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--popover-gap);
-}
+.m-popover {
 
-
-
-.m-popover__title {
-  margin: 0;
-
-  font-size: 1rem;
-  font-weight: 600;
-  line-height: 1.3;
-
-  color: var(--popover-title-color);
-}
-
-
-
-// Close affordance for popover="manual" (no light dismiss). A real <button>
-// with popovertarget + popovertargetaction="hide" — the closing itself is
-// native, this only styles it.
-.m-popover__close {
-
-  // Popover sits on a dark elevated surface -> the light (bright) ring.
-  @include focus-ring(light);
-
-  & {
-    flex-shrink: 0;
-
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    width: var(--popover-close-size);
-    height: var(--popover-close-size);
-    padding: 0;
-    border: 1px solid transparent;
-    border-radius: var(--popover-radius);
-
-    background: transparent;
-    color: var(--popover-muted-color);
-    line-height: 1;
-
-    cursor: pointer;
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--popover-gap);
   }
 
-  // The inline "×" icon inherits the button's color via
-  // stroke="currentColor", so the hover recolour below applies to the
-  // glyph too.
-  svg {
-    width: var(--popover-close-icon-size);
-    height: var(--popover-close-icon-size);
+
+
+  &__title {
+    margin: 0;
+
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.3;
+
+    color: var(--popover-title-color);
   }
 
-  &:hover {
-    color: var(--popover-text-color);
-    border-color: var(--popover-border-color);
+
+
+  // Close affordance for popover="manual" (no light dismiss). A real <button>
+  // with popovertarget + popovertargetaction="hide" — the closing itself is
+  // native, this only styles it.
+  &__close {
+
+    // Popover sits on a dark elevated surface -> the light (bright) ring.
+    @include focus-ring(light);
+
+    & {
+      flex-shrink: 0;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      width: var(--popover-close-size);
+      height: var(--popover-close-size);
+      padding: 0;
+      border: 1px solid transparent;
+      border-radius: var(--popover-radius);
+
+      background: transparent;
+      color: var(--popover-muted-color);
+      line-height: 1;
+
+      cursor: pointer;
+    }
+
+    // The inline "×" icon inherits the button's color via
+    // stroke="currentColor", so the hover recolour below applies to the
+    // glyph too.
+    svg {
+      width: var(--popover-close-icon-size);
+      height: var(--popover-close-icon-size);
+    }
+
+    &:hover {
+      color: var(--popover-text-color);
+      border-color: var(--popover-border-color);
+    }
   }
 }
 

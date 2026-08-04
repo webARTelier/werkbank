@@ -76,9 +76,13 @@
     mask-image: $mask;
   }
 
+
+
   &[data-fade-top] {
     --scrollFade-top: transparent;
   }
+
+
 
   &[data-fade-bottom] {
     --scrollFade-bottom: transparent;

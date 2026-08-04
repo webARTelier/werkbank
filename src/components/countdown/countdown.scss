@@ -31,8 +31,30 @@
   // (see _shared/scss/_foundations.scss).
   --countdown-gap: var(--space-s); // gap between the units
   --countdown-value-label-gap: var(--space-3xs); // gap value <-> label
+
+  // Gap between the unit display and the pause/resume control. Follows
+  // --countdown-gap unless it is set, because the two are the same distance
+  // in the stacked default — they are not once a host lays the countdown out
+  // inline, where the digits want to sit tight and the control does not.
+  --countdown-root-gap: var(--countdown-gap);
+
   --countdown-toggle-padding: var(--space-3xs) var(--space-xs);
   --countdown-toggle-radius: var(--borderRadius);
+
+  // Layout of the root: the unit display stacked over the pause/resume
+  // control, top-aligned. A host that needs the countdown laid out inline —
+  // a ticker strip, a headline row — flips these two from the container it
+  // provides for it (the nesting convention in CLAUDE.md), which is what
+  // keeps such a host out of this component's internals.
+  --countdown-direction: column;
+  --countdown-align: flex-start;
+
+  // Floor under a single value box. "auto" hugs the digits; a fixed measure
+  // (e.g. 2ch) keeps the box the same width whether it reads "9" or "59", so
+  // a ticking countdown cannot change its own layout width — which is what a
+  // surrounding marquee needs, since a width change makes it re-measure and
+  // re-clone the track.
+  --countdown-value-min-size: auto;
 
   // Type scale
   --countdown-value-size: clamp(2.5rem, 8vw, 4.5rem);
@@ -53,126 +75,133 @@
   --countdown-toggle-border-color-hover: var(--color-border-strong);
 
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--countdown-gap);
+  flex-direction: var(--countdown-direction);
+  align-items: var(--countdown-align);
+  gap: var(--countdown-root-gap);
 
   font-family: system-ui, sans-serif;
-}
 
 
 
-// The live-updating value display (role="timer"): the row of unit columns.
-.m-countdown__units {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--countdown-gap);
-}
+  // The live-updating value display (role="timer"): the row of unit columns.
+  &__units {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--countdown-gap);
+  }
 
 
 
-// Each unit stacks its value over its label in a single grid column. A
-// second column holds the colon separator, aligned to the value's row so
-// it sits between the numbers rather than being centered on the taller
-// value+label block.
-.m-countdown__unit {
-  display: grid;
-  grid-template-columns: auto auto;
-  grid-template-rows: auto auto;
-  column-gap: var(--countdown-gap);
-  row-gap: var(--countdown-value-label-gap);
-  justify-items: center;
+  // Each unit stacks its value over its label in a single grid column. A
+  // second column holds the colon separator, aligned to the value's row so
+  // it sits between the numbers rather than being centered on the taller
+  // value+label block.
+  &__unit {
+    display: grid;
+    grid-template-columns: auto auto;
+    grid-template-rows: auto auto;
+    column-gap: var(--countdown-gap);
+    row-gap: var(--countdown-value-label-gap);
+    justify-items: center;
 
-  // Colon separator between units. Rendered only when a *visible* unit still
-  // follows, so it adapts whether or not the optional seconds unit is present
-  // and — crucially — when a unit is [hidden] under reduced motion. A purely
-  // structural :not(:last-child) would leave a dangling colon after the minutes
-  // when the trailing seconds unit is hidden (it stays the last child in the
-  // DOM), so we test for a following non-hidden sibling instead.
-  &:not([hidden]):has(~ .m-countdown__unit:not([hidden]))::after {
-    grid-column: 2;
+    // Colon separator between units. Rendered only when a *visible* unit still
+    // follows, so it adapts whether or not the optional seconds unit is present
+    // and — crucially — when a unit is [hidden] under reduced motion. A purely
+    // structural :not(:last-child) would leave a dangling colon after the minutes
+    // when the trailing seconds unit is hidden (it stays the last child in the
+    // DOM), so we test for a following non-hidden sibling instead.
+    &:not([hidden]):has(~ .m-countdown__unit:not([hidden]))::after {
+      grid-column: 2;
+      grid-row: 1;
+
+      color: var(--countdown-separator-color);
+      font-size: var(--countdown-value-size);
+      font-weight: 700;
+      line-height: 1;
+
+      content: ":";
+    }
+  }
+
+
+
+  // The value box hugs its digits by default, so the centring is a no-op
+  // until --countdown-value-min-size widens the box past its content (see
+  // the token): there the digits sit in the middle of a slot that no longer
+  // changes width.
+  &__value {
+    grid-column: 1;
     grid-row: 1;
 
-    color: var(--countdown-separator-color);
+    min-inline-size: var(--countdown-value-min-size);
+
+    color: var(--countdown-value-color);
     font-size: var(--countdown-value-size);
     font-weight: 700;
     line-height: 1;
-
-    content: ":";
-  }
-}
-
-
-
-.m-countdown__value {
-  grid-column: 1;
-  grid-row: 1;
-
-  color: var(--countdown-value-color);
-  font-size: var(--countdown-value-size);
-  font-weight: 700;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-
-
-
-.m-countdown__label {
-  grid-column: 1;
-  grid-row: 2;
-
-  color: var(--countdown-label-color);
-  font-size: var(--countdown-label-size);
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-
-
-// Pause / resume control (injected by countdown.js). Satisfies WCAG 2.2.2
-// by letting any user stop the auto-updating display. Understated by
-// default; the keyboard focus ring (WCAG 2.4.7) is applied via the shared
-// focus-ring() mixin.
-.m-countdown__toggle {
-
-  // Sits on a dark surface -> the light (bright) ring.
-  @include focus-ring(light);
-
-  & {
-    padding: var(--countdown-toggle-padding);
-    border: 1px solid var(--countdown-toggle-border-color);
-    border-radius: var(--countdown-toggle-radius);
-
-    background-color: var(--countdown-toggle-bg-color);
-    color: var(--countdown-toggle-color);
-    font: inherit;
-    font-size: var(--countdown-toggle-size);
-    line-height: 1.4;
-
-    cursor: pointer;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
   }
 
-  &:hover {
-    color: var(--countdown-toggle-color-hover);
-    border-color: var(--countdown-toggle-border-color-hover);
+
+
+  &__label {
+    grid-column: 1;
+    grid-row: 2;
+
+    color: var(--countdown-label-color);
+    font-size: var(--countdown-label-size);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
   }
-}
 
 
 
-// Visually hidden, but available to assistive tech. Carries the coherent
-// countdown sentence (data-countdown-summary) and the terminal status message.
-.m-countdown__sr {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  border: 0;
+  // Pause / resume control (injected by countdown.js). Satisfies WCAG 2.2.2
+  // by letting any user stop the auto-updating display. Understated by
+  // default; the keyboard focus ring (WCAG 2.4.7) is applied via the shared
+  // focus-ring() mixin.
+  &__toggle {
 
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  clip-path: inset(50%);
-  white-space: nowrap;
+    // Sits on a dark surface -> the light (bright) ring.
+    @include focus-ring(light);
+
+    & {
+      padding: var(--countdown-toggle-padding);
+      border: 1px solid var(--countdown-toggle-border-color);
+      border-radius: var(--countdown-toggle-radius);
+
+      background-color: var(--countdown-toggle-bg-color);
+      color: var(--countdown-toggle-color);
+      font: inherit;
+      font-size: var(--countdown-toggle-size);
+      line-height: 1.4;
+
+      cursor: pointer;
+    }
+
+    &:hover {
+      color: var(--countdown-toggle-color-hover);
+      border-color: var(--countdown-toggle-border-color-hover);
+    }
+  }
+
+
+
+  // Visually hidden, but available to assistive tech. Carries the coherent
+  // countdown sentence (data-countdown-summary) and the terminal status message.
+  &__sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }

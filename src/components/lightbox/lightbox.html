@@ -58,8 +58,15 @@
       into a viewer that never opens.
     - Responsive images: the thumbnails use srcset/sizes as usual, and the
       viewer takes its own candidate list from data-lightbox-srcset /
-      data-lightbox-sizes on the link (the href stays the fallback). Give
-      the thumbnails width/height so the grid reserves their box.
+      data-lightbox-sizes on the link (the href stays the fallback).
+    - Thumbnail box: the tile link (.m-lightbox__link) carries the aspect
+      ratio and the <img> fills it with object-fit: cover — the container
+      owns the box, the image never sizes itself, and the box is reserved
+      before the first paint (this stylesheet is render-blocking). A project
+      with its own gallery layout keeps that split on its own wrapper and
+      drops the m-lightbox__* classes. The thumbnails' width/height
+      attributes stay for the ratio-"auto" gallery, where the image's own
+      proportions are what reserve the row.
     - Keyboard: the arrows step through the set (following the writing
       direction), Home/End jump to the ends, Escape closes — the last one is
       the platform's, along with the focus trap and the focus returning to

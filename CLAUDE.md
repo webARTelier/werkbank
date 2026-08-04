@@ -128,6 +128,128 @@ contrasts with its own surface:
   `shared.scss`; only the components that apply a ring pull it in. The tone tokens,
   however, live in `shared.min.css` so they resolve at runtime.
 
+## Media sizing: the container owns the box
+
+Images and videos never carry their own dimensions in a component stylesheet.
+The **surrounding container has the size and the aspect ratio** — supplied by
+the consuming project — and the media fills that box and is cropped to it:
+
+```scss
+// component: the media fills whatever box it is placed in
+.m-thing__media {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+
+  object-fit: cover;
+}
+```
+
+```css
+/* project: the container dictates size and shape */
+.thing-media {
+  inline-size: 100%;
+  aspect-ratio: 16 / 9;
+}
+```
+
+- **The ratio sits on the parent, never on the media.** A container that owns
+  the box can be retuned per instance (a wide hero, a 1:1 tile, a 9:16 story)
+  without the component knowing, and it reserves the layout space *before* the
+  image arrives, so nothing shifts. `video` is the reference implementation —
+  its SCSS header states the contract and `demo.html` plays the project side;
+  `lightbox`'s authored gallery carries `--lightbox-thumb-ratio` on the tile
+  link, and its `<img>` only fills it.
+- **`cover`, not `contain`, is the default.** The container's shape wins; the
+  media is cropped to it rather than letterboxed inside it.
+- **`width`/`height` in the markup are not what reserves the space here.** The
+  stylesheets are render-blocking `<link>`s in the `<head>`, so there is no
+  paint before them: by the time anything is drawn, the container's
+  `aspect-ratio` already holds the box. Measured on `lightbox`'s demo with the
+  CSS held back 1.2 s — first contentful paint at 1468 ms, stylesheets done at
+  1266 ms, nothing painted in between. This is exactly the difference to the
+  gap [`preEnhancement.md`](docs/preEnhancement.md) covers: a deferred module
+  arrives *after* the first paint, a stylesheet in the head cannot.
+  Keep the attributes anyway — they cost nothing and they are load-bearing in
+  the two cases where the *media* decides the box: a container left at
+  `aspect-ratio: auto` (`lightbox`'s documented ratio-`auto` gallery) and the
+  `contain` surfaces below. Where the container imposes a ratio they are
+  documentation of the source's shape, not layout insurance; do not cite them
+  as CLS protection there.
+- **A component that renders media says so in its snippet** (`<name>.html`
+  Notes) and its readme: the container styles are a required part of the
+  wiring, not an optional nicety.
+- **Exceptions are named in the component, not decided ad hoc:**
+  - A surface whose job is to show the *whole* frame uses `object-fit:
+    contain` and takes its box from the media instead. `lightbox`'s viewer
+    image is the only one in this collection — cropping a photograph the
+    reader opened in order to look at it defeats the component.
+  - **`object-fit` cannot reach into an `<iframe>`.** A third-party embed
+    letterboxes inside the box it is given (`video`'s YouTube facade); real
+    cover-cropping of an iframe is a project-level decision (oversize + clip),
+    not something a component ships.
+  - **SVG is out of scope.** `inlineSVG` / `scaleSVG` scale through the
+    `viewBox`, and an icon takes its box from the control it sits in.
+
+
+## Nesting: the outer module provides the container
+
+Modules nest — a `dropdownNav` in an `offCanvasNav` drawer, a `countdown`
+riding inside a `marquee`. Where they do, the **outer module provides the
+element the inner one sits in**, named after both:
+`m-<outerModule>__<innerModule>` (camelCase on both sides, like the folders).
+
+```html
+<div class="m-marquee__track" data-marquee-animated>
+  <div class="m-marquee__countdown">
+    <div class="m-countdown" data-js-behavior="countdown"> … </div>
+  </div>
+</div>
+```
+
+- **That container is the only place the outer module talks about the inner
+  one.** Placement, size and spacing of the nested module go there, and the
+  inner module is retuned through **its own knobs, set on its root from
+  inside that container**:
+
+  ```scss
+  .m-marquee__countdown > .m-countdown {
+    --countdown-direction: row;
+    --countdown-root-gap: var(--space-2xs);
+  }
+  ```
+
+  It has to be the root, not the container: every component declares its
+  knobs *on its own root* (see the standards §6), and a declaration on an
+  element beats any inherited value no matter what the specificity is — so
+  `.m-marquee__countdown { --countdown-direction: row }` inherits down and
+  loses to the root's own `column`. Verified the hard way; the knobs simply
+  did not apply.
+- **The inner module's root class is the whole of the outer's vocabulary.**
+  Never its internals: no `.m-countdown__value`, no `.m-countdown__toggle`.
+  The internals are what the component is free to rearrange between versions;
+  the root class and the documented knobs are what it promises. In the other
+  direction there is nothing at all — the inner module never mentions a host.
+- **A real element, not a second class on the inner root.** The inner root
+  carries its own token block and its own `display`; two blocks sharing one
+  element fight over the same box. A wrapper also keeps swapping one nested
+  module for another a pure markup change.
+- **If something cannot be said through a knob, the inner module is missing
+  one.** Add it to that component's token block instead of reaching in from
+  outside — that is the failure mode this convention exists to prevent.
+  `countdown` grew `--countdown-direction`, `--countdown-align`,
+  `--countdown-root-gap` and `--countdown-value-min-size` for exactly this
+  reason: they are what a host needs in order to lay a countdown out inline,
+  and with them the marquee demo went from styling `.m-countdown__value` and
+  `.m-countdown__toggle` from outside to setting four knobs.
+- **A slot that takes arbitrary content keeps its role name.**
+  `.m-offCanvasNav__body` and `.m-marquee__track` hold *whatever* the author
+  puts there ("any `<nav>` works"), so naming them after one module would be
+  a lie and the outer has nothing specific to say about the occupant. The
+  `m-<outer>__<inner>` element appears where the outer actually places, sizes
+  or tunes a named companion — inside such a slot, as in the example above.
+
+
 ## Still open / intentionally not changed
 
 These do not (yet) follow the camelCase convention, since they are not file/folder names

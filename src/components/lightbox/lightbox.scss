@@ -74,8 +74,10 @@
   --lightbox-thumb-easing: var(--an-ease);
 
   // Sizing. The narrowest a thumbnail may get before the grid drops a
-  // column, and the shape they are all cropped to — set the ratio to "auto"
-  // for a gallery that wants to keep every image's own proportions.
+  // column, and the shape they are all cropped to. The ratio is applied to
+  // the tile link, i.e. to the container, not to the image (the media-sizing
+  // rule in CLAUDE.md) — set it to "auto" for a gallery that wants to keep
+  // every image's own proportions.
   --lightbox-thumb-min: 12rem;
   --lightbox-thumb-ratio: 3 / 2;
   --lightbox-thumb-hover-scale: 1.04;
@@ -198,89 +200,97 @@
 // -------------------------------------------------------------
 .m-lightbox {
   font-family: system-ui, sans-serif;
-}
 
 
 
-// auto-fill rather than a breakpoint list: the gallery drops a column
-// whenever a thumbnail would go below --lightbox-thumb-min. The min() guard
-// is what keeps a single column from overflowing a viewport narrower than
-// that floor.
-.m-lightbox__grid {
-  margin: 0;
-  padding: 0;
+  // auto-fill rather than a breakpoint list: the gallery drops a column
+  // whenever a thumbnail would go below --lightbox-thumb-min. The min() guard
+  // is what keeps a single column from overflowing a viewport narrower than
+  // that floor.
+  &__grid {
+    margin: 0;
+    padding: 0;
 
-  display: grid;
-  grid-template-columns:
-    repeat(auto-fill, minmax(min(var(--lightbox-thumb-min), 100%), 1fr));
-  gap: var(--lightbox-gap);
+    display: grid;
+    grid-template-columns:
+      repeat(auto-fill, minmax(min(var(--lightbox-thumb-min), 100%), 1fr));
+    gap: var(--lightbox-gap);
 
-  list-style: none;
-}
-
-
-
-// One tile: the thumbnail and, optionally, its caption. The caption is real
-// page content — it is also what the viewer picks up when the item carries
-// no data-lightbox-caption of its own.
-.m-lightbox__tile {
-  margin: 0;
-
-  display: flex;
-  flex-direction: column;
-  gap: var(--lightbox-tile-gap);
-}
-
-
-
-.m-lightbox__link {
-
-  // Thumbnails on a dark surface -> the light (bright) ring. An element's
-  // own overflow does not clip its own outline, so the ring survives the
-  // clipping box below.
-  @include focus-ring(light);
-
-  & {
-    display: block;
-    border-radius: var(--lightbox-radius);
-    overflow: hidden;
-
-    background-color: var(--lightbox-thumb-bg-color);
+    list-style: none;
   }
-}
 
 
 
-// The reserved box: aspect-ratio plus object-fit crops every thumbnail to
-// the same shape, so the grid keeps its rhythm whatever the sources are —
-// and the box is there before the image is, so nothing shifts when it
-// arrives. The width/height attributes in the markup say the same thing for
-// a reader without this stylesheet.
-.m-lightbox__thumb {
-  display: block;
-  inline-size: 100%;
-  block-size: auto;
+  // One tile: the thumbnail and, optionally, its caption. The caption is real
+  // page content — it is also what the viewer picks up when the item carries
+  // no data-lightbox-caption of its own.
+  &__tile {
+    margin: 0;
 
-  aspect-ratio: var(--lightbox-thumb-ratio);
-  object-fit: cover;
-
-  transition: scale var(--lightbox-thumb-duration) var(--lightbox-thumb-easing);
-}
-
-
-// The pointer affordance. Scale rather than a filter or a shadow: it is the
-// one property that cannot repaint anything outside the clipping box above.
-.m-lightbox__link:hover .m-lightbox__thumb {
-  scale: var(--lightbox-thumb-hover-scale);
-}
+    display: flex;
+    flex-direction: column;
+    gap: var(--lightbox-tile-gap);
+  }
 
 
 
-.m-lightbox__caption {
-  font-size: var(--lightbox-thumb-caption-font-size);
-  line-height: 1.4;
+  // The tile link is the container that owns the box: it carries the shape
+  // every thumbnail is cropped to, so the grid keeps its rhythm whatever the
+  // sources are — and the box is there before the image is, so nothing shifts
+  // when it arrives. Same division of labour as in `video`, where the box
+  // comes from the project's own wrapper (the media-sizing rule in CLAUDE.md).
+  &__link {
 
-  color: var(--lightbox-thumb-caption-color);
+    // Thumbnails on a dark surface -> the light (bright) ring. An element's
+    // own overflow does not clip its own outline, so the ring survives the
+    // clipping box below.
+    @include focus-ring(light);
+
+    & {
+      display: block;
+      border-radius: var(--lightbox-radius);
+      overflow: hidden;
+
+      aspect-ratio: var(--lightbox-thumb-ratio);
+
+      background-color: var(--lightbox-thumb-bg-color);
+    }
+  }
+
+
+
+  // The image only fills that box and object-fit crops it. With the ratio set
+  // to "auto" the link has no definite height, the percentage resolves to auto
+  // and the thumbnail keeps its own proportions — which is what that setting
+  // is for, and the one case in which the markup's width/height attributes
+  // still reserve anything: with a ratio on the link the box is there before
+  // the first paint anyway, this stylesheet being render-blocking.
+  &__thumb {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+
+    object-fit: cover;
+
+    transition: scale var(--lightbox-thumb-duration) var(--lightbox-thumb-easing);
+  }
+
+
+
+  // The pointer affordance. Scale rather than a filter or a shadow: it is the
+  // one property that cannot repaint anything outside the clipping box above.
+  &__link:hover &__thumb {
+    scale: var(--lightbox-thumb-hover-scale);
+  }
+
+
+
+  &__caption {
+    font-size: var(--lightbox-thumb-caption-font-size);
+    line-height: 1.4;
+
+    color: var(--lightbox-thumb-caption-color);
+  }
 }
 
 
@@ -331,6 +341,8 @@
     overlay var(--lightbox-duration-exit) allow-discrete,
     display var(--lightbox-duration-exit) allow-discrete;
 
+
+
   &[open] {
     opacity: 1;
     scale: 1;
@@ -353,6 +365,8 @@
     }
   }
 
+
+
   // The backdrop. Same split as the viewer itself: this rule is the exit,
   // the [open] one below the entrance.
   &::backdrop {
@@ -371,6 +385,8 @@
       overlay var(--lightbox-duration-exit) allow-discrete,
       display var(--lightbox-duration-exit) allow-discrete;
   }
+
+
 
   &[open]::backdrop {
     opacity: 1;
@@ -436,6 +452,12 @@
 // and object-fit is the safety net for the moment the flex/grid layout
 // resolves the two into a box that is not the image's own ratio, which
 // would otherwise stretch the photograph rather than letterbox it.
+//
+// This is the documented exception to the project's media-sizing rule (see
+// CLAUDE.md): here the image keeps its own proportions inside the stage
+// instead of taking the container's, and `contain` letterboxes rather than
+// crops — a viewer the reader opened in order to look at a photograph must
+// not cut it.
 [data-lightbox-ui='image'] {
   display: block;
   border-radius: var(--lightbox-radius);
@@ -529,6 +551,8 @@
     backdrop-filter: blur(4px);
   }
 
+
+
   // The glyph inherits the button's colour via stroke="currentColor", so the
   // hover recolour below reaches it too.
   svg {
@@ -536,12 +560,16 @@
     block-size: var(--lightbox-icon-size);
   }
 
+
+
   // The disc deepens rather than brightening: over a light photograph a
   // brightening overlay walks towards the picture instead of away from it,
   // and the hover state would be the moment the control disappears.
   &:hover {
     background-color: var(--lightbox-control-bg-color-hover);
   }
+
+
 
   // An end of a non-looping gallery. The control keeps its place, its name
   // and its tab stop — only the pointer and the colour say that pressing it
@@ -617,6 +645,8 @@
     opacity: 0;
   }
 
+
+
   [data-lightbox-ui='stage']::after {
     content: '';
 
@@ -680,9 +710,11 @@ body.is-scrollLocked {
   [data-lightbox-ui='next'] {
     transition-duration: 0.01ms !important;
   }
+  .m-lightbox {
 
-  .m-lightbox__link:hover .m-lightbox__thumb {
-    scale: 1;
+    &__link:hover &__thumb {
+      scale: 1;
+    }
   }
 
   [data-lightbox-ui='viewer'].is-loading [data-lightbox-ui='stage']::after {

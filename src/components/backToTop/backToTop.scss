@@ -156,10 +156,14 @@
       background-color var(--backToTop-duration) var(--backToTop-ease);
   }
 
+
+
   &:hover {
     border-color: var(--backToTop-border-color-hover);
     background-color: var(--backToTop-bg-color-hover);
   }
+
+
 
   // State written by the script while the page is scrolled less than the
   // threshold — everything about "not on screen" keys off this attribute.
@@ -198,32 +202,34 @@
   @media (prefers-reduced-motion: reduce) {
     transition: none;
   }
-}
 
 
 
-// Decorative glyph (aria-hidden in the markup): the label carries the
-// accessible name. Sized in em, so it follows the control's font size.
-.m-backToTop__icon {
-  flex-shrink: 0;
-  inline-size: var(--backToTop-icon-size);
-  block-size: var(--backToTop-icon-size);
-}
+  // Decorative glyph (aria-hidden in the markup): the label carries the
+  // accessible name. Sized in em, so it follows the control's font size.
+  &__icon {
+    flex-shrink: 0;
+    inline-size: var(--backToTop-icon-size);
+    block-size: var(--backToTop-icon-size);
+  }
 
 
 
-// Icon-only variant. The padding becomes symmetric, which turns the pill
-// into a circle around the glyph; the label is hidden visually but keeps
-// naming the control.
-.m-backToTop--iconOnly {
-  --backToTop-padding: var(--space-xs);
-}
+  // Icon-only variant. The padding becomes symmetric, which turns the pill
+  // into a circle around the glyph; the label is hidden visually but keeps
+  // naming the control.
+  &--iconOnly {
+    --backToTop-padding: var(--space-xs);
+  }
 
-// Visually only: the label stays in the accessibility tree, so the control
-// keeps its accessible name. The narrow-viewport rule further down does the
-// same thing for a different reason.
-.m-backToTop--iconOnly .m-backToTop__label {
-  @include visually-hidden;
+
+
+  // Visually only: the label stays in the accessibility tree, so the control
+  // keeps its accessible name. The narrow-viewport rule further down does the
+  // same thing for a different reason.
+  &--iconOnly &__label {
+    @include visually-hidden;
+  }
 }
 
 
@@ -245,10 +251,12 @@
 
   .m-backToTop {
     --backToTop-padding: var(--space-xs);
-  }
 
-  .m-backToTop .m-backToTop__label {
-    @include visually-hidden;
+
+
+    & &__label {
+      @include visually-hidden;
+    }
   }
 }
 

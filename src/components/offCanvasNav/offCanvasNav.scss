@@ -185,12 +185,14 @@
   // transparent block that inherits the page's colours.
   color: inherit;
   background-color: transparent;
+  .m-offCanvasNav {
 
-  // The drawer's chrome belongs to the drawer: in the flow the title would
-  // be a stray heading above the navigation, and the close control a control
-  // with nothing to close.
-  .m-offCanvasNav__header {
-    display: none;
+    // The drawer's chrome belongs to the drawer: in the flow the title would
+    // be a stray heading above the navigation, and the close control a control
+    // with nothing to close.
+    &__header {
+      display: none;
+    }
   }
 }
 
@@ -234,45 +236,47 @@
   &:not([open]) {
     display: none;
   }
+  .m-offCanvasNav {
 
-  // ----- the panel: the visible drawer -----
-  //
-  // Closed, the panel rests one panel width outside its own edge; opening
-  // moves it in to 0. That is done with a *logical* inset and not with a
-  // translate, because there is no logical translate: a physical translateX
-  // would send the panel across the viewport instead of out of its own edge
-  // as soon as the writing direction is right-to-left, and :dir() cannot
-  // stand in for it either (the build lowers it to a language list for older
-  // engines, which does not see dir="rtl" at all). Which of the two insets
-  // carries the offset is the only thing the side decides, so both sides read
-  // the same property and opening stays one rule.
-  //
-  // This rule carries the *entrance* timing: it is the one in effect while
-  // [open] is being added, and a transition takes its timing from the state
-  // it animates to.
-  .m-offCanvasNav__panel {
-    --offCanvasNav-panel-offset: calc(var(--offCanvasNav-inline-size) * -1);
+    // ----- the panel: the visible drawer -----
+    //
+    // Closed, the panel rests one panel width outside its own edge; opening
+    // moves it in to 0. That is done with a *logical* inset and not with a
+    // translate, because there is no logical translate: a physical translateX
+    // would send the panel across the viewport instead of out of its own edge
+    // as soon as the writing direction is right-to-left, and :dir() cannot
+    // stand in for it either (the build lowers it to a language list for older
+    // engines, which does not see dir="rtl" at all). Which of the two insets
+    // carries the offset is the only thing the side decides, so both sides read
+    // the same property and opening stays one rule.
+    //
+    // This rule carries the *entrance* timing: it is the one in effect while
+    // [open] is being added, and a transition takes its timing from the state
+    // it animates to.
+    &__panel {
+      --offCanvasNav-panel-offset: calc(var(--offCanvasNav-inline-size) * -1);
 
-    position: absolute;
-    inset-block: 0;
-    inset-inline: var(--offCanvasNav-panel-offset) auto;
+      position: absolute;
+      inset-block: 0;
+      inset-inline: var(--offCanvasNav-panel-offset) auto;
 
-    padding: var(--offCanvasNav-padding);
-    inline-size: var(--offCanvasNav-inline-size);
-    max-inline-size: 100%;
+      padding: var(--offCanvasNav-padding);
+      inline-size: var(--offCanvasNav-inline-size);
+      max-inline-size: 100%;
 
-    // Only the body scrolls (see below), so the title and the close control
-    // stay put while a long menu is scrolled. "clip" for the same reason as
-    // on the dialog above: this box is never meant to scroll, and a scroll
-    // container nobody scrolls on purpose is one the browser scrolls for you.
-    overflow: clip;
+      // Only the body scrolls (see below), so the title and the close control
+      // stay put while a long menu is scrolled. "clip" for the same reason as
+      // on the dialog above: this box is never meant to scroll, and a scroll
+      // container nobody scrolls on purpose is one the browser scrolls for you.
+      overflow: clip;
 
-    background-color: var(--offCanvasNav-bg-color);
-    box-shadow: var(--offCanvasNav-shadow);
+      background-color: var(--offCanvasNav-bg-color);
+      box-shadow: var(--offCanvasNav-shadow);
 
-    transition:
-      inset-inline-start var(--offCanvasNav-duration) var(--offCanvasNav-easing),
-      inset-inline-end var(--offCanvasNav-duration) var(--offCanvasNav-easing);
+      transition:
+        inset-inline-start var(--offCanvasNav-duration) var(--offCanvasNav-easing),
+        inset-inline-end var(--offCanvasNav-duration) var(--offCanvasNav-easing);
+    }
   }
 
   &[data-offcanvasnav-side='end'] .m-offCanvasNav__panel {
@@ -302,9 +306,11 @@
   // data-offcanvasnav-side; the other three sit on the viewport edge, where
   // they cost nothing.
   @media (forced-colors: active) {
+    .m-offCanvasNav {
 
-    .m-offCanvasNav__panel {
-      border: 1px solid CanvasText;
+      &__panel {
+        border: 1px solid CanvasText;
+      }
     }
   }
 
@@ -331,41 +337,44 @@
       inset-inline-end var(--offCanvasNav-duration-exit)
       var(--offCanvasNav-easing-exit);
   }
+  .m-offCanvasNav {
+
+    // ----- the drawer's own chrome -----
+    &__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--offCanvasNav-gap);
+    }
 
 
-  // ----- the drawer's own chrome -----
-  .m-offCanvasNav__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--offCanvasNav-gap);
-  }
 
-  .m-offCanvasNav__body {
-    flex: 1 1 auto;
-    min-block-size: 0;
+    &__body {
+      flex: 1 1 auto;
+      min-block-size: 0;
 
-    // "overflow-y: auto" below makes this a scroll container, and a scroll
-    // container clips on *both* axes, at its padding box. The navigation
-    // links inside fill its full inline size, so their focus ring — drawn
-    // outside the link's own box — was cut away on the left and the right
-    // entirely, and on the first item at the top as well. So the box is
-    // inset by exactly the ring's outset and that inset is handed straight
-    // back as a negative margin: the content stays where it was to the pixel,
-    // and the ring has somewhere to sit. There is room for it because the
-    // panel's padding and the gap above are both wider than the ring.
-    margin: calc(var(--offCanvasNav-ringSpace) * -1);
-    padding: var(--offCanvasNav-ringSpace);
+      // "overflow-y: auto" below makes this a scroll container, and a scroll
+      // container clips on *both* axes, at its padding box. The navigation
+      // links inside fill its full inline size, so their focus ring — drawn
+      // outside the link's own box — was cut away on the left and the right
+      // entirely, and on the first item at the top as well. So the box is
+      // inset by exactly the ring's outset and that inset is handed straight
+      // back as a negative margin: the content stays where it was to the pixel,
+      // and the ring has somewhere to sit. There is room for it because the
+      // panel's padding and the gap above are both wider than the ring.
+      margin: calc(var(--offCanvasNav-ringSpace) * -1);
+      padding: var(--offCanvasNav-ringSpace);
 
-    overflow-y: auto;
+      overflow-y: auto;
 
-    // Same reason, for a ring that has been scrolled to the very edge of the
-    // container: scrolling stops that much short of the content's end.
-    scroll-padding: var(--offCanvasNav-ringSpace);
+      // Same reason, for a ring that has been scrolled to the very edge of the
+      // container: scrolling stops that much short of the content's end.
+      scroll-padding: var(--offCanvasNav-ringSpace);
 
-    // Reaching the end of the menu must not start scrolling the page behind
-    // the drawer.
-    overscroll-behavior: contain;
+      // Reaching the end of the menu must not start scrolling the page behind
+      // the drawer.
+      overscroll-behavior: contain;
+    }
   }
 
 
@@ -413,153 +422,154 @@
 
   // The default: the navigation is part of the page (see the mixin).
   @include flowRendering;
-}
 
 
 
-// The drawer, once the script has taken over — below the navigation
-// breakpoint, where the page has no room for the full navigation.
-.m-offCanvasNav[data-offcanvasnav-ready] {
-
-  @include vp-nav-collapsed {
-    @include drawerRendering;
-  }
-}
-
-
-
-// Opted in with data-offcanvasnav-always: the drawer is the navigation at
-// every viewport width. Higher specificity than the block above, so its
-// rules also win where that one does not apply.
-.m-offCanvasNav[data-offcanvasnav-ready][data-offcanvasnav-always] {
-  @include drawerRendering;
-}
-
-
-
-// -------------------------------------------------------------
-// The pre-enhancement state (see
-// _shared/scss/_progressiveEnhancement.scss).
-//
-// The two blocks above are the drawer once the module is live. Before it
-// is — and boot.js needs two round trips to get there, one for itself and
-// one for this component's chunk — the flow rendering is what paints, so a
-// narrow viewport opens every page with the full navigation expanded down
-// the screen and then folds it into a burger. That is the flash, and it is
-// the whole menu.
-//
-// Scoped to the same two conditions as the drawer, and both matter. Below
-// the navigation breakpoint only: above it the flow rendering is not a
-// transitional state at all, it is the final one, and hiding the
-// navigation there would blank the site header on every load. And with
-// data-offcanvasnav-always the drawer is the navigation at every width, so
-// the pre-state has to follow it up there.
-//
-// ":not(:target)" is what makes hiding the navigation survivable. The
-// burger is authored as a link to the drawer's id, so if this component's
-// chunk never arrives, following it still makes the <dialog> the URL
-// fragment's target — and a target is exempt here, so the navigation
-// simply appears as the block of the page it is without any script. The
-// menu can therefore never end up both hidden and unreachable, which is
-// the one thing a pre-enhancement state must not do.
-//
-// "[id]" is the other half of that guarantee, and it is not defensive
-// styling for its own sake: a fragment can only ever target an element
-// that has an id, so without one the escape hatch above does not exist.
-// It happens to be the module's only bail-out too — offCanvasNav.js gives
-// up on a <dialog> with no id, because no trigger can address it either,
-// and leaves the navigation in the page as a plain block. Requiring the id
-// here makes this rule apply in exactly the cases where the module can
-// succeed AND where a failure stays recoverable.
-// -------------------------------------------------------------
-.m-offCanvasNav[id] {
-
-  @include pre-enhancement("data-offcanvasnav-ready") {
+  // The drawer, once the script has taken over — below the navigation
+  // breakpoint, where the page has no room for the full navigation.
+  &[data-offcanvasnav-ready] {
 
     @include vp-nav-collapsed {
+      @include drawerRendering;
+    }
+  }
+
+
+
+  // Opted in with data-offcanvasnav-always: the drawer is the navigation at
+  // every viewport width. Higher specificity than the block above, so its
+  // rules also win where that one does not apply.
+  &[data-offcanvasnav-ready][data-offcanvasnav-always] {
+    @include drawerRendering;
+  }
+
+
+
+  // -------------------------------------------------------------
+  // The pre-enhancement state (see
+  // _shared/scss/_progressiveEnhancement.scss).
+  //
+  // The two blocks above are the drawer once the module is live. Before it
+  // is — and boot.js needs two round trips to get there, one for itself and
+  // one for this component's chunk — the flow rendering is what paints, so a
+  // narrow viewport opens every page with the full navigation expanded down
+  // the screen and then folds it into a burger. That is the flash, and it is
+  // the whole menu.
+  //
+  // Scoped to the same two conditions as the drawer, and both matter. Below
+  // the navigation breakpoint only: above it the flow rendering is not a
+  // transitional state at all, it is the final one, and hiding the
+  // navigation there would blank the site header on every load. And with
+  // data-offcanvasnav-always the drawer is the navigation at every width, so
+  // the pre-state has to follow it up there.
+  //
+  // ":not(:target)" is what makes hiding the navigation survivable. The
+  // burger is authored as a link to the drawer's id, so if this component's
+  // chunk never arrives, following it still makes the <dialog> the URL
+  // fragment's target — and a target is exempt here, so the navigation
+  // simply appears as the block of the page it is without any script. The
+  // menu can therefore never end up both hidden and unreachable, which is
+  // the one thing a pre-enhancement state must not do.
+  //
+  // "[id]" is the other half of that guarantee, and it is not defensive
+  // styling for its own sake: a fragment can only ever target an element
+  // that has an id, so without one the escape hatch above does not exist.
+  // It happens to be the module's only bail-out too — offCanvasNav.js gives
+  // up on a <dialog> with no id, because no trigger can address it either,
+  // and leaves the navigation in the page as a plain block. Requiring the id
+  // here makes this rule apply in exactly the cases where the module can
+  // succeed AND where a failure stays recoverable.
+  // -------------------------------------------------------------
+  &[id] {
+
+    @include pre-enhancement("data-offcanvasnav-ready") {
+
+      @include vp-nav-collapsed {
+
+        &:not(:target) {
+          display: none;
+        }
+      }
+    }
+  }
+
+
+
+  &[id][data-offcanvasnav-always] {
+
+    @include pre-enhancement("data-offcanvasnav-ready") {
 
       &:not(:target) {
         display: none;
       }
     }
   }
-}
-
-
-.m-offCanvasNav[id][data-offcanvasnav-always] {
-
-  @include pre-enhancement("data-offcanvasnav-ready") {
-
-    &:not(:target) {
-      display: none;
-    }
-  }
-}
 
 
 
-// -------------------------------------------------------------
-// Panel contents. Shared by both renderings; whatever is specific
-// to the drawer lives in the mixin above.
-// -------------------------------------------------------------
-.m-offCanvasNav__panel {
-  display: flex;
-  flex-direction: column;
-  gap: var(--offCanvasNav-gap);
-}
-
-
-
-.m-offCanvasNav__title {
-  margin: 0;
-
-  font-size: 1.125rem;
-  font-weight: 600;
-  line-height: 1.3;
-
-  color: var(--offCanvasNav-text-color);
-}
-
-
-
-// Close affordance in the drawer header. A real <button> so it is focusable
-// and operable by keyboard and AT out of the box.
-.m-offCanvasNav__close {
-
-  // The drawer is a dark elevated surface -> the light (bright) ring.
-  @include focus-ring(light);
-
-  & {
-    flex-shrink: 0;
-
-    cursor: pointer;
-
-    border: 1px solid transparent;
-    border-radius: var(--offCanvasNav-radius);
-    padding: 0;
-    inline-size: var(--offCanvasNav-close-size);
-    block-size: var(--offCanvasNav-close-size);
-
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    line-height: 1;
-
-    color: var(--offCanvasNav-muted-color);
-    background-color: transparent;
+  // -------------------------------------------------------------
+  // Panel contents. Shared by both renderings; whatever is specific
+  // to the drawer lives in the mixin above.
+  // -------------------------------------------------------------
+  &__panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--offCanvasNav-gap);
   }
 
-  // The inline "×" icon inherits the button's colour via
-  // stroke="currentColor", so the hover recolour applies to the glyph too.
-  svg {
-    inline-size: var(--offCanvasNav-close-icon-size);
-    block-size: var(--offCanvasNav-close-icon-size);
-  }
 
-  &:hover {
+
+  &__title {
+    margin: 0;
+
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.3;
+
     color: var(--offCanvasNav-text-color);
-    border-color: var(--offCanvasNav-border-color);
+  }
+
+
+
+  // Close affordance in the drawer header. A real <button> so it is focusable
+  // and operable by keyboard and AT out of the box.
+  &__close {
+
+    // The drawer is a dark elevated surface -> the light (bright) ring.
+    @include focus-ring(light);
+
+    & {
+      flex-shrink: 0;
+
+      cursor: pointer;
+
+      border: 1px solid transparent;
+      border-radius: var(--offCanvasNav-radius);
+      padding: 0;
+      inline-size: var(--offCanvasNav-close-size);
+      block-size: var(--offCanvasNav-close-size);
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      line-height: 1;
+
+      color: var(--offCanvasNav-muted-color);
+      background-color: transparent;
+    }
+
+    // The inline "×" icon inherits the button's colour via
+    // stroke="currentColor", so the hover recolour applies to the glyph too.
+    svg {
+      inline-size: var(--offCanvasNav-close-icon-size);
+      block-size: var(--offCanvasNav-close-icon-size);
+    }
+
+    &:hover {
+      color: var(--offCanvasNav-text-color);
+      border-color: var(--offCanvasNav-border-color);
+    }
   }
 }
 
@@ -602,6 +612,8 @@
     background-color: transparent;
   }
 
+
+
   &:hover {
     background-color: var(--offCanvasNavToggle-bg-color-hover);
   }
@@ -631,65 +643,68 @@
 
 
 
-// The three bars: the element itself is the middle one, its pseudo-elements
-// the outer two. Purely decorative — the control is named by its label (or,
-// in the icon-only variant, by that label kept for AT only).
-.m-offCanvasNavToggle__burger {
-  position: relative;
-  flex-shrink: 0;
+.m-offCanvasNavToggle {
 
-  inline-size: var(--offCanvasNavToggle-bar-inline);
-  block-size: var(--offCanvasNavToggle-bar-block);
+  // The three bars: the element itself is the middle one, its pseudo-elements
+  // the outer two. Purely decorative — the control is named by its label (or,
+  // in the icon-only variant, by that label kept for AT only).
+  &__burger {
+    position: relative;
+    flex-shrink: 0;
 
-  background-color: currentColor;
-  transition:
-    background-color var(--offCanvasNavToggle-duration)
-    var(--offCanvasNavToggle-easing);
-
-  &::before,
-  &::after {
-    position: absolute;
-    inset-block-start: 0;
-    inset-inline: 0;
-
+    inline-size: var(--offCanvasNavToggle-bar-inline);
     block-size: var(--offCanvasNavToggle-bar-block);
-
-    content: "";
 
     background-color: currentColor;
     transition:
-      translate var(--offCanvasNavToggle-duration)
-      var(--offCanvasNavToggle-easing),
-      rotate var(--offCanvasNavToggle-duration)
+      background-color var(--offCanvasNavToggle-duration)
       var(--offCanvasNavToggle-easing);
+
+    &::before,
+    &::after {
+      position: absolute;
+      inset-block-start: 0;
+      inset-inline: 0;
+
+      block-size: var(--offCanvasNavToggle-bar-block);
+
+      content: "";
+
+      background-color: currentColor;
+      transition:
+        translate var(--offCanvasNavToggle-duration)
+        var(--offCanvasNavToggle-easing),
+        rotate var(--offCanvasNavToggle-duration)
+        var(--offCanvasNavToggle-easing);
+    }
+
+    &::before {
+      translate: 0 calc(var(--offCanvasNavToggle-bar-gap) * -1);
+    }
+
+    &::after {
+      translate: 0 var(--offCanvasNavToggle-bar-gap);
+    }
   }
 
-  &::before {
-    translate: 0 calc(var(--offCanvasNavToggle-bar-gap) * -1);
-  }
-
-  &::after {
-    translate: 0 var(--offCanvasNavToggle-bar-gap);
-  }
-}
 
 
+  // Open: the outer bars meet in the middle and cross, the middle one fades
+  // out from under them. The script clears the attribute as soon as the
+  // drawer starts leaving, so the cross unfolds while the panel slides out
+  // instead of snapping back afterwards.
+  &[data-offcanvasnav-open] &__burger {
+    background-color: transparent;
 
-// Open: the outer bars meet in the middle and cross, the middle one fades
-// out from under them. The script clears the attribute as soon as the
-// drawer starts leaving, so the cross unfolds while the panel slides out
-// instead of snapping back afterwards.
-.m-offCanvasNavToggle[data-offcanvasnav-open] .m-offCanvasNavToggle__burger {
-  background-color: transparent;
+    &::before {
+      translate: 0 0;
+      rotate: 45deg;
+    }
 
-  &::before {
-    translate: 0 0;
-    rotate: 45deg;
-  }
-
-  &::after {
-    translate: 0 0;
-    rotate: -45deg;
+    &::after {
+      translate: 0 0;
+      rotate: -45deg;
+    }
   }
 }
 
@@ -702,26 +717,31 @@
 // CanvasText is the system's own foreground colour, so the bars come back in
 // the user's chosen palette instead of ours.
 @media (forced-colors: active) {
+  .m-offCanvasNavToggle {
 
-  .m-offCanvasNavToggle__burger {
+    &__burger {
 
-    &,
-    &::before,
-    &::after {
-      background-color: CanvasText;
+      &,
+      &::before,
+      &::after {
+        background-color: CanvasText;
+      }
     }
   }
 }
 
 
 
-// Icon-only burger: the label stays in the markup as the control's
-// accessible name and is only taken out of the visual layout.
-.m-offCanvasNavToggle--iconOnly {
-  padding: var(--offCanvasNavToggle-padding-block);
+.m-offCanvasNavToggle {
 
-  .m-offCanvasNavToggle__label {
-    @include visually-hidden;
+  // Icon-only burger: the label stays in the markup as the control's
+  // accessible name and is only taken out of the visual layout.
+  &--iconOnly {
+    padding: var(--offCanvasNavToggle-padding-block);
+
+    .m-offCanvasNavToggle__label {
+      @include visually-hidden;
+    }
   }
 }
 

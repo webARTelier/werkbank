@@ -2,9 +2,10 @@
 // video — media-container filling + overlay controls
 // =============================================================
 //
-// Layout contract: the consuming project wraps each instance in its own
-// media container that dictates the rendered size and aspect ratio (e.g.
-// `aspect-ratio` on the wrapper). The module root fills that container
+// Layout contract (the project-wide media-sizing rule, see CLAUDE.md — this
+// component is its reference file): the consuming project wraps each instance
+// in its own media container that dictates the rendered size and aspect ratio
+// (e.g. `aspect-ratio` on the wrapper). The module root fills that container
 // and the actual media — <video>, facade poster, injected iframe — fills
 // the root with `object-fit: cover`. Note that object-fit cannot reach
 // INTO an iframe: the YouTube player letterboxes footage whose ratio
@@ -76,130 +77,136 @@
   position: relative;
   inline-size: 100%;
   block-size: 100%;
-}
 
 
 
-// The JS swaps elements in and out via the `hidden` attribute. Author
-// styles override the user-agent's `[hidden] { display: none }`, so the
-// display declarations below (e.g. on the poster) would silently defeat
-// it — restore its authority explicitly.
-.m-video [hidden] {
-  display: none;
-}
+  // The JS swaps elements in and out via the `hidden` attribute. Author
+  // styles override the user-agent's `[hidden] { display: none }`, so the
+  // display declarations below (e.g. on the poster) would silently defeat
+  // it — restore its authority explicitly.
+  & [hidden] {
+    display: none;
+  }
 
 
 
-// The media itself fills the root. object-fit crops <video> and the
-// facade poster to cover; on the iframe it is inert (see the header
-// note) but harmless.
-.m-video__video,
-.m-video__poster,
-.m-video [data-video-embed] {
-  display: block;
+  // The media itself fills the root. object-fit crops <video> and the
+  // facade poster to cover; on the iframe it is inert (see the header
+  // note) but harmless.
+  &__video,
+  &__poster,
+  & [data-video-embed] {
+    display: block;
 
-  border: 0;
-  inline-size: 100%;
-  block-size: 100%;
-
-  object-fit: cover;
-}
-
-
-
-// The play (or play/pause) overlay button. Ships `hidden` in the markup
-// and is revealed by the JS, so no dead control appears without script.
-// Centered via inset + auto margins (writing-mode safe); the ambient
-// modifier moves it into a corner below.
-.m-video__toggle {
-
-  // Sits on arbitrary footage, usually dark -> the light (bright) ring.
-  @include focus-ring(light);
-
-  & {
-    position: absolute;
-    inset: 0;
-    z-index: var(--zi-aboveBackground);
-
-    cursor: pointer;
-
-    margin: auto;
     border: 0;
-    padding: 0;
-    inline-size: var(--video-toggle-size);
-    block-size: var(--video-toggle-size);
+    inline-size: 100%;
+    block-size: 100%;
 
-    color: var(--video-toggle-color);
-    background-color: transparent;
-
-    opacity: var(--video-toggle-opacity);
-    transition: opacity var(--video-an-duration) var(--video-an-easing);
+    object-fit: cover;
   }
 
-  &:hover,
-  &:focus-visible {
-    opacity: 1;
+
+
+  // The play (or play/pause) overlay button. Ships `hidden` in the markup
+  // and is revealed by the JS, so no dead control appears without script.
+  // Centered via inset + auto margins (writing-mode safe); the ambient
+  // modifier moves it into a corner below.
+  &__toggle {
+
+    // Sits on arbitrary footage, usually dark -> the light (bright) ring.
+    @include focus-ring(light);
+
+    & {
+      position: absolute;
+      inset: 0;
+      z-index: var(--zi-aboveBackground);
+
+      cursor: pointer;
+
+      margin: auto;
+      border: 0;
+      padding: 0;
+      inline-size: var(--video-toggle-size);
+      block-size: var(--video-toggle-size);
+
+      color: var(--video-toggle-color);
+      background-color: transparent;
+
+      opacity: var(--video-toggle-opacity);
+      transition: opacity var(--video-an-duration) var(--video-an-easing);
+    }
+
+    &:hover,
+    &:focus-visible {
+      opacity: 1;
+    }
   }
-}
 
 
 
-// The icons fill the button; is-playing (written by the JS) swaps them.
-.m-video__icon {
-  display: block;
-  inline-size: 100%;
-  block-size: 100%;
-}
-
-.m-video.is-playing .m-video__icon--play {
-  display: none;
-}
-
-.m-video:not(.is-playing) .m-video__icon--pause {
-  display: none;
-}
+  // The icons fill the button; is-playing (written by the JS) swaps them.
+  &__icon {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+  }
 
 
 
-// Ambient loops keep their persistent toggle out of the footage's
-// center: pinned to the block-end/inline-end corner, smaller.
-.m-video--ambient .m-video__toggle {
-  inset: auto;
-  inset-block-end: var(--video-toggle-inset);
-  inset-inline-end: var(--video-toggle-inset);
-
-  margin: 0;
-  inline-size: var(--video-toggle-ambient-size);
-  block-size: var(--video-toggle-ambient-size);
-}
+  &.is-playing &__icon--play {
+    display: none;
+  }
 
 
 
-// Facade no-JS fallback: a plain link to YouTube, readable on top of the
-// poster. The JS hides it once the play button is functional.
-.m-video__fallback {
-  @include focus-ring(light);
+  &:not(.is-playing) &__icon--pause {
+    display: none;
+  }
 
-  & {
-    position: absolute;
-    inset-block-end: var(--video-fallback-inset);
-    inset-inline: 0;
 
-    margin-inline: auto;
-    border-radius: var(--video-fallback-radius);
-    padding: var(--video-fallback-padding);
-    inline-size: fit-content;
 
-    color: var(--video-fallback-color);
-    background-color: var(--video-scrim-color);
+  // Ambient loops keep their persistent toggle out of the footage's
+  // center: pinned to the block-end/inline-end corner, smaller.
+  &--ambient &__toggle {
+    inset: auto;
+    inset-block-end: var(--video-toggle-inset);
+    inset-inline-end: var(--video-toggle-inset);
+
+    margin: 0;
+    inline-size: var(--video-toggle-ambient-size);
+    block-size: var(--video-toggle-ambient-size);
+  }
+
+
+
+  // Facade no-JS fallback: a plain link to YouTube, readable on top of the
+  // poster. The JS hides it once the play button is functional.
+  &__fallback {
+    @include focus-ring(light);
+
+    & {
+      position: absolute;
+      inset-block-end: var(--video-fallback-inset);
+      inset-inline: 0;
+
+      margin-inline: auto;
+      border-radius: var(--video-fallback-radius);
+      padding: var(--video-fallback-padding);
+      inline-size: fit-content;
+
+      color: var(--video-fallback-color);
+      background-color: var(--video-scrim-color);
+    }
   }
 }
 
 
 
 @media (prefers-reduced-motion: reduce) {
+  .m-video {
 
-  .m-video__toggle {
-    transition: none;
+    &__toggle {
+      transition: none;
+    }
   }
 }

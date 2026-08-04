@@ -15,6 +15,8 @@ Optional attributes:
 
 Recommended structure (see `countdown.html`): wrap the unit columns in `[data-countdown-display]` › `[data-countdown-units]`, mark each unit column with `[data-countdown-unit]`, and add an empty `[data-countdown-summary]` node. This is what powers the accessibility behavior below. (The `[data-countdown-unit]` hook lets the script hide the whole seconds column under `prefers-reduced-motion` without depending on the `m-countdown__unit` style class.)
 
+Nested inside a marquee: the ticker provides an `.m-marquee__countdown` container (the nesting convention in the project `CLAUDE.md`) and lays the countdown out inline from there, by setting knobs on the countdown's root — `--countdown-direction: row`, `--countdown-align`, `--countdown-root-gap` and `--countdown-value-min-size` (a fixed measure such as `2ch` keeps every value box the same width as the digits change, so the ticker never has to re-measure and re-clone its track). `countdown.js` mirrors the live values into the marquee's inert clones on its own. See `marquee/demo.html` for the whole example.
+
 ## Accessibility (BITV / WCAG)
 - **2.2.2 Pause, Stop, Hide (A):** the auto-updating display is paused/resumed by a `<button>` that `countdown.js` injects — no author markup needed.
 - **prefers-reduced-motion:** the tick slows to once per minute and the fast-churning seconds unit is hidden, so reduced-motion users get no per-second flicker.

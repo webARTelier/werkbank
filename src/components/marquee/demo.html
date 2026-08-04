@@ -141,10 +141,25 @@
       Example 6: a countdown living inside the ticker. The countdown is a
       real module (data-js-behavior="countdown"); the marquee clones its
       track and countdown.js mirrors the live values into the (inert)
-      clones — the documented marquee↔countdown integration. countdown.min.css
-      renders the countdown as a big vertical block by default; the rules
-      below only shrink it and lay it out inline so it rides inside a
-      one-line strip. They are demo styling, not part of either component.
+      clones — the documented marquee↔countdown integration.
+
+      The nested module sits in a container the outer module provides,
+      .m-marquee__countdown (the nesting convention in CLAUDE.md), and from
+      inside it the countdown is retuned through its own knobs, set on its
+      root: a knob has to be declared on the root to win, since that is where
+      the component declares its defaults and an own declaration beats an
+      inherited one. Nothing here touches the countdown's internals.
+      countdown.min.css renders a countdown as a big vertical block by
+      default; these values only shrink it and lay it out inline so it rides
+      inside a one-line strip. They are demo styling, not part of either
+      component, which is why they live here rather than in marquee.scss.
+
+      The value floor is the one that matters for the marquee: together with
+      the countdown's tabular-nums it keeps every value box the same width
+      whether it reads "9" or "59", so the track width stays constant as the
+      seconds tick and the marquee never re-measures/re-clones on a
+      digit-count change. 2ch covers the two-digit seconds/minutes/hours; the
+      days box widens once to its own content and then stays put.
     */
     .demo__countdown .m-marquee__track {
       display: inline-flex;
@@ -152,31 +167,14 @@
       gap: var(--space-xs);
     }
 
-    .demo__countdown .m-countdown {
-      flex-direction: row;
-      align-items: baseline;
-      gap: var(--space-2xs);
-
-      --countdown-value-size: clamp(2.5rem, 8vw, 4.5rem);
-      --countdown-label-size: 0.7rem;
+    .m-marquee__countdown > .m-countdown {
+      --countdown-direction: row;
+      --countdown-align: baseline;
       --countdown-gap: var(--space-3xs);
-    }
-
-    .demo__countdown .m-countdown__toggle {
-      font-size: 0.7rem;
-    }
-
-    /*
-      Fixed-width number slots. Together with the countdown's tabular-nums
-      (set in countdown.scss) this keeps every value box the same width
-      whether it shows "9" or "59", so the track width stays constant as the
-      seconds tick and the marquee never re-measures/re-clones on a
-      digit-count change. 2ch covers the two-digit seconds/minutes/hours;
-      the days box widens once to its own content and then stays put.
-    */
-    .demo__countdown .m-countdown__value {
-      min-width: 2ch;
-      text-align: center;
+      --countdown-root-gap: var(--space-2xs);
+      --countdown-value-min-size: 2ch;
+      --countdown-label-size: 0.7rem;
+      --countdown-toggle-size: 0.7rem;
     }
   </style>
 
@@ -374,30 +372,38 @@
             <div class="m-marquee__strip" data-marquee-container>
               <div class="m-marquee__track" data-marquee-animated>
                 <span>+++ Sale ends in</span>
-                <div class="m-countdown" data-js-behavior="countdown"
-                  data-countdown-date="2027-01-01T00:00:00+01:00" data-countdown-label="the sale end">
-                  <div class="m-countdown__display" data-countdown-display>
-                    <div class="m-countdown__units" data-countdown-units>
-                      <div class="m-countdown__unit" data-countdown-unit>
-                        <span class="m-countdown__value" data-countdown-days>0</span>
-                        <span class="m-countdown__label">Days</span>
+
+                <!-- The container the outer module provides for the nested
+                     one (see the style block above): it carries the
+                     countdown's knobs, so no rule here reaches into
+                     .m-countdown*. -->
+                <div class="m-marquee__countdown">
+                  <div class="m-countdown" data-js-behavior="countdown"
+                    data-countdown-date="2027-01-01T00:00:00+01:00" data-countdown-label="the sale end">
+                    <div class="m-countdown__display" data-countdown-display>
+                      <div class="m-countdown__units" data-countdown-units>
+                        <div class="m-countdown__unit" data-countdown-unit>
+                          <span class="m-countdown__value" data-countdown-days>0</span>
+                          <span class="m-countdown__label">Days</span>
+                        </div>
+                        <div class="m-countdown__unit" data-countdown-unit>
+                          <span class="m-countdown__value" data-countdown-hours>0</span>
+                          <span class="m-countdown__label">Hours</span>
+                        </div>
+                        <div class="m-countdown__unit" data-countdown-unit>
+                          <span class="m-countdown__value" data-countdown-minutes>0</span>
+                          <span class="m-countdown__label">Minutes</span>
+                        </div>
+                        <div class="m-countdown__unit" data-countdown-unit>
+                          <span class="m-countdown__value" data-countdown-seconds>0</span>
+                          <span class="m-countdown__label">Seconds</span>
+                        </div>
                       </div>
-                      <div class="m-countdown__unit" data-countdown-unit>
-                        <span class="m-countdown__value" data-countdown-hours>0</span>
-                        <span class="m-countdown__label">Hours</span>
-                      </div>
-                      <div class="m-countdown__unit" data-countdown-unit>
-                        <span class="m-countdown__value" data-countdown-minutes>0</span>
-                        <span class="m-countdown__label">Minutes</span>
-                      </div>
-                      <div class="m-countdown__unit" data-countdown-unit>
-                        <span class="m-countdown__value" data-countdown-seconds>0</span>
-                        <span class="m-countdown__label">Seconds</span>
-                      </div>
+                      <span class="m-countdown__sr" data-countdown-summary></span>
                     </div>
-                    <span class="m-countdown__sr" data-countdown-summary></span>
                   </div>
                 </div>
+
                 <span>— don't miss it! +++</span>
               </div>
             </div>

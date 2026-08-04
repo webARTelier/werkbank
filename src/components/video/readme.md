@@ -23,6 +23,7 @@ Google before the click).
 Wrap every instance in your own **media container** — the project layout owns
 size and aspect ratio (e.g. `aspect-ratio: 16 / 9` on the wrapper). The module
 root fills that container and the media covers it with `object-fit: cover`.
+This is the project-wide media-sizing rule, not a quirk of this component.
 Caveat: `object-fit` cannot reach *into* the YouTube iframe — footage whose
 ratio differs from the container letterboxes there.
 

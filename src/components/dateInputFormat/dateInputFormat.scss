@@ -52,53 +52,53 @@
   font-family: system-ui, sans-serif;
 
   color: var(--dateField-text-color);
-}
 
 
 
-.m-dateField__label {
-  color: var(--dateField-label-color);
-  font-weight: 600;
-}
-
-
-
-// The formatted input. tabular-nums keeps every digit the same width, so the
-// value does not shift sideways as separators are inserted while typing.
-.m-dateField__control {
-
-  // Visible focus ring for keyboard users (WCAG 2.4.7). The control sits on a
-  // dark surface -> the light (bright) ring.
-  @include focus-ring(light);
-
-  & {
-    border: 1px solid var(--dateField-border-color);
-    border-radius: var(--dateField-radius);
-    padding: var(--dateField-padding-block) var(--dateField-padding-inline);
-
-    font: inherit;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: 0.02em;
-
-    color: var(--dateField-text-color);
-    background-color: var(--dateField-bg-color);
+  &__label {
+    color: var(--dateField-label-color);
+    font-weight: 600;
   }
 
-  &::placeholder {
-    color: var(--dateField-placeholder-color);
+
+
+  // The formatted input. tabular-nums keeps every digit the same width, so the
+  // value does not shift sideways as separators are inserted while typing.
+  &__control {
+
+    // Visible focus ring for keyboard users (WCAG 2.4.7). The control sits on a
+    // dark surface -> the light (bright) ring.
+    @include focus-ring(light);
+
+    & {
+      border: 1px solid var(--dateField-border-color);
+      border-radius: var(--dateField-radius);
+      padding: var(--dateField-padding-block) var(--dateField-padding-inline);
+
+      font: inherit;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.02em;
+
+      color: var(--dateField-text-color);
+      background-color: var(--dateField-bg-color);
+    }
+
+    &::placeholder {
+      color: var(--dateField-placeholder-color);
+    }
+
+    &:hover {
+      border-color: var(--dateField-border-color-hover);
+    }
   }
 
-  &:hover {
-    border-color: var(--dateField-border-color-hover);
+
+
+  // Format hint (e.g. "Format: DD.MM.YYYY"). Kept visually subordinate; wire it
+  // to the input via aria-describedby so screen-reader users hear it too.
+  &__hint {
+    font-size: var(--dateField-hint-fontSize);
+    line-height: 1.4;
+    color: var(--dateField-hint-color);
   }
-}
-
-
-
-// Format hint (e.g. "Format: DD.MM.YYYY"). Kept visually subordinate; wire it
-// to the input via aria-describedby so screen-reader users hear it too.
-.m-dateField__hint {
-  font-size: var(--dateField-hint-fontSize);
-  line-height: 1.4;
-  color: var(--dateField-hint-color);
 }

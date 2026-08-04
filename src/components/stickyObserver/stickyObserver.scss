@@ -69,6 +69,8 @@
     background-color var(--stickyBar-duration) var(--stickyBar-ease),
     box-shadow var(--stickyBar-duration) var(--stickyBar-ease);
 
+
+
   // State written by the script while the bar is pinned. Everything visual
   // about "stuck" keys off this class — restyle it to taste.
   &.is-stuck {

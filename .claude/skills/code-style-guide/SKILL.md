@@ -409,6 +409,32 @@ Prefix every class by its role:
   - pseudo-classes / pseudo-elements
   - styles that react to an `is-`/`has-` state class
   - viewport-dependent styles (media-query mixins)
+- ✅ **BEM elements and modifiers are written inside their block** as
+  `&__element` / `&--modifier`. That is selector *concatenation*, not
+  descendant nesting: it compiles to `.m-block__element`, identical selector
+  and identical specificity to the flat form — which is what BEM is for. The
+  block therefore holds its own token declarations and all of its parts:
+
+  ```scss
+  .m-block {
+    --block-gap: var(--space-s);
+
+
+
+    &__element { … }
+
+
+
+    &--modifier &__element { … }
+  }
+  ```
+
+  Every block on this level sits three blank lines below whatever precedes it —
+  see *Formatting rules*.
+
+  A selector that is *not* relative to the block (a foreign class, an
+  attribute hook on a script-injected node) stays outside it — nested, it
+  would become a descendant selector and change what it matches.
 
 ### `@extend`
 - ❌ Don't use `@extend`.
@@ -457,12 +483,78 @@ Prefix every class by its role:
 - One space after the colon in a declaration.
 - One space around operators in arithmetic.
 - **Omit units on `0` values** (`margin: 0;` not `0px`).
-- Separate pseudo-class / viewport selector blocks with **one** blank line.
 - Separate top-level declarations / rules with **three** blank lines.
+- **Every selector block on the first level inside a top-level selector gets
+  three blank lines** before it. Not just BEM elements — `&__element`,
+  `&--modifier`, `&:hover`, `&::backdrop`, `&[data-x]`, `&[data-x] &__element`,
+  `> :first-child`, a foreign descendant: they are all parts of the block in
+  their own right, the same kind of boundary a top-level rule marks, so they
+  read at the wide gap (see General › *Whitespace*). That is what makes a long
+  stylesheet's outline scannable. Where the block carries a leading comment the
+  gap goes **above the comment**: it introduces the block and belongs to it.
+- **Deeper than the first level, everything keeps one blank line** — concern
+  groups, and the pseudo-class / pseudo-element / state / media-query blocks
+  nested inside a first-level block. The wide gap marks where a part of the
+  block starts, never anything within it.
+- Three things on the first level stay at **one** blank line:
+  - **A block that is the first thing in its parent**, right after the opening
+    brace — there is nothing to separate it from, and a wide gap would only push
+    it away from the selector it belongs to. (It is the same single line a
+    leading comment gets anyway, see *Comments*.)
+  - **The `& { … }` wrapper** that holds the parent's own declarations after an
+    `@include` (see *`@include` followed by declarations*). It is the block's
+    body, not a part of it.
+  - **At-rule blocks** — `@media`, the media-query mixins, `@starting-style`.
+    They are conditions wrapped around the block, not parts of it.
+
+```scss
+.m-offCanvasNavToggle {
+
+  // First in the block — one blank line, no wide gap.
+  @include focus-ring(light);
+
+  // The block's own declarations — the wrapper stays close too.
+  & {
+    cursor: pointer;
+    display: inline-flex;
+  }
+
+
+
+  // Every part that follows opens on three, its comment included.
+  &__burger {
+    inline-size: var(--offCanvasNavToggle-bar-inline);
+
+    // Nested one level deeper: back to a single blank line.
+    &::before {
+      translate: 0 calc(var(--offCanvasNavToggle-bar-gap) * -1);
+    }
+
+    &::after {
+      translate: 0 var(--offCanvasNavToggle-bar-gap);
+    }
+  }
+
+
+
+  &[data-offcanvasnav-open] &__burger {
+    background-color: transparent;
+  }
+
+
+
+  &:hover {
+    background-color: var(--offCanvasNavToggle-bg-color-hover);
+  }
+}
+```
+
 - **Compact selectors:** when a selector holds no more than three
   `property: value` declarations, drop all blank lines inside it so the
   declarations sit directly one after another. The single exception is the
-  blank line before a leading comment (see *Comments*).
+  blank line before a leading comment (see *Comments*). This governs the space
+  *inside* a selector — the three lines before a `&__elementName` are unaffected
+  by how short that element's block is.
 
 ```scss
 .c-badge {

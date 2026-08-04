@@ -62,116 +62,116 @@
   font-family: system-ui, sans-serif;
 
   color: var(--accordion-text-color);
-}
 
 
 
-.m-accordion__item {
-  border: 1px solid var(--accordion-border-color);
-  border-radius: var(--accordion-radius);
-  overflow: hidden;
+  &__item {
+    border: 1px solid var(--accordion-border-color);
+    border-radius: var(--accordion-radius);
+    overflow: hidden;
 
-  background-color: var(--accordion-bg-color);
+    background-color: var(--accordion-bg-color);
 
-  // Visible focus ring instead of the removed default outline. The ring is
-  // placed on the item (not the trigger) so it surrounds the whole item and
-  // follows its rounded corners. An outline on the trigger would be clipped
-  // by this element's "overflow: hidden"; an element's own outline is not.
-  // Trigger sits on a dark surface -> the light (bright) tone. focus-ring-outline
-  // (not focus-ring) because the ring lives on the item, keyed off the child's
-  // :focus-visible via :has(); the 2px offset lifts it clear of the item edge.
-  &:has(> .m-accordion__trigger:focus-visible) {
-    @include focus-ring-outline(light, 2px);
-  }
-}
-
-
-
-.m-accordion__trigger {
-  cursor: pointer;
-
-  padding: var(--accordion-padding-block) var(--accordion-padding-inline);
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--accordion-trigger-gap);
-  font-weight: 600;
-
-  // remove the default marker (Firefox / modern browsers)
-  list-style: none;
-  user-select: none;
-
-  // Remove the default disclosure triangle (older WebKit/Safari).
-  // The marker is a pseudo-element of <summary>, so it belongs here.
-  &::-webkit-details-marker {
-    display: none;
+    // Visible focus ring instead of the removed default outline. The ring is
+    // placed on the item (not the trigger) so it surrounds the whole item and
+    // follows its rounded corners. An outline on the trigger would be clipped
+    // by this element's "overflow: hidden"; an element's own outline is not.
+    // Trigger sits on a dark surface -> the light (bright) tone. focus-ring-outline
+    // (not focus-ring) because the ring lives on the item, keyed off the child's
+    // :focus-visible via :has(); the 2px offset lifts it clear of the item edge.
+    &:has(> .m-accordion__trigger:focus-visible) {
+      @include focus-ring-outline(light, 2px);
+    }
   }
 
-  // Custom arrow icon instead of the native marker
-  &::after {
-    flex-shrink: 0;
 
-    border-right: 2px solid currentColor;
-    border-bottom: 2px solid currentColor;
 
-    width: var(--accordion-arrow-size);
-    height: var(--accordion-arrow-size);
+  &__trigger {
+    cursor: pointer;
 
-    content: "";
+    padding: var(--accordion-padding-block) var(--accordion-padding-inline);
 
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--accordion-trigger-gap);
+    font-weight: 600;
+
+    // remove the default marker (Firefox / modern browsers)
+    list-style: none;
+    user-select: none;
+
+    // Remove the default disclosure triangle (older WebKit/Safari).
+    // The marker is a pseudo-element of <summary>, so it belongs here.
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    // Custom arrow icon instead of the native marker
+    &::after {
+      flex-shrink: 0;
+
+      border-right: 2px solid currentColor;
+      border-bottom: 2px solid currentColor;
+
+      width: var(--accordion-arrow-size);
+      height: var(--accordion-arrow-size);
+
+      content: "";
+
+      transform: rotate(-45deg);
+      transition: transform var(--accordion-duration) var(--accordion-easing);
+    }
+
+    &:hover {
+      background-color: var(--accordion-bg-color-hover);
+    }
+
+    // The focus ring is drawn on the parent ".m-accordion__item" (see there).
+    // Suppress the native UA outline on the <summary> itself — otherwise its
+    // bottom edge shows as a stray line at the trigger/panel boundary when open.
+    &:focus-visible {
+      outline: none;
+    }
+  }
+
+
+
+  // The heading inside the <summary> carries the accessible section
+  // title (so screen-reader users can navigate the panels by heading).
+  &__title {
+    margin: 0;
+    font: inherit;
+  }
+
+
+
+  &__item[open]>&__trigger::after {
+    transform: rotate(45deg);
+  }
+
+
+
+  // During the JS-driven close 'open' stays set until the transition ends,
+  // so the arrow would only flip back once the panel is fully closed.
+  // 'data-closing' rotates it back right away, in sync with the collapse.
+  // (Higher specificity than the [open] rule above, so it wins.)
+  &__item[open][data-closing]>&__trigger::after {
     transform: rotate(-45deg);
-    transition: transform var(--accordion-duration) var(--accordion-easing);
   }
 
-  &:hover {
-    background-color: var(--accordion-bg-color-hover);
-  }
-
-  // The focus ring is drawn on the parent ".m-accordion__item" (see there).
-  // Suppress the native UA outline on the <summary> itself — otherwise its
-  // bottom edge shows as a stray line at the trigger/panel boundary when open.
-  &:focus-visible {
-    outline: none;
-  }
-}
 
 
+  &__panel {
+    padding: 0 var(--accordion-padding-inline) var(--accordion-padding-inline);
 
-// The heading inside the <summary> carries the accessible section
-// title (so screen-reader users can navigate the panels by heading).
-.m-accordion__title {
-  margin: 0;
-  font: inherit;
-}
+    p:first-child {
+      margin-block-start: 0;
+    }
 
-
-
-.m-accordion__item[open]>.m-accordion__trigger::after {
-  transform: rotate(45deg);
-}
-
-
-
-// During the JS-driven close 'open' stays set until the transition ends,
-// so the arrow would only flip back once the panel is fully closed.
-// 'data-closing' rotates it back right away, in sync with the collapse.
-// (Higher specificity than the [open] rule above, so it wins.)
-.m-accordion__item[open][data-closing]>.m-accordion__trigger::after {
-  transform: rotate(-45deg);
-}
-
-
-
-.m-accordion__panel {
-  padding: 0 var(--accordion-padding-inline) var(--accordion-padding-inline);
-
-  p:first-child {
-    margin-block-start: 0;
-  }
-
-  p:last-child {
-    margin-block-end: 0;
+    p:last-child {
+      margin-block-end: 0;
+    }
   }
 }
 
@@ -240,26 +240,29 @@
 // the browser supports the required properties.
 // -------------------------------------------------------------
 @supports (interpolate-size: allow-keywords) {
-  .m-accordion:not([data-accordion-ready]) {
-    
-    .m-accordion__item {
-      interpolate-size: allow-keywords;
+  .m-accordion {
 
-      &::details-content {
-        opacity: 0;
+    &:not([data-accordion-ready]) {
 
-        height: 0;
-        overflow: hidden;
-        
-        transition:
-          height var(--accordion-duration) var(--accordion-easing),
-          opacity var(--accordion-duration) var(--accordion-easing),
-          content-visibility var(--accordion-duration) allow-discrete;
-      }
+      .m-accordion__item {
+        interpolate-size: allow-keywords;
 
-      &[open]::details-content {
-        height: auto;
-        opacity: 1;
+        &::details-content {
+          opacity: 0;
+
+          height: 0;
+          overflow: hidden;
+
+          transition:
+            height var(--accordion-duration) var(--accordion-easing),
+            opacity var(--accordion-duration) var(--accordion-easing),
+            content-visibility var(--accordion-duration) allow-discrete;
+        }
+
+        &[open]::details-content {
+          height: auto;
+          opacity: 1;
+        }
       }
     }
   }
