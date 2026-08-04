@@ -30,15 +30,14 @@ the container.
 The shipped stylesheet uses the class to draw a hairline divider between
 row-neighbours — a sensible default and a starting point. `has-neighbor` is a
 styling hook: override or replace the rules to style a same-row relationship
-however your project needs. The optional `m-flexNeighbor` class is a convenience
+however your project needs. The class name itself is fixed, since the shipped
+SCSS keys its divider off it. The optional `m-flexNeighbor` class is a convenience
 flex container (wrap + gap + the default divider); the script does not read it,
 so you can lay the container out any way you like.
 
 ### Configuration (optional, attributes on the container)
-- `data-neighbor-tolerance` – px tolerance when grouping items into a row by
-  their top edge (absorbs sub-pixel layout). Default: `1`.
-- `data-neighbor-class` – override the marker class. Default: `has-neighbor`. The
-  SCSS keys off the default, so restyle to match if you change it.
+- `data-neighbor-container` – mark descendant flex containers to scan several
+  at once; put `data-js-behavior` on a shared wrapper.
 - `--flexNeighbor-gap`, `--flexNeighbor-divider-width`, `--flexNeighbor-divider-color`
   (CSS custom properties) – tune the default divider. Set them in your CSS or
   inline: `style="--flexNeighbor-gap: 24px"`.

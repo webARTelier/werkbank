@@ -83,6 +83,8 @@
 
 import { debounceThenExecute } from './debounce.js';
 import { resolveLocale } from './resolveLocale.js';
+import { formatTemplate } from './formatTemplate.js';
+import { addDescribedBy, removeDescribedBy } from './describedBy.js';
 
 
 
@@ -119,7 +121,7 @@ const defaults = {
 // feed the sighted counter; `*Sr` templates feed the spoken status region and
 // are deliberately natural language ("3 of 200 characters", not "3 / 200",
 // which a screen reader would read as "3 slash 200"). {placeholders} are
-// interpolated from the live field by formatLabel.
+// interpolated from the live field by formatTemplate.
 const labels = {
 
   de: {
@@ -145,17 +147,6 @@ const labels = {
 
 
 
-// Interpolates {placeholder} tokens in a template from a plain values object.
-// Unknown placeholders are left as-is so a typo stays visible, not silent.
-function formatLabel(template, tokens) {
-  if (!template) return '';
-  return String(template).replace(/\{(\w+)\}/g, (match, key) =>
-    key in tokens ? String(tokens[key]) : match
-  );
-}
-
-
-
 // Distinguishes multiple counted fields on one page so their generated
 // status-region ids never collide (a field without its own id still gets a
 // unique one).
@@ -164,6 +155,14 @@ let instanceCount = 0;
 
 
 class InputCharCount {
+
+  // Set by destroy(), read by the debounced announcement: a queued one cannot
+  // be cancelled from the outside (debounceThenExecute hands back no handle),
+  // so it has to find out for itself that there is nothing left to write —
+  // the same guard scrollSpy and backToTop carry for their debounced work.
+  destroyed = false;
+
+
 
   constructor(field, config, reporter) {
     this.field = field;
@@ -242,7 +241,7 @@ class InputCharCount {
     this.status.setAttribute('aria-live', 'polite');
 
     this.counter.after(this.status);
-    this.addDescribedBy(this.field, this.statusId);
+    addDescribedBy(this.field, this.statusId);
   };
 
 
@@ -276,7 +275,7 @@ class InputCharCount {
     const tokens = this.tokens();
 
     const template = this.textOverride || this.visibleTemplate();
-    this.counter.textContent = formatLabel(template, tokens);
+    this.counter.textContent = formatTemplate(template, tokens);
 
     // At-limit is meaningful only when there is a limit. Toggle it on the
     // field so the project can style the field and/or its sibling counter.
@@ -292,14 +291,16 @@ class InputCharCount {
   // Writes the spoken status text. At the limit we say so explicitly, so a
   // screen-reader user learns the field will accept no more input.
   renderSr = () => {
+    if (this.destroyed) return;
+
     const tokens = this.tokens();
 
     if (this.max && tokens.count >= this.max) {
-      this.status.textContent = formatLabel(this.labels.atLimitSr, tokens);
+      this.status.textContent = formatTemplate(this.labels.atLimitSr, tokens);
       return;
     }
 
-    this.status.textContent = formatLabel(this.srTemplate(), tokens);
+    this.status.textContent = formatTemplate(this.srTemplate(), tokens);
   };
 
 
@@ -318,15 +319,24 @@ class InputCharCount {
 
 
 
-  // --- aria-describedby token helper (preserves any author-set ids) --------
+  // Optional teardown for hosts that mount/unmount this subtree repeatedly
+  // instead of doing a full page (re)load — see destroyModulesInScope() in
+  // boot.js. The input listener sits on the field and would die with it, but
+  // the two nodes this module injects are the field's SIBLINGS: a host that
+  // keeps the field and initialises it again would end up with a second
+  // counter and, worse, a second status region announcing the same count. The
+  // link to it and the state class go too, so the field is handed back exactly
+  // as it was authored.
+  destroy = () => {
+    this.destroyed = true;
 
-  addDescribedBy = (field, id) => {
-    const tokens = (field.getAttribute('aria-describedby') || '')
-      .split(/\s+/)
-      .filter(Boolean);
+    this.field.removeEventListener('input', this.handleInput);
 
-    if (!tokens.includes(id)) tokens.push(id);
-    field.setAttribute('aria-describedby', tokens.join(' '));
+    removeDescribedBy(this.field, this.statusId);
+    this.field.classList.remove(this.config.atLimitClass);
+
+    this.counter?.remove();
+    this.status?.remove();
   };
 }
 
@@ -348,5 +358,6 @@ export function init(el, services = {}) {
 
   // Double-init is prevented by the loader (boot.js sets a per-element,
   // per-module flag before calling init), so no extra guard is needed here.
-  new InputCharCount(el, defaults, reporter);
+  const instance = new InputCharCount(el, defaults, reporter);
+  return instance.destroy;
 }

@@ -56,9 +56,8 @@
   // Divider between an item and its same-row neighbour. Drawn as an absolutely
   // positioned pseudo-element centred in the gutter: it adds NO box size, so it
   // never changes how items wrap and cannot feed back into the script's
-  // ResizeObserver. Logical properties keep it correct under RTL / vertical
-  // writing modes. Only items the script marked as having a following neighbour
-  // in the same row get one — a row's last item stays clean.
+  // ResizeObserver. Only items the script marked as having a following
+  // neighbour in the same row get one — a row's last item stays clean.
   > .has-neighbor::after {
     position: absolute;
     pointer-events: none;
@@ -67,8 +66,8 @@
     inline-size: var(--flexNeighbor-divider-width);
 
     // Centre the stroke in the gutter: push it half a gap past the item's
-    // inline-end edge, then back off half its own width. Logical inset only, so
-    // it flips correctly under RTL / vertical writing modes — no transform.
+    // inline-end edge, then back off half its own width — an inset rather than
+    // a transform, so the stroke stays out of the compositor's way.
     inset-inline-end: calc(-0.5 * (var(--flexNeighbor-gap) + var(--flexNeighbor-divider-width)));
 
     content: "";

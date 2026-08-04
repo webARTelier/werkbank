@@ -10,7 +10,7 @@ as it is fixed.
 - `formValidation.html` – markup
 - `formValidation.scss` – styles (source; compiled to `dist/css/formValidation.min.css` — validation-state styles only, see *Styling* below)
 - `formValidation.js` – behavior
-- `src/_shared/js/resolveLocale.js` – bundled utility (imported by the module; the build already bundles it into the component's chunk, only relevant if you paste the source into a plain project)
+- `src/_shared/js/resolveLocale.js`, `src/_shared/js/formatTemplate.js`, `src/_shared/js/describedBy.js` – bundled utilities (imported by the module; the build resolves them from `_shared/js`, only relevant if you paste the source into a plain project)
 - `src/_shared/media/img/system/chevronDown.svg` – source glyph for the select chevron (embedded as a mask, see *Styling*)
 - `src/_shared/media/img/system/warning.svg` – source glyph for the invalid-field icon (embedded as a mask, see *Styling*)
 

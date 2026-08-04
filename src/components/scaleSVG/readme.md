@@ -38,11 +38,15 @@ See `scaleSVG.html` for a ready-to-copy snippet.
 `<img src="….svg">` (a bare `data-scale` — natural size — works here too)
 first inlines the file
 ([`inlineSVG`](../inlineSVG/readme.md) carries `data-scale` over onto the
-`<svg>`) and then sizes the result from its viewBox. The order of operations
-is handled for you: conversions that finished before scaleSVG ran are picked
-up, and pending ones are watched with a `MutationObserver` — for up to 5
-seconds, since a source whose fetch fails never converts and the observer must
-not run forever.
+`<svg>`) and then sizes the result from its viewBox. The order of operations is
+handled for you: `boot.js` runs the modules on one element in the order the
+attribute lists them and awaits each, so the conversion has finished before
+scaleSVG looks.
+
+Put both on the **same** element. Wiring them apart — `inlineSVG` on the images,
+`scaleSVG` on an ancestor — races the two, and an `<img data-scale>` left over
+after the sweep is reported rather than waited for: `data-scale` on an `<img>`
+sizes nothing.
 
 ### Without JavaScript
 Nothing breaks — the SVG renders exactly as the markup says. Note that an

@@ -34,13 +34,14 @@
  * 2. Idempotence: a sized SVG is marked with the is-scaled state class and
  *    each candidate is examined at most once, so repeated passes over the
  *    same scope (re-scans, observer runs) are safe and stay silent.
- * 3. Cooperation with inlineSVG: an <img data-scale> that is still waiting
- *    to be swapped for an inline <svg> is watched with a MutationObserver
- *    (bounded by observeForMs) and the replacement is sized the moment it
- *    appears. When boot hands the module an <img> that inlineSVG has
- *    already replaced — the chained data-js-behavior="inlineSVG,scaleSVG"
- *    wiring — the not-yet-sized candidates are picked up document-wide
- *    instead (see init).
+ * 3. Cooperation with inlineSVG: chain the two on one element
+ *    (data-js-behavior="inlineSVG,scaleSVG") and boot awaits the conversion
+ *    before calling this module, so the sweep finds real <svg> nodes. When
+ *    that element is the <img> itself, inlineSVG has replaced it by then and
+ *    the replacement is unreachable from the detached node — so the
+ *    not-yet-sized candidates are picked up document-wide instead (see init).
+ *    An <img data-scale> left unconverted in the scope is reported, since
+ *    data-scale on an <img> sizes nothing.
  *
  * Accessibility
  * -------------
@@ -76,11 +77,6 @@ const defaults = {
   // Scale factor used when data-scale carries no usable value: the SVG's
   // natural viewBox size.
   fallbackScale: 1,
-
-  // How long the MutationObserver waits for pending <img> -> <svg>
-  // conversions before giving up — a source may never convert at all
-  // (e.g. its fetch fails and inlineSVG leaves the <img> in place).
-  observeForMs: 5000,
 };
 
 
@@ -170,54 +166,29 @@ function scaleInScope(scope, reporter) {
 
 
 
-// Collects the <img data-scale> sources in the scope that still await
-// their inline conversion.
-function collectPendingSources(el) {
-  const pending = new Set(el.querySelectorAll(defaults.sourceSelector));
-  if (el.matches(defaults.sourceSelector)) pending.add(el);
-  return pending;
-}
+// An <img data-scale> still sitting in the scope after the sweep is a source
+// nothing converted into an inline <svg>, so there is nothing here for this
+// module to size — data-scale on an <img> does not resize the image.
+//
+// Chaining the two modules on the same element is what gets this right: boot
+// awaits inlineSVG before calling this one, so every conversion has already
+// happened by the time the sweep runs. This used to be a MutationObserver
+// waiting up to five seconds for swaps to appear, which only ever mattered for
+// the reverse wiring (inlineSVG on the images, scaleSVG on an ancestor) — one
+// no snippet and no demo uses. Naming the fix beats waiting for it.
+function reportPendingSources(el, reporter) {
+  const pending = el.querySelectorAll(defaults.sourceSelector).length
+    + (el.matches(defaults.sourceSelector) ? 1 : 0);
+  if (!pending) return;
 
-
-
-// Sizes the candidates among the nodes the mutations added — only the
-// added nodes, so an unusable SVG already reported at init is not touched
-// again on every later mutation.
-function scaleAddedNodes(records, reporter) {
-  records.forEach((record) => {
-    record.addedNodes.forEach((node) => {
-      if (node instanceof Element) scaleInScope(node, reporter);
-    });
-  });
-}
-
-
-
-// Watches until every pending <img> source has been swapped for its inline
-// <svg> (each swap is a childList mutation), sizing replacements as they
-// appear. When el is itself a pending <img>, the swap happens in its
-// parent, so that is what must be observed. The observer is torn down as
-// soon as no source is left — and after observeForMs at the latest, since
-// a source may never convert.
-function observeConversions(el, pending, reporter) {
-  const watchRoot = el.matches(defaults.sourceSelector)
-    ? el.parentElement
-    : el;
-  if (!watchRoot) return;
-
-  const observer = new MutationObserver((records) => {
-    scaleAddedNodes(records, reporter);
-
-    pending.forEach((img) => {
-      if (!img.isConnected) pending.delete(img);
-    });
-    if (!pending.size) observer.disconnect();
-  });
-
-  observer.observe(watchRoot, { childList: true, subtree: true });
-
-  // Disconnecting twice is a no-op, so the timer needs no bookkeeping.
-  setTimeout(() => observer.disconnect(), defaults.observeForMs);
+  reporter?.report(
+    'scaleSVG',
+    `${pending} <img ${defaults.sourceSelector}> left in this scope: only an `
+      + 'inline <svg> can be sized from its viewBox. Put both modules on the '
+      + 'same element (data-js-behavior="inlineSVG,scaleSVG") so the '
+      + 'conversion has happened before this one runs.',
+    el
+  );
 }
 
 
@@ -252,8 +223,5 @@ export function init(el, services = {}) {
   // here.
   scaleInScope(el, reporter);
 
-  const pending = collectPendingSources(el);
-  if (!pending.size) return;
-
-  observeConversions(el, pending, reporter);
+  reportPendingSources(el, reporter);
 }

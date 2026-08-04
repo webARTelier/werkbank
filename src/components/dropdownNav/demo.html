@@ -400,89 +400,7 @@
       </div>
 
 
-      <!-- 3) Right-to-left: the same component, mirrored by the platform -->
-      <div class="demoExample demoStack">
-        <h2>Right-to-left</h2>
-
-        <p class="stage__intro">
-          Nothing here is a second implementation: the stylesheet uses
-          logical properties throughout, so <code>dir="rtl"</code> mirrors
-          the bar, the flyouts and the chevrons on its own. The one place
-          the script has to care is the collision flip — it has to know
-          which physical edge the panel grows towards, so it reads the
-          nav's resolved direction before measuring. Open “المنتجات” and
-          then its nested “البرمجيات”: the panels step out towards the
-          left, and the one nearest the edge turns around.
-        </p>
-
-        <div class="demoBar" dir="rtl" lang="ar">
-          <span class="demoBar__brand">أكمي</span>
-
-          <nav
-            class="m-dropdownNav"
-            aria-label="التنقل الرئيسي"
-            data-js-behavior="dropdownNav"
-            data-dropdownnav-submenu-label="افتح قائمة {label}"
-          >
-            <ul class="m-dropdownNav__list">
-
-              <li class="m-dropdownNav__item">
-                <a class="m-dropdownNav__link" href="javascript:;" aria-current="page">الرئيسية</a>
-              </li>
-
-              <li class="m-dropdownNav__item" data-dropdownnav-item>
-                <a class="m-dropdownNav__link" href="javascript:;" data-dropdownnav-label>المنتجات</a>
-
-                <div class="m-dropdownNav__panel" data-dropdownnav-panel>
-                  <ul class="m-dropdownNav__subList">
-                    <li class="m-dropdownNav__item">
-                      <a class="m-dropdownNav__link" href="javascript:;">الأجهزة</a>
-                    </li>
-
-                    <li class="m-dropdownNav__item" data-dropdownnav-item>
-                      <span class="m-dropdownNav__label" data-dropdownnav-label>البرمجيات</span>
-
-                      <div class="m-dropdownNav__panel" data-dropdownnav-panel>
-                        <ul class="m-dropdownNav__subList">
-                          <li class="m-dropdownNav__item">
-                            <a class="m-dropdownNav__link" href="javascript:;">سطح المكتب</a>
-                          </li>
-                          <li class="m-dropdownNav__item">
-                            <a class="m-dropdownNav__link" href="javascript:;">الهاتف المحمول</a>
-                          </li>
-                        </ul>
-                      </div>
-                    </li>
-                  </ul>
-                </div>
-              </li>
-
-              <li class="m-dropdownNav__item" data-dropdownnav-item>
-                <a class="m-dropdownNav__link" href="javascript:;" data-dropdownnav-label>الشركة</a>
-
-                <div class="m-dropdownNav__panel" data-dropdownnav-panel>
-                  <ul class="m-dropdownNav__subList">
-                    <li class="m-dropdownNav__item">
-                      <a class="m-dropdownNav__link" href="javascript:;">من نحن</a>
-                    </li>
-                    <li class="m-dropdownNav__item">
-                      <a class="m-dropdownNav__link" href="javascript:;">الوظائف</a>
-                    </li>
-                  </ul>
-                </div>
-              </li>
-
-              <li class="m-dropdownNav__item">
-                <a class="m-dropdownNav__link" href="javascript:;">اتصل بنا</a>
-              </li>
-
-            </ul>
-          </nav>
-        </div>
-      </div>
-
-
-      <!-- 4) The stacked layout, without having to resize the window -->
+      <!-- 3) The stacked layout, without having to resize the window -->
       <div class="demoExample">
         <h2>Stacked layout (below the breakpoint)</h2>
 
@@ -578,7 +496,7 @@
       </div>
 
 
-      <!-- 5) The base layer: what everyone gets before/without the module -->
+      <!-- 4) The base layer: what everyone gets before/without the module -->
       <div class="demoExample">
         <h2>Without JavaScript (the base layer)</h2>
 

@@ -6,7 +6,8 @@ Accessible dialog/modal built on the native `<dialog>` element.
 - `dialog.html` – markup
 - `dialog.scss` – styles (source; compiled to `dist/css/dialog.min.css`)
 - `dialog.js` – behavior
-- `_shared/js/rafThrottle.js` – utility imported by the behavior (copy alongside it)
+- `_shared/js/rafThrottle.js`, `_shared/js/focusableSelector.js` – utilities
+  imported by the behavior (copy them alongside it)
 
 ## Usage
 The dialog is a native `<dialog class="m-dialog" data-js-behavior="dialog">` with a unique `id`. It relies on the platform for the heavy lifting — the top layer, focus trap, `::backdrop`, `Esc` and focus restoration all come from the browser — so the module is a thin progressive enhancement that wires the outside trigger, adds backdrop-click dismissal, locks body scroll and stops media on close.

@@ -6,7 +6,7 @@ Multi-level dropdown and mega-menu navigation built on the ARIA disclosure patte
 - `dropdownNav.html` – markup
 - `dropdownNav.scss` – styles (source; compiled to `dist/css/dropdownNav.min.css`)
 - `dropdownNav.js` – behavior
-- `_shared/js/getCssCustomProperty.js`, `_shared/js/rafThrottle.js` – bundled into the module by the build; copy them alongside `dropdownNav.js` when pasting into a plain project.
+- `_shared/js/rafThrottle.js`, `_shared/js/focusableSelector.js`, `_shared/js/uniqueId.js`, `_shared/js/navExpandedMediaQuery.js` (which itself imports `_shared/js/getCssCustomProperty.js`) – resolved from `_shared/js` by the build; copy them alongside `dropdownNav.js` when pasting into a plain project.
 
 ## Usage
 Author the navigation as what it is without JavaScript: a `<nav>` with a nested list of links. Every submenu is simply visible, so the nav reads like a sitemap — usable, and honest: nothing is hidden, and no control exists that would do nothing when clicked. The module upgrades that markup in place.

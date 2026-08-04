@@ -88,6 +88,8 @@
  */
 
 import { debounceThenExecute } from './debounce.js';
+import { decodeFragment } from './decodeFragment.js';
+import { parseNonNegative } from './parseNonNegative.js';
 
 
 
@@ -118,30 +120,7 @@ const defaults = {
 
 
 
-// Decodes a URL-fragment id to resolve a link's target. A fragment can
-// carry malformed percent-encoding (e.g. '#%zz' typed into the markup),
-// where decodeURIComponent throws — mapped to null here so one broken
-// link can never abort init.
-function decodeFragment(fragment) {
-  try {
-    return decodeURIComponent(fragment);
-  } catch {
-    return null;
-  }
-}
-
-
-
 class ScrollSpy {
-
-  // Parse a non-negative numeric option, falling back for
-  // missing/invalid values.
-  static parseOffset(value, fallback) {
-    const parsed = Number.parseFloat(value);
-    return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
-  }
-
-
 
   // Set by destroy(), read by the debounced rebuild: the resize watcher
   // can already be queued when the host unmounts, and a debounced call
@@ -304,12 +283,12 @@ class ScrollSpy {
   // media query is picked up with the resize that triggered it.
   resolveOffset = () => {
     const computed = getComputedStyle(this.items[0].target).scrollMarginTop;
-    const fallback = ScrollSpy.parseOffset(computed, defaults.offset);
+    const fallback = parseNonNegative(computed, defaults.offset);
 
     const attribute = this.container.dataset.spyOffset;
     if (attribute === undefined) return fallback;
 
-    return ScrollSpy.parseOffset(attribute, fallback);
+    return parseNonNegative(attribute, fallback);
   };
 
 

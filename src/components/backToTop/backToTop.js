@@ -110,6 +110,8 @@
  */
 
 import { debounceThenExecute } from './debounce.js';
+import { decodeFragment } from './decodeFragment.js';
+import { parseNonNegative } from './parseNonNegative.js';
 
 
 
@@ -141,30 +143,7 @@ const defaults = {
 
 
 
-// Decodes a URL fragment to the id it addresses. A fragment can carry
-// malformed percent-encoding (e.g. '#%zz' typed into the markup), where
-// decodeURIComponent throws — mapped to null here, so a broken href is
-// reported instead of aborting init.
-function decodeFragment(fragment) {
-  try {
-    return decodeURIComponent(fragment);
-  } catch {
-    return null;
-  }
-}
-
-
-
 class BackToTop {
-
-  // Parse a non-negative numeric option, falling back for
-  // missing/invalid values.
-  static parseThreshold(value, fallback) {
-    const parsed = Number.parseFloat(value);
-    return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
-  }
-
-
 
   // Set by destroy(), read by the debounced rebuild: the resize handler
   // can already be queued when the host unmounts, and a debounced call
@@ -349,7 +328,7 @@ class BackToTop {
     const attribute = this.control.dataset.backtotopThreshold;
     if (attribute === undefined) return fallback;
 
-    return BackToTop.parseThreshold(attribute, fallback);
+    return parseNonNegative(attribute, fallback);
   };
 
 

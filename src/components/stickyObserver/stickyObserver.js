@@ -61,9 +61,6 @@
  *       against that container's edge, so the class must flip against
  *       the same edge, not the viewport's. Target and sentinel must both
  *       sit inside the root element.
- *   - data-sticky-class="..."
- *       override the state class (default "is-stuck"). The SCSS keys off
- *       the default, so restyle to match if you change it.
  *   - data-sticky-offset="..."
  *       px pin distance from the top of the viewport/root — the target's
  *       `inset-block-start` / `top` value. Normally NOT needed: the
@@ -78,23 +75,23 @@
 
 
 
+import { parseNonNegative } from './parseNonNegative.js';
+
+
+
 const defaults = {
-  stateClass: 'is-stuck', // toggled on the target while it is pinned
+
+  // Toggled on the target while it is pinned. Not overridable from the
+  // markup: the shipped SCSS keys its pinned-state rules off this exact
+  // name, so a renamed class would only take the styling away.
+  stateClass: 'is-stuck',
+
   offset: 0, // px pin distance from the viewport top (data-sticky-offset)
 };
 
 
 
 class StickyObserver {
-
-  // Parse a non-negative numeric option, falling back for
-  // missing/invalid values.
-  static parseOffset(value, fallback) {
-    const parsed = Number.parseFloat(value);
-    return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
-  }
-
-
 
   constructor(target, reporter) {
     this.target = target;
@@ -106,7 +103,6 @@ class StickyObserver {
     // is injected.
     if (!('IntersectionObserver' in window)) return;
 
-    this.stateClass = target.dataset.stickyClass?.trim() || defaults.stateClass;
     this.offset = this.resolveOffset();
 
     // null = viewport, an element = scroll-container root, undefined =
@@ -132,13 +128,13 @@ class StickyObserver {
   resolveOffset = () => {
     const computedTop = getComputedStyle(this.target).top;
     const fallback = computedTop.endsWith('px')
-      ? StickyObserver.parseOffset(computedTop, defaults.offset)
+      ? parseNonNegative(computedTop, defaults.offset)
       : defaults.offset;
 
     const attribute = this.target.dataset.stickyOffset;
     if (attribute === undefined) return fallback;
 
-    return StickyObserver.parseOffset(attribute, fallback);
+    return parseNonNegative(attribute, fallback);
   };
 
 
@@ -284,7 +280,7 @@ class StickyObserver {
     const topEdge = entry.rootBounds?.top ?? this.offset;
     const isStuck = !entry.isIntersecting && entry.boundingClientRect.top < topEdge;
 
-    this.target.classList.toggle(this.stateClass, isStuck);
+    this.target.classList.toggle(defaults.stateClass, isStuck);
   };
 
 

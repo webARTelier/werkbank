@@ -147,7 +147,9 @@
 
 
 
-import { getCssCustomProperty } from './getCssCustomProperty.js';
+import { decodeFragment } from './decodeFragment.js';
+import { navExpandedMediaQuery } from './navExpandedMediaQuery.js';
+import { otherModalOpen } from './otherModalOpen.js';
 
 
 
@@ -206,28 +208,11 @@ const defaults = {
 
 
 
-// The navigation breakpoint stays single-sourced in the SCSS
-// (--bp-navigation, see _shared/scss/_breakpoint_tokens.scss) and is read
-// back from there — the same helper dropdownNav uses. A project that does not
-// ship the token gets a query that never matches, which leaves the drawer in
-// charge at every width: the safe end of the trade, because the alternative
-// would be closing the drawer at a width where nothing else shows the
-// navigation.
-const lengthPattern = /^[\d.]+(px|em|rem)$/;
-
-function navExpandedMediaQuery(prop) {
-  const breakpoint = getCssCustomProperty(document.documentElement, prop);
-  if (!lengthPattern.test(breakpoint)) return 'not all';
-  return `(min-width: ${breakpoint})`;
-}
-
-
-
-// Whether the engine knows :modal (it tells an actually-modal dialog from one
-// merely opened with show()). Probed once, because matches() throws on a
-// selector the engine cannot parse — see otherModalOpen.
-const supportsModalSelector =
-  typeof CSS !== 'undefined' && CSS.supports?.('selector(:modal)') === true;
+// A project that does not ship the breakpoint token gets a query that never
+// matches, which leaves the drawer in charge at every width: the safe end of
+// the trade, because the alternative would be closing the drawer at a width
+// where nothing else shows the navigation.
+const noTokenQuery = 'not all';
 
 
 
@@ -523,20 +508,13 @@ class OffCanvasNav {
   // fragment may be empty (a link to the top of the same document) or name
   // nothing that exists. The browser percent-encodes a non-ASCII fragment in
   // link.hash, while the id in the document is not encoded, so it is decoded
-  // back — guarded, because decodeURIComponent throws on a malformed escape.
+  // back — and a fragment that is not decodable falls back to the raw one,
+  // which is the best guess there is.
   fragmentTarget = (link) => {
     const raw = link.hash.slice(1);
     if (!raw) return null;
 
-    let id = raw;
-    try {
-      id = decodeURIComponent(raw);
-    } catch {
-
-      // Not decodable, so the raw fragment is the best guess there is.
-    }
-
-    return document.getElementById(id);
+    return document.getElementById(decodeFragment(raw) ?? raw);
   };
 
 
@@ -639,7 +617,7 @@ class OffCanvasNav {
     if (this.isAlways) return;
 
     this.expandedQuery = window.matchMedia(
-      navExpandedMediaQuery(this.params.navBreakpointProp)
+      navExpandedMediaQuery(this.params.navBreakpointProp, noTokenQuery)
     );
     this.expandedQuery.addEventListener('change', this.handleViewportChange);
   };
@@ -718,23 +696,20 @@ class OffCanvasNav {
     if (!this.panel) return 0;
 
     // A computed transition-duration is always in seconds, with one entry per
-    // transitioned property; the delays are their own list, which CSS repeats
-    // from the start when it is the shorter one — hence the wrap-around
-    // index. A property is done at its delay plus its duration, so the
-    // longest of those sums is when the exit has played out. Reading the
-    // delay too is what makes "the timing lives in the stylesheet" true for a
-    // project that staggers the exit instead of only retuning its length; a
-    // negative delay starts the transition partway in and therefore shortens
-    // it, which the same sum expresses (floored at zero).
-    const style = window.getComputedStyle(this.panel);
-    const durations = style.transitionDuration.split(',');
-    const delays = style.transitionDelay.split(',');
+    // transitioned property, so the longest of them is when the exit has
+    // played out. transition-delay is deliberately not read: this component's
+    // exit sets none, so the arithmetic that would combine the two lists (they
+    // can differ in length, and CSS repeats the shorter one) only ever
+    // described a staggered exit no project has authored. A project that adds
+    // a delay closes that much too early and should retune
+    // --offCanvasNav-duration-exit instead.
+    const durations =
+      window.getComputedStyle(this.panel).transitionDuration.split(',');
 
-    const seconds = durations.reduce((longest, value, index) => {
-      const duration = Number.parseFloat(value) || 0;
-      const delay = Number.parseFloat(delays[index % delays.length]) || 0;
-      return Math.max(longest, Math.max(0, duration + delay));
-    }, 0);
+    const seconds = durations.reduce(
+      (longest, value) => Math.max(longest, Number.parseFloat(value) || 0),
+      0
+    );
 
     return seconds * 1000;
   };
@@ -799,23 +774,11 @@ class OffCanvasNav {
 
 
   // Released only when no other modal dialog is still up: the body class is
-  // shared with dialog, and a dialog opened from inside the drawer would be
-  // left with a scrolling page behind it. Read from the DOM rather than
-  // counted per instance, because a counter in this module could only ever
-  // see this module's own drawers.
+  // shared with dialog and lightbox, and a dialog opened from inside the
+  // drawer would be left with a scrolling page behind it.
   unlockScroll = () => {
-    if (this.otherModalOpen()) return;
+    if (otherModalOpen(this.dialog)) return;
     document.body.classList.remove(this.params.scrollLockClass);
-  };
-
-
-
-  otherModalOpen = () => {
-    if (!supportsModalSelector) return false;
-
-    return [...document.querySelectorAll('dialog[open]')].some(
-      (other) => other !== this.dialog && other.matches(':modal')
-    );
   };
 
 

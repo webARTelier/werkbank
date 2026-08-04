@@ -12,6 +12,8 @@ of its own.
 - `inputCharCount.js` – behavior
 - `src/_shared/js/debounce.js` – bundled utility (imported by the module; the build already bundles it into the component's chunk, only relevant if you paste the source into a plain project)
 - `src/_shared/js/resolveLocale.js` – bundled utility (same note as above)
+- `src/_shared/js/formatTemplate.js` – bundled utility (same note as above)
+- `src/_shared/js/describedBy.js` – bundled utility (same note as above)
 
 There is **no vendor dependency**.
 
@@ -90,6 +92,14 @@ The JS exports `init(el, services)` and does not self-initialize. It is loaded
 on demand by `boot.js` for every `<input>` / `<textarea>` carrying
 `data-js-behavior="inputCharCount"` — one controller instance per field. It
 sets no inline styles.
+
+`init()` returns a cleanup function, so a host that mounts and unmounts the same
+markup (Astro islands, a framework re-render — see `destroyModulesInScope()` in
+`boot.js`) can hand the field back as it was authored. That matters more here
+than for a behaviour-only module: the counter and the status region are the
+field's **siblings**, so without the cleanup a re-init would leave a second
+counter and a second live region announcing the same count. The `input`
+listener, the `aria-describedby` link and the `is-atLimit` class go with them.
 
 `services.reporter` (dependency injection via `boot.js`) is **optional** — it is
 only used to warn about author mistakes (module on a non-field element,

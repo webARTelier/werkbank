@@ -15,11 +15,15 @@ the one bit of information this module adds.
 - `stickyObserver.html` – markup
 - `stickyObserver.scss` – styles (source; compiled to `dist/css/stickyObserver.min.css`)
 - `stickyObserver.js` – behavior
+- `_shared/js/parseNonNegative.js` – utility imported by the behavior (copy
+  alongside it)
 
 ## Usage
 Put `data-js-behavior="stickyObserver"` on the sticky element. That is all:
 the script injects a zero-size, `aria-hidden` sentinel `<div>` directly before
-the element and toggles `is-stuck` on the element while it is pinned.
+the element and toggles `is-stuck` on the element while it is pinned. That
+class name is fixed: the shipped SCSS keys its pinned-state rules off it, so
+there is nothing to gain from renaming it — restyle the rules instead.
 
 When the injected sibling is not welcome — inside a flex/grid container with
 `gap` it occupies a slot, it shifts `:first-child` / sibling selectors, and it
@@ -54,8 +58,6 @@ however your project needs. The script does not read `m-stickyBar`.
   sticks in (first match in the document). Only needed inside an
   `overflow: auto`/`scroll` container; element and sentinel must sit inside
   it. Default: the viewport.
-- `data-sticky-class` – override the state class. Default: `is-stuck`. The
-  SCSS keys off the default, so restyle to match if you change it.
 - `data-sticky-offset` – px pin distance from the viewport/root top (the
   element's `inset-block-start` / `top` value). Normally **not needed**: the
   script reads the element's computed `top` by itself, so the CSS pin

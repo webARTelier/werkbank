@@ -88,6 +88,12 @@ const defaults = {
   // resolves to pixels and can be read back as one number here.
   offsetProp: '--popover-offset',
 
+  // Gap (px) used when that property cannot be read as a number — a project
+  // whose stylesheet does not ship the token. Its own value, not the inset
+  // below: the two happen to match in the shipped CSS, but one is the distance
+  // to the trigger and the other the distance to the viewport edge.
+  offsetFallback: 8,
+
   // Minimum distance (px) the fallback keeps to the viewport edges.
   viewportInset: 8,
 };
@@ -318,7 +324,7 @@ class Popover {
   readOffset = () => {
     const raw = getCssCustomProperty(this.popover, this.config.offsetProp);
     const parsed = parseFloat(raw);
-    return Number.isNaN(parsed) ? 8 : parsed;
+    return Number.isNaN(parsed) ? this.config.offsetFallback : parsed;
   };
 
 

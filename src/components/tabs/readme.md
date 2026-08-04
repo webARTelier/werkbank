@@ -12,7 +12,10 @@ roving-tabindex keyboard support.
   by design, but not empty: it carries the pre-enhancement state, see *Styling*)
 - `tabs.js` – behavior
 
-There is **no vendor dependency** and no bundled shared utility.
+- `_shared/js/focusableSelector.js`, `_shared/js/decodeFragment.js` – utilities
+  imported by the behavior (copy them alongside `tabs.js`)
+
+There is **no vendor dependency**.
 
 ## Usage
 Put `data-js-behavior="tabs"` on a wrapper containing:

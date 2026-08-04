@@ -60,6 +60,14 @@
 
 
 
+// focusableSelector decides whether a panel needs tabindex="0" of its own
+// (APG): one that already holds something focusable is reachable without it.
+// decodeFragment resolves a tab's href fragment to its panel id.
+import { focusableSelector } from './focusableSelector.js';
+import { decodeFragment } from './decodeFragment.js';
+
+
+
 const defaults = {
 
   // the element that becomes the tablist (one per module instance)
@@ -89,28 +97,6 @@ const defaults = {
   // constructor for why it goes first.
   readyAttr: 'data-tabs-ready',
 };
-
-
-
-// Rough probe for "contains something keyboard-reachable". Only used to
-// decide whether a panel itself needs tabindex="0" (APG recommendation),
-// so a false positive is harmless.
-const focusableSelector =
-  'a[href], button, input, select, textarea, [tabindex], [contenteditable]';
-
-
-
-// Decodes a URL-fragment id to compare it against panel ids. A fragment
-// can carry malformed percent-encoding (e.g. '#%zz' typed or mangled in
-// a shared link), where decodeURIComponent throws — mapped to null here
-// so a broken fragment can never abort init or the hashchange handler.
-function decodeFragment(fragment) {
-  try {
-    return decodeURIComponent(fragment);
-  } catch {
-    return null;
-  }
-}
 
 
 

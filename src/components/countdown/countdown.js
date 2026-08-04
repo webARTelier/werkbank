@@ -45,6 +45,15 @@
  * polite status message via a role="status" node — a legitimate, one-off
  * announcement rather than a per-second stream.
  *
+ * Localization
+ * ------------
+ * The spoken sentence and the pause control's label are chosen from <html
+ * lang> (de/en, falling back to en) — the same mechanism inputCharCount,
+ * video and formValidation use. The strings live in the `labels` map as plain
+ * templates, so adding a language is a set of strings and not a code change,
+ * and the plural form of a unit ("1 Tag" / "2 Tage") is part of the message id
+ * rather than something this module assembles.
+ *
  * Marquee integration (optional)
  * ------------------------------
  * The usual case is a standalone countdown with no marquee involved. When the
@@ -56,6 +65,11 @@
  * Without a surrounding marquee this is simply a no-op.
  * ----------------------------------------------------------------------------
  */
+
+
+
+import { resolveLocale } from './resolveLocale.js';
+import { formatTemplate } from './formatTemplate.js';
 
 
 
@@ -75,20 +89,58 @@ const defaults = {
   tickMs: 1000, // normal cadence
   reducedTickMs: 60000, // cadence under prefers-reduced-motion
 
-  toggleLabelPause: 'Pause countdown',
-  toggleLabelResume: 'Resume countdown',
+  // <html lang> matching none of the offered locales falls back to this.
+  fallbackLocale: 'en',
+};
 
-  // Screen-reader text builders (English defaults). Override any of these to
-  // localize the announced sentences — each receives raw values, so word order
-  // and pluralization stay under the author's control.
-  formatUnit: (value, unit) => {
-    const word = { day: 'day', hour: 'hour', minute: 'minute' }[unit];
-    return `${value} ${word}${value === 1 ? '' : 's'}`;
+
+
+// Localized text, keyed by locale then by a message id — the same shape
+// inputCharCount, video and formValidation use, so a translation is a set of
+// plain strings rather than a code change. {placeholders} are interpolated
+// from the live values by formatTemplate.
+//
+// The unit ids carry the plural form, because "1 Tag" and "2 Tage" are two
+// different words: which form a count takes is a property of the language, so
+// it belongs in here and not in the arithmetic below.
+//
+// The *Labelled variants are used when the markup names what the countdown
+// counts to (data-countdown-label); without one the clause would dangle.
+const labels = {
+
+  de: {
+    dayOne: '{count} Tag',
+    dayOther: '{count} Tage',
+    hourOne: '{count} Stunde',
+    hourOther: '{count} Stunden',
+    minuteOne: '{count} Minute',
+    minuteOther: '{count} Minuten',
+
+    summary: 'Noch {units}.',
+    summaryLabelled: 'Noch {units} bis {label}.',
+    finished: 'Der Countdown ist abgelaufen.',
+    finishedLabelled: 'Der Countdown bis {label} ist abgelaufen.',
+
+    togglePause: 'Countdown pausieren',
+    toggleResume: 'Countdown fortsetzen',
   },
-  formatSummary: (unitText, label) =>
-    `${unitText} remaining${label ? ` until ${label}` : ''}.`,
-  formatFinished: (label) =>
-    label ? `The countdown to ${label} has finished.` : 'The countdown has finished.',
+
+  en: {
+    dayOne: '{count} day',
+    dayOther: '{count} days',
+    hourOne: '{count} hour',
+    hourOther: '{count} hours',
+    minuteOne: '{count} minute',
+    minuteOther: '{count} minutes',
+
+    summary: '{units} remaining.',
+    summaryLabelled: '{units} remaining until {label}.',
+    finished: 'The countdown has finished.',
+    finishedLabelled: 'The countdown to {label} has finished.',
+
+    togglePause: 'Pause countdown',
+    toggleResume: 'Resume countdown',
+  },
 };
 
 
@@ -99,6 +151,9 @@ class Countdown {
     this.module = module;
     this.reporter = reporter;
     this.config = config;
+
+    const locale = resolveLocale(Object.keys(labels), config.fallbackLocale);
+    this.labels = labels[locale] || labels[config.fallbackLocale];
 
     this.intervalId = null;
     this.paused = false;
@@ -192,10 +247,11 @@ class Countdown {
     this.units?.setAttribute('aria-hidden', 'true');
 
     // role="timer" marks the value as a live-updating counter without forcing
-    // announcements (its implicit aria-live is "off").
-    if (!this.display.hasAttribute('role')) {
-      this.display.setAttribute('role', 'timer');
-    }
+    // announcements (its implicit aria-live is "off"). An author-set role is
+    // left alone — and remembered, so destroy() only takes back the one this
+    // module put there.
+    this.appliedRole = !this.display.hasAttribute('role');
+    if (this.appliedRole) this.display.setAttribute('role', 'timer');
 
     // Single polite live region for the terminal "finished" message. Injected
     // here so authors do not have to hand-wire a11y plumbing.
@@ -221,7 +277,7 @@ class Countdown {
     button.type = 'button';
     button.className = 'm-countdown__toggle';
     button.setAttribute('aria-pressed', 'false');
-    button.textContent = this.config.toggleLabelPause;
+    button.textContent = this.labels.togglePause;
     button.addEventListener('click', this.toggle);
 
     this.module.appendChild(button);
@@ -242,7 +298,7 @@ class Countdown {
     this.stopInterval();
     this.module.setAttribute('data-countdown-paused', '');
     this.toggleButton.setAttribute('aria-pressed', 'true');
-    this.toggleButton.textContent = this.config.toggleLabelResume;
+    this.toggleButton.textContent = this.labels.toggleResume;
   };
 
 
@@ -252,7 +308,7 @@ class Countdown {
     this.paused = false;
     this.module.removeAttribute('data-countdown-paused');
     this.toggleButton.setAttribute('aria-pressed', 'false');
-    this.toggleButton.textContent = this.config.toggleLabelPause;
+    this.toggleButton.textContent = this.labels.togglePause;
     this.start();
   };
 
@@ -348,14 +404,31 @@ class Countdown {
   renderSummary = ({ d, h, m }) => {
     if (!this.summary) return;
 
-    const { formatUnit, formatSummary } = this.config;
-    const unitText = [formatUnit(d, 'day'), formatUnit(h, 'hour'), formatUnit(m, 'minute')].join(', ');
-    const text = formatSummary(unitText, this.label);
+    const units = [
+      this.unitText('day', d),
+      this.unitText('hour', h),
+      this.unitText('minute', m),
+    ].join(', ');
+
+    const template = this.label
+      ? this.labels.summaryLabelled
+      : this.labels.summary;
+
+    const text = formatTemplate(template, { units, label: this.label });
 
     if (text === this.lastSummary) return;
     this.lastSummary = text;
     this.summary.textContent = text;
   };
+
+
+
+  // One unit of the spoken sentence. The plural form is part of the message id
+  // (see labels), so the choice between "1 Tag" and "2 Tage" stays with the
+  // translation instead of being assembled here.
+  unitText = (unit, value) => formatTemplate(
+    this.labels[`${unit}${value === 1 ? 'One' : 'Other'}`], { count: value }
+  );
 
 
 
@@ -371,7 +444,11 @@ class Countdown {
     this.toggleButton?.remove();
     this.toggleButton = null;
 
-    const message = this.config.formatFinished(this.label);
+    const template = this.label
+      ? this.labels.finishedLabelled
+      : this.labels.finished;
+
+    const message = formatTemplate(template, { label: this.label });
 
     // role="status" announces this once (polite); the timer's on-demand text is
     // replaced too, so a screen reader reading it later gets the same message.
@@ -439,9 +516,27 @@ class Countdown {
   // boot.js. The running interval would otherwise keep firing forever,
   // retaining this instance and the detached module through its closure; the
   // matchMedia change listener likewise outlives the module unless removed.
+  //
+  // The injected nodes have to go with them. A host that tears this module down
+  // and initialises the same markup again keeps the module element, so a
+  // teardown that left them behind would add a second pause control and a
+  // second status region on every cycle — the second one a live region that
+  // announces the same thing twice.
   destroy = () => {
     this.stopInterval();
     this.motionQuery?.removeEventListener?.('change', this.handleMotionChange);
+
+    this.toggleButton?.remove();
+    this.toggleButton = null;
+    this.statusNode?.remove();
+    this.statusNode = null;
+
+    // The rest is the markup handed back as it was authored.
+    this.module.removeAttribute('data-countdown-paused');
+    this.module.removeAttribute('data-countdown-finished');
+    this.units?.removeAttribute('aria-hidden');
+    this.secondsUnit?.removeAttribute('hidden');
+    if (this.appliedRole) this.display?.removeAttribute('role');
   };
 }
 

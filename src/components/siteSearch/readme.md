@@ -7,7 +7,9 @@ Site search that expands out of a toggle — and an ordinary, working search for
 - `siteSearch.scss` – styles (source; compiled to `dist/css/siteSearch.min.css`)
 - `siteSearch.js` – behavior
 
-No shared JS utility is bundled into this module; `siteSearch.js` stands on its own.
+- `_shared/js/uniqueId.js` – utility imported by the behavior (copy it
+  alongside `siteSearch.js`); it names the form when the author did not, so
+  `aria-controls` has something to point at.
 
 ## Usage
 Author the complete search where it belongs in the page — inside the site header — as a `<search>` landmark holding a toggle and the form it expands:

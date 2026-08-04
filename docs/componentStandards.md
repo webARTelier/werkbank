@@ -192,9 +192,13 @@ Boot (`_shared/js/boot.js`) lazily imports the module when it sees
   (`classList.toggle(cls, force)`) so a mutation that changes an element's box
   cannot feed back into a `ResizeObserver` as an infinite loop.
 - **Pure utilities are direct imports** from `_shared/js/` as flat siblings
-  (`import { rafThrottle } from './rafThrottle.js';`) — the build resolves and
-  bundles them into the component's lazy chunk. **Configured/stateful
-  collaborators come via `services`** (DI). See `CLAUDE.md`.
+  (`import { rafThrottle } from './rafThrottle.js';`) — the build resolves them
+  from there. A utility only one component imports is inlined into that
+  component's lazy chunk; one that two or more import becomes its own chunk in
+  `dist/js/modules/`, loaded alongside the first of them and then cached for
+  the rest. So **the second consumer of a helper is the reason to hoist it**:
+  duplicating it would ship it twice. **Configured/stateful collaborators come
+  via `services`** (DI). See `CLAUDE.md`.
 - Collapse bursts of resize/observer/scroll events into **one measurement per
   frame** with `rafThrottle`. Recompute on the real triggers: `resize`,
   `ResizeObserver`, `MutationObserver`, `document.fonts.ready`, `load`. Tear
@@ -323,8 +327,11 @@ Boot (`_shared/js/boot.js`) lazily imports the module when it sees
 - Animation/transition is a **pure CSS progressive enhancement**
   (`@starting-style`, `allow-discrete`); older engines just snap. Always add a
   `@media (prefers-reduced-motion: reduce)` block that makes it instant.
-- Use **logical properties** (`inset-inline-end`, `inline-size`) so RTL /
-  vertical writing modes stay correct.
+- Use **logical properties** (`inset-inline-end`, `inline-size`) as the house
+  style: they read better next to `inset-block` / `block-size` and keep one
+  rule where physical sides would need two. **Not** as RTL preparation —
+  right-to-left is explicitly out of scope for this project (see `CLAUDE.md`),
+  so never add direction detection in JS to go with them.
 - **Media takes its box from its container.** An `<img>`/`<video>` gets
   `display: block; inline-size: 100%; block-size: 100%; object-fit: cover` and
   no dimensions of its own — the size and the `aspect-ratio` come from the
@@ -387,8 +394,16 @@ paragraphs, and several live examples exercising each mode of the component.
 
 ## 10. Shared building blocks (reference)
 
-- **JS utilities** (`_shared/js/`): `rafThrottle`, `debounce`,
-  `getCssCustomProperty` (direct import); `createReporter` (via DI in `boot.js`).
+- **JS utilities** (`_shared/js/`, all direct imports): `rafThrottle`,
+  `debounce`, `getCssCustomProperty`, `resolveLocale`, `formatTemplate`
+  (interpolate `{placeholder}` tokens in a localized template),
+  `decodeFragment` (a URL fragment to the id it addresses),
+  `parseNonNegative` (a px option, with a fallback), `uniqueId` (an id that is
+  free in the document), `focusableSelector` (elements the keyboard already
+  reaches), `describedBy` (add/remove one id in a field's `aria-describedby`),
+  `navExpandedMediaQuery` (the `--bp-navigation` query), `otherModalOpen` (is
+  another modal `<dialog>` still up). Plus `createReporter` (via DI in
+  `boot.js`).
 - **Dev-only** helpers loaded by demos: `dev_pageInfo`, `dev_a11yInspector`,
   `dev_qrCode`.
 - **SCSS tokens** (`_shared/scss/`): `_foundations` (space/animation/radius),

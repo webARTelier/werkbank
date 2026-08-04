@@ -151,6 +151,11 @@
 
 
 
+import { otherModalOpen } from './otherModalOpen.js';
+import { uniqueId } from './uniqueId.js';
+
+
+
 const defaults = {
 
   // The trigger of one image: an <a href> pointing at the full-size file,
@@ -236,31 +241,6 @@ const icons = {
   prev: `<svg ${iconAttributes}><path d="m15 5-7 7 7 7" /></svg>`,
   next: `<svg ${iconAttributes}><path d="m9 5 7 7-7 7" /></svg>`,
 };
-
-
-
-// The viewer needs an id for the triggers' aria-controls to point at, and it
-// is the module's own node, so nobody else can have given it one. The counter
-// is module-wide (a page may carry several galleries) and the result is
-// checked against the document, so a hand-written id of the same shape
-// elsewhere cannot be shadowed. Same helper siteSearch uses for its form ids.
-let viewerIdCounter = 0;
-
-function uniqueViewerId(prefix) {
-  let id = `${prefix}-${++viewerIdCounter}`;
-  while (document.getElementById(id)) {
-    id = `${prefix}-${++viewerIdCounter}`;
-  }
-  return id;
-}
-
-
-
-// Whether the engine knows :modal (it tells an actually-modal dialog from
-// one merely opened with show()). Probed once, because matches() throws on a
-// selector the engine cannot parse — see otherModalOpen.
-const supportsModalSelector =
-  typeof CSS !== 'undefined' && CSS.supports?.('selector(:modal)') === true;
 
 
 
@@ -394,8 +374,9 @@ class Lightbox {
       'aria-label', this.option(params.labelAttr, params.label)
     );
 
-    // The id the triggers' aria-controls points at (see syncTriggers).
-    this.viewer.id = uniqueViewerId(params.viewerIdPrefix);
+    // The id the triggers' aria-controls points at (see syncTriggers). The
+    // viewer is the module's own node, so nobody else can have named it.
+    this.viewer.id = uniqueId(params.viewerIdPrefix);
 
     // The viewer sits on <body>, so it inherits the document's language and
     // not the gallery's — while every string in it (the labels, the
@@ -1063,19 +1044,11 @@ class Lightbox {
 
     if (key !== 'ArrowRight' && key !== 'ArrowLeft') return -1;
 
-    // ArrowRight means "the image on the right", and the controls are placed
-    // with logical properties — so in a right-to-left context that is the
-    // previous one, and the keys swap with them. Read per press rather than
-    // cached: a project may flip direction at runtime.
-    const rightwards = key === 'ArrowRight';
-    const forwards = this.isRtl() ? !rightwards : rightwards;
-
-    return this.step(this.index, forwards ? 1 : -1);
+    // ArrowRight means "the image on the right", which is the next one: the
+    // controls sit in logical order and the project ships left-to-right only,
+    // so the key and the control it belongs to cannot come apart.
+    return this.step(this.index, key === 'ArrowRight' ? 1 : -1);
   };
-
-
-
-  isRtl = () => getComputedStyle(this.viewer).direction === 'rtl';
 
 
 
@@ -1149,10 +1122,9 @@ class Lightbox {
   // Released only when no other modal dialog is still up: the body class is
   // shared with dialog and offCanvasNav, and a lightbox opened from inside
   // another dialog would otherwise leave that one with a scrolling page
-  // behind it. Read from the DOM rather than counted per instance, because a
-  // counter in this module could only ever see this module's own viewers.
+  // behind it.
   unlockScroll = () => {
-    if (this.otherModalOpen()) return;
+    if (otherModalOpen(this.viewer)) return;
 
     document.body.classList.remove(this.params.scrollLockClass);
   };
@@ -1171,16 +1143,6 @@ class Lightbox {
       trigger.removeAttribute('aria-haspopup');
       trigger.removeAttribute('aria-controls');
     }
-  };
-
-
-
-  otherModalOpen = () => {
-    if (!supportsModalSelector) return false;
-
-    return [...document.querySelectorAll('dialog[open]')].some(
-      (other) => other !== this.viewer && other.matches(':modal')
-    );
   };
 
 

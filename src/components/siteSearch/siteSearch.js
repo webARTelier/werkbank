@@ -102,6 +102,10 @@
 
 
 
+import { uniqueId } from './uniqueId.js';
+
+
+
 const defaults = {
 
   // The control that expands the field. It has to sit immediately before
@@ -126,22 +130,6 @@ const defaults = {
   // Prefix for generated form ids (aria-controls needs one).
   formIdPrefix: 'sitesearch-form',
 };
-
-
-
-// Form ids are generated only where the author did not provide one. The
-// counter is module-wide (a page may carry several searches) and the result
-// is checked against the document, so a hand-written id of the same shape
-// elsewhere cannot be shadowed.
-let formIdCounter = 0;
-
-function uniqueFormId(prefix) {
-  let id = `${prefix}-${++formIdCounter}`;
-  while (document.getElementById(id)) {
-    id = `${prefix}-${++formIdCounter}`;
-  }
-  return id;
-}
 
 
 
@@ -323,7 +311,7 @@ class SiteSearch {
 
   seedToggle = () => {
     if (!this.form.id) {
-      this.form.id = uniqueFormId(this.params.formIdPrefix);
+      this.form.id = uniqueId(this.params.formIdPrefix);
       this.generatedId = true;
     }
 

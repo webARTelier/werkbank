@@ -6,7 +6,7 @@ Burger menu that slides the site navigation in over the page — built on the na
 - `offCanvasNav.html` – markup
 - `offCanvasNav.scss` – styles (source; compiled to `dist/css/offCanvasNav.min.css`)
 - `offCanvasNav.js` – behavior
-- `_shared/js/getCssCustomProperty.js` – bundled into the module by the build; copy it alongside `offCanvasNav.js` when pasting into a plain project.
+- `_shared/js/decodeFragment.js`, `_shared/js/otherModalOpen.js`, `_shared/js/navExpandedMediaQuery.js` (which itself imports `_shared/js/getCssCustomProperty.js`) – resolved from `_shared/js` by the build; copy them alongside `offCanvasNav.js` when pasting into a plain project.
 
 Optional but intended: `dropdownNav` for the navigation *inside* the drawer (see [Composition](#composition)).
 
@@ -101,7 +101,7 @@ Opened with `showModal()`, the native `<dialog>` renders in the top layer, keeps
 
 7. **The exit.** The entrance is pure CSS (`@starting-style`); the exit cannot be. A dialog that has been closed leaves the top layer immediately in every engine without the CSS `overlay` property — Chromium is still the only one that has it — so `allow-discrete` on `display`/`overlay` animates the exit there and nowhere else: in Firefox and Safari the drawer simply vanishes. So the drawer is not closed on the way out. Every route out marks it with `data-offcanvasnav-closing` while it is **still open**, which is the state the stylesheet animates, and the native `close()` follows once that has played. <kbd>Esc</kbd> is routed through the same path by catching the dialog's `cancel` event.
 
-Neither the breakpoint nor the exit timing is duplicated in the script. The breakpoint is read from the shared `--bp-navigation` token, so the auto-close and the layout switch in the stylesheet cannot drift apart; the exit length is read back from the panel's own computed `transition-duration` **and `transition-delay`**, so retuning `--offCanvasNav-duration-exit`, staggering the exit with a delay, or a `prefers-reduced-motion` preference flattening it are all followed by themselves.
+Neither the breakpoint nor the exit timing is duplicated in the script. The breakpoint is read from the shared `--bp-navigation` token, so the auto-close and the layout switch in the stylesheet cannot drift apart; the exit length is read back from the panel's own computed `transition-duration`, so retuning `--offCanvasNav-duration-exit` — or a `prefers-reduced-motion` preference flattening it — is followed by itself. A `transition-delay` is **not** part of that measurement: nothing in this component sets one, and a project that staggers the exit with a delay would see the drawer close that much too early. Retune the duration instead.
 
 **The drawer only opens where the drawer rendering applies.** Above the navigation breakpoint the stylesheet renders the `<dialog>` as a plain block, and `showModal()` would lift *that* into the top layer: a chrome-free strip in the corner, no panel, no backdrop, the whole page inert behind it and the focus trapped inside. So the module refuses to open it there and hands the click back to the browser instead — where the burger is still the link it was authored as, pointing at the navigation that is now in the page. The stylesheet's own half of this is keyed on `[data-offcanvasnav-toggle]` rather than on `m-offCanvasNavToggle`: hiding a control that has nothing to open is not decoration, so it has to reach a trigger a project styled entirely by itself too.
 

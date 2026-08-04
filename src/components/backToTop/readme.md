@@ -19,8 +19,9 @@ enhancement.
 - `backToTop.html` – markup
 - `backToTop.scss` – styles (source; compiled to `dist/css/backToTop.min.css`)
 - `backToTop.js` – behavior
-- `_shared/js/debounce.js` – bundled into the component's chunk by the build;
-  copy it along when pasting the JS into a plain project
+- `_shared/js/debounce.js`, `_shared/js/decodeFragment.js`,
+  `_shared/js/parseNonNegative.js` – resolved from `_shared/js` by the build;
+  copy them along when pasting the JS into a plain project
 
 ## Usage
 Put `data-js-behavior="backToTop"` on the control and place it at the **end**

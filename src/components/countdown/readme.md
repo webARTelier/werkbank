@@ -6,6 +6,8 @@ Live countdown to a target date.
 - `countdown.html` – markup
 - `countdown.scss` – styles (source; compiled to `dist/css/countdown.min.css`)
 - `countdown.js` – behavior
+- `_shared/js/resolveLocale.js`, `_shared/js/formatTemplate.js` – utilities
+  imported by the behavior (copy them alongside it)
 
 ## Usage
 The root element gets `data-js-behavior="countdown"` as well as `data-countdown-date` with the target date (e.g. `2026-12-31T23:59:59+01:00`, optionally on a child element too). Inside it are the output elements with `data-countdown-days`, `data-countdown-hours`, `data-countdown-minutes` and optionally `data-countdown-seconds`, which are updated every second.
@@ -26,7 +28,9 @@ Nested inside a marquee: the ticker provides an `.m-marquee__countdown` containe
 For the fullest experience, place a visible heading or intro next to the countdown (or set `data-countdown-label`) so it is clear what is being counted down to.
 
 ## Localization
-The screen-reader announcements default to English. They are built by the `formatUnit`, `formatSummary` and `formatFinished` functions in the `defaults` config in `countdown.js`, each receiving raw values so word order and pluralization stay under your control — override them (together with `toggleLabelPause` / `toggleLabelResume`) to translate the countdown.
+The screen-reader sentence and the pause control's label follow `<html lang>` (German and English, falling back to English) — the same mechanism `inputCharCount`, `video` and `formValidation` use, so one `lang` attribute settles every component on the page.
+
+The strings live in the `labels` map in `countdown.js` as plain templates with `{placeholders}` (`{count}`, `{units}`, `{label}`), so adding a language means adding a block of strings, not editing code. Note the two ids per unit — `dayOne` / `dayOther` — which is where "1 Tag" vs. "2 Tage" is decided: the plural rule belongs to the language, not to the arithmetic. The `*Labelled` variants are the sentences used when the markup carries `data-countdown-label`.
 
 ## Demo
 Open `demo.html` in the browser (requires a prior `gulp build`).

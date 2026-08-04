@@ -72,25 +72,40 @@
 
 
 import { rafThrottle } from './rafThrottle.js';
+import { focusableSelector } from './focusableSelector.js';
 
 
 
-// Elements that can already receive keyboard focus. If the scroll region holds
-// any of these, a keyboard user reaches its content anyway, so we do NOT make
-// the container itself a (redundant) tab stop — see syncScrollFocusability.
-const focusableSelector = [
-  'a[href]',
-  'area[href]',
-  'button:not([disabled])',
-  'input:not([disabled])',
-  'select:not([disabled])',
-  'textarea:not([disabled])',
-  'iframe',
-  'audio[controls]',
-  'video[controls]',
-  "[contenteditable]:not([contenteditable='false'])",
-  "[tabindex]:not([tabindex='-1'])",
-].join(',');
+// Marks an <iframe> the close handler may reload to stop it playing (see
+// stopMedia). Opt-in, because reloading a frame drops its state and costs a
+// request.
+const mediaAttr = 'data-dialog-media';
+
+
+
+// Stops whatever the dialog was playing. Runs on every close (see the file
+// header). A plain function, not a `defaults` entry: `init(el, services)` is
+// the only way in and it takes no config, so a "hook" here could not be
+// replaced by a project without editing this file — and calling it through a
+// try/catch would only have guarded a failure that nobody can introduce.
+function stopMedia(dialog) {
+
+  // Pausing native media is cheap and side-effect-free, so we always do it —
+  // a closed dialog must never keep playing sound.
+  dialog.querySelectorAll('video, audio').forEach((media) => {
+    if (typeof media.pause === 'function') media.pause();
+  });
+
+  // Reassigning src is the reliable cross-browser way to stop an <iframe>
+  // (e.g. an embedded video) from playing on in the background — but it
+  // reloads the frame, losing its state and costing a request. So we only
+  // touch iframes the author explicitly marks as media (data-dialog-media),
+  // never every frame (a map, an embedded form, an app keeps its state).
+  dialog.querySelectorAll(`iframe[${mediaAttr}]`).forEach((iframe) => {
+    const src = iframe.getAttribute('src');
+    if (src) iframe.setAttribute('src', src);
+  });
+}
 
 
 
@@ -110,32 +125,8 @@ const defaults = {
   // attribute (not a style class) so the script stays decoupled from the CSS.
   scrollRegionAttr: 'data-dialog-scroll',
 
-  // Marks an <iframe> the close handler may reload to stop it playing (see
-  // stopMedia). Opt-in, because reloading a frame drops its state.
-  mediaAttr: 'data-dialog-media',
-
   // Body class toggled while at least one dialog is open.
   scrollLockClass: 'is-scrollLocked',
-
-  // Optional media-cleanup hook. Runs on every close; override to customise.
-  stopMedia: (dialog) => {
-
-    // Pausing native media is cheap and side-effect-free, so we always do it —
-    // a closed dialog must never keep playing sound.
-    dialog.querySelectorAll('video, audio').forEach((media) => {
-      if (typeof media.pause === 'function') media.pause();
-    });
-
-    // Reassigning src is the reliable cross-browser way to stop an <iframe>
-    // (e.g. an embedded video) from playing on in the background — but it
-    // reloads the frame, losing its state and costing a request. So we only
-    // touch iframes the author explicitly marks as media (data-dialog-media),
-    // never every frame (a map, an embedded form, an app keeps its state).
-    dialog.querySelectorAll('iframe[data-dialog-media]').forEach((iframe) => {
-      const src = iframe.getAttribute('src');
-      if (src) iframe.setAttribute('src', src);
-    });
-  },
 };
 
 
@@ -379,7 +370,7 @@ class Dialog {
   handleClose = () => {
     if (this.isModal) this.unlockScroll();
     this.syncTriggers('false');
-    this.runStopMedia();
+    stopMedia(this.dialog);
     this.restoreFocus();
     window.removeEventListener('resize', this.requestScrollSync);
     this.unobserveScrollRegion();
@@ -400,16 +391,6 @@ class Dialog {
       this.lastFocused.focus();
     }
     this.lastFocused = null;
-  };
-
-
-
-  runStopMedia = () => {
-    try {
-      this.config.stopMedia(this.dialog);
-    } catch (err) {
-      this.reporter?.report('dialog', 'stopMedia hook failed.', err);
-    }
   };
 
 

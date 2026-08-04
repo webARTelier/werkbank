@@ -53,9 +53,7 @@
  * data-js-behavior="marquee")
  * --------------------------------------------------------------------------
  * - `data-marquee-direction="left|right"` visual scroll direction
- *                                         (default "left"). Works in RTL
- *                                         contexts too — the translate
- *                                         range is mirrored there.
+ *                                         (default "left")
  * - `data-marquee-start="always|overflow"` "overflow" animates only while
  *                                         the content is wider than the
  *                                         visible track (default
@@ -65,10 +63,6 @@
  *                                         velocity, so tickers with
  *                                         differently long content all
  *                                         scroll at the same pace.
- * - `data-marquee-clones="3"`             minimum number of generated
- *                                         clone tracks (positive
- *                                         integer); raised automatically
- *                                         when the viewport needs more.
  * - `[data-marquee-toggle]`               an optional <button> inside the
  *                                         module (outside the container!)
  *                                         wired as pause/play toggle.
@@ -119,8 +113,12 @@ const defaults = {
   // track can be measured — speed needs a width to turn into a duration
   // (see getCycleDuration).
   fallbackCycleSeconds: 8,
-  clonesAttr: 'data-marquee-clones',
-  clones: 3,                  // minimum number of generated clone tracks
+
+  // Clone count used only while the track cannot be measured yet (a width of
+  // zero). Once it can be measured, the count follows from the viewport and
+  // the track width, so there is nothing to configure — see
+  // getRequiredCloneCount.
+  fallbackClones: 3,
 
   // State classes written on the module element (styling hooks only; the
   // JS never reads them back).
@@ -177,8 +175,7 @@ class Marquee {
     this.startMode = this.readKeyword(
       config.startAttr, ['always', 'overflow'], config.startMode
     );
-    this.speed = this.readNumber(config.speedAttr, config.speed, false);
-    this.minClones = this.readNumber(config.clonesAttr, config.clones, true);
+    this.speed = this.readNumber(config.speedAttr, config.speed);
 
     this.allAnimated = [];
     this.allAnimations = [];
@@ -400,18 +397,21 @@ class Marquee {
 
 
   // Calculates how many clones are needed to avoid visible gaps: enough
-  // tracks that viewport + one full cycle of travel is always covered.
+  // tracks that viewport + one full cycle of travel is always covered. The
+  // extra track is what covers the travel itself — during one cycle the
+  // leading one moves out by its own width — and one clone is the floor,
+  // since a single track cannot follow itself.
   getRequiredCloneCount = () => {
     const contentWidth = this.animated.scrollWidth;
     const visibleWidth = this.getVisibleWidth();
+    const fallback = this.config.fallbackClones;
 
-    if (!Number.isFinite(contentWidth) || contentWidth <= 0) return this.minClones;
-    if (!Number.isFinite(visibleWidth) || visibleWidth <= 0) return this.minClones;
+    if (!Number.isFinite(contentWidth) || contentWidth <= 0) return fallback;
+    if (!Number.isFinite(visibleWidth) || visibleWidth <= 0) return fallback;
 
     const requiredTracks = Math.ceil(visibleWidth / contentWidth) + 1;
-    const autoClones = Math.max(requiredTracks - 1, 1);
 
-    return Math.max(this.minClones, autoClones);
+    return Math.max(requiredTracks - 1, 1);
   };
 
 
@@ -493,24 +493,23 @@ class Marquee {
 
 
 
-  // Physical keyframes for one seamless cycle: each track travels exactly
-  // one track width (100% of its own border box — which is why the
-  // repetition gap must be padding, see marquee.scss). In an RTL context
-  // the flex row extends to the LEFT of the viewport, so the same visual
-  // direction needs the mirrored translate range to keep the viewport
-  // covered at every point of the cycle.
+  // Physical keyframes for one seamless cycle: each track travels exactly one
+  // track width (100% of its own border box — which is why the repetition gap
+  // must be padding, see marquee.scss). Physical is all there is to pick from
+  // (there is no logical translate), and the project ships left-to-right only,
+  // so there is no mirrored range to choose between either.
   getKeyframes = () => {
-    const rtlContext = getComputedStyle(this.container).direction === 'rtl';
-
     if (this.direction === 'left') {
-      return rtlContext
-        ? [{ transform: 'translateX(100%)' }, { transform: 'translateX(0)' }]
-        : [{ transform: 'translateX(0)' }, { transform: 'translateX(-100%)' }];
+      return [
+        { transform: 'translateX(0)' },
+        { transform: 'translateX(-100%)' },
+      ];
     }
 
-    return rtlContext
-      ? [{ transform: 'translateX(0)' }, { transform: 'translateX(100%)' }]
-      : [{ transform: 'translateX(-100%)' }, { transform: 'translateX(0)' }];
+    return [
+      { transform: 'translateX(-100%)' },
+      { transform: 'translateX(0)' },
+    ];
   };
 
 
@@ -617,21 +616,17 @@ class Marquee {
 
 
 
-  // Same contract as readKeyword, for positive numeric options.
-  readNumber = (attr, fallback, wantsInteger) => {
+  // Same contract as readKeyword, for a positive numeric option.
+  readNumber = (attr, fallback) => {
     const raw = this.root.getAttribute(attr);
     if (raw === null) return fallback;
 
-    const parsed = wantsInteger
-      ? Number.parseInt(raw, 10)
-      : Number.parseFloat(raw);
-
+    const parsed = Number.parseFloat(raw);
     if (Number.isFinite(parsed) && parsed > 0) return parsed;
 
     this.reporter?.report(
       'marquee',
-      `"${raw}" is not a valid ${attr} (positive number); ` +
-      (fallback === null ? 'ignoring it.' : `using ${fallback}.`),
+      `"${raw}" is not a valid ${attr} (positive number); using ${fallback}.`,
       this.root
     );
     return fallback;

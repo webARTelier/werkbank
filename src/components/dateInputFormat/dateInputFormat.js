@@ -86,9 +86,9 @@ const defaults = {
   // Semantic order of the mask segments, aligned with `groups`. Only used to
   // reorder a wholesale ISO date (YYYY-MM-DD, as browsers autofill an
   // autocomplete="bday" field) into this order before grouping — see
-  // isoDigitsInMaskOrder. Keys: "D" day, "M" month, "Y" year. For MM/DD/YYYY
-  // use ["M", "D", "Y"]; set to null to disable ISO reordering entirely.
-  // A per-field pattern (above) derives this order from the pattern itself.
+  // isoDigitsInMaskOrder. Keys: "D" day, "M" month, "Y" year. A per-field
+  // pattern (above) derives this order from the pattern itself, so there is
+  // always one.
   order: ['D', 'M', 'Y'], // DD . MM . YYYY
 };
 
@@ -265,8 +265,10 @@ class DateInputFormat {
 
   enhance = () => {
 
-    // Touch-keyboard hint — never clobber an author-set inputmode.
-    if (!this.input.hasAttribute('inputmode')) {
+    // Touch-keyboard hint — never clobber an author-set inputmode. Remembered,
+    // so destroy() only takes back the one this module put there.
+    this.appliedInputMode = !this.input.hasAttribute('inputmode');
+    if (this.appliedInputMode) {
       this.input.setAttribute('inputmode', this.config.inputMode);
     }
 
@@ -298,7 +300,7 @@ class DateInputFormat {
   // into the mask's segment order first (see isoDigitsInMaskOrder), any other
   // value is just stripped to its digits. Capped at the mask length.
   digitsFrom = (value) => {
-    const iso = this.config.order && isoDigitsInMaskOrder(value, this.config.order);
+    const iso = isoDigitsInMaskOrder(value, this.config.order);
     return onlyDigits(iso || value).slice(0, this.maxDigits);
   };
 
@@ -314,7 +316,7 @@ class DateInputFormat {
     // YYYY-MM-DD) is not live typing: reorder and reformat it via normalize(),
     // leaving the caret at the end, rather than running the digit-space caret
     // math below on ISO-ordered digits.
-    if (this.config.order && isoDigitsInMaskOrder(this.input.value, this.config.order)) {
+    if (isoDigitsInMaskOrder(this.input.value, this.config.order)) {
       this.normalize();
       return;
     }
@@ -387,6 +389,28 @@ class DateInputFormat {
       this.input
     );
   };
+
+
+
+  // Optional teardown for hosts that mount/unmount this subtree repeatedly
+  // instead of doing a full page (re)load — see destroyModulesInScope() in
+  // boot.js. Every listener here is bound to the field itself and would die
+  // with it; this exists for the case where a host keeps the same field and
+  // initialises it again, which would otherwise leave it with a second set of
+  // listeners reformatting every keystroke twice.
+  //
+  // The value stays as it is. It is what the visitor typed, the formatting is
+  // idempotent, and a re-init reproduces the same grouping — turning it back
+  // into bare digits on the way out would be the module editing user input.
+  // Guarded because the constructor bails on an unsupported field type before
+  // enhance() ever runs.
+  destroy = () => {
+    this.input.removeEventListener('input', this.handleInput);
+    this.input.removeEventListener('change', this.handleChange);
+    this.input.removeEventListener('blur', this.handleBlur);
+
+    if (this.appliedInputMode) this.input.removeAttribute('inputmode');
+  };
 }
 
 
@@ -416,7 +440,11 @@ export function init(el, services = {}) {
   // per-module flag before calling init), so no extra guard is needed here.
   // Each field resolves its own config, so a per-field mask pattern (e.g.
   // data-dateinputformat="MM/DD/YYYY") is honored independently.
-  inputs.forEach((input) => {
-    new DateInputFormat(input, resolveConfig(input, defaults, reporter), reporter);
-  });
+  const instances = inputs.map((input) => new DateInputFormat(
+    input, resolveConfig(input, defaults, reporter), reporter
+  ));
+
+  // The module element may be a wrapper holding several fields, so the one
+  // cleanup boot.js stores has to tear down all of them.
+  return () => instances.forEach((instance) => instance.destroy());
 }

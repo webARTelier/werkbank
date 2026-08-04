@@ -69,12 +69,20 @@ To change the **project-wide default**, edit the `defaults` config in
 `separator: '.'`, and the sum of the groups is the maximum number of digits
 kept. The `order` config (`['D', 'M', 'Y']` by default) names the mask's
 segments so a wholesale ISO date (from autofill) can be reordered into it — set
-it to match your mask, or to `null` to disable ISO reordering. (A per-field
-pattern derives `groups`, `separator` and `order` from the pattern itself.)
+it to match your mask. (A per-field pattern derives `groups`, `separator` and
+`order` from the pattern itself, so there is always an order.)
 
 ## Integration
 The JS exports `init(el, services)` and does not self-initialize. It is loaded on
 demand by `boot.js` for every element carrying `data-js-behavior="dateInputFormat"`.
+
+`init()` returns a cleanup function, so a host that mounts and unmounts the same
+markup (Astro islands, a framework re-render — see `destroyModulesInScope()` in
+`boot.js`) can hand the field back as it was authored: the `input` / `change` /
+`blur` listeners go, and so does the `inputmode` hint if this module was the one
+that added it. Because one module element may hold several fields, the cleanup
+tears down every instance it created. The value itself is left alone — it is
+what the visitor typed, and the formatting is idempotent.
 
 `services.reporter` (dependency injection via `boot.js`) is **optional** — it is
 used to warn when the module is initialized on a non-element node, when no

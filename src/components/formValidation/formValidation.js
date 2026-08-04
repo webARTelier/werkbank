@@ -90,6 +90,8 @@
  */
 
 import { resolveLocale } from './resolveLocale.js';
+import { formatTemplate } from './formatTemplate.js';
+import { addDescribedBy, removeDescribedBy } from './describedBy.js';
 
 
 
@@ -151,7 +153,12 @@ const defaults = {
     { key: 'rangeUnderflow', attr: 'fvMin' },
     { key: 'rangeOverflow', attr: 'fvMax' },
     { key: 'stepMismatch', attr: 'fvStep' },
-    { key: 'badInput', attr: 'fvBadinput' },
+
+    // No per-constraint override attribute: badInput only fires where the
+    // control itself refuses the value (a type="number" holding letters),
+    // which is a state the user cannot usually reach and a message no project
+    // has had to reword. data-fv-message still covers it.
+    { key: 'badInput' },
   ],
 };
 
@@ -224,14 +231,15 @@ const messageTokens = {
 
 
 
-// Interpolates {placeholder} tokens in a message template from the live
-// field. Unknown placeholders are left as-is so a CMS typo stays visible,
-// not silent.
+// Interpolates a message template from the live field: the tokens are read at
+// the moment the message is rendered, so "currently 3 characters" stays true.
 function formatMessage(template, field) {
-  if (!template) return '';
-  return String(template).replace(/\{(\w+)\}/g, (match, key) =>
-    messageTokens[key] ? String(messageTokens[key](field)) : match
-  );
+  const tokens = {};
+  for (const [key, read] of Object.entries(messageTokens)) {
+    tokens[key] = read(field);
+  }
+
+  return formatTemplate(template, tokens);
 }
 
 
@@ -542,7 +550,7 @@ class FormValidation {
     if (!item) return;
     const errorEl = this.getOrCreateErrorEl(field, item);
     errorEl.textContent = message;
-    this.addDescribedBy(field, errorEl.id);
+    addDescribedBy(field, errorEl.id);
   };
 
 
@@ -557,7 +565,7 @@ class FormValidation {
     // field's message that happens to sit inside it.
     const errorEl = document.getElementById(this.errorIdFor(field));
     if (errorEl) {
-      this.removeDescribedBy(field, errorEl.id);
+      removeDescribedBy(field, errorEl.id);
       errorEl.remove();
     }
   };
@@ -616,7 +624,7 @@ class FormValidation {
     for (const check of this.config.checks) {
       if (!validity[check.key]) continue;
 
-      const specific = field.dataset[check.attr];
+      const specific = check.attr ? field.dataset[check.attr] : undefined;
       if (specific) return specific;
       if (generic) return generic;
 
@@ -782,7 +790,7 @@ class FormValidation {
   summaryTitle = (count) => {
     const template =
       count === 1 ? this.messages.summaryTitleSingular : this.messages.summaryTitlePlural;
-    return String(template || '').replace(/\{count\}/g, String(count));
+    return formatTemplate(template, { count });
   };
 
 
@@ -839,32 +847,6 @@ class FormValidation {
 
 
   collapse = (text) => String(text || '').replace(/\s+/g, ' ').trim();
-
-
-
-  // --- aria-describedby token helpers (preserve any author-set ids) --------
-
-  addDescribedBy = (field, id) => {
-    const tokens = this.describedByTokens(field);
-    if (!tokens.includes(id)) tokens.push(id);
-    field.setAttribute('aria-describedby', tokens.join(' '));
-  };
-
-
-
-  removeDescribedBy = (field, id) => {
-    const tokens = this.describedByTokens(field).filter((t) => t !== id);
-    if (!tokens.length) {
-      field.removeAttribute('aria-describedby');
-      return;
-    }
-    field.setAttribute('aria-describedby', tokens.join(' '));
-  };
-
-
-
-  describedByTokens = (field) =>
-    (field.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean);
 
 
 

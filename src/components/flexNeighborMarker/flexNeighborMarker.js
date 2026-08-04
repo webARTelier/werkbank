@@ -40,14 +40,8 @@
  * drives (see the SCSS) must stay decorative (dividers, spacing): nothing that
  * carries meaning to assistive technology may depend on it.
  *
- * Configuration (all optional, read from the module element)
- * ----------------------------------------------------------
- *   - data-neighbor-tolerance="1"
- *       px tolerance when grouping items into a row by their top edge
- *       (sub-pixel layout).
- *   - data-neighbor-class="..."
- *       override the marker class (default "has-neighbor"). The SCSS keys off
- *       the default, so restyle to match if you change it.
+ * Configuration (optional, read from the module element)
+ * ------------------------------------------------------
  *   - data-neighbor-container
  *       mark one or more descendant flex containers to scan; without it the
  *       module element itself is treated as the container.
@@ -62,32 +56,25 @@ import { rafThrottle } from './rafThrottle.js';
 
 const defaults = {
   containerSelector: '[data-neighbor-container]',
+
+  // Set on every item that has a following sibling in the same visual row.
+  // Not overridable from the markup: the shipped SCSS keys its divider off
+  // this exact name, so a renamed class would only take the styling away.
   markerClass: 'has-neighbor',
-  tolerance: 1, // px tolerance before two items count as sharing a row
+
+  // px tolerance before two items count as sharing a row. An internal
+  // constant, not an option: it absorbs sub-pixel layout, and one device
+  // pixel is what that takes on every layout there is.
+  tolerance: 1,
 };
 
 
 
 class FlexNeighborMarker {
 
-  // Parse a non-negative numeric option, falling back for
-  // missing/invalid values.
-  static parseTolerance(value, fallback) {
-    const parsed = Number.parseFloat(value);
-    return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
-  }
-
-
-
   constructor(module, reporter) {
     this.module = module;
     this.reporter = reporter;
-
-    this.markerClass = module.dataset.neighborClass?.trim() || defaults.markerClass;
-    this.tolerance = FlexNeighborMarker.parseTolerance(
-      module.dataset.neighborTolerance,
-      defaults.tolerance
-    );
 
     this.containers = this.resolveContainers();
 
@@ -156,7 +143,9 @@ class FlexNeighborMarker {
 
     for (const item of items) {
       const top = item.getBoundingClientRect().top;
-      const row = rows.find((candidate) => Math.abs(candidate.top - top) <= this.tolerance);
+      const row = rows.find(
+        (candidate) => Math.abs(candidate.top - top) <= defaults.tolerance
+      );
 
       if (row) {
 
@@ -182,7 +171,8 @@ class FlexNeighborMarker {
   // flag only mutates the attribute when the state actually
   // differs, so a mark that changes an item's box cannot feed
   // back into the ResizeObserver as an endless loop.
-  mark = (item, hasNeighbor) => item.classList.toggle(this.markerClass, hasNeighbor);
+  mark = (item, hasNeighbor) =>
+    item.classList.toggle(defaults.markerClass, hasNeighbor);
 
 
 

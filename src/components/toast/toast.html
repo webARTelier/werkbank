@@ -1,0 +1,168 @@
+<!--
+  toast — copy-paste snippet
+  ============================================================================
+  Copy the block(s) below into your own project.
+
+  1) In <head> (or before </body>): load the shared styles, this component's
+     styles and the boot script. boot.min.js lazily loads the toast module as
+     soon as it finds data-js-behavior="toast" in the DOM — you do not import
+     toast.js yourself. Adjust the paths to where you serve /dist.
+
+       <link rel="stylesheet" href="/dist/css/shared.min.css" />
+       <link rel="stylesheet" href="/dist/css/toast.min.css" />
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+  2) Put ONE stack on the page. The stylesheet fixes it to a corner of the
+     viewport, so where it sits in the document does not change where it
+     appears — early in <body>, right after the skip link, is the tidiest
+     place for it.
+
+  Wiring
+    - The stack carries data-js-behavior="toast". A NAMED <section> is the
+      recommended root: with an aria-label it is a region landmark, which is
+      the one navigation mode that reaches the stack from anywhere. That
+      matters because a message may hold a control ("Undo"), and the tab
+      order cannot help much — wherever the stack sits in the document, it is
+      either behind the whole page or before it. An <ol role="list"> works
+      too (the module then writes <li> items instead of <div>) and gives a
+      count instead of a landmark; on a page with several stacks give each a
+      name of its own, or two identically named landmarks are worse than one.
+    - A message the server already knows about — the flash message after a
+      redirect, "your changes have been saved" — is written straight into the
+      stack. That one is on screen at the first paint, script or no script;
+      the module adds the way out and the timer.
+    - Three ways to show a message once the page is running:
+
+      a) A control, with no project script at all:
+
+           <button type="button"
+                   data-toast-trigger
+                   data-toast-message="Link copied"
+                   data-toast-variant="success">Copy link</button>
+
+         The press is never taken — the control is doing its own job and the
+         message is only the feedback.
+
+      b) From your own code, without importing anything:
+
+           document.dispatchEvent(new CustomEvent('toast:show', {
+             detail: { message: 'Could not save', variant: 'error' }
+           }));
+
+         A plain string as detail is shorthand for { message: … }. The event
+         may also be dispatched on the stack itself.
+
+      c) With a <template>, for a message that needs more than text (a link,
+         an "Undo" button — wire your own listener to it, e.g. delegated on
+         the stack):
+
+           <template id="toast-undo">
+             <p>Draft deleted.</p>
+             <button type="button" data-undo>Undo</button>
+           </template>
+
+           <button type="button" data-toast-trigger
+                   data-toast-template="toast-undo">Delete draft</button>
+
+  Notes / Configuration
+    - Progressive enhancement: nothing is hidden behind a control the script
+      has to deliver first, so the component ships no pre-enhancement state.
+      A message in the markup renders the same before and after the module
+      arrives — it simply keeps standing, which is a static notice and not a
+      broken widget — and the stack is empty until something asks for a
+      message. What does need the module is a message fired from code, so
+      fire those from an interaction (which is always after load) and put a
+      message you already have at page load into the markup, where it also
+      survives the chunk never arriving. <link rel="modulepreload"> for
+      /dist/js/modules/toast.min.js shortens that window if you need it.
+    - Auto-dismissal is a time limit (WCAG 2.2.1) and is treated as one. It
+      pauses while the pointer is over the stack, while the focus is inside
+      it and while the tab is in the background, and resumes with the time
+      that was left rather than starting over. data-toast-duration="0"
+      switches it off — per message, or on the stack for all of them. And a
+      message holding a control of its own is NEVER given a timer, whatever
+      the attributes say: the reader has to be able to reach that control.
+    - Keyboard: Tab reaches the dismiss control of each message, Escape
+      dismisses the message the focus is in. Focus is never moved TO a
+      message; when one that HAS the focus leaves, the focus goes to the next
+      message in the stack or back where it came from.
+    - On the stack, all optional:
+        data-toast-duration="6000"    ms a message stays; 0 keeps it
+        data-toast-max="3"            how many may be on screen at once
+        data-toast-politeness="polite"   or "assertive"
+    - The strings this module generates — the dismiss control's name and the
+      word the announcement is prefixed with per kind of message ("Fehler:
+      …") — follow <html lang> (de/en, falling back to en). Nothing to wire
+      in the markup; add a language in the `labels` map in toast.js.
+    - On one message: data-toast-variant (info | success | warning | error),
+      data-toast-duration, data-toast-politeness. The variant picks the accent
+      colour and the icon; both are decoration, so say in the text what the
+      message means.
+    - Placement: the stack sits in the bottom inline-end corner. The
+      modifiers m-toast--blockStart, m-toast--inlineStart and
+      m-toast--inlineCenter move it, and each is only a preset of the
+      --toast-inset-*/--toast-align/--toast-shift properties — theming and
+      placement both go through the --toast-* custom properties on the stack.
+    - Announcements: the module injects two visually hidden live regions
+      after the stack (one polite, one assertive) and announces a copy of the
+      text in the matching one. An error is assertive by default, everything
+      else polite. The stack itself is deliberately not a live region: one
+      would read out the name of every control in it, so a dismissable
+      message would announce its own button.
+    - A modal <dialog> is painted in the top layer, above any fixed element,
+      so a stack outside it cannot appear over it. Put a second stack INSIDE
+      the dialog for that case, give both an id, and name the one you mean:
+      data-toast-trigger="<id>" or detail.target = "<id>". With exactly one
+      stack on the page no id is needed anywhere.
+    - Motion and contrast are honoured: prefers-reduced-motion makes messages
+      appear and disappear without travelling, the four icons are four
+      distinct shapes rather than four colours of one, and in a forced-colors
+      context they are repainted in a system colour so they survive the
+      accents being flattened.
+-->
+
+
+
+<!--
+  The stack. One per page, early in <body>. The message inside it is an
+  example of a server-rendered one: delete it for a stack that starts empty.
+-->
+<section class="m-toast" aria-label="Notifications" data-js-behavior="toast">
+
+  <div data-toast-item data-toast-variant="success">
+    <p data-toast-body>Your changes have been saved.</p>
+  </div>
+
+</section>
+
+
+
+<!--
+  A control that shows a message declaratively: no project script, and the
+  press is left alone so the control can do its own job.
+-->
+<button
+  type="button"
+  data-toast-trigger
+  data-toast-message="Link copied to the clipboard"
+  data-toast-variant="success"
+>
+  Copy link
+</button>
+
+
+
+<!--
+  A message that holds a control of its own. It never auto-dismisses — the
+  reader has to be able to reach that control — so it stays until it is
+  dismissed. The "Undo" button is yours: wire it up in your own code, e.g.
+  with one delegated listener on the stack.
+-->
+<template id="toast-undo">
+  <p>Draft deleted.</p>
+  <button type="button" data-undo>Undo</button>
+</template>
+
+<button type="button" data-toast-trigger data-toast-template="toast-undo">
+  Delete draft
+</button>

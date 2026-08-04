@@ -28,6 +28,12 @@
   // Error text and invalid-field borders (e.g. formValidation). Picked light
   // enough to keep AA contrast on the dark surfaces above.
   --color-error: var(--c-red-400);
+  // The other two outcomes a message can report (e.g. toast). Same lightness
+  // band as the error tone, so the three read as one set — and none of them
+  // ever carries body text in this collection: they colour a border and an
+  // icon, where the bar is the 3:1 of WCAG 1.4.11.
+  --color-warning: var(--c-amber-400);
+  --color-success: var(--c-green-400);
 
   // Interactive states
   // Two focus-ring tones so an element can pick the one that contrasts with its

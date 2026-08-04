@@ -241,14 +241,10 @@
     // ----- the panel: the visible drawer -----
     //
     // Closed, the panel rests one panel width outside its own edge; opening
-    // moves it in to 0. That is done with a *logical* inset and not with a
-    // translate, because there is no logical translate: a physical translateX
-    // would send the panel across the viewport instead of out of its own edge
-    // as soon as the writing direction is right-to-left, and :dir() cannot
-    // stand in for it either (the build lowers it to a language list for older
-    // engines, which does not see dir="rtl" at all). Which of the two insets
-    // carries the offset is the only thing the side decides, so both sides read
-    // the same property and opening stays one rule.
+    // moves it in to 0. That is an inset rather than a translate so the two
+    // sides stay one rule: which of the two insets carries the offset is the
+    // only thing data-offcanvasnav-side decides, and the animated property is
+    // the same either way.
     //
     // This rule carries the *entrance* timing: it is the one in effect while
     // [open] is being added, and a transition takes its timing from the state

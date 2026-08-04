@@ -45,8 +45,15 @@ of dependency — not by preference. Keep this split consistent:
   (e.g. a no-op in tests).
 - **Pure, stateless utilities → direct import from `_shared/js/`.** Imported as
   flat siblings (e.g. `import { rafThrottle } from './rafThrottle.js';`), which
-  the build resolves from `_shared/js/` and bundles into that component's lazy
-  chunk. Examples: `debounce`, `rafThrottle`, `getCssCustomProperty`.
+  the build resolves from `_shared/js/`. A utility only one component imports
+  is inlined into that component's lazy chunk; from the second consumer on,
+  Rollup splits it into its own chunk in `dist/js/modules/` that is loaded
+  alongside and cached — which is why **a helper's second consumer is the
+  signal to hoist it here** instead of copying it. Examples: `debounce`,
+  `rafThrottle`, `getCssCustomProperty`, `formatTemplate`, `decodeFragment`,
+  `parseNonNegative`, `uniqueId`, `focusableSelector`,
+  `navExpandedMediaQuery`, `otherModalOpen` (see
+  `docs/componentStandards.md` §10 for what each one does).
 
 Do **not** route pure utilities through `services`: `boot.js` loads eagerly on
 every page, so anything it imports for the `services` object lands in the
@@ -249,6 +256,22 @@ element the inner one sits in**, named after both:
   `m-<outer>__<inner>` element appears where the outer actually places, sizes
   or tunes a named companion — inside such a slot, as in the example above.
 
+
+## Out of scope: right-to-left
+
+**This project does not support RTL layouts.** Decided 2026-08-04 after 25
+years without a single project needing it, and the JS that had grown for it
+(marquee's mirrored translate range, dropdownNav's direction-aware collision
+flip, lightbox's swapped arrow keys) has been removed.
+
+- **Logical properties stay** (`inset-inline`, `inline-size`, …). They are the
+  house style because they keep one rule where physical sides need two — not
+  because anything mirrors. Comments must not promise otherwise.
+- **Never read `direction` / `dir` in JS**, and never pair a logical property
+  with a script that measures which physical edge it resolved to.
+- The build is a second reason: it lowers `:dir(rtl)` into a `:lang()` list for
+  older engines, which does not see `dir="rtl"` at all — so the CSS could not
+  express the mirroring reliably even if the JS did.
 
 ## Still open / intentionally not changed
 

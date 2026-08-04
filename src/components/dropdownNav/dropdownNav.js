@@ -116,8 +116,10 @@
 
 
 
-import { getCssCustomProperty } from './getCssCustomProperty.js';
 import { rafThrottle } from './rafThrottle.js';
+import { focusableSelector } from './focusableSelector.js';
+import { navExpandedMediaQuery } from './navExpandedMediaQuery.js';
+import { uniqueId } from './uniqueId.js';
 
 
 
@@ -211,31 +213,13 @@ const defaults = {
 // (nested interactive content), so it gets a separate split toggle.
 const interactiveLabelSelector = 'a[href], button, [role="button"]';
 
-// "The first thing a keyboard user should land on" when a submenu is
-// opened with ArrowDown. Disabled controls and tabindex="-1" are excluded
-// because focusing them would silently do nothing (or, worse, park the
-// focus somewhere Tab cannot leave in the expected direction), which would
-// look like the key press was ignored.
-const focusableSelector =
-  'a[href], button:not([disabled]), input:not([disabled]), ' +
-  'select:not([disabled]), textarea:not([disabled]), ' +
-  '[tabindex]:not([tabindex="-1"])';
-
-// The flyout layout — the one with floating panels that can overflow the
-// viewport, and the only one where hover opening makes sense. The
-// breakpoint stays single-sourced in the SCSS (--bp-navigation, see
-// _shared/scss/_breakpoint_tokens.scss) and is read back from there.
-// A project that does not ship the token gets a query that always
+// The flyout layout is the one with floating panels that can overflow the
+// viewport, and the only one where hover opening makes sense. A project
+// that does not ship the breakpoint token gets a query that always
 // matches: the flip rules are scoped to the flyout layout in the
 // stylesheet anyway, and in the stacked layout a panel sits in the flow
 // where it cannot overflow to begin with.
-const lengthPattern = /^[\d.]+(px|em|rem)$/;
-
-function navExpandedMediaQuery(prop) {
-  const breakpoint = getCssCustomProperty(document.documentElement, prop);
-  if (!lengthPattern.test(breakpoint)) return '(min-width: 0px)';
-  return `(min-width: ${breakpoint})`;
-}
+const noTokenQuery = '(min-width: 0px)';
 
 // Hover opening only makes sense where there is something to hover over:
 // a coarse pointer has no hover at all (a tap would open a menu the user
@@ -243,23 +227,7 @@ function navExpandedMediaQuery(prop) {
 // under a passing pointer would be noise rather than a shortcut.
 function hoverMediaQuery(prop) {
   const pointer = '(hover: hover) and (pointer: fine)';
-  return `${pointer} and ${navExpandedMediaQuery(prop)}`;
-}
-
-
-
-// Panel ids are generated only when the author did not provide one. The
-// counter is module-wide (several navs can coexist on a page) and the
-// result is checked against the document, so a hand-written id of the
-// same shape elsewhere cannot be shadowed.
-let panelIdCounter = 0;
-
-function uniquePanelId(prefix) {
-  let id = `${prefix}-${++panelIdCounter}`;
-  while (document.getElementById(id)) {
-    id = `${prefix}-${++panelIdCounter}`;
-  }
-  return id;
+  return `${pointer} and ${navExpandedMediaQuery(prop, noTokenQuery)}`;
 }
 
 
@@ -276,8 +244,9 @@ class DropdownNav {
     this.useHover = root.hasAttribute(params.hoverAttr) && !this.isStacked;
     this.hoverQuery =
       window.matchMedia(hoverMediaQuery(params.navBreakpointProp));
-    this.expandedQuery =
-      window.matchMedia(navExpandedMediaQuery(params.navBreakpointProp));
+    this.expandedQuery = window.matchMedia(
+      navExpandedMediaQuery(params.navBreakpointProp, noTokenQuery)
+    );
     this.submenuLabel =
       root.getAttribute(params.submenuLabelAttr) || params.submenuLabelTemplate;
 
@@ -398,7 +367,7 @@ class DropdownNav {
     }
 
     const generatedId = !panel.id;
-    if (generatedId) panel.id = uniquePanelId(this.params.panelIdPrefix);
+    if (generatedId) panel.id = uniqueId(this.params.panelIdPrefix);
 
     const isSplit = label.matches(interactiveLabelSelector);
     const toggle = this.createToggle(panel.id, isSplit);
@@ -660,11 +629,6 @@ class DropdownNav {
       return;
     }
 
-    // Which physical edge is the inline-end one. Read per pass rather than
-    // once in the constructor, so a language switch that flips the
-    // document's direction at runtime flips the collision handling with it.
-    const isRtl = window.getComputedStyle(this.root).direction === 'rtl';
-
     this.records.forEach(({ item, panel }) => {
 
       // A mega panel spans the nav, so there is no other side to move it
@@ -678,7 +642,7 @@ class DropdownNav {
       // every panel: an item carrying data-dropdownnav-align="end" already
       // grows towards the start, so the only edge it can ever cross is the
       // one the "always flip to the end" assumption never looked at.
-      const side = this.overflowingSide(panel, isRtl, viewportMargin);
+      const side = this.overflowingSide(panel, viewportMargin);
       if (!side) return;
 
       // Anchoring the panel at the edge it just overflowed turns it
@@ -698,7 +662,7 @@ class DropdownNav {
       // margin says when a panel *should* move, but one that now sits
       // flush against the other edge did get rescued — sending it back
       // over a few pixels of breathing room would undo a working flip.
-      if (this.overflowingSide(panel, isRtl, 0)) {
+      if (this.overflowingSide(panel, 0)) {
         panel.removeAttribute(flipAttr);
       }
     });
@@ -707,19 +671,17 @@ class DropdownNav {
 
 
   // Which viewport edge the panel currently crosses, as a logical edge
-  // ('start' / 'end') so the caller never has to think in physical sides.
-  // The end edge is checked first: it is the one the default anchoring
-  // grows towards, so it is the common case. clientWidth, not innerWidth:
-  // a classic scrollbar is not space a panel may use.
-  overflowingSide = (panel, isRtl, margin) => {
+  // ('start' / 'end') so the caller never has to think in physical sides —
+  // and with left-to-right the only direction this project ships, inline-end
+  // is the right edge. The end edge is checked first: it is the one the
+  // default anchoring grows towards, so it is the common case. clientWidth,
+  // not innerWidth: a classic scrollbar is not space a panel may use.
+  overflowingSide = (panel, margin) => {
     const rect = panel.getBoundingClientRect();
     const limit = document.documentElement.clientWidth - margin;
 
-    const overStart = isRtl ? rect.right > limit : rect.left < margin;
-    const overEnd = isRtl ? rect.left < margin : rect.right > limit;
-
-    if (overEnd) return 'end';
-    if (overStart) return 'start';
+    if (rect.right > limit) return 'end';
+    if (rect.left < margin) return 'start';
     return null;
   };
 

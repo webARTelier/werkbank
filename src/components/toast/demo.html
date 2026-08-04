@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>toast – Demo</title>
+  <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
+  <link rel="stylesheet" href="../../../dist/css/toast.min.css" />
+  <script type="module" src="../../../dist/js/boot.min.js"></script>
+
+  <!-- for development only -->
+  <script type="module" src="../../../src/_shared/js/dev_pageInfo.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_a11yInspector.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_qrCode.js"></script>
+  <!-- end for development only -->
+
+  <!--
+      DEMO-ONLY STYLES
+      ----------------------------------------------------------------------
+      toast.min.css ships the stack and everything in a message. What is left
+      to the page is the controls that ask for a message and the space around
+      them — plus the link inside one message, which is the project's control
+      and not the component's. (Tokens like --space-* / --color-* come from
+      shared.min.css.)
+  -->
+
+  <style>
+    .demo {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2xl);
+    }
+
+    .demo__example {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-s);
+    }
+
+    .demo__example h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      color: var(--color-text);
+    }
+
+    .demo__controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-2xs);
+      margin: 0;
+    }
+
+    /* The triggers are the project's controls: the component ships no styles
+       for them, the way dialog leaves its triggers alone. */
+    .demo__button {
+      cursor: pointer;
+      min-height: 2.75rem;
+      padding: 0 var(--space-s);
+      border: 1px solid var(--color-border);
+      border-radius: var(--borderRadius);
+      color: var(--color-text);
+      background-color: transparent;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .demo__button:hover {
+      border-color: var(--color-border-strong);
+      background-color: var(--color-bg-overlay);
+    }
+
+    .demo__button:focus-visible {
+      outline: 2px solid var(--color-focus-ring-light);
+      outline-offset: var(--outlineOffset);
+    }
+
+    /* A control inside a message is the project's too — here the link in the
+       templated one. */
+    .m-toast [data-toast-body] a {
+      color: var(--color-accent-secondary);
+      font-weight: 600;
+    }
+
+    .m-toast [data-toast-body] a:focus-visible {
+      outline: 2px solid var(--color-focus-ring-light);
+      outline-offset: var(--outlineOffset);
+    }
+
+    /* The templated message stacks its two lines. */
+    .m-toast [data-toast-body] p {
+      margin: 0 0 var(--space-3xs);
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <!--
+      The stacks come first in <body>, right after where a skip link would be.
+      Where they APPEAR is fixed by the stylesheet, so their position in the
+      document changes nothing visually.
+
+      Both are named <section>s, i.e. region landmarks: that is the one
+      navigation mode which reaches a stack from anywhere, and a message may
+      well hold a control. Each carries a name of its own — two landmarks
+      with the same name are worse than one.
+  -->
+
+  <!-- The main stack: bottom inline-end corner, empty at rest. -->
+  <section class="m-toast" aria-label="Notifications" id="toast-stack" data-js-behavior="toast"></section>
+
+  <!--
+      A second stack, top and centred, carrying a message the "server"
+      rendered: it is on screen at the first paint, script or no script. The
+      module gives it the dismiss control and a timer — 9 s here, so it is
+      still there when the page has finished loading and gone a moment later.
+      Reload to see it again.
+  -->
+  <section
+    class="m-toast m-toast--blockStart m-toast--inlineCenter"
+    aria-label="Site notices"
+    id="toast-notices"
+    data-js-behavior="toast"
+    data-toast-duration="9000"
+  >
+    <div data-toast-item data-toast-variant="info">
+      <p data-toast-body>Scheduled maintenance tonight, 23:00–23:30 UTC.</p>
+    </div>
+  </section>
+
+  <main class="shell">
+
+    <section class="hero">
+      <a class="back" href="../../../index.html">← Overview</a>
+      <h1>toast</h1>
+      <p>Transient messages in a stack over the page — announced through a live region the messages themselves are not part of.</p>
+    </section>
+
+    <section class="stage" aria-label="Live demo">
+
+      <!--
+          One stack per page, enabled with data-js-behavior="toast" on it.
+          This demo has two, because the second one shows both a
+          server-rendered message and a different placement.
+
+          Wiring
+            - Every control below carries data-toast-trigger="toast-stack" (or
+              "toast-notices") plus the message it shows. No script on this
+              page: the trigger IS the API for the case where the feedback is
+              the whole point. The press is never taken — the control is
+              meant to be doing something of its own.
+            - With exactly ONE stack on the page the value can be left empty
+              (data-toast-trigger), which needs no id at all. Two stacks have
+              to be told apart, so both carry one here; a request that names
+              neither is dropped and reported rather than guessed at.
+            - From project code the same thing is a DOM event, so nothing has
+              to be imported:
+                document.dispatchEvent(new CustomEvent('toast:show', {
+                  detail: { message: 'Saved', variant: 'success' } }));
+            - The last example uses data-toast-template: the message's content
+              is a <template> the page authored, which is how a message gets a
+              control of its own without this module ever parsing a string of
+              HTML as markup.
+
+          Progressive enhancement
+            - Nothing is hidden behind a control the script has to deliver
+              first, so there is no pre-enhancement state. The message in the
+              second stack is written into the markup and is on screen at the
+              first paint; without the chunk it simply keeps standing, which
+              is a static notice and not a broken widget. The dismiss control
+              is injected, so it cannot exist before it works.
+            - Entrance and exit are CSS alone (@starting-style plus the
+              leaving state). The script does not know how long they take: it
+              asks the element which animations are running and removes the
+              node when they have finished — so under
+              prefers-reduced-motion, where nothing animates, a message is
+              simply gone at once.
+
+          Accessibility
+            - The stack is NOT a live region: one would read out the name of
+              every control in it, so a dismissable message would announce
+              its own button. The module injects two hidden regions next to
+              the stack — one polite, one assertive — and announces a copy of
+              the text in the matching one. An error is assertive, everything
+              else polite.
+            - The announcement is prefixed with the kind of message ("Error:
+              …"), because in the stack that kind is a colour and an icon,
+              and neither is text.
+            - Auto-dismissal is a time limit (WCAG 2.2.1): it pauses while
+              the pointer is over the stack, while the focus is inside it and
+              while the tab is in the background, and resumes with the time
+              that was left. data-toast-duration="0" switches it off, and a
+              message holding a control of its own never gets a timer at all.
+            - The focus is never moved TO a message. When one that HAS the
+              focus leaves, the focus goes to the next message in the stack
+              or back where it came from — a node removed from under the
+              focus would drop it to <body>, and the next Tab would start
+              over at the top of the page.
+            - Escape dismisses the message the focus is in. The four icons
+              are four distinct shapes, not four colours of one, so a
+              forced-colors context loses the hue and keeps the meaning.
+        -->
+
+
+
+      <div class="demo">
+
+        <!-- Example 1: the four kinds -->
+        <section class="demo__example">
+          <h2>The four kinds of message</h2>
+          <p class="stage__intro">
+            <strong><code>data-toast-variant</code>:</strong> each picks an
+            accent colour <em>and</em> an icon shape — a colour on its own
+            would not be a distinction. The kind is also the first word of the
+            announcement, so a screen-reader user hears
+            <code>Error: …</code> where a sighted one sees the red rule. The
+            error goes to the assertive region, the other three to the polite
+            one.
+          </p>
+
+          <p class="demo__controls">
+            <button class="demo__button" type="button" data-toast-trigger="toast-stack" data-toast-message="Your session ends in 5 minutes.">
+              Info
+            </button>
+            <button class="demo__button" type="button" data-toast-trigger="toast-stack" data-toast-variant="success" data-toast-message="Your changes have been saved.">
+              Success
+            </button>
+            <button class="demo__button" type="button" data-toast-trigger="toast-stack" data-toast-variant="warning" data-toast-message="Two of the twelve rows were skipped.">
+              Warning
+            </button>
+            <button class="demo__button" type="button" data-toast-trigger="toast-stack" data-toast-variant="error" data-toast-message="Could not save your changes — the server did not respond.">
+              Error
+            </button>
+          </p>
+        </section>
+
+
+
+        <!-- Example 2: the timer, and the stack's ceiling -->
+        <section class="demo__example">
+          <h2>The timer, and how many fit</h2>
+          <p class="stage__intro">
+            <strong>Messages leave by themselves after 6 s</strong> — but not
+            while you are near them: put the pointer over the stack, or tab
+            into it, and the countdown holds where it is. The first control
+            below sets <code>data-toast-duration="0"</code>, which switches
+            the timer off for that message. Press any of them five times in a
+            row and only three are ever on screen
+            (<code>data-toast-max</code>): past that the oldest leaves, so a
+            loop reporting twenty failures cannot bury the page.
+          </p>
+
+          <p class="demo__controls">
+            <button class="demo__button" type="button" data-toast-trigger="toast-stack" data-toast-duration="0" data-toast-message="This one stays until you dismiss it.">
+              A message that stays
+            </button>
+            <button class="demo__button" type="button" data-toast-trigger="toast-stack" data-toast-duration="2000" data-toast-message="Gone in two seconds.">
+              A short one
+            </button>
+            <button class="demo__button" type="button" data-toast-trigger="toast-stack" data-toast-variant="warning" data-toast-message="Row 8 could not be imported.">
+              Press me five times
+            </button>
+          </p>
+        </section>
+
+
+
+        <!-- Example 3: the other stack, and placement -->
+        <section class="demo__example">
+          <h2>A second stack, somewhere else</h2>
+          <p class="stage__intro">
+            <strong><code>data-toast-trigger="toast-notices"</code>:</strong>
+            the stack at the top of the viewport is the one holding the
+            maintenance notice — a message this page rendered into the markup,
+            so it was on screen before any script ran. It carries the
+            <code>m-toast--blockStart</code> and
+            <code>m-toast--inlineCenter</code> modifiers, which are nothing
+            but presets of the placement properties; note that a message
+            travels out of the edge its stack is pinned to, downwards here
+            instead of upwards. The usual reason for a second stack is less
+            decorative: a modal <code>&lt;dialog&gt;</code> is painted in the
+            top layer, above every fixed element, so a stack that has to show
+            over one has to live inside it.
+          </p>
+
+          <p class="demo__controls">
+            <button class="demo__button" type="button" data-toast-trigger="toast-notices" data-toast-message="Backup finished — 1.2 GB written.">
+              Message at the top
+            </button>
+            <button class="demo__button" type="button" data-toast-trigger="toast-notices" data-toast-variant="error" data-toast-message="The connection was lost.">
+              Error at the top
+            </button>
+          </p>
+        </section>
+
+
+
+        <!-- Example 4: a message with a control in it -->
+        <section class="demo__example">
+          <h2>A message that holds a control</h2>
+          <p class="stage__intro">
+            <strong><code>data-toast-template</code>:</strong> the content
+            comes from a <code>&lt;template&gt;</code> on the page, which is
+            how a message gets a link or an "Undo" button without this module
+            ever parsing a string as markup — a message is data, and data
+            parsed as markup is an injection. Such a message is
+            <strong>never</strong> given a timer, whatever the attributes say:
+            the reader has to be able to reach that control, and a countdown
+            running against them while they do is the one thing a toast must
+            not be (WCAG 2.2.1). Tab into it, then press Escape to dismiss it
+            — the focus comes back to the control you started from.
+          </p>
+
+          <p class="demo__controls">
+            <button class="demo__button" type="button" data-toast-trigger="toast-stack" data-toast-variant="success" data-toast-template="toast-order">
+              Place the order
+            </button>
+          </p>
+
+          <!--
+              The control inside is the project's: the module only clones the
+              template. In a real page a delegated listener on the stack would
+              act on it; here it is a plain link, which needs none.
+          -->
+          <template id="toast-order">
+            <p>Order <strong>#4711</strong> has been placed.</p>
+            <a href="../../../index.html">Back to the overview</a>
+          </template>
+        </section>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</body>
+
+</html>

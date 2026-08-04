@@ -94,6 +94,7 @@ components downloads two chunks — nothing else.
 | `siteSearch`         | Site search form expanding out of a toggle, on `<search>`.          |
 | `stickyObserver`     | Sentinel-driven "is stuck" class toggle for `position: sticky`.     |
 | `tabs`               | ARIA tabs enhancement of an anchor-link table of contents.          |
+| `toast`              | Transient messages in a stack, announced via a live region.         |
 | `video`              | CMS-maintainable video embeds with responsive sources.              |
 
 Each folder under `src/components/<name>/` contains exactly:

@@ -43,12 +43,16 @@ wide viewports and cleans itself up when it is not needed.
 
 | Attribute | Effect |
 |---|---|
-| `data-marquee-direction="left\|right"` | visual scroll direction (default `left`). In an RTL context (`dir="rtl"`) the translate range is mirrored automatically, so both directions stay seamless. |
+| `data-marquee-direction="left\|right"` | visual scroll direction (default `left`) |
 | `data-marquee-start="always\|overflow"` | `overflow` animates only while the content is wider than the visible track; once everything fits, the animation stops and the clones are removed (default `always`) |
 | `data-marquee-speed="80"` | pixels per second (positive number, default `80`) — a constant velocity, so tickers with differently long content all scroll at the same pace |
-| `data-marquee-clones="3"` | minimum number of generated clone tracks (positive integer); raised automatically when a wide viewport needs more |
 
 Invalid values fall back to the defaults with a reporter warning.
+
+The number of clone tracks is not an option: it follows from the viewport and
+the track width (enough tracks that one full cycle of travel never exposes a
+gap) and is re-evaluated on every resize, so there is no figure a project could
+supply that the measurement does not already know.
 
 ## Accessibility
 - **Progressive enhancement:** without JavaScript nothing moves, nothing is

@@ -51,6 +51,7 @@ module.exports = {
       p("src", "components", "siteSearch", "siteSearch.scss"),
       p("src", "components", "stickyObserver", "stickyObserver.scss"),
       p("src", "components", "tabs", "tabs.scss"),
+      p("src", "components", "toast", "toast.scss"),
       p("src", "components", "video", "video.scss"),
     ],
     outDir: p("dist", "css"),
@@ -88,6 +89,7 @@ module.exports = {
       siteSearch: p("src", "components", "siteSearch", "siteSearch.js"),
       stickyObserver: p("src", "components", "stickyObserver", "stickyObserver.js"),
       tabs: p("src", "components", "tabs", "tabs.js"),
+      toast: p("src", "components", "toast", "toast.js"),
       video: p("src", "components", "video", "video.js"),
 
       // shared helpers that are also lazily loadable modules

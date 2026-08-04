@@ -12,8 +12,9 @@ per frame.
 - `scrollSpy.scss` – styles (source; compiled to `dist/css/scrollSpy.min.css`
   — an empty stub by design, see *Styling*)
 - `scrollSpy.js` – behavior
-- `_shared/js/debounce.js` – bundled utility (direct import; copy it next to
-  the module when pasting into a plain project)
+- `_shared/js/debounce.js`, `_shared/js/decodeFragment.js`,
+  `_shared/js/parseNonNegative.js` – utilities (direct imports; copy them next
+  to the module when pasting into a plain project)
 
 There is **no vendor dependency**.
 

@@ -7,7 +7,8 @@ Image and gallery viewer: a list of links to full-size images, opened in place i
 - `lightbox.scss` – styles (source; compiled to `dist/css/lightbox.min.css`)
 - `lightbox.js` – behavior
 
-No shared utility is needed — the module imports nothing.
+- `_shared/js/uniqueId.js`, `_shared/js/otherModalOpen.js` – utilities imported
+  by the behavior (copy them alongside `lightbox.js`)
 
 ## Usage
 
@@ -101,7 +102,7 @@ The viewer is opened with `showModal()`, so the top layer, the focus trap, the i
 
 | Key | What it does |
 | --- | --- |
-| `←` / `→` | Previous / next image, following the writing direction (in a right-to-left context the controls swap sides, so the keys swap with them). |
+| `←` / `→` | Previous / next image — the direction the controls sit in. |
 | `Home` / `End` | First / last image — **unless the viewer is itself scrollable** (see below), where the two keys stay with the scroll container. |
 | `↑` / `↓`, `PageUp` / `PageDown` | Never taken: they scroll the viewer when there is something to scroll. |
 | `Esc` | Closes the viewer (the platform's, not ours). |
