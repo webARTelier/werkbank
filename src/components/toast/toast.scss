@@ -229,7 +229,7 @@
 
     // The variant's colour as a rule down the leading edge — the part of the
     // message that stays recognisable when it is read out of the corner of an
-    // eye. Logical, so it swaps sides with the writing direction.
+    // eye.
     border-inline-start: var(--toast-accent-width) solid var(--toast-accent-color);
     border-radius: var(--toast-radius);
     padding: var(--toast-padding);

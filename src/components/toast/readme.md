@@ -10,6 +10,12 @@ Transient messages in a stack over the page — announced to assistive technolog
 - `_shared/js/focusableSelector.js` – utility imported by the behavior (copy it
   alongside `toast.js`); it is what tells a message that holds a control of its
   own, which is a message that never expires.
+- `_shared/js/resolveLocale.js` – utility imported by the behavior (same note);
+  it picks the language of the two strings the module generates from
+  `<html lang>`.
+- shared: `_shared/media/img/icons/close.svg` – source file of the dismiss
+  glyph, which `toast.js` inlines (the build does not copy `media` into `dist`,
+  which is why it is inlined rather than referenced).
 
 ## Usage
 
@@ -21,7 +27,9 @@ One stack per page, authored:
 
 **A named `<section>` is the recommended root**, because with an `aria-label` it is a region landmark — and landmark navigation is the one mode that reaches the stack *from anywhere*. That matters: a message may hold a control (an "Undo"), and the tab order cannot help much, because wherever the stack sits in the document it is either behind the whole page or before it. Reaching a toast is the part no component can solve from the inside; what it can do is be reachable, never expire while it holds a control, and say plainly that **a toast must not be the only way to perform an action**.
 
-An `<ol role="list">` works too — the module then writes `<li>` items instead of `<div>` ones, because an `<li>` outside a list is invalid markup — and gives the reader a count instead of a landmark. It is the lesser trade: content that sits outside every landmark is content a screen-reader user has no way to jump to (it is also what axe-core's `region` rule reports). On a page with several stacks, give each its own name; two identically named landmarks are worse than one.
+An `<ol role="list">` works too — the module then writes `<li>` items instead of `<div>` ones, because an `<li>` outside a list is invalid markup — and gives the reader a count instead of a landmark. It is the lesser trade: content that sits outside every landmark is content a screen-reader user has no way to jump to (it is also what axe-core's `region` rule reports). The explicit `role="list"` is not decoration: `.m-toast` sets `list-style: none`, which strips the list role in WebKit. On a page with several stacks, give each its own name; two identically named landmarks are worse than one.
+
+**Why not both?** `<section aria-label="…"><ol class="m-toast" role="list" data-js-behavior="toast">` looks like it should get the landmark *and* the count, and half of it works: the wrapper is 0×0 because the stack is out of flow, and Chromium's accessibility tree still exposes the region alongside the list and its items (checked in WebKit too). But the module inserts the announcement regions with `root.after()`, so with the `<ol>` as root they land **inside** the wrapper — and a live region is browsable content, unavoidably, since `aria-hidden` or `display: none` would stop it announcing. Browsing that landmark then reads every message twice, once from the message and once from its hidden copy. In the recommended form those copies sit in `<body>`, outside the landmark. Moving them somewhere else is not an option either: a stack inside a modal `<dialog>` needs them inside the dialog, or the inert rest of the document silences them. So the cost of the nested form lands precisely on the navigation mode the landmark exists to serve, which is more than a list count is worth.
 
 Where it goes in the document changes nothing visually — the stylesheet fixes it to a corner of the viewport — so early in `<body>`, right after the skip link, is the tidiest place for it.
 
@@ -90,6 +98,15 @@ block of strings. There are no per-variant label attributes — the strings
 belong to markup this module writes, so there is nothing for a project to write
 them into.
 
+On a page in **neither** language — `<html lang="fr">` gets the English strings
+— what the module writes carries a `lang` of its own where it lands, so a screen
+reader does not pronounce English words with French rules ([WCAG 3.1.2](https://www.w3.org/WAI/WCAG22/Understanding/language-of-parts.html)).
+On the dismiss control that is the whole label; in the announcement it is the
+**prefix only**, never the whole line, because the message itself is yours and
+stays in your language. A page whose `lang` already resolves to the label
+language gets no marking at all — `lang="de-CH"` resolves to `de`, and `lang="de"`
+on every injected string of a German page is noise.
+
 On one message — authored, or written by the module:
 
 | Attribute | What it does |
@@ -136,7 +153,9 @@ The stack is not a live region. The module builds **two** visually hidden region
 
 Two details follow from it. The announcement is a **new node per message** rather than one node whose text is replaced, because replacing text with the same text is not a change and would not be announced — the second "Could not save" would be silent. And it is taken from the message **before** the dismiss control is injected, which is what keeps that control's name out of the sentence.
 
-The sentence itself is the kind of message and then its text: `Error: could not save your changes`. In the stack the kind is a colour and an icon, and neither of those is text; the prefix is what a screen-reader user gets instead. It is configurable per variant, and `info` has none by default because "Info: your session ends in 5 minutes" adds a word and no information.
+The sentence itself is the kind of message and then its text: `Error: could not save your changes`. In the stack the kind is a colour and an icon, and neither of those is text; the prefix is what a screen-reader user gets instead. The prefixes live in the `labels` map in `toast.js` (see [Localization](#localization)) — `info` has none, because "Info: your session ends in 5 minutes" adds a word and no information.
+
+**A control a template brought with it *is* part of the announcement**: an "Undo" toast comes through as `Draft deleted. Undo`. That is deliberate, and it is not the case the split guards against — the dismiss control is chrome this module injects, and announcing it would name a way out the reader already has, while an "Undo" is the reason the message exists at all. A reader who hears only "Draft deleted." has nothing to send them to the stack to look for it. What the copy cannot carry is that those words *are* a control, which is why such a message never expires and why the stack wants to be a landmark.
 
 A message the author wrote into the markup is **not** announced: it is part of the page at the first paint, and it is read where it stands like any other content.
 
@@ -145,8 +164,23 @@ A message the author wrote into the markup is **not** announced: it is part of t
 It is [WCAG 2.2.1](https://www.w3.org/WAI/WCAG22/Understanding/timing-adjustable.html), and the component treats it as one rather than as a duration setting:
 
 - **It pauses** while the pointer is over the stack, while the focus is inside it, and while the tab is in the background — and resumes with the time that was **left**, not from the start. A reader who moved the pointer across the stack is not handed the whole duration again; one who read half a message does not lose the other half.
-- **It can be switched off** with `data-toast-duration="0"`, on one message or on the stack for all of them.
+- **A tap holds it for good.** A touch cannot hover: `pointerenter` and `pointerleave` both fire before the finger is off the glass, so the pause that works for a mouse is worth nothing on a phone — and the only other pause a touch reader can reach, the focus being inside the stack, means pressing the dismiss control, which ends the message instead of holding it. So a touch or pen press on a message stops its timer for the rest of its life; the ways out are the dismiss control and `Escape`. A **mouse** press deliberately does not: hover already says the same thing and says it reversibly, and a click that pinned every message it landed on would turn a passing press into a permanent one. The rule is not "the same gesture everywhere" but "every input has some way to suspend the timer", and what that way is depends on what the input can express.
 - **A message holding a control of its own never gets a timer at all**, whatever the attributes say. A countdown running against a reader who is trying to reach that control is the one thing a toast must not be, so an explicit `data-toast-duration` on such a message is reported through the reporter and ignored. (A duration inherited from the stack is not reported: that one is a default for messages in general, not a statement about this one.) The check is "does the message contain anything focusable", made *before* the dismiss control is injected — so the way out this module adds does not count as a reason to keep the message forever.
+- **It can be switched off** with `data-toast-duration="0"`, on one message or on the stack for all of them — and for some messages it **must** be. 2.2.1 names exactly three remedies for a time limit: turn it off, adjust it, or extend it. Pausing is none of the three (that is 2.2.2, which does not apply here), so switching it off is the only one this component offers. The rule that follows:
+
+  > A message whose information is not available anywhere else on the page gets `data-toast-duration="0"`.
+
+  "Link copied" is redundant feedback and may expire — the reader can look at the clipboard. "Uploaded 3 of 5 files, 2 failed" is the only place that count exists, and a default 6000 takes it away from anyone reading slower than that.
+
+### The cap is the limit `duration="0"` cannot lift
+
+`data-toast-max` removes a message for a reason that is about the stack rather than about the reader, so it is the one removal a reader cannot outlast — not by hovering, not by tapping, and not with `data-toast-duration="0"`. Two things keep it from being a hole, and one thing remains one:
+
+- **A message holding the focus is skipped.** Culling it would move the focus out from under someone who is operating that message, which is the thing the rest of the component works to avoid. The stack is then one message over its maximum for as long as that lasts — the lesser harm.
+- **The announcement outlives the message.** Removing the announcement node is housekeeping (nothing re-reads a region with `aria-atomic="false"`), but a node added and taken away again before the accessibility layer picked it up is never spoken at all — which is exactly what a burst larger than the cap used to do. Each announcement now stays for a minimum dwell of its own, so a screen-reader user hears all twenty failures even though the screen only ever held three.
+- **What remains: a sighted reader sees `max` messages and no more.** A burst larger than the cap reaches the ear and not the eye. There is no fix inside the component — not capping means a stack that grows over the viewport, which trades this against 1.4.10 and 2.4.11. **Size `data-toast-max` against how many messages the page can actually produce at once**, and prefer one summarising message to a loop of twenty.
+
+The cap is **not** applied to the messages the author wrote into the stack: culling markup the page shipped, for a reason that is about the stack rather than about the message, would be the module deciding what the page says. They count against it from the first runtime message on, so a stack authored over its own cap comes back down to it as soon as one arrives.
 
 ## Accessibility
 
@@ -178,6 +212,16 @@ document.dispatchEvent(new CustomEvent('toast:show', {
 ```
 
 With exactly one stack on the page no `id` is needed anywhere — the empty value means "the page's only stack". A request that names no stack while several exist is **dropped and reported** rather than guessed at: a message shown in the wrong place is a message the reader never sees.
+
+### The stack can cover the focused element
+
+The other consequence of `position: fixed` at overlay `z-index`, and one the component cannot solve from the inside: a message in the corner can be painted **over the element that currently has the focus** — the submit button at the end of a long form, the last row of a table. That is [WCAG 2.2's SC 2.4.11 *Focus Not Obscured (Minimum)*](https://www.w3.org/WAI/WCAG22/Understanding/focus-not-obscured-minimum.html) (AA), the criterion written for sticky footers and cookie banners. `pointer-events: none` in the stack's gaps keeps the *pointer* reaching what is underneath; it does nothing for the focus.
+
+WCAG 2.2 is not in the current BITV-Test, which rests on EN 301 549 V3.2.1 (WCAG 2.1 AA) — it arrives with V4. Wiring the stack is therefore the project's job either way:
+
+- **`scroll-padding-block-end` on the scroll container**, matching the stack's footprint (its measure plus `--toast-viewport-inset`). Focusing an element scrolls it into view, and this keeps that scroll from stopping under the stack. It covers the usual case — tabbing down a long form — but *not* an element already in view in that corner, which is never scrolled at all.
+- **Pick a corner the page's interactive content does not reach**, via the placement modifiers. This is the only complete answer, and it is a layout decision, not a setting.
+- **Remember that `data-toast-duration="0"` removes the self-clearing.** A message that expires uncovers what it was over; one that stays until dismissed does not.
 
 ## Styling
 
@@ -218,7 +262,9 @@ The JS exports `init(el, services)` and does not self-initialize. It is loaded o
 
 `services.reporter` (dependency injection via `boot.js`) is **optional** — it is only used for warnings (a request with nothing to say, a `<template>` that is not on the page, an unknown variant/duration/politeness value, a duration on a message that holds a control, a request that cannot tell two stacks apart). Without it the module degrades silently.
 
-`init()` returns a cleanup function that removes the delegated `document` listeners and the `visibilitychange` listener, clears every pending timer (one that fired afterwards would reach into a detached tree), removes the two injected live regions — they sit next to the root, so they do not go with its subtree — and takes the injected dismiss controls off the authored messages again. The loader only needs this for a host that mounts/unmounts the same markup repeatedly instead of a full page (re)load — see `destroyModulesInScope()` in `boot.js`.
+`init()` returns a cleanup function that removes the delegated `document` listeners and the `visibilitychange` listener, clears every pending timer of both kinds (one that fired afterwards would reach into a detached tree), removes the two injected live regions — they sit next to the root, so they do not go with its subtree — and takes the injected dismiss controls off the authored messages again.
+
+It also **removes the messages it generated itself**. `destroyModulesInScope()` walks the live DOM and a host may tear a module down in order to re-initialise it, so the stack can well outlive the module: a generated message left in it would have no dismiss control, no timer and no `Escape` — an undismissable notice over the page. An authored message is the page's and stays, exactly as it was written; without the module it is a static notice, which is what it was before the module arrived. The loader only needs any of this for a host that mounts/unmounts the same markup repeatedly instead of a full page (re)load — see `destroyModulesInScope()` in `boot.js`.
 
 ## Demo
 Open `demo.html` in the browser (requires a previous `gulp build`).

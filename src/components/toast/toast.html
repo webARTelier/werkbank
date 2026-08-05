@@ -25,8 +25,12 @@
       order cannot help much — wherever the stack sits in the document, it is
       either behind the whole page or before it. An <ol role="list"> works
       too (the module then writes <li> items instead of <div>) and gives a
-      count instead of a landmark; on a page with several stacks give each a
-      name of its own, or two identically named landmarks are worse than one.
+      count instead of a landmark — the explicit role is needed because
+      list-style: none strips the list role in WebKit; on a page with several
+      stacks give each a name of its own, or two identically named landmarks
+      are worse than one. Nesting the two to get both is a trap: the live
+      regions would land inside the landmark and browsing it would read every
+      message twice (see the readme).
     - A message the server already knows about — the flash message after a
       redirect, "your changes have been saved" — is written straight into the
       stack. That one is on screen at the first paint, script or no script;
@@ -78,14 +82,43 @@
     - Auto-dismissal is a time limit (WCAG 2.2.1) and is treated as one. It
       pauses while the pointer is over the stack, while the focus is inside
       it and while the tab is in the background, and resumes with the time
-      that was left rather than starting over. data-toast-duration="0"
-      switches it off — per message, or on the stack for all of them. And a
-      message holding a control of its own is NEVER given a timer, whatever
-      the attributes say: the reader has to be able to reach that control.
+      that was left rather than starting over. And a message holding a
+      control of its own is NEVER given a timer, whatever the attributes say:
+      the reader has to be able to reach that control.
+    - One rule to take from that: A MESSAGE WHOSE INFORMATION IS NOT
+      AVAILABLE ANYWHERE ELSE ON THE PAGE GETS data-toast-duration="0" (per
+      message, or on the stack for all of them). 2.2.1 allows three remedies
+      for a time limit — turn it off, adjust it, extend it — and pausing is
+      none of them, so switching it off is the only one on offer here.
+      "Link copied" may expire; "2 of 5 uploads failed" is the only place
+      that count exists, and the default 6000 takes it away from anyone
+      reading slower than that.
+    - The stack is fixed at overlay z-index, so a message can cover the
+      element that currently has the FOCUS — WCAG 2.2's SC 2.4.11, the
+      criterion written for sticky footers. pointer-events: none in the gaps
+      keeps the pointer reaching what is underneath and does nothing for the
+      focus. Wiring it is the project's job: scroll-padding-block-end on the
+      scroll container matching the stack's footprint (covers tabbing down a
+      long form, not an element already in that corner), and a placement
+      modifier that puts the stack where the page's interactive content does
+      not reach. See the readme for the full picture.
+    - Touch: a tap on a message stops its timer for good, because a touch
+      cannot hover and would otherwise have no pause at all — the ways out
+      stay the dismiss control and Escape. A mouse press does not pin, since
+      hover already pauses and does it reversibly.
     - Keyboard: Tab reaches the dismiss control of each message, Escape
       dismisses the message the focus is in. Focus is never moved TO a
       message; when one that HAS the focus leaves, the focus goes to the next
       message in the stack or back where it came from.
+    - data-toast-max is the one removal a reader cannot outlast — not by
+      hovering, not by tapping, not with duration="0". A message holding the
+      focus is skipped, and every announcement outlives its message by a
+      minimum dwell, so a burst larger than the cap still reaches a screen
+      reader in full. It does NOT reach the screen in full: size the cap
+      against how many messages the page can produce at once, and prefer one
+      summarising message to a loop of twenty. Messages you wrote into the
+      markup are never culled — they count against the cap from the first
+      runtime message on.
     - On the stack, all optional:
         data-toast-duration="6000"    ms a message stays; 0 keeps it
         data-toast-max="3"            how many may be on screen at once
@@ -93,7 +126,11 @@
     - The strings this module generates — the dismiss control's name and the
       word the announcement is prefixed with per kind of message ("Fehler:
       …") — follow <html lang> (de/en, falling back to en). Nothing to wire
-      in the markup; add a language in the `labels` map in toast.js.
+      in the markup; add a language in the `labels` map in toast.js. On a page
+      in neither language they are marked lang="en" where they land, so a
+      screen reader does not pronounce them in the page's language (WCAG
+      3.1.2) — on the announcement's prefix only, never on the whole line,
+      because the message itself is yours and stays in your language.
     - On one message: data-toast-variant (info | success | warning | error),
       data-toast-duration, data-toast-politeness. The variant picks the accent
       colour and the icon; both are decoration, so say in the text what the
@@ -108,7 +145,10 @@
       text in the matching one. An error is assertive by default, everything
       else polite. The stack itself is deliberately not a live region: one
       would read out the name of every control in it, so a dismissable
-      message would announce its own button.
+      message would announce its own button. A control your TEMPLATE brought
+      with it IS part of the announcement, though ("Draft deleted. Undo"):
+      it is the reason the message exists, and a reader who never hears it
+      has nothing to send them to the stack to look for it.
     - A modal <dialog> is painted in the top layer, above any fixed element,
       so a stack outside it cannot appear over it. Put a second stack INSIDE
       the dialog for that case, give both an id, and name the one you mean:
