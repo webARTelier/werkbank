@@ -198,6 +198,7 @@ of them, and the wrong one for most.
 | `siteSearch` | search form visible, then folded shut | documented opt-in | the toggle is a `<button>`, dead without the script, and there is no fragment fallback |
 | `dropdownNav` | full nested list, then a bar with flyouts | documented opt-in | the disclosure buttons are injected by the script; nothing reopens a collapsed submenu without it |
 | `accordion` | none | not needed | `<details>` renders closed either way; its ready attribute only picks the animation |
+| `dataTable` | none | not needed | the table is complete and readable in its scrolling box either way, and the sort controls do not exist until the script builds them out of the header labels — its ready attribute switches the stacked layout *on* (see below) |
 | `dialog`, `popover` | none | not needed | closed at rest, and the behaviour is native |
 | `lightbox` | none | not needed | the gallery is a list of links to the images either way; the viewer is closed at rest and does not exist in the markup at all — the script injects it |
 | `toast` | none | not needed | the stack is empty at rest, and a message authored into it is a static notice that simply keeps standing; the one control the component owns is injected, so it cannot exist before it works |
@@ -213,6 +214,18 @@ script can simply ship with the `hidden` attribute and be revealed by `init()`.
 Where that works it is better than any CSS, because it needs no ready
 attribute and no media query. It only works for *adding* a control, not for
 changing an existing rendering.
+
+`dataTable` is the case that runs the other way, and it is worth knowing that
+the attribute can. Its stacked layout (rows as cards, below the `small`
+breakpoint) is gated **on** `[data-datatable-ready]` rather than lifted by its
+absence, because that layout needs two things only the script can write: the
+column label on each cell, and the explicit table roles that keep the cells
+cells once they stop being table boxes. So the flag says "these are in place"
+— which means the bail-out rule inverts with it: `tabs` sets its attribute
+*first* so a bail lifts the pre-state, `dataTable` sets its own *last* and
+withholds it on a bail, leaving the scrolling table that needs no script. Same
+attribute, same "only ever written" rule; what differs is which side of the
+condition the enhanced state sits on.
 
 
 ## 5. What changed in the loader

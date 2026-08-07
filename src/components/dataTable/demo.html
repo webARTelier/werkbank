@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>dataTable – Demo</title>
+  <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
+  <link rel="stylesheet" href="../../../dist/css/dataTable.min.css" />
+  <script type="module" src="../../../dist/js/boot.min.js"></script>
+
+  <!-- for development only -->
+  <script type="module" src="../../../src/_shared/js/dev_pageInfo.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_a11yInspector.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_qrCode.js"></script>
+  <!-- end for development only -->
+
+  <!--
+      DEMO-ONLY STYLES
+      ----------------------------------------------------------------------
+      dataTable.min.css ships the box, the table and the stacked layout. What
+      is left to the page is the spacing between the examples and their
+      headings. (Tokens like --space-* / --color-* come from
+      shared.min.css.)
+  -->
+
+  <style>
+    .demo {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2xl);
+    }
+
+    .demo__example {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-s);
+    }
+
+    .demo__example h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      color: var(--color-text);
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <main class="shell">
+
+    <section class="hero">
+      <a class="back" href="../../../index.html">← Overview</a>
+      <h1>dataTable</h1>
+      <p>Sortable columns, and a table that survives a narrow screen.</p>
+    </section>
+
+    <section class="stage" aria-label="Live demo">
+
+      <!--
+          A plain <table> in a box that scrolls, plus the sorting the platform
+          does not have.
+
+          Wiring
+            - data-js-behavior="dataTable" boots the module on the BOX around
+              the table (class="m-dataTable"), because that box is what
+              scrolls when the table is wider than the space it was given.
+            - The table itself is ordinary markup: <thead>, <th scope> and
+              <caption> carry the semantics, so there are no classes and no
+              ARIA on it.
+            - data-datatable-sort on a header cell makes that column
+              sortable; the value names the kind of data ("text", "number",
+              "date", or empty to let the module guess between numbers and
+              text).
+            - data-datatable-sorted="descending" on one header sorts by that
+              column on load.
+            - data-datatable-value / <time datetime> give a formatted cell a
+              machine-readable value to sort by.
+            - m-dataTable--stickyHead needs a height to scroll inside
+              (--dataTable-max-block-size), because a sticky cell sticks
+              within its own scroll container.
+            - m-dataTable--stickyColumn freezes the first cell of every row.
+            - data-datatable-stacked asks for the card layout below 575px.
+
+          Progressive enhancement
+            - Without the chunk this is a complete table in a scrolling box.
+              The sort controls do not exist in the markup — the module
+              builds each one out of the header label that is already there,
+              so nothing promises a behaviour that has not arrived.
+            - The stacked layout is the one part that waits for the module:
+              it needs the cell labels and the explicit table roles, both of
+              which only a script can write. It is keyed off
+              data-datatable-ready, so a chunk that never arrives leaves the
+              scrolling table rather than a stack of unlabelled values.
+
+          Accessibility
+            - The sort state is aria-sort on the header cell — what a screen
+              reader reads, and what the arrow in the stylesheet is drawn
+              from. Every sortable column carries it, "none" until it is the
+              sorted one: that attribute is what says the column offers
+              sorting at all.
+            - Each sort writes one sentence into a visually hidden
+              role="status" region. aria-sort states the new state, but it
+              changes on the PARENT of the focused button, which screen
+              readers do not read out by themselves.
+            - Both sticky modifiers cover an edge of the scroll box. The
+              module measures how deep, and the stylesheet turns that into
+              scroll-padding, so tabbing backwards through the sort controls
+              cannot park the focused one behind the frozen first column.
+            - While the table is wider than its box AND holds nothing
+              focusable, the module makes the box a tab stop (tabindex="0",
+              role="region" named by the <caption>) so the arrow keys scroll
+              it. A sortable table needs no tab stop of its own: its buttons
+              are already a keyboard path in, and the arrow keys scroll the
+              box the focus sits in. The fourth example below is the one
+              without controls — tab to it.
+        -->
+
+      <div class="demo">
+
+        <section class="demo__example">
+          <h2>Sortable columns</h2>
+
+          <p class="stage__intro">
+            Four columns, three of them sortable, sorted by
+            <strong>Last check</strong> on load. Click a header to sort by it:
+            a fresh column starts ascending, the sorted one flips. The
+            <strong>Requests</strong> and <strong>Median</strong> cells are
+            formatted for people and carry a <code>data-datatable-value</code>
+            for the machine; the dates sort by their
+            <code>&lt;time datetime&gt;</code>. Two rows have gaps — an empty
+            cell sorts last in <em>both</em> directions, because it is not a
+            small value but no value.
+          </p>
+
+          <div class="m-dataTable" data-js-behavior="dataTable">
+            <table>
+              <caption>Edge regions, last 24 hours</caption>
+
+              <thead>
+                <tr>
+                  <th scope="col" data-datatable-sort="text">Region</th>
+                  <th scope="col" data-datatable-sort="number">Requests</th>
+                  <th scope="col" data-datatable-sort="number">Median</th>
+                  <th scope="col" data-datatable-sort="date" data-datatable-sorted="descending">Last check</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr>
+                  <th scope="row">Frankfurt</th>
+                  <td data-datatable-value="128400">128,400</td>
+                  <td data-datatable-value="86">86 ms</td>
+                  <td><time datetime="2026-08-07T09:12">7 Aug, 09:12</time></td>
+                </tr>
+                <tr>
+                  <th scope="row">Ashburn</th>
+                  <td data-datatable-value="94120">94,120</td>
+                  <td data-datatable-value="141">141 ms</td>
+                  <td><time datetime="2026-08-07T08:47">7 Aug, 08:47</time></td>
+                </tr>
+                <tr>
+                  <th scope="row">Singapore</th>
+                  <td data-datatable-value="41880">41,880</td>
+                  <td data-datatable-value="203">203 ms</td>
+                  <td><time datetime="2026-08-06T23:05">6 Aug, 23:05</time></td>
+                </tr>
+                <tr>
+                  <th scope="row">São Paulo</th>
+                  <td data-datatable-value="18240">18,240</td>
+                  <td data-datatable-value="264">264 ms</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <th scope="row">Cape Town</th>
+                  <td data-datatable-value="7310">7,310</td>
+                  <td></td>
+                  <td><time datetime="2026-08-05T17:30">5 Aug, 17:30</time></td>
+                </tr>
+                <tr>
+                  <th scope="row">Sydney</th>
+                  <td data-datatable-value="33905">33,905</td>
+                  <td data-datatable-value="188">188 ms</td>
+                  <td><time datetime="2026-08-07T07:58">7 Aug, 07:58</time></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="demo__example">
+          <h2>Wide, with a sticky header and a sticky first column</h2>
+
+          <p class="stage__intro">
+            Eleven columns, capped at <strong>18rem</strong> tall — more than
+            fits, on purpose. Scroll the box sideways: the region column stays
+            put, and it carries whichever colour its row has — a stripe, or the
+            one under your pointer — so it covers the columns passing
+            underneath. Scroll it downwards and the header stays. The height is
+            what makes that work: a sticky cell sticks inside its own scroll
+            container, so without a cap the header would have nothing to stick
+            to.
+          </p>
+
+          <div class="m-dataTable m-dataTable--stickyHead m-dataTable--stickyColumn"
+               data-js-behavior="dataTable" style="--dataTable-max-block-size: 18rem">
+            <table>
+              <caption>Deployments per region</caption>
+
+              <thead>
+                <tr>
+                  <th scope="col" data-datatable-sort="text">Region</th>
+                  <th scope="col" data-datatable-sort="number">Requests</th>
+                  <th scope="col" data-datatable-sort="number">Median</th>
+                  <th scope="col" data-datatable-sort="number">p95</th>
+                  <th scope="col" data-datatable-sort="number">Errors</th>
+                  <th scope="col" data-datatable-sort="number">Uptime</th>
+                  <th scope="col" data-datatable-sort="number">Cache hit</th>
+                  <th scope="col" data-datatable-sort="number">Egress</th>
+                  <th scope="col" data-datatable-sort="text">Version</th>
+                  <th scope="col" data-datatable-sort="date">Deployed</th>
+                  <th scope="col" data-datatable-sort="text">On call</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr>
+                  <th scope="row">Frankfurt</th>
+                  <td data-datatable-value="128400">128,400</td>
+                  <td data-datatable-value="86">86 ms</td>
+                  <td data-datatable-value="214">214 ms</td>
+                  <td data-datatable-value="12">12</td>
+                  <td data-datatable-value="99.98">99.98 %</td>
+                  <td data-datatable-value="94.2">94.2 %</td>
+                  <td data-datatable-value="18400">18.4 TB</td>
+                  <td>4.12.0</td>
+                  <td><time datetime="2026-08-04T11:20">4 Aug</time></td>
+                  <td>Platform</td>
+                </tr>
+                <tr>
+                  <th scope="row">Ashburn</th>
+                  <td data-datatable-value="94120">94,120</td>
+                  <td data-datatable-value="141">141 ms</td>
+                  <td data-datatable-value="388">388 ms</td>
+                  <td data-datatable-value="47">47</td>
+                  <td data-datatable-value="99.91">99.91 %</td>
+                  <td data-datatable-value="91.7">91.7 %</td>
+                  <td data-datatable-value="14100">14.1 TB</td>
+                  <td>4.12.0</td>
+                  <td><time datetime="2026-08-04T11:44">4 Aug</time></td>
+                  <td>Platform</td>
+                </tr>
+                <tr>
+                  <th scope="row">Singapore</th>
+                  <td data-datatable-value="41880">41,880</td>
+                  <td data-datatable-value="203">203 ms</td>
+                  <td data-datatable-value="512">512 ms</td>
+                  <td data-datatable-value="8">8</td>
+                  <td data-datatable-value="99.99">99.99 %</td>
+                  <td data-datatable-value="88.3">88.3 %</td>
+                  <td data-datatable-value="6720">6.7 TB</td>
+                  <td>4.11.3</td>
+                  <td><time datetime="2026-07-28T09:05">28 Jul</time></td>
+                  <td>APAC</td>
+                </tr>
+                <tr>
+                  <th scope="row">São Paulo</th>
+                  <td data-datatable-value="18240">18,240</td>
+                  <td data-datatable-value="264">264 ms</td>
+                  <td data-datatable-value="701">701 ms</td>
+                  <td data-datatable-value="103">103</td>
+                  <td data-datatable-value="99.62">99.62 %</td>
+                  <td data-datatable-value="79.4">79.4 %</td>
+                  <td data-datatable-value="3110">3.1 TB</td>
+                  <td>4.11.3</td>
+                  <td><time datetime="2026-07-28T09:31">28 Jul</time></td>
+                  <td>LATAM</td>
+                </tr>
+                <tr>
+                  <th scope="row">Cape Town</th>
+                  <td data-datatable-value="7310">7,310</td>
+                  <td data-datatable-value="298">298 ms</td>
+                  <td data-datatable-value="844">844 ms</td>
+                  <td data-datatable-value="21">21</td>
+                  <td data-datatable-value="99.84">99.84 %</td>
+                  <td data-datatable-value="72.8">72.8 %</td>
+                  <td data-datatable-value="940">0.9 TB</td>
+                  <td>4.10.7</td>
+                  <td><time datetime="2026-07-14T15:12">14 Jul</time></td>
+                  <td>EMEA</td>
+                </tr>
+                <tr>
+                  <th scope="row">Sydney</th>
+                  <td data-datatable-value="33905">33,905</td>
+                  <td data-datatable-value="188">188 ms</td>
+                  <td data-datatable-value="466">466 ms</td>
+                  <td data-datatable-value="15">15</td>
+                  <td data-datatable-value="99.95">99.95 %</td>
+                  <td data-datatable-value="90.1">90.1 %</td>
+                  <td data-datatable-value="4480">4.5 TB</td>
+                  <td>4.12.0</td>
+                  <td><time datetime="2026-08-04T12:02">4 Aug</time></td>
+                  <td>APAC</td>
+                </tr>
+                <tr>
+                  <th scope="row">Tokyo</th>
+                  <td data-datatable-value="76540">76,540</td>
+                  <td data-datatable-value="97">97 ms</td>
+                  <td data-datatable-value="245">245 ms</td>
+                  <td data-datatable-value="19">19</td>
+                  <td data-datatable-value="99.97">99.97 %</td>
+                  <td data-datatable-value="93.5">93.5 %</td>
+                  <td data-datatable-value="11200">11.2 TB</td>
+                  <td>4.12.0</td>
+                  <td><time datetime="2026-08-04T11:58">4 Aug</time></td>
+                  <td>APAC</td>
+                </tr>
+                <tr>
+                  <th scope="row">Mumbai</th>
+                  <td data-datatable-value="52470">52,470</td>
+                  <td data-datatable-value="167">167 ms</td>
+                  <td data-datatable-value="401">401 ms</td>
+                  <td data-datatable-value="34">34</td>
+                  <td data-datatable-value="99.88">99.88 %</td>
+                  <td data-datatable-value="85.6">85.6 %</td>
+                  <td data-datatable-value="7940">7.9 TB</td>
+                  <td>4.11.3</td>
+                  <td><time datetime="2026-07-28T10:12">28 Jul</time></td>
+                  <td>APAC</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="demo__example">
+          <h2>Stacked below 575px</h2>
+
+          <p class="stage__intro">
+            The same kind of table, with <code>data-datatable-stacked</code>.
+            <strong>Narrow the window below 575px</strong> and every row becomes
+            a card of label/value pairs, with the header row surviving as a bar
+            of sort chips — sorting is the one part of a table a phone wants more
+            of, not less. The labels on the cards are written by the module from
+            the header, and so are the explicit table roles, without which the
+            cards would stop being a table for a screen reader. That is why the
+            layout is keyed off <code>data-datatable-ready</code>: without the
+            module, this stays the scrolling table above.
+          </p>
+
+          <div class="m-dataTable" data-js-behavior="dataTable" data-datatable-stacked>
+            <table>
+              <caption>Open incidents</caption>
+
+              <thead>
+                <tr>
+                  <th scope="col" data-datatable-sort="text">Incident</th>
+                  <th scope="col" data-datatable-sort="text">Component</th>
+                  <th scope="col" data-datatable-sort="number">Severity</th>
+                  <th scope="col" data-datatable-sort="date" data-datatable-sorted="ascending">Opened</th>
+                  <th scope="col">Owner</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr>
+                  <th scope="row">INC-2041</th>
+                  <td>Image pipeline</td>
+                  <td data-datatable-value="1">1 — critical</td>
+                  <td><time datetime="2026-08-07T06:20">7 Aug, 06:20</time></td>
+                  <td>Platform</td>
+                </tr>
+                <tr>
+                  <th scope="row">INC-2038</th>
+                  <td>Search index</td>
+                  <td data-datatable-value="2">2 — major</td>
+                  <td><time datetime="2026-08-06T21:05">6 Aug, 21:05</time></td>
+                  <td>Discovery</td>
+                </tr>
+                <tr>
+                  <th scope="row">INC-2033</th>
+                  <td>Checkout</td>
+                  <td data-datatable-value="3">3 — minor</td>
+                  <td><time datetime="2026-08-05T13:48">5 Aug, 13:48</time></td>
+                  <td>Payments</td>
+                </tr>
+                <tr>
+                  <th scope="row">INC-2029</th>
+                  <td>Mail delivery</td>
+                  <td data-datatable-value="2">2 — major</td>
+                  <td><time datetime="2026-08-04T08:14">4 Aug, 08:14</time></td>
+                  <td>Comms</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="demo__example">
+          <h2>No controls: the box itself takes the focus</h2>
+
+          <p class="stage__intro">
+            Eleven columns again, this time with no sortable one — so the module
+            adds no buttons, and nothing inside the box can take focus. Since the
+            table is wider than the box, the module therefore makes the
+            <strong>box</strong> a tab stop and names it by its caption, and the
+            arrow keys scroll it. <strong>Tab to it</strong> and hold
+            <kbd>→</kbd>. Make the window wide enough for the table to fit and
+            the tab stop goes away again — a box that fits is not a dead stop in
+            the tab order.
+          </p>
+
+          <div class="m-dataTable" data-js-behavior="dataTable">
+            <table>
+              <caption>Retention windows per bucket</caption>
+
+              <thead>
+                <tr>
+                  <th scope="col">Bucket</th>
+                  <th scope="col">Class</th>
+                  <th scope="col">Objects</th>
+                  <th scope="col">Size</th>
+                  <th scope="col">Retention</th>
+                  <th scope="col">Replication</th>
+                  <th scope="col">Encryption</th>
+                  <th scope="col">Versioning</th>
+                  <th scope="col">Lifecycle</th>
+                  <th scope="col">Created</th>
+                  <th scope="col">Owner</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr>
+                  <th scope="row">assets-eu</th>
+                  <td>Standard</td>
+                  <td>4,182,904</td>
+                  <td>18.4 TB</td>
+                  <td>90 days</td>
+                  <td>eu-central, eu-west</td>
+                  <td>KMS</td>
+                  <td>On</td>
+                  <td>Archive after 30 d</td>
+                  <td><time datetime="2024-03-11">11 Mar 2024</time></td>
+                  <td>Platform</td>
+                </tr>
+                <tr>
+                  <th scope="row">assets-us</th>
+                  <td>Standard</td>
+                  <td>3,067,431</td>
+                  <td>14.1 TB</td>
+                  <td>90 days</td>
+                  <td>us-east, us-west</td>
+                  <td>KMS</td>
+                  <td>On</td>
+                  <td>Archive after 30 d</td>
+                  <td><time datetime="2024-03-11">11 Mar 2024</time></td>
+                  <td>Platform</td>
+                </tr>
+                <tr>
+                  <th scope="row">backups-cold</th>
+                  <td>Archive</td>
+                  <td>128,940</td>
+                  <td>92.7 TB</td>
+                  <td>7 years</td>
+                  <td>eu-central</td>
+                  <td>KMS</td>
+                  <td>Off</td>
+                  <td>Never expire</td>
+                  <td><time datetime="2022-09-27">27 Sep 2022</time></td>
+                  <td>Operations</td>
+                </tr>
+                <tr>
+                  <th scope="row">logs-raw</th>
+                  <td>Infrequent</td>
+                  <td>9,884,215</td>
+                  <td>41.9 TB</td>
+                  <td>30 days</td>
+                  <td>eu-central</td>
+                  <td>SSE-S3</td>
+                  <td>Off</td>
+                  <td>Delete after 30 d</td>
+                  <td><time datetime="2025-01-08">8 Jan 2025</time></td>
+                  <td>Observability</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</body>
+</html>

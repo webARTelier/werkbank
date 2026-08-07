@@ -4,6 +4,7 @@ export const registry = {
   adaptiveScrollFade: () => import('./modules/adaptiveScrollFade.min.js'),
   backToTop: () => import('./modules/backToTop.min.js'),
   countdown: () => import('./modules/countdown.min.js'),
+  dataTable: () => import('./modules/dataTable.min.js'),
   dateInputFormat: () => import('./modules/dateInputFormat.min.js'),
   debounce: () => import('./modules/debounce.min.js'),
   decodeFragment: () => import('./modules/decodeFragment.min.js'),

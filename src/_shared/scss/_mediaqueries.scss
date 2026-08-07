@@ -103,6 +103,7 @@
 
 // collapsed navigation (below nav breakpoint)
 @mixin vp-nav-collapsed {
+
   @media (width < #{$navBreakpoint}) {
     @content;
   }
@@ -112,6 +113,7 @@
 
 // expanded navigation (from nav breakpoint and up)
 @mixin vp-nav-expanded {
+
   @media (width >=#{$navBreakpoint}) {
     @content;
   }
@@ -143,6 +145,7 @@
 
 // display density
 @mixin highdpi {
+
   @media (min-resolution: 2dppx) {
     @content;
   }

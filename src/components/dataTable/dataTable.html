@@ -1,0 +1,154 @@
+<!--
+  dataTable — copy-paste snippet
+  ============================================================================
+  Copy the block(s) below into your own project.
+
+  1) In <head> (or before </body>): load the shared styles, this component's
+     styles and the boot script. boot.min.js lazily loads the dataTable
+     module as soon as it finds data-js-behavior="dataTable" in the DOM — you
+     do not import dataTable.js yourself. Adjust the paths to where you serve
+     /dist.
+
+       <link rel="stylesheet" href="/dist/css/shared.min.css" />
+       <link rel="stylesheet" href="/dist/css/dataTable.min.css" />
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+  2) Wrap your table in the component root and mark the columns that may be
+     sorted. The table itself stays ordinary markup: no classes, no ARIA —
+     <thead>, <th scope> and <caption> already say everything, and the module
+     adds the sort controls on top.
+
+  Wiring
+    - The root is the element with class="m-dataTable" and
+      data-js-behavior="dataTable". It is the box that scrolls when the table
+      is wider than the space it was given, so the <table> has to be inside
+      it, not next to it.
+    - data-datatable-sort on a header cell of the <thead> row makes that
+      column sortable. The value names the kind of data — "text", "number"
+      or "date"; an empty value lets the module guess (numbers or text, never
+      dates).
+    - data-datatable-sorted="ascending | descending" on one header cell sorts
+      the table by that column on load.
+    - data-datatable-value on a body cell is the value to sort by where the
+      visible text is formatted for people. Always machine readable: a plain
+      number with a dot, or an ISO date. A <time datetime="…"> in the cell
+      does the same job and is the better markup for a date.
+    - <caption> names the table — and the module borrows it to name the
+      scroll box once that becomes keyboard focusable (see Notes). Give the
+      root an aria-label instead if you would rather not show a caption.
+    - class="m-dataTable--stickyHead" keeps the header row in view while the
+      rows scroll past it. It only does something when the box has a height
+      to scroll inside, because a sticky cell sticks within its own scroll
+      container: set style="--dataTable-max-block-size: 24rem" (or your own
+      CSS) along with it.
+    - class="m-dataTable--stickyColumn" freezes the first cell of every row
+      against the inline edge, so a wide table can still be read row by row.
+      Both sticky modifiers cover an edge of the scroll box; the module
+      measures how deep and the stylesheet turns that into scroll-padding, so
+      a control the keyboard reaches is not parked underneath them. Nothing
+      to wire — just do not overwrite
+      --dataTable-sticky-head-block-size / --dataTable-sticky-column-inline-size
+      on the root, they are measurements rather than settings.
+    - data-datatable-announce on the root replaces the sentence the module
+      announces after a sort ("Sorted by {column}, {direction}."). It ships in
+      German and English, picked from <html lang>.
+    - data-datatable-stacked asks for the card layout below the "small"
+      breakpoint (575px): every row becomes a card of label/value pairs and
+      the header row becomes a bar of sort chips. Whether a table has too
+      many columns for a phone is a question about your data, which is why
+      this is opt-in.
+
+  Notes / Configuration
+    - Without the chunk this is a plain table in a scrolling box: readable,
+      complete, in document order. Nothing is hidden and no control promises
+      anything it cannot do — the sort buttons do not exist until the module
+      creates them out of the header labels.
+    - The stacked layout is the one part that waits for the module, because
+      it needs two things only a script can write: the column label on each
+      cell (CSS can print an attribute, not read another element's text) and
+      the explicit table roles, without which Chromium and WebKit drop the
+      table semantics the moment the cells stop being table boxes. Both are
+      keyed off data-datatable-ready, so a chunk that never arrives leaves
+      the scrolling table — never a stack of unlabelled values.
+    - Sorting: a fresh column starts ascending, the sorted one flips.
+      Equal values keep their document order, an empty cell always sorts
+      last, and rows are sorted inside each <tbody> separately — several
+      bodies mean groups, and sorting across them would dissolve them.
+    - Numbers in the visible text are read in the page's language (<html
+      lang>), so "1.284,50" is one value on a German page. A
+      data-datatable-value is not: it is always the machine's format.
+    - Accessibility: the sort state is aria-sort on the header cell, which is
+      what a screen reader reads and what the arrow in the stylesheet is
+      drawn from. Every sortable column carries it — "none" until it is the
+      sorted one — because that attribute is what says the column can be
+      sorted at all. Each sort also writes one sentence into a visually
+      hidden role="status" region the module injects: the rows have all
+      moved, and nothing about that reaches a screen reader by itself.
+    - Accessibility: while the table is wider than its box and holds nothing
+      focusable, the module makes the box a tab stop (tabindex="0",
+      role="region" named by the caption) so the arrow keys scroll it; a
+      sortable table needs no tab stop of its own, because its buttons are
+      already a keyboard path in. Without a caption and without an
+      aria-label the module reports the missing name rather than emitting an
+      unnamed region.
+    - A header cell that already holds a control cannot become a sort
+      control — the module would have to nest one button inside another, so
+      it reports it and leaves that column unsorted.
+    - Cells that span: both features address a cell by its position in its
+      row, so a colspan or a rowspan in a <tbody> would sort by the wrong
+      column and label a card with the wrong header, silently. The module
+      reports it and leaves sorting and the labels off. A <thead> may still
+      group its columns under a spanning row above the one that names them
+      (the last <thead> row is the one that counts), and a spanning "Total"
+      in a <tfoot> costs nothing — a footer is never sorted; that row just
+      gets no labels.
+    - Colours, spacing, radius, the row stripes, the sticky behaviour and
+      every measure of the stacked layout are the --dataTable-* custom
+      properties in dataTable.scss. Two are worth knowing:
+      --dataTable-max-block-size (what makes --stickyHead work) and
+      --dataTable-cell-min-inline-size (how narrow a column may get before
+      the box scrolls instead of squeezing).
+    - Every row colour has to stay opaque if you use --stickyColumn: the
+      frozen cell copies its row's colour to cover the columns scrolling
+      underneath.
+-->
+
+
+
+<!-- The scroll box is the component; the table inside it is plain markup -->
+<div class="m-dataTable m-dataTable--stickyHead" data-js-behavior="dataTable"
+     data-datatable-stacked style="--dataTable-max-block-size: 24rem">
+  <table>
+    <caption>Server response times, last 24 hours</caption>
+
+    <thead>
+      <tr>
+        <th scope="col" data-datatable-sort="text">Region</th>
+        <th scope="col" data-datatable-sort="number">Requests</th>
+        <th scope="col" data-datatable-sort="number">Median</th>
+        <th scope="col" data-datatable-sort="date" data-datatable-sorted="descending">Last check</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr>
+        <th scope="row">Frankfurt</th>
+        <td data-datatable-value="128400">128,400</td>
+        <td data-datatable-value="86">86 ms</td>
+        <td><time datetime="2026-08-07T09:12">7 Aug, 09:12</time></td>
+      </tr>
+      <tr>
+        <th scope="row">Ashburn</th>
+        <td data-datatable-value="94120">94,120</td>
+        <td data-datatable-value="141">141 ms</td>
+        <td><time datetime="2026-08-07T08:47">7 Aug, 08:47</time></td>
+      </tr>
+      <tr>
+        <th scope="row">Singapore</th>
+        <td data-datatable-value="41880">41,880</td>
+        <td data-datatable-value="203">203 ms</td>
+        <td><time datetime="2026-08-06T23:05">6 Aug, 23:05</time></td>
+      </tr>
+    </tbody>
+  </table>
+</div>

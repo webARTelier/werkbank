@@ -78,6 +78,7 @@ components downloads two chunks — nothing else.
 | `adaptiveScrollFade` | Fade-out edges on scrollable containers, only where overflow is.    |
 | `backToTop`          | Jump back to the top, shown once the page is scrolled far enough.   |
 | `countdown`          | Live countdown to a target date/time.                               |
+| `dataTable`          | Sortable columns on a plain `<table>`, scrolling or stacked.        |
 | `dateInputFormat`    | Auto-formats a text field into a grouped date mask (`DD.MM.YYYY`).  |
 | `dialog`             | Modal dialogs on the native `<dialog>` element.                     |
 | `dropdownNav`        | Multi-level dropdown / mega-menu nav on the ARIA disclosure pattern.|
