@@ -95,6 +95,7 @@ components downloads two chunks — nothing else.
 | `stickyObserver`     | Sentinel-driven "is stuck" class toggle for `position: sticky`.     |
 | `tabs`               | ARIA tabs enhancement of an anchor-link table of contents.          |
 | `toast`              | Transient messages in a stack, announced via a live region.         |
+| `tooltip`            | Hoverable, dismissible hint on a control, shown by CSS alone.       |
 | `video`              | CMS-maintainable video embeds with responsive sources.              |
 
 Each folder under `src/components/<name>/` contains exactly:

@@ -1,0 +1,82 @@
+<!--
+  tooltip — copy-paste snippet
+  ============================================================================
+  Copy the block(s) below into your own project.
+
+  1) In <head> (or before </body>): load the shared styles, this component's
+     styles and the boot script. boot.min.js lazily loads the tooltip module
+     as soon as it finds data-js-behavior="tooltip" in the DOM — you do not
+     import tooltip.js yourself. Adjust the paths to where you serve /dist.
+
+       <link rel="stylesheet" href="/dist/css/shared.min.css" />
+       <link rel="stylesheet" href="/dist/css/tooltip.min.css" />
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+  2) Drop the markup below around the control the hint belongs to. Showing
+     and hiding is pure CSS: the hint sits inside the component root next to
+     its control, and the stylesheet reveals it on :hover and on keyboard
+     focus (:has([data-tooltip-trigger]:focus-visible)) — so it works before
+     and without the module.
+
+  Wiring
+    - The root is the wrapper with class="m-tooltip" and
+      data-js-behavior="tooltip". It is the positioning context, so the hint
+      has to be inside it, not next to it.
+    - data-tooltip-trigger marks the control being described. It must be a
+      real control — a <button>, a link, a form field — or the hint is
+      reachable by pointer only; the module reports that case.
+    - data-tooltip-bubble marks the hint. role="tooltip" and the id are
+      written by the module where they are missing, but authoring them is
+      free and keeps the markup honest.
+    - data-tooltip-position="top | right | bottom | left" picks the side of
+      the trigger (default: top). Read by the CSS and by the module's
+      measurement alike.
+
+  Notes / Configuration
+    - The module adds the four things CSS cannot: aria-describedby from the
+      control to the hint, dismissal with Escape (and a tap outside, for
+      touch), the measurement that centres the hint on the control and
+      keeps it inside the viewport (flipping the side and bounding the
+      width where it has to), and warnings about broken wiring.
+    - Without the chunk the hint still shows on hover and on focus, centred
+      on the wrapper. Two things are then missing, and the second one is
+      not only the hint's problem: it is not announced, and — because the
+      bubble is a real box in the layout even while hidden — a hint on a
+      control near the right edge of a narrow window reaches past the
+      viewport and puts a horizontal scrollbar under the whole page. A page
+      that has to stay usable when the chunk fails and carries hints near
+      its right edge wants overflow-x: clip on its own scroll container.
+    - A tooltip describes, it never *is* the information: anything the
+      reader must have belongs in the page, anything they must interact
+      with belongs in the popover component. Nothing inside the hint can be
+      focused (the module reports it if you try).
+    - Do not put the same text in a title attribute — the browser would show
+      its own tooltip next to this one. The module reports that too.
+    - The hint is hidden with visibility, not display, so aria-describedby
+      keeps reading it out on focus even before it has faded in.
+    - The wrapper is inline-flex; set --tooltip-display: block on it for a
+      hint on a full-width field. Colours, spacing, radius, max width,
+      arrow, fade and the hover delay are the other --tooltip-* custom
+      properties in tooltip.scss. Three of them (--tooltip-shift,
+      --tooltip-arrow-shift, --tooltip-available) are written by the module
+      and are not yours to set.
+    - A hint placed left or right is bounded by the room that side has, so
+      it wraps to more lines rather than reaching out of the window. Where
+      that gets too narrow to read, the control wants top or bottom.
+    - Placement is relative to the wrapper, so an ancestor with
+      overflow: hidden clips the hint. Where that is the case, reach for the
+      popover component instead — it renders in the top layer.
+    - The hint appears after --tooltip-delay on hover and immediately on
+      keyboard focus; prefers-reduced-motion is respected.
+-->
+
+
+
+<!-- The hint sits inside the wrapper, after the control it describes -->
+<span class="m-tooltip" data-js-behavior="tooltip">
+  <button type="button" data-tooltip-trigger>Save draft</button>
+
+  <span class="m-tooltip__bubble" role="tooltip" data-tooltip-bubble>
+    Keeps the editor open.
+  </span>
+</span>

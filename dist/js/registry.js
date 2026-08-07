@@ -32,6 +32,7 @@ export const registry = {
   stickyObserver: () => import('./modules/stickyObserver.min.js'),
   tabs: () => import('./modules/tabs.min.js'),
   toast: () => import('./modules/toast.min.js'),
+  tooltip: () => import('./modules/tooltip.min.js'),
   uniqueId: () => import('./modules/uniqueId.min.js'),
   video: () => import('./modules/video.min.js')
 }

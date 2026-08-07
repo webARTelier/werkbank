@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tooltip – Demo</title>
+  <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
+  <link rel="stylesheet" href="../../../dist/css/tooltip.min.css" />
+  <script type="module" src="../../../dist/js/boot.min.js"></script>
+
+  <!-- for development only -->
+  <script type="module" src="../../../src/_shared/js/dev_pageInfo.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_a11yInspector.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_qrCode.js"></script>
+  <!-- end for development only -->
+
+  <!--
+      DEMO-ONLY STYLES
+      ----------------------------------------------------------------------
+      Page rhythm, the control row, the demo's own buttons and field, and the
+      code blocks of the explainer. None of it is part of the component.
+      (Tokens like --space-* / --color-* come from shared.min.css.)
+  -->
+
+  <style>
+    .demo {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2xl);
+    }
+
+    .demo__example {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-s);
+    }
+
+    .demo__example h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      color: var(--color-text);
+    }
+
+    .demo__row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-s);
+      margin: 0;
+    }
+
+    .demo__row--edges {
+      justify-content: space-between;
+      gap: var(--space-2xs);
+    }
+
+    /* The triggers are the project's controls: the component ships no styles
+       for them, the way dialog and toast leave their triggers alone. */
+    /* inline-flex + centring: a <button> centres its content on its own, an
+       <a> does not — and as a flex item of the wrapper it is blockified, so
+       min-height applies and the text would sit at the top of the box. */
+    .demo__button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      min-height: 2.75rem;
+      padding: 0 var(--space-s);
+      border: 1px solid var(--color-border);
+      border-radius: var(--borderRadius);
+      color: var(--color-text);
+      background-color: transparent;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .demo__button:hover {
+      border-color: var(--color-border-strong);
+      background-color: var(--color-bg-overlay);
+    }
+
+    .demo__button:focus-visible {
+      outline: 2px solid var(--color-focus-ring-light);
+      outline-offset: var(--outlineOffset);
+    }
+
+    /* Icon-only variant: a square hit area, the glyph sized from the box. */
+    .demo__button--icon {
+      inline-size: 2.75rem;
+      padding: 0;
+    }
+
+    .demo__button--icon svg {
+      inline-size: 1.1rem;
+      block-size: 1.1rem;
+    }
+
+    .demo__field {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3xs);
+      max-inline-size: 22rem;
+      font-size: 0.9rem;
+      color: var(--color-text-secondary);
+    }
+
+    .demo__field input {
+      min-height: 2.75rem;
+      padding: 0 var(--space-2xs);
+      border: 1px solid var(--color-border);
+      border-radius: var(--borderRadius);
+      color: var(--color-text);
+      background-color: transparent;
+      font-family: inherit;
+      font-size: 0.9rem;
+    }
+
+    .demo__field input:focus-visible {
+      outline: 2px solid var(--color-focus-ring-light);
+      outline-offset: var(--outlineOffset);
+    }
+
+    .demoExplainer {
+      margin-block-start: var(--space-2xl);
+      border-block-start: 1px solid var(--color-border);
+      padding-block-start: var(--space-l);
+    }
+
+    .demoExplainer h3 {
+      margin-block-start: var(--space-l);
+      margin-block-end: var(--space-2xs);
+    }
+
+    .demoExplainer pre {
+      margin-block: var(--space-s);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--borderRadius);
+      padding: var(--space-s);
+      overflow-x: auto;
+
+      font-size: 0.875rem;
+      line-height: 1.6;
+
+      background-color: var(--color-bg-surface);
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <main class="shell">
+
+    <section class="hero">
+      <a class="back" href="../../../index.html">← Overview</a>
+      <h1>tooltip</h1>
+      <p>A short hint about a control, on hover and on keyboard focus — shown by CSS alone, described and dismissible.</p>
+    </section>
+
+    <section class="stage" aria-label="Live demo">
+
+      <!--
+          One tooltip per element with data-js-behavior="tooltip".
+
+          Wiring
+            - The root is the wrapper (class="m-tooltip"); the control
+              (data-tooltip-trigger) and the hint (data-tooltip-bubble) both
+              live inside it. The wrapper is the positioning context and the
+              element the show rules key on, so the hint cannot sit next to
+              it.
+            - data-tooltip-position="top|right|bottom|left" picks the side
+              (default top); read by the CSS and by the module's measurement
+              alike.
+            - The trigger must be a real control — a button, a link, a
+              field. The module reports a trigger the keyboard cannot reach,
+              a title attribute that would double the hint, and anything
+              focusable inside the hint.
+
+          Progressive enhancement
+            - Showing and hiding is pure CSS: :hover and
+              :has([data-tooltip-trigger]:focus-visible) on the wrapper. The
+              module adds the aria-describedby wiring, Escape (plus a tap
+              outside, for touch), and the measurement that centres the hint
+              on the control, bounds its width and keeps it inside the
+              viewport. Without the chunk the hint still appears, centred on
+              the wrapper — it is then not announced, not dismissible, and
+              its box can reach past the edge of a narrow window and put a
+              horizontal scrollbar under the page.
+
+          Accessibility
+            - The hint is hidden with visibility rather than display, so the
+              node aria-describedby points at keeps contributing its text
+              even before it has faded in. The flip side is that it is a
+              real box even while hidden, which is why every hint here is
+              measured at init, on resize and once a webfont has swapped
+              in — not only the one on screen.
+            - WCAG 1.4.13: hoverable (the bubble bridges the gap to the
+              trigger), dismissible (Escape), persistent (no timer). Whether
+              a hint is up is read back off the DOM, never mirrored in a
+              flag — the stylesheet can show one from a state change no
+              event reports, and Escape has to reach that one too.
+            - A tooltip is never focused. Anything to interact with belongs
+              in the popover component instead.
+        -->
+
+      <p class="stage__intro">
+        <strong>The stylesheet does the showing.</strong> Every hint below
+        appears on <code>:hover</code> and on keyboard focus without any
+        JavaScript — hover a control, or <kbd>Tab</kbd> through the page and
+        watch them appear on focus. What the module adds is the
+        <code>aria-describedby</code> that lets a screen reader read the hint
+        out, <kbd>Esc</kbd> to take it away, and the measurement that keeps it
+        inside the window.
+      </p>
+
+      <div class="demo">
+
+        <!-- 1) Default: above the trigger -->
+        <div class="demo__example">
+          <h2>Default (above the trigger)</h2>
+
+          <p class="stage__intro">
+            Hover the button, then press <kbd>Esc</kbd> without moving the
+            pointer: the hint goes and stays gone until you ask for it again.
+            That is WCAG 1.4.13's “dismissible”, and it is the one thing here
+            the CSS cannot do on its own.
+          </p>
+
+          <p class="demo__row">
+            <span class="m-tooltip" data-js-behavior="tooltip">
+              <button type="button" class="demo__button" data-tooltip-trigger>Save draft</button>
+
+              <span class="m-tooltip__bubble" role="tooltip" data-tooltip-bubble>
+                Keeps the editor open.
+              </span>
+            </span>
+          </p>
+        </div>
+
+
+        <!-- 2) Placements: one hint per side -->
+        <div class="demo__example">
+          <h2>Placement (<code>data-tooltip-position</code>)</h2>
+
+          <p class="demo__row">
+            <span class="m-tooltip" data-js-behavior="tooltip" data-tooltip-position="top">
+              <button type="button" class="demo__button" data-tooltip-trigger>Top</button>
+
+              <span class="m-tooltip__bubble" role="tooltip" data-tooltip-bubble>
+                Above the trigger — the default.
+              </span>
+            </span>
+
+            <span class="m-tooltip" data-js-behavior="tooltip" data-tooltip-position="right">
+              <button type="button" class="demo__button" data-tooltip-trigger>Right</button>
+
+              <span class="m-tooltip__bubble" role="tooltip" data-tooltip-bubble>
+                Centred to the right of the trigger.
+              </span>
+            </span>
+
+            <span class="m-tooltip" data-js-behavior="tooltip" data-tooltip-position="bottom">
+              <button type="button" class="demo__button" data-tooltip-trigger>Bottom</button>
+
+              <span class="m-tooltip__bubble" role="tooltip" data-tooltip-bubble>
+                Below the trigger.
+              </span>
+            </span>
+
+            <span class="m-tooltip" data-js-behavior="tooltip" data-tooltip-position="left">
+              <button type="button" class="demo__button" data-tooltip-trigger>Left</button>
+
+              <span class="m-tooltip__bubble" role="tooltip" data-tooltip-bubble>
+                Centred to the left of the trigger.
+              </span>
+            </span>
+          </p>
+        </div>
+
+
+        <!-- 3) The case a tooltip is actually for: an icon-only control -->
+        <div class="demo__example">
+          <h2>An icon-only control</h2>
+
+          <p class="stage__intro">
+            The button already has an accessible <em>name</em> via
+            <code>aria-label</code> — the hint is its
+            <em>description</em>, and the two are different jobs. A tooltip
+            never replaces the name: a control whose only label is a hint
+            that appears on hover has no label at all for anyone who does not
+            hover.
+          </p>
+
+          <p class="demo__row">
+            <span class="m-tooltip" data-js-behavior="tooltip" data-tooltip-position="right">
+              <button type="button" class="demo__button demo__button--icon" aria-label="Billing period" data-tooltip-trigger>
+                <!-- decorative glyph: the button carries the name -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 11v5M12 7.5h.01" />
+                </svg>
+              </button>
+
+              <span class="m-tooltip__bubble" role="tooltip" data-tooltip-bubble>
+                Invoices are issued on the first of each month.
+              </span>
+            </span>
+
+            <span class="m-tooltip" data-js-behavior="tooltip">
+              <a class="demo__button" href="#tooltip-explained" data-tooltip-trigger>A link works too</a>
+
+              <span class="m-tooltip__bubble" role="tooltip" data-tooltip-bubble>
+                Jumps to the explainer at the bottom of this page.
+              </span>
+            </span>
+          </p>
+        </div>
+
+
+        <!-- 4) On a form field: the wrapper goes block -->
+        <div class="demo__example">
+          <h2>On a form field</h2>
+
+          <p class="stage__intro">
+            The wrapper is <code>inline-flex</code> by default; here it is
+            switched with <code>--tooltip-display: block</code> so it does not
+            shrink-wrap the field. That makes the wrapper wider than the
+            control, and the hint still sits under the <em>field</em> rather
+            than under the wrapper — the module measures the trigger, not the
+            box it is positioned in. The hint also joins whatever the field is
+            already described by: <code>aria-describedby</code> is extended,
+            never overwritten.
+          </p>
+
+          <span class="m-tooltip" data-js-behavior="tooltip" data-tooltip-position="bottom" style="--tooltip-display: block">
+            <label class="demo__field" for="recoveryCode">
+              Recovery code
+              <input id="recoveryCode" type="text" name="recoveryCode" autocomplete="off" data-tooltip-trigger />
+            </label>
+
+            <span class="m-tooltip__bubble" role="tooltip" data-tooltip-bubble>
+              Twelve characters, printed on the sheet you saved when the
+              account was created.
+            </span>
+          </span>
+        </div>
+
+
+        <!-- 5) Collision: the module slides and flips -->
+        <div class="demo__example">
+          <h2>At the edge of the window</h2>
+
+          <p class="stage__intro">
+            <strong>Narrow the window</strong> until the panel touches both
+            sides, then hover the outer two buttons: the hint slides along
+            the trigger instead of leaving the screen, and the arrow stays
+            pointing at the control. Both are the module's measurement,
+            written as <code>--tooltip-shift</code> and
+            <code>--tooltip-arrow-shift</code> and read by the stylesheet.
+          </p>
+
+          <p class="demo__row demo__row--edges">
+            <span class="m-tooltip" data-js-behavior="tooltip">
+              <button type="button" class="demo__button" data-tooltip-trigger>Left edge</button>
+
+              <span class="m-tooltip__bubble" role="tooltip" data-tooltip-bubble>
+                A hint long enough to run past the edge of a narrow window.
+              </span>
+            </span>
+
+            <span class="m-tooltip" data-js-behavior="tooltip">
+              <button type="button" class="demo__button" data-tooltip-trigger>Right edge</button>
+
+              <span class="m-tooltip__bubble" role="tooltip" data-tooltip-bubble>
+                A hint long enough to run past the edge of a narrow window.
+              </span>
+            </span>
+          </p>
+        </div>
+
+
+        <!-- 6) Collision on the other axis: the width bound -->
+        <div class="demo__example">
+          <h2>A long hint beside its control</h2>
+
+          <p class="stage__intro">
+            <strong>Narrow the window</strong> and scroll until this button
+            sits near the lower edge. A hint placed <code>left</code> or
+            <code>right</code> can only be slid up and down — the shift is on
+            the other axis — so the only thing that keeps it out of the
+            window's margin is the width bound the module measures and writes
+            as <code>--tooltip-available</code>. It wraps into more lines
+            instead of reaching out; and because wrapping makes it taller
+            than it was when it was measured, the module reads it a second
+            time and lifts the taller box back inside the window, arrow still
+            on the button.
+          </p>
+
+          <p class="demo__row">
+            <span class="m-tooltip" data-js-behavior="tooltip" data-tooltip-position="right">
+              <button type="button" class="demo__button" data-tooltip-trigger>Notify reviewers</button>
+
+              <span class="m-tooltip__bubble" role="tooltip" data-tooltip-bubble>
+                Sends the draft to everyone on the review list and keeps a
+                copy in the outbox until each of them has confirmed receipt.
+              </span>
+            </span>
+          </p>
+        </div>
+
+
+        <!-- 7) Collision: flip to the opposite side -->
+        <div class="demo__example">
+          <h2>Out of room above — the flip</h2>
+
+          <p class="stage__intro">
+            This one asks for <code>top</code>. <strong>Scroll</strong> until
+            the button is near the upper edge of the window: with no room
+            left above it, the module writes
+            <code>data-tooltip-flipped</code> and the stylesheet renders the
+            same hint below instead — arrow and all. Scroll back and it
+            returns.
+          </p>
+
+          <p class="demo__row">
+            <span class="m-tooltip" data-js-behavior="tooltip" data-tooltip-position="top">
+              <button type="button" class="demo__button" data-tooltip-trigger>Scroll me to the top</button>
+
+              <span class="m-tooltip__bubble" role="tooltip" data-tooltip-bubble>
+                No room above, so this went below.
+              </span>
+            </span>
+          </p>
+        </div>
+
+      </div>
+
+
+      <!-- ================================================================
+           Explainer: what a tooltip owes the reader
+           ================================================================ -->
+      <div class="demoExplainer" id="tooltip-explained">
+        <h2>What a tooltip owes the reader</h2>
+
+        <p>
+          The platform already has a tooltip — the <code>title</code>
+          attribute — and it is the reason this component exists. It never
+          appears on a touch device, appears only inconsistently on keyboard
+          focus, cannot be styled, cannot be reached with the pointer, and
+          arrives after a delay nobody can change. A hint worth writing is
+          worth showing to everyone, so it goes into the markup:
+        </p>
+        <pre><code>&lt;span class="m-tooltip" data-js-behavior="tooltip"&gt;
+  &lt;button type="button" data-tooltip-trigger&gt;Save draft&lt;/button&gt;
+
+  &lt;span class="m-tooltip__bubble" role="tooltip" data-tooltip-bubble&gt;
+    Keeps the editor open.
+  &lt;/span&gt;
+&lt;/span&gt;</code></pre>
+
+        <h3>WCAG 1.4.13, in three words</h3>
+        <ul>
+          <li>
+            <strong>Hoverable:</strong> the pointer has to be able to travel
+            to the hint. The gap to the trigger is a strip of “nothing” that
+            would take the hint away mid-transit, so the bubble extends
+            invisibly across it.
+          </li>
+          <li>
+            <strong>Dismissible:</strong> a hint covering what the reader was
+            looking at has to go without them moving the pointer or the focus
+            first — <kbd>Esc</kbd>. That key is deliberately not swallowed: a
+            tooltip is a passive hint, not a layer that owns it, so a dialog
+            underneath still closes. It also has to reach a hint the module
+            never saw appear: click a control with the mouse and then touch
+            the keyboard, and the engine turns <code>:focus-visible</code> on
+            without reporting anything — the stylesheet shows the hint, and
+            the keystroke that was meant to dismiss it is the very thing that
+            brought it up. So the module reads the two show conditions back
+            off the DOM instead of tracking them, and listens for the key for
+            as long as it lives rather than only while it thinks a hint is
+            showing.
+          </li>
+          <li>
+            <strong>Persistent:</strong> nothing takes the hint away on a
+            timer.
+          </li>
+        </ul>
+
+        <h3>Name, or description?</h3>
+        <p>
+          A tooltip is a <em>description</em>. The control still needs its own
+          <em>name</em> — visible text, or an <code>aria-label</code> on an
+          icon-only button. That is why the module wires
+          <code>aria-describedby</code> and never
+          <code>aria-labelledby</code>, and why it adds its id to whatever the
+          control was already described by instead of assigning over it.
+        </p>
+        <p>
+          The hint is hidden with <code>visibility</code>, not
+          <code>display</code>, and that is an accessibility decision as much
+          as a layout one: a node <code>aria-describedby</code> points at
+          <em>directly</em> contributes its text whether it is visible or not,
+          so the description is read out on focus even before the bubble has
+          faded in.
+        </p>
+
+        <h3>tooltip, or popover?</h3>
+        <p>
+          Both anchor a small surface to a control. The split is what the
+          surface is for — and the practical consequence is the last row:
+        </p>
+        <ul>
+          <li>
+            <strong>Opened by</strong> hover and keyboard focus, versus a
+            click.
+          </li>
+          <li>
+            <strong>Holds</strong> a sentence of description, versus anything
+            at all, controls included.
+          </li>
+          <li>
+            <strong>Focus</strong> never reaches a tooltip; a popover can be
+            tabbed into.
+          </li>
+          <li>
+            <strong>Renders</strong> in the normal flow — so an ancestor with
+            <code>overflow: hidden</code> clips it — versus the top layer,
+            which nothing clips. That is the price of a hint that needs no
+            script to appear at all: the top layer can only be entered by
+            <code>showPopover()</code>, and no CSS-only component can call it.
+            Where a hint has to escape its container, use
+            <a href="../popover/demo.html">popover</a>.
+          </li>
+        </ul>
+      </div>
+
+    </section>
+
+  </main>
+
+</body>
+
+</html>
