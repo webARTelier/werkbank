@@ -135,6 +135,35 @@ contrasts with its own surface:
   `shared.scss`; only the components that apply a ring pull it in. The tone tokens,
   however, live in `shared.min.css` so they resolve at runtime.
 
+## Media queries: all of them live in `_mediaqueries.scss`
+
+A component stylesheet never writes a raw `@media`. It `@use`s the partial and
+includes the mixin that **names the condition**:
+
+```scss
+@use "mediaqueries" as *;
+.m-thing { @include reduced-motion { transition: none; } }
+```
+
+- **Viewport / input / display:** `vp-only`, `vp-up`, `vp-between`,
+  `vp-nav-collapsed`, `vp-nav-expanded` (all named through
+  `_breakpoints.scss`), `input-touch`, `input-mouse`, `highdpi`.
+- **User preferences and context:** `darkmode`, `reduced-motion`,
+  `forced-colors`, `scripting-enabled`, `print-only`. These were the ones
+  written out by hand in the components until 2026-08-07; they are exactly as
+  much a project-wide decision as a breakpoint is. `pre-enhancement()` in
+  `_progressiveEnhancement.scss` wraps its rules in `scripting-enabled` from
+  here, and `tabs` — the one component that cannot use that mixin (see the
+  pre-enhancement section) — still takes the query from here.
+- **A condition the partial does not have yet is a mixin missing there**, not
+  a query to write out locally. Same failure mode the nesting section
+  describes for knobs: the moment a component states the raw condition
+  itself, the project has two answers to "what does reduced motion mean here".
+- The partial emits **no CSS on its own** (mixins only), so a component pays
+  nothing for `@use`ing it. `_demo.scss` is the one file that still carries a
+  raw query — a one-off 680px breakpoint for the demo page chrome, which is
+  not part of the project's scale and not a component.
+
 ## Media sizing: the container owns the box
 
 Images and videos never carry their own dimensions in a component stylesheet.

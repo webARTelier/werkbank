@@ -27,6 +27,7 @@
 // class stays a pure styling choice.
 
 @use "focus" as *;
+@use "mediaqueries" as *;
 
 
 
@@ -202,7 +203,7 @@
 
 
 
-@media (prefers-reduced-motion: reduce) {
+@include reduced-motion {
   .m-video {
 
     &__toggle {

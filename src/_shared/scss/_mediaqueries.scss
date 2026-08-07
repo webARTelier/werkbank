@@ -160,6 +160,47 @@
 
 
 
+// reduced motion (the reader asked for less animation)
+@mixin reduced-motion {
+
+  @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
+}
+
+
+
+// forced colors (the windows contrast themes replace every colour;
+// system colour keywords are the one kind an author may still choose)
+@mixin forced-colors {
+
+  @media (forced-colors: active) {
+    @content;
+  }
+}
+
+
+
+// scripting available (see _progressiveEnhancement.scss)
+@mixin scripting-enabled {
+
+  @media (scripting: enabled) {
+    @content;
+  }
+}
+
+
+
+// print
+@mixin print-only {
+
+  @media print {
+    @content;
+  }
+}
+
+
+
 // safari on mac/ios
 @mixin safari-only {
 

@@ -26,6 +26,7 @@
 // Restyle freely without touching the behaviour.
 
 @use "focus" as *;
+@use "mediaqueries" as *;
 
 
 
@@ -288,7 +289,7 @@
 
 
 // Respect reduced motion: keep the open/close instant.
-@media (prefers-reduced-motion: reduce) {
+@include reduced-motion {
 
   .m-popover {
     transition-duration: 0.01ms !important;

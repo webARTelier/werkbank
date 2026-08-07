@@ -326,7 +326,15 @@ Boot (`_shared/js/boot.js`) lazily imports the module when it sees
   element out of the accessibility tree too.
 - Animation/transition is a **pure CSS progressive enhancement**
   (`@starting-style`, `allow-discrete`); older engines just snap. Always add a
-  `@media (prefers-reduced-motion: reduce)` block that makes it instant.
+  `@include reduced-motion { … }` block that makes it instant.
+- **Every media query comes from `_mediaqueries.scss`** — no raw `@media` in a
+  component stylesheet. `@use "mediaqueries" as *;` and include the mixin that
+  names the condition: `vp-only` / `vp-up` / `vp-between` /
+  `vp-nav-collapsed` / `vp-nav-expanded`, `input-touch` / `input-mouse`,
+  `highdpi`, `darkmode`, `reduced-motion`, `forced-colors`,
+  `scripting-enabled` (what `pre-enhancement` wraps its rules in),
+  `print-only`. A condition a component needs and the partial does not have
+  is a mixin missing there, not a query to write out locally.
 - Use **logical properties** (`inset-inline-end`, `inline-size`) as the house
   style: they read better next to `inset-block` / `block-size` and keep one
   rule where physical sides would need two. **Not** as RTL preparation —
@@ -411,7 +419,8 @@ paragraphs, and several live examples exercising each mode of the component.
   `_visuallyHidden` (mixin only — `visually-hidden`, for the text node that
   names an icon-only control), `_progressiveEnhancement` (mixin only —
   `pre-enhancement`, the state that covers the gap before `init()`),
-  `_breakpoints` / `_mediaqueries`, `_functions`.
+  `_breakpoints` / `_mediaqueries` (mixins only — every media query in the
+  collection, viewport and preference alike), `_functions`.
 - **Shared media** (`_shared/media/img/`): `icons/`, `system/`. Note: the build
   does **not** copy `media` into `dist`, so reference icons inline
   (`currentColor`) or via a project-served path, not a `dist`-relative one.

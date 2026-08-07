@@ -44,6 +44,7 @@
 // fallback.
 
 @use "focus" as *;
+@use "mediaqueries" as *;
 @use "visuallyHidden" as *;
 
 
@@ -699,7 +700,7 @@ body.is-scrollLocked {
 // !important (rather than zeroing the duration tokens) so it also
 // beats the transitions declared on the [open] rules above.
 // -------------------------------------------------------------
-@media (prefers-reduced-motion: reduce) {
+@include reduced-motion {
 
   .m-lightbox__thumb,
   [data-lightbox-ui='viewer'],
@@ -732,7 +733,7 @@ body.is-scrollLocked {
 // the forcing keeps. System colours inside this query are the
 // one kind an author may still choose.
 // -------------------------------------------------------------
-@media (forced-colors: active) {
+@include forced-colors {
 
   // The end of a non-looping gallery is a dimmed glyph and nothing else (see
   // the aria-disabled rule above), so forcing the colour takes the state with

@@ -199,7 +199,7 @@
     translate: 0 var(--backToTop-enter-shift);
   }
 
-  @media (prefers-reduced-motion: reduce) {
+  @include reduced-motion {
     transition: none;
   }
 
@@ -267,7 +267,7 @@
 // paper means a pill printed over the content — on the first sheet in
 // Chromium, on every sheet in engines that repeat fixed elements. A jump
 // link is meaningless on paper either way.
-@media print {
+@include print-only {
 
   .m-backToTop {
     display: none;

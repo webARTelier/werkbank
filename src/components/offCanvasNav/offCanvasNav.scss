@@ -301,7 +301,7 @@
   // it is drawn on all four sides because which one faces the page depends on
   // data-offcanvasnav-side; the other three sit on the viewport edge, where
   // they cost nothing.
-  @media (forced-colors: active) {
+  @include forced-colors {
     .m-offCanvasNav {
 
       &__panel {
@@ -712,7 +712,7 @@
 // icon-only variant below leaves a control with nothing visible in it at all.
 // CanvasText is the system's own foreground colour, so the bars come back in
 // the user's chosen palette instead of ours.
-@media (forced-colors: active) {
+@include forced-colors {
   .m-offCanvasNavToggle {
 
     &__burger {
@@ -764,7 +764,7 @@ body.is-scrollLocked {
 // transition-duration (see offCanvasNav.js), so flattening it here
 // is all it takes for the script to close the drawer at once too.
 // -------------------------------------------------------------
-@media (prefers-reduced-motion: reduce) {
+@include reduced-motion {
 
   .m-offCanvasNav::backdrop,
   .m-offCanvasNav__panel,

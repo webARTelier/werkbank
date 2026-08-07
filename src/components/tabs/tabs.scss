@@ -16,6 +16,10 @@
 // rather than ugly. Same reason marquee ships its clipping row — structure
 // the behaviour cannot work without, not design.
 
+@use "mediaqueries" as *;
+
+
+
 // -------------------------------------------------------------
 // The pre-enhancement state (see
 // _shared/scss/_progressiveEnhancement.scss).
@@ -44,9 +48,11 @@
 // to nest them under (matching data-js-behavior with *= would be guesswork
 // about a comma-separated list). So the guard is ":not([data-tabs-ready] *)"
 // — "not inside a container the module has reached" — which needs no
-// container selector at all. Same two conditions as the mixin, same meaning.
+// container selector at all. Same two conditions as the mixin, same meaning:
+// the query is the shared scripting-enabled one either way, only the guard
+// differs.
 // -------------------------------------------------------------
-@media (scripting: enabled) {
+@include scripting-enabled {
 
   // Every panel that has another panel before it: the first one is the
   // module's default selection, so it is the one that stays.

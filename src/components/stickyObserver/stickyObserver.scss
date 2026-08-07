@@ -24,6 +24,10 @@
 // or read "m-stickyBar", so the sticky element can be styled any way you
 // like.
 
+@use "mediaqueries" as *;
+
+
+
 // Convenience target: a bar that sticks to the top of the viewport. The
 // surface properties are transparent while the bar rests in the normal flow
 // and fade in once the script marks it as pinned.
@@ -79,7 +83,7 @@
     box-shadow: var(--stickyBar-shadow);
   }
 
-  @media (prefers-reduced-motion: reduce) {
+  @include reduced-motion {
     transition: none;
   }
 }

@@ -45,6 +45,7 @@
 // three modifiers for the corners a project is most likely to want.
 
 @use "focus" as *;
+@use "mediaqueries" as *;
 @use "visuallyHidden" as *;
 
 
@@ -443,7 +444,7 @@
 // animations are running before it removes it, so a message whose
 // exit takes no time is simply gone at once.
 // -------------------------------------------------------------
-@media (prefers-reduced-motion: reduce) {
+@include reduced-motion {
 
   .m-toast [data-toast-item],
   .m-toast [data-toast-dismiss] {
@@ -463,7 +464,7 @@
 // colour it is sitting on. System colours inside this query are
 // the one kind an author may still choose.
 // -------------------------------------------------------------
-@media (forced-colors: active) {
+@include forced-colors {
 
   .m-toast [data-toast-item]::before {
     background-color: CanvasText;
@@ -479,7 +480,7 @@
 // elements — and a message about something that just happened on
 // screen means nothing on a page that outlives it.
 // -------------------------------------------------------------
-@media print {
+@include print-only {
 
   .m-toast {
     display: none;

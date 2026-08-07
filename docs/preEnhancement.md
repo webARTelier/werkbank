@@ -49,7 +49,9 @@ Two conditions guard every such rule, and both are load-bearing:
 
 - **`@media (scripting: enabled)`** — the pre-enhancement state may only apply
   where a script is going to run. For a reader with scripting off, the
-  unenhanced markup is not a transitional state but the final one.
+  unenhanced markup is not a transitional state but the final one. Like every
+  media query in the collection it is written as a mixin, not by hand:
+  `scripting-enabled` from `_shared/scss/_mediaqueries.scss`.
 - **`:not([data-thing-ready])`** — the component's own ready attribute, so the
   rule lifts the moment the module takes over.
 
@@ -71,9 +73,10 @@ root of its own, the attribute goes there, and descendants nest inside the
 block as usual. `tabs` is the one case where that does not hold — it is
 behaviour-only, has no root class to nest its panel rules under, and matching
 `data-js-behavior` with `*=` would be guesswork about a comma-separated
-list. It therefore writes the same two conditions out by hand with a
-`:not([data-tabs-ready] *)` guard ("not inside a container the module has
-reached"), which needs no container selector at all. One exception did not
+list. It therefore writes the same two conditions out itself — the shared
+`scripting-enabled` query plus a `:not([data-tabs-ready] *)` guard ("not
+inside a container the module has reached"), which needs no container
+selector at all. One exception did not
 warrant a second mixin; see `tabs.scss` for the note that says so in place.
 
 Why `@media (scripting: enabled)` and not a `.js` class set by an inline

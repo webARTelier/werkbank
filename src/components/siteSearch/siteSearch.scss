@@ -42,6 +42,7 @@
 // Restyle freely without touching the behaviour.
 
 @use "focus" as *;
+@use "mediaqueries" as *;
 @use "visuallyHidden" as *;
 
 
@@ -445,7 +446,7 @@
 // instantly. !important (rather than zeroing the duration token)
 // so it also beats a transition a project declared itself.
 // -------------------------------------------------------------
-@media (prefers-reduced-motion: reduce) {
+@include reduced-motion {
   .m-siteSearch {
 
     &__toggle,

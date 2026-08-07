@@ -529,7 +529,7 @@
 // fade-out, and left alone it would keep a closed panel around
 // for half a second with nothing animating.
 // -------------------------------------------------------------
-@media (prefers-reduced-motion: reduce) {
+@include reduced-motion {
 
   [data-dropdownnav-toggle]::after,
   [data-dropdownnav-ready] [data-dropdownnav-panel] {

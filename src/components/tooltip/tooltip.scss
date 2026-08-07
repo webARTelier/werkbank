@@ -58,6 +58,7 @@
 // nothing to declare up front and no ready attribute — see
 // docs/preEnhancement.md.
 
+@use "mediaqueries" as *;
 
 
 // Registering the offset as a real <length> makes its computed value always
@@ -386,7 +387,7 @@
 // leave the bubble indistinguishable from the page and the arrow invisible
 // against it. A border gives the hint its edge back, and the arrow — which
 // carries no meaning of its own — goes.
-@media (forced-colors: active) {
+@include forced-colors {
 
   .m-tooltip {
 
@@ -405,7 +406,7 @@
 // Respect reduced motion: the hint appears and disappears instantly. The
 // delay stays — it is not motion, it is the reason a hint does not fire
 // while the pointer is only passing through.
-@media (prefers-reduced-motion: reduce) {
+@include reduced-motion {
 
   .m-tooltip {
 

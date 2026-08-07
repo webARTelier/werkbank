@@ -16,8 +16,8 @@
    enhanced resting position up front — under two conditions, both
    load-bearing:
 
-   - "@media (scripting: enabled)" — for a reader with scripting off the
-     unenhanced markup is not a transitional state but the final one.
+   - "scripting-enabled" (_mediaqueries.scss) — for a reader with scripting
+     off the unenhanced markup is not a transitional state but the final one.
    - ":not([<name>-ready])" — the component's own ready attribute, set by its
      init(). The loader's "data-js-init_<name>" cannot stand in for it: that
      one is written BEFORE the chunk is imported.
@@ -33,8 +33,12 @@
    shared.scss.
    ========================================================================== */
 
+@use "mediaqueries" as *;
+
+
+
 @mixin pre-enhancement($ready-attr) {
-  @media (scripting: enabled) {
+  @include scripting-enabled {
     &:not([#{$ready-attr}]) {
       @content;
     }

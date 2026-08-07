@@ -24,6 +24,7 @@
 // — the ready attribute exists to pick the animation, not to hide anything.
 
 @use "focus" as *;
+@use "mediaqueries" as *;
 
 
 
@@ -273,7 +274,7 @@
 // -------------------------------------------------------------
 // Respect reduced motion
 // -------------------------------------------------------------
-@media (prefers-reduced-motion: reduce) {
+@include reduced-motion {
 
   .m-accordion__trigger::after,
   .m-accordion__item::details-content,
