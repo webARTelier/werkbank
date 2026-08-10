@@ -92,7 +92,8 @@ to know before touching a component:
 - **The block only ships when it is survivable.** Whatever it declares is
   permanent if the chunk 404s. It may hide something only when nothing is
   lost (`backToTop`), a `:target` escape keeps it reachable (`tabs`,
-  `offCanvasNav`), or the module lifts the state on its own bail-outs.
+  `offCanvasNav`, `readMore`), or the module lifts the state on its own
+  bail-outs.
   Otherwise it stays a documented opt-in in the component's snippet
   (`siteSearch`, `dropdownNav`) — hiding content behind a control the script
   never delivered is the one outcome the convention exists to prevent.

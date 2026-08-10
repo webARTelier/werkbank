@@ -1,0 +1,113 @@
+<!--
+  readMore — copy-paste snippet
+  ============================================================================
+  Copy the block(s) below into your own project.
+
+  1) In <head> (or before </body>): load the shared styles, this component's
+     styles and the boot script. boot.min.js lazily loads the readMore module
+     as soon as it finds data-js-behavior="readMore" in the DOM — you do not
+     import readMore.js yourself. Adjust the paths to where you serve /dist.
+
+       <link rel="stylesheet" href="/dist/css/shared.min.css" />
+       <link rel="stylesheet" href="/dist/css/readMore.min.css" />
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+  2) Put the text in the region and the control right after it. The text
+     itself stays ordinary markup — paragraphs, lists, whatever the text is
+     made of; the component never looks inside it.
+
+  Wiring
+    - The root is the element with class="m-readMore" and
+      data-js-behavior="readMore".
+    - data-readmore-body marks the region that gets cut down to a preview.
+      Give it an id: that id is what the toggle links to, and it is what
+      makes the whole thing work without JavaScript (see Notes).
+    - data-readmore-toggle marks the control. Write it as
+      <a href="#<the region's id>"> — before the module arrives that link
+      takes the reader to the text and the stylesheet hands the full text
+      back through ":target". A <button type="button"> works too (the type
+      matters: inside a form a button without it submits), but it is dead
+      until the module has loaded, so the stylesheet then leaves the text
+      uncut until then and you get the full text on the first paint instead
+      of the preview.
+    - The control's own text is the label of the closed state ("Read
+      more"); the module swaps it for the open one when the reader opens
+      the region. That is a text swap, so the control holds TEXT, not
+      markup — an icon element inside it would be replaced by the label.
+      The chevron is a pseudo-element in the stylesheet for that reason.
+    - data-readmore-expand / data-readmore-collapse on the root set the two
+      labels explicitly. The open label ships in German and English, picked
+      from <html lang>; the closed one defaults to whatever your markup
+      already says.
+
+  Notes / Configuration
+    - How much is shown is a stylesheet setting, not a script one:
+      --readMore-lines (default 6) or --readMore-collapsed-size for a
+      measure of another kind (e.g. 12rem). Set either on the root —
+      style="--readMore-lines: 3" is enough for a single instance.
+    - The preview is cut from the FIRST paint, before any script has run:
+      the stylesheet states it, so nothing collapses under the reader a
+      round trip later. That is only safe because the toggle is a real
+      link — if the chunk never arrives, pressing it jumps to the region
+      and ":target" lifts the cut. Both halves are required: the id on the
+      region, the matching href on the toggle. Without an id the module
+      reports it and the pre-cut is not applied at all, so the text is
+      complete either way.
+    - The module removes the control where the text turns out to fit
+      anyway, and brings it back when a narrower viewport, a bigger font
+      or new content makes it too long again. So a component around a
+      short text costs nothing but the chunk.
+    - Opening and closing animate the height, in every engine:
+      --readMore-duration (default: the shared --an-duration) says how
+      long that takes, 0s switches it off, and prefers-reduced-motion
+      makes it instant. The module measures the text's height and hands
+      it to the stylesheet for the length of the movement — a transition
+      needs two lengths, and "as tall as the text" is not one. It takes
+      the height back afterwards, so an open region is capped by nothing
+      and anything inside it may still grow.
+    - A link anywhere on the page pointing at the region's id opens it —
+      and so does one pointing at an anchor inside the text, because the
+      browser scrolls there either way. Both work before the module (that
+      is ":target") and after it (the module watches the fragment), so the
+      enhancement does not take a working in-page link away.
+    - Accessibility: the cut text is CLIPPED, not hidden — a screen reader
+      reads it in full in both states, and aria-expanded on the control
+      describes a visual truncation. That also means a link below the cut
+      is still reachable by keyboard, so focus landing BELOW THE CUT opens
+      the region rather than parking the reader on something they cannot
+      see — the module does that, and the stylesheet does the same for the
+      load where the module has not arrived yet. Focus inside the preview
+      changes nothing: that part is painted.
+    - The control carries no padding of its own: its hit area is the line
+      box of its label, at your font size and line height. Standing alone
+      under the text that is normally enough for the spacing exception to
+      WCAG 2.5.8; put a min-block-size of 24px on it where you place
+      another control next to it.
+    - Printing shows the whole text and drops the control; a forced-colors
+      context drops the fade over the last lines and keeps the cut.
+    - Colours, the fade depth, spacing and the chevron are the
+      --readMore-* custom properties in readMore.scss.
+-->
+
+
+
+<!-- The region carries the id the toggle links to -->
+<div class="m-readMore" data-js-behavior="readMore">
+
+  <div class="m-readMore__body" data-readmore-body id="readMore-story">
+    <p>
+      The first paragraph is what the reader sees in any case — the preview
+      is cut at six lines by default, which is roughly a paragraph and the
+      beginning of the next one.
+    </p>
+    <p>
+      Everything after it is what the control opens: the component never
+      looks inside this region, so it can hold whatever the text is made
+      of.
+    </p>
+  </div>
+
+  <a class="m-readMore__toggle" href="#readMore-story" data-readmore-toggle>
+    Read more
+  </a>
+</div>

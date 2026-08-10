@@ -1,1 +1,1 @@
-@media (scripting:enabled){[data-tabs-panel]~[data-tabs-panel]:not([data-tabs-ready] *):not(:target),[data-tabs-panel]:not([data-tabs-ready] *):has(~[data-tabs-panel]:target){display:none}}
+@media (scripting:enabled){[data-tabs-panel]~[data-tabs-panel]:not([data-tabs-ready] *):not(:target):not(:has(:target)),[data-tabs-panel]:not([data-tabs-ready] *):has(~[data-tabs-panel]:target,~[data-tabs-panel] :target){display:none}}

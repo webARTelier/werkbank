@@ -51,7 +51,23 @@ already-paired panel is ignored and reported as a duplicate.
 ### Deep linking
 A URL fragment matching a panel id selects that tab on load and on
 `hashchange`; any other hash is ignored, so skip links and other anchors on
-the page cannot clash. Fragments are independent of path and query string, so
+the page cannot clash.
+
+A fragment naming something **inside** a panel selects that panel as well — a
+heading, or another component's region. The browser scrolls to the target
+either way, so the panel holding it has to come along; otherwise the reader is
+taken to an element that is still out of the flow, with nothing on screen to
+say so. That is what makes a panel safe to fill with anchored content: a
+`readMore` gives its text region an `id` precisely so a link can point at it,
+and a page can carry both without the two fragments fighting. The
+pre-enhancement rule below exempts the same two cases, so it holds before the
+module has loaded too.
+
+The fragment the reader arrived with is never rewritten — `data-tabs-deeplink`
+writes one only when the *reader* switches tabs — so a component further in
+still sees its own `:target`.
+
+Fragments are independent of path and query string, so
 deep links work with any URL scheme (query parameters, rewritten/pretty
 URLs) and are never sent to the server. Leave `data-tabs-deeplink` off on
 pages whose hash is owned by something else (e.g. a hash-based SPA router) —
@@ -93,8 +109,12 @@ has loaded, so the page does not paint every panel stacked and then snap to a
 single one a round trip later. The rule lifts the moment the module sets
 `data-tabs-ready` on the wrapper. It cannot be left to the project, because it
 has to be in force before any script runs — and it is safe to ship because a
-panel named by the URL fragment is exempt (`:target`), so the jump-link list
-above still reaches every panel if the chunk never arrives. See
+panel the URL fragment names, or contains the target of, is exempt
+(`:target` / `:has(:target)`), so the jump-link list above still reaches every
+panel if the chunk never arrives. An engine that does not know `:has()` drops
+those selectors whole and lands on the plain stacked document, which is the
+same place a missing chunk lands the reader — nothing becomes unreachable
+either way. See
 [`docs/preEnhancement.md`](../../../docs/preEnhancement.md).
 
 ## Integration

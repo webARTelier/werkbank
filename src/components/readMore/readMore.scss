@@ -1,0 +1,384 @@
+// =============================================================
+// readMore — a long text cut to a preview, with a way back
+// =============================================================
+//
+// The component is a text region plus one control. The cut itself is CSS —
+// a max-block-size in line units, overflow: hidden and a mask that fades
+// the last lines out — so the preview is on screen from the very first
+// paint, before any script has run. What the module adds is the answer CSS
+// cannot give: whether THIS text, at THIS width, in THIS font, is long
+// enough to need a control at all (see readMore.js).
+//
+// Contract with the JS (readMore.js)
+//   - "data-readmore-body" marks the region that gets cut, and
+//     "data-readmore-toggle" the control that opens it. Behavioural
+//     attributes, not the m-* classes below: the script does not own this
+//     file's class names.
+//   - "data-readmore-collapsed" on the root says the region is closed, and
+//     it is the only thing the module writes that paints anything.
+//     Presence IS the state, so it is idempotent to write. It says nothing
+//     about whether there is anything below the cut: that question is
+//     answered by "data-readmore-clipped" below, and the state stays put
+//     on a short text because a cut nothing reaches changes nothing — a
+//     max-block-size above the content height does not paint. Which is
+//     exactly what lets the module measure at all: scrollHeight and
+//     clientHeight only differ while the cut is in force.
+//   - "data-readmore-clipped" on the root says there really is something
+//     below the cut. It is what the fade hangs on, and it is also the
+//     module's own answer to whether the control is shown at all (that
+//     one it writes as "hidden" on the toggle, so the control leaves the
+//     tab order with it). It survives a movement rather than being
+//     re-measured during one: a height that is travelling cannot be
+//     measured, and the fade has to stay for the whole way down.
+//   - "aria-expanded" on the toggle is the state AND the styling hook for
+//     the chevron below, exactly the way dataTable uses aria-sort: what a
+//     screen reader announces and what the eye sees cannot drift apart,
+//     and before the module has run there is no attribute and the chevron
+//     points down, which is the truth at that moment.
+//   - "data-readmore-ready" says the module has been here. It lifts the
+//     pre-enhancement block below and nothing else — the cut is then
+//     re-stated through data-readmore-collapsed, for the texts that turned
+//     out to need it.
+//   - "--readMore-content-size" is the height of the whole text, measured
+//     by the module and written to the root — but only while the region is
+//     moving, and taken back off the moment it has arrived. It is the one
+//     thing this module puts in a style attribute, and the reason is the
+//     same one dataTable has for its two: only a measurement can answer
+//     how tall a text is, and a transition needs that answer as a length
+//     (see the &__body rule). Do not set it yourself; it is a measurement,
+//     not a setting.
+//   - The script runs no animation of its own: it hands over that one
+//     length and flips the state attribute. The movement, its duration and
+//     its reduced-motion escape all live here — the module reads the
+//     duration back from this file to know when to give the height back.
+//
+// Two things are worth knowing before touching this file:
+//   - --readMore-collapsed-size is the switch for the whole collapsed
+//     rendering, not just for its height: the fade mask is drawn from the
+//     same length, so a value the engine cannot resolve drops the clamp
+//     and the fade together. That is what makes the "lh" default safe (an
+//     engine without the unit shows the whole text, rather than all of it
+//     with a fade sitting over the last lines) and it is how the print
+//     block at the end lifts both without a single !important.
+//   - The region keeps "overflow: hidden" in every state. A link in the
+//     cut-away part is still in the tab order (the text is clipped, not
+//     hidden — see readMore.js), which is why the pre-enhancement block
+//     below lifts the cut on ":focus-within": the same thing the module
+//     does from handleBodyFocus(), for the load where the module never
+//     arrives. A hidden overflow is a scroll container on top of that, so
+//     the browser scrolls the focused link into view either way — but into
+//     a box whose last lines are faded out, which is what the escape
+//     avoids (WCAG 2.4.11).
+
+@use "focus" as *;
+@use "mediaqueries" as *;
+@use "progressiveEnhancement" as *;
+
+
+
+// The custom properties are the component's override surface. They live on
+// the component root rather than in :root, so they stay scoped to the
+// component and a single instance can be retuned in place
+// (`style="--readMore-lines: 3"` on the root still wins over the defaults
+// below).
+.m-readMore {
+
+  // Animation maps to the shared animation tokens (see
+  // _shared/scss/_foundations.scss).
+  --readMore-duration: var(--an-duration);
+  --readMore-easing: var(--an-ease);
+
+  // Sizing
+  //
+  // How much of the text the preview shows, in lines — the unit the
+  // decision is actually made in. "lh" is the height of one line box of
+  // this very text, so the cut lands on a line boundary whatever the
+  // project's type scale does, and it follows a font-size change without a
+  // second decision. Override the whole length for a measure of another
+  // kind (`--readMore-collapsed-size: 12rem`).
+  --readMore-lines: 6;
+  --readMore-collapsed-size: calc(var(--readMore-lines) * 1lh);
+
+  // How deep the preview fades out towards the cut. It is what says "this
+  // goes on" without a word: a hard edge reads as the end of the text.
+  // "0px" for a clean cut — with the unit, because the value is read
+  // inside the min() below and a math function has no use for a unitless
+  // zero.
+  --readMore-fade-size: var(--space-xl);
+
+  // The fade itself, as a property rather than inline in the rule that
+  // applies it: a context with no use for it (forced colors, print) can
+  // then switch it off from the root instead of having to out-specify
+  // that rule.
+  //
+  // Anchored to the end of the BOX, so that it travels with the edge
+  // while the region closes — the text is rolled up behind the fade
+  // instead of the lower half going transparent where it stands the
+  // moment the movement starts.
+  //
+  // max() is what keeps that from reaching a text that has nothing below
+  // the cut: the anchor never rises above the cut, so a box shorter than
+  // the preview pushes both stops past its own end and stays fully
+  // opaque. (The module answers the same question exactly, one rule
+  // further down — this is the answer for the paint before it has run.)
+  //
+  // min() says a fade can never be deeper than the preview it sits in.
+  // Both of them reference the clamp, which is also what makes the whole
+  // mask die together with it (see the header).
+  --readMore-fade-mask: linear-gradient(
+    to bottom,
+    black calc(
+      max(100%, var(--readMore-collapsed-size)) -
+      min(var(--readMore-fade-size), var(--readMore-collapsed-size))
+    ),
+    transparent max(100%, var(--readMore-collapsed-size))
+  );
+
+  // Side length of the chevron square on the toggle. In em, so it scales
+  // with the control's label.
+  --readMore-icon-size: 0.45em;
+
+  // Spacing maps to the shared spacing scale (see
+  // _shared/scss/_foundations.scss).
+  --readMore-gap: var(--space-2xs); // text <-> control
+  --readMore-toggle-gap: var(--space-2xs); // label <-> chevron
+
+  // Colors map to the shared semantic tokens (see
+  // _shared/scss/_colors_semantic.scss).
+  --readMore-toggle-color: var(--color-accent-secondary);
+  --readMore-toggle-color-hover: var(--color-text);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--readMore-gap);
+
+
+
+  // The text region. At rest — open — nothing caps its height: it is as
+  // tall as the text, so whatever sits inside may still grow (a nested
+  // disclosure, an image that arrives late) without being clipped.
+  //
+  // "--readMore-content-size" is that same height as a LENGTH, handed
+  // over by the module for the duration of a movement and taken back
+  // afterwards (see readMore.js). It is what makes the open/close
+  // animate: a transition interpolates two lengths, and an intrinsic
+  // keyword is not one — only Chromium can interpolate to "max-content"
+  // (interpolate-size), which is why this used to animate there and snap
+  // in Firefox and Safari.
+  &__body {
+    overflow: hidden;
+    max-block-size: var(--readMore-content-size, max-content);
+
+    transition: max-block-size var(--readMore-duration) var(--readMore-easing);
+  }
+
+
+
+  // The cut: in force whenever the region is closed. Harmless on a text
+  // that does not reach it — a max-block-size above the content height
+  // paints nothing — which is what lets the module keep it there and
+  // measure against it (see readMore.js).
+  &[data-readmore-collapsed] &__body {
+    max-block-size: var(--readMore-collapsed-size);
+  }
+
+  // The fade, on the one state that says something really is below the
+  // cut. The mask above can only guess that from the box it is drawn on,
+  // and it guesses conservatively; here the module has measured it. So a
+  // text that ends just short of the cut is not brushed by a fade it has
+  // nothing to earn, and the attribute stays put for the whole closing
+  // movement, which is what lets the fade ride the edge down.
+  &[data-readmore-collapsed][data-readmore-clipped] &__body {
+    mask-image: var(--readMore-fade-mask);
+  }
+
+  // The same cut, for the gap between the first paint and init() (see
+  // _shared/scss/_progressiveEnhancement.scss and docs/preEnhancement.md).
+  // Without it every page load shows the text in full and takes most of it
+  // away a round trip later — the one flash in this collection that moves
+  // whole screens of content.
+  //
+  // Survivable, which is what makes it shippable: the toggle is an
+  // <a href="#…"> into the region, so a chunk that never arrives leaves a
+  // working in-page link, and ":target" hands the full text back. That is
+  // the same fragment escape tabs and offCanvasNav are built on, and the
+  // two conditions in the selector are its two halves — an id is what a
+  // fragment can address, so a region without one is never cut before the
+  // module has looked at it.
+  //
+  // Written as a descendant class instead of "&__body": the mixin has
+  // already turned "&" into the root plus its :not(), so the usual
+  // concatenation would build a class name that does not exist.
+  //
+  // ":focus-within" is the second escape, and it is the one the keyboard
+  // needs: the text is clipped, not hidden, so a link below the cut keeps
+  // its place in the tab order, and focus landing there would sit in a box
+  // that paints nothing of it (WCAG 2.4.11). The module answers that with
+  // handleBodyFocus(); this is the same answer for the load where the
+  // module never arrives — and it costs one pseudo-class, because the
+  // toggle sits outside the region and can therefore never trigger it.
+  //
+  // ":has(:target)" is the third, and it covers the fragment that does not
+  // address the region but something INSIDE it — an anchor deep in the
+  // text. The browser scrolls there either way, so without this the reader
+  // would be taken to a line the box does not paint. The module answers
+  // the same case from targeted(). Note the failure direction if an engine
+  // does not know ":has": the whole selector is invalid, the pre-cut is
+  // dropped, and the text shows in full — which is the safe end of it, the
+  // same way an unresolvable --readMore-collapsed-size fails.
+  @include pre-enhancement("data-readmore-ready") {
+
+    .m-readMore__body[id]:not(:target):not(:has(:target)):not(:focus-within) {
+      max-block-size: var(--readMore-collapsed-size);
+      mask-image: var(--readMore-fade-mask);
+    }
+  }
+
+
+
+  // The control. It is an <a> before the module runs and a button
+  // afterwards (role="button", see readMore.js), and a project may author
+  // a <button> instead where it has no use for the no-script fallback — so
+  // everything a browser puts on either element is reset here and both end
+  // up looking the same.
+  &__toggle {
+
+    // The control sits on the page's own dark surface -> the light ring.
+    @include focus-ring(light);
+
+    & {
+      cursor: pointer;
+
+      // Shrink-to-fit inside the column: the region above is as wide as
+      // the text it holds, the control is as wide as its label.
+      align-self: start;
+
+      margin: 0;
+      border: 0;
+      padding: 0;
+
+      display: inline-flex;
+      align-items: center;
+      gap: var(--readMore-toggle-gap);
+
+      font: inherit;
+      font-weight: 600;
+      text-align: start;
+      text-decoration: none;
+
+      color: var(--readMore-toggle-color);
+      background-color: transparent;
+
+      transition: color var(--readMore-duration) var(--readMore-easing);
+    }
+
+
+
+    // The chevron. A pseudo-element, so it adds nothing to the
+    // accessibility tree — what it shows is aria-expanded on this very
+    // control, which is where assistive tech reads it.
+    &::after {
+      content: '';
+
+      flex-shrink: 0;
+      inline-size: var(--readMore-icon-size);
+      block-size: var(--readMore-icon-size);
+
+      border-inline-end: 2px solid currentColor;
+      border-block-end: 2px solid currentColor;
+
+      // Pointing down: "there is more below". The nudge upwards is
+      // optical — a rotated square hangs low against a line of text.
+      rotate: 45deg;
+      translate: 0 -0.15em;
+
+      transition: rotate var(--readMore-duration) var(--readMore-easing);
+    }
+
+
+
+    &:hover {
+      color: var(--readMore-toggle-color-hover);
+      text-decoration: underline;
+      text-underline-offset: 0.2em;
+    }
+  }
+
+
+
+  // Open: the chevron turns back on itself. Keyed off the ARIA state, not
+  // off a class of our own, so the arrow and the announcement cannot
+  // disagree — and before the module has run there is no attribute here at
+  // all, which is exactly when the arrow should point down.
+  &__toggle[aria-expanded='true']::after {
+    rotate: -135deg;
+    translate: 0 0.1em;
+  }
+
+
+
+  // The control is taken away with the "hidden" attribute wherever the text
+  // turned out to fit (see sync() in readMore.js) — the one thing this
+  // component must never show. That only works if this file gets out of the
+  // way: the "display: inline-flex" above is an author declaration and
+  // therefore beats the user agent's own [hidden] rule, whatever the
+  // specificity, so the attribute would be set and the control painted
+  // anyway. Restored explicitly, the way video and lightbox restore it for
+  // the same reason — and only on the element this file gives a display to,
+  // so a [hidden] in the author's own text keeps answering to the author.
+  &__toggle[hidden] {
+    display: none;
+  }
+}
+
+
+
+// -------------------------------------------------------------
+// A forced-colors context (the Windows contrast themes): the fade
+// is a mask, and a mask is not touched by the forced palette — so
+// it would keep thinning out text in the one context that exists
+// to make text as legible as possible. The cut and the control
+// say the same thing without it.
+// -------------------------------------------------------------
+@include forced-colors {
+
+  .m-readMore {
+    --readMore-fade-mask: none;
+  }
+}
+
+
+
+// -------------------------------------------------------------
+// Respect reduced motion: the open/close is instant. Both the
+// height and the chevron, because they are one movement.
+// -------------------------------------------------------------
+@include reduced-motion {
+
+  .m-readMore__body,
+  .m-readMore__toggle::after {
+    transition-duration: 0.01ms;
+  }
+}
+
+
+
+// -------------------------------------------------------------
+// Print: paper has no control to press, so a cut text is one the
+// reader can never finish. Lifting the clamp is a matter of
+// taking the length away — the collapsed state and the
+// pre-enhancement block both read it from here, and the fade is
+// drawn from it too, so it goes with it. The control is dropped:
+// on paper it points at nothing.
+// -------------------------------------------------------------
+@include print-only {
+
+  .m-readMore {
+    --readMore-collapsed-size: none;
+    --readMore-fade-mask: none;
+  }
+
+  .m-readMore__toggle {
+    display: none;
+  }
+}

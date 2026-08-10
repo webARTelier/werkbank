@@ -35,10 +35,18 @@
 // same way the module decides it, and that is what makes hiding the others
 // survivable. The tabs are in-page anchor links, so a URL fragment naming a
 // panel makes it :target — and a targeted panel is exempt here, exactly as
-// the module would select it on load. If this component's chunk never
-// arrives, the list above the panels is still a working table of contents:
-// every panel stays one click away, and the widget degrades to the document
-// it was authored as.
+// the module would select it on load. So is a panel that merely CONTAINS
+// the target, which is the case a panel full of anchored content brings
+// with it; the two rules below carry both, and itemForHash() in the module
+// answers the same pair. If this component's chunk never arrives, the list
+// above the panels is still a working table of contents: every panel stays
+// one click away, and the widget degrades to the document it was authored
+// as.
+//
+// A note on the failure direction: an engine that does not know :has()
+// throws each of those selectors out whole, which un-hides the panels and
+// leaves the plain stacked document — the same place a missing chunk lands
+// the reader. Nothing becomes unreachable either way.
 //
 // Written out rather than through the shared pre-enhancement() mixin, and
 // this is the one component where that is right. The mixin guards with
@@ -56,14 +64,28 @@
 
   // Every panel that has another panel before it: the first one is the
   // module's default selection, so it is the one that stays.
-  [data-tabs-panel] ~ [data-tabs-panel]:not([data-tabs-ready] *):not(:target) {
+  //
+  // Two exemptions, and they are the two cases itemForHash() answers in the
+  // module: the fragment names this panel, or it names something inside it.
+  // The second one is what a panel holding anchored content needs — a
+  // readMore names its text region, and a fragment pointing at that region
+  // would otherwise scroll the reader to an element still out of the flow.
+  [data-tabs-panel] ~ [data-tabs-panel]:not([data-tabs-ready] *):not(:target):not(:has(:target)) {
     display: none;
   }
 
-  // ... unless a fragment names a later panel, in which case the first one
-  // steps aside for it. Written as "has a targeted panel after me", so it
-  // needs no assumption about which element comes first.
-  [data-tabs-panel]:not([data-tabs-ready] *):has(~ [data-tabs-panel]:target) {
+  // ... and when either exemption applies to a LATER panel, the first one
+  // steps aside for it. Written as "has such a panel after me", so it needs
+  // no assumption about which element comes first.
+  //
+  // The second half of that list is a descendant selector inside :has()
+  // rather than a nested ":has(~ [data-tabs-panel]:has(:target))" — which
+  // would say the same thing and is invalid, because :has() cannot be
+  // nested inside :has().
+  [data-tabs-panel]:not([data-tabs-ready] *):has(
+    ~ [data-tabs-panel]:target,
+    ~ [data-tabs-panel] :target
+  ) {
     display: none;
   }
 }

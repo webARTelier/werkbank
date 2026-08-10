@@ -18,8 +18,9 @@
  * docs/preEnhancement.md), so the page never paints the full stack and then
  * snaps. That state lifts on data-tabs-ready, which the constructor sets
  * before anything else — so markup this script bails on falls back to the
- * plain stacked document rather than staying collapsed. A panel named by
- * the URL fragment is exempt from it either way.
+ * plain stacked document rather than staying collapsed. A panel the URL
+ * fragment names, or holds the target of, is exempt from it either way —
+ * the same two cases itemForHash() answers once the module runs.
  *
  * What the script adds
  * --------------------
@@ -32,11 +33,13 @@
  *    with wrap-around, Home/End jump to the first/last tab. Activation is
  *    automatic on focus by default (APG recommendation for instantly
  *    displayable panels), or explicit via Enter/Space with data-tabs-manual.
- * 4. Deep linking: a URL fragment matching a panel id selects that tab on
- *    load and on hashchange (foreign hashes are ignored). With
- *    data-tabs-deeplink the selected tab is also written back to the URL
- *    via history.replaceState — path and query stay untouched, no history
- *    entries pile up.
+ * 4. Deep linking: a URL fragment naming a panel — or anything inside one
+ *    — selects that tab on load and on hashchange (foreign hashes are
+ *    ignored). With data-tabs-deeplink the selected tab is also written
+ *    back to the URL via history.replaceState — path and query stay
+ *    untouched, no history entries pile up. The fragment the reader
+ *    arrived with is never rewritten, so a component further in (a
+ *    readMore naming its text region) still sees its own :target.
  *
  * Accessibility
  * -------------
@@ -384,11 +387,33 @@ class Tabs {
 
   // Maps a URL fragment to a tab item, or null when it points elsewhere
   // or is not decodable.
+  //
+  // A panel's own id is the documented case; something INSIDE a panel is
+  // the other one, and it counts just as much. The browser scrolls to the
+  // fragment either way, so a heading — or another component's region —
+  // deep in an inactive panel would otherwise take the reader to an
+  // element that is not in the flow, with nothing on screen to say so.
+  // That is not exotic: it happens as soon as a panel holds content with
+  // anchors of its own, and `readMore` gives its text region an id for
+  // exactly that reason.
+  //
+  // Checked in that order because the id is the cheap answer and the
+  // common one. A nested tabs widget resolves correctly through the same
+  // rule: the outer instance finds the panel that contains the inner
+  // panel, the inner one matches it by id.
   itemForHash = (hash) => {
     if (!hash || hash.length < 2) return null;
+
     const id = decodeFragment(hash.slice(1));
     if (id === null) return null;
-    return this.items.find((item) => item.id === id) || null;
+
+    const named = this.items.find((item) => item.id === id);
+    if (named) return named;
+
+    const target = document.getElementById(id);
+    if (!target) return null;
+
+    return this.items.find((item) => item.panel.contains(target)) || null;
   };
 
 

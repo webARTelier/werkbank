@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>readMore – Demo</title>
+  <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
+  <link rel="stylesheet" href="../../../dist/css/readMore.min.css" />
+  <script type="module" src="../../../dist/js/boot.min.js"></script>
+
+  <!-- for development only -->
+  <script type="module" src="../../../src/_shared/js/dev_pageInfo.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_a11yInspector.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_qrCode.js"></script>
+  <!-- end for development only -->
+
+  <!--
+      DEMO-ONLY STYLES
+      ----------------------------------------------------------------------
+      readMore.min.css ships the cut, the fade and the control. What is left
+      to the page is the spacing between the examples, their headings and the
+      text's own typography — a component that cuts a text by its line height
+      does not get to decide what that line height is. (Tokens like --space-*
+      / --color-* come from shared.min.css.)
+  -->
+
+  <style>
+    .demo {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2xl);
+    }
+
+    .demo__example {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-s);
+    }
+
+    .demo__example h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      color: var(--color-text);
+    }
+
+    /* The text the component is wrapped around: the project's typography. */
+    .prose {
+      max-width: 68ch;
+      line-height: 1.6;
+      color: var(--color-text-secondary);
+    }
+
+    .prose p {
+      margin: 0 0 var(--space-s);
+    }
+
+    .prose p:last-child {
+      margin-bottom: 0;
+    }
+
+    .prose a {
+      color: var(--color-accent-secondary);
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <main class="shell">
+
+    <section class="hero">
+      <a class="back" href="../../../index.html">← Overview</a>
+      <h1>readMore</h1>
+      <p>A long text cut to a preview, and one control that opens it.</p>
+    </section>
+
+    <section class="stage" aria-label="Live demo">
+
+      <!--
+          A preview of a few lines plus the control the platform has no
+          element for.
+
+          Wiring
+            - data-js-behavior="readMore" boots the module on the ROOT
+              (class="m-readMore"), which holds the region and the control.
+            - data-readmore-body marks the region that gets cut. Its id is
+              what the toggle links to.
+            - data-readmore-toggle marks the control, written as
+              <a href="#<that id>"> so it works before the module does.
+            - --readMore-lines (or --readMore-collapsed-size) says how much
+              of the text the preview shows; --readMore-fade-size how deep
+              it fades out at the cut; --readMore-duration how long the
+              opening and closing take.
+            - data-readmore-expand / data-readmore-collapse set the two
+              labels; without them the markup's own text is the closed
+              label and the open one ships in German and English.
+
+          Progressive enhancement
+            - The preview is cut from the FIRST paint — the stylesheet
+              states it, so no text collapses under the reader a round trip
+              later. It is keyed off data-readmore-ready, which the module
+              sets as its first statement, so even a bail-out lifts the cut
+              instead of leaving a shortened text behind.
+            - That is only safe because the toggle is a real link: if the
+              chunk never arrives, pressing it jumps to the region and
+              ":target" hands the full text back. Turn JavaScript off and
+              try it.
+            - The fragment keeps working once the module has run, which is
+              not automatic: ":target" stops answering the moment the
+              pre-enhancement block is lifted, so the module watches the
+              fragment itself. The two cross-references in the last
+              example jump to the first two regions AND open them.
+            - The control is REMOVED where the text turns out to fit — the
+              third example below is the one that does. Narrow the window
+              until it no longer fits and the control comes back.
+
+          Accessibility
+            - The cut text is clipped, not hidden: a screen reader reads it
+              in full in both states, and aria-expanded on the control
+              describes a visual truncation.
+            - Which means a link below the cut is still in the tab order,
+              so focus landing there opens the region rather than parking
+              the reader on something they cannot see (fourth example).
+              Below the cut only — a link in the painted preview is one the
+              reader can see, so focus on it changes nothing.
+            - The control is a link before the module runs and a button
+              afterwards (role="button", Enter and Space); the chevron is a
+              pseudo-element drawn from aria-expanded.
+        -->
+
+      <div class="demo">
+
+        <section class="demo__example">
+          <h2>The default: six lines</h2>
+
+          <p class="stage__intro">
+            The preview is <strong>six lines</strong> of this very text —
+            <code>--readMore-lines</code> is counted in <code>lh</code>, the
+            height of one line box <em>here</em>, so the cut lands on a line
+            boundary whatever the page's typography does. The last lines fade
+            out, which is what says "this goes on" without a word — and on the
+            way back down the fade travels with the closing edge, rolling the
+            text up behind it. The movement itself runs in
+            <strong>every engine</strong>: the module measures the text and
+            hands the height to the stylesheet for as long as it takes,
+            because a transition interpolates two lengths and "as tall as the
+            text" is not one of them.
+          </p>
+
+          <div class="m-readMore" data-js-behavior="readMore">
+
+            <div class="m-readMore__body prose" data-readmore-body id="story-observatory">
+              <p>
+                The observatory was built in 1904 on a ridge that nobody had
+                thought worth naming, three hours by mule from the nearest
+                telegraph office. Its first director spent two winters
+                arguing with the postal service about whether the road up to
+                it counted as a road at all, and lost both arguments, which
+                is why the original plates were carried down on foot.
+              </p>
+              <p>
+                What the plates recorded was unremarkable at the time: a
+                patch of sky the size of a thumbnail held at arm's length,
+                photographed once a week for eleven years. The director's
+                successor considered the series a waste of glass and stopped
+                it in 1916. It sat in a cellar until a graduate student, out
+                of a mixture of boredom and stubbornness, scanned the whole
+                set in the winter of 1987 and found that one of the fainter
+                points of light had been moving.
+              </p>
+              <p>
+                The moving point turned out to be nothing dramatic — a star
+                of no particular distinction, drifting at a rate that only
+                eleven years of weekly plates could have shown. But the
+                measurement was good enough to be used, twice, as a
+                calibration for something else entirely, which is how most
+                careful work ends up mattering: not where it was aimed, but
+                a little to the side of it, and much later.
+              </p>
+            </div>
+
+            <a class="m-readMore__toggle" href="#story-observatory" data-readmore-toggle>
+              Read more
+            </a>
+          </div>
+        </section>
+
+        <section class="demo__example">
+          <h2>Three lines, own labels, no fade</h2>
+
+          <p class="stage__intro">
+            The same component with <code>--readMore-lines: 3</code> and
+            <code>--readMore-fade-size: 0px</code> — a clean cut instead of a
+            fade, and with the unit, because the value is read inside a
+            <code>min()</code> — and both labels set explicitly through
+            <code>data-readmore-expand</code> /
+            <code>data-readmore-collapse</code>. The size of the preview is a
+            stylesheet setting, not a script one: nothing here is passed to
+            JavaScript.
+          </p>
+
+          <div class="m-readMore" data-js-behavior="readMore"
+               data-readmore-expand="Read the full note" data-readmore-collapse="Collapse the note"
+               style="--readMore-lines: 3; --readMore-fade-size: 0px">
+
+            <div class="m-readMore__body prose" data-readmore-body id="story-ledger">
+              <p>
+                The ledger covers the years 1871 to 1889 and was kept by two
+                hands, the second one taking over in the middle of a page
+                without any note about why. Both were meticulous about the
+                grain deliveries and both gave up entirely on the column for
+                the weather, which is blank for most of the second decade.
+              </p>
+              <p>
+                Whoever wrote the later entries had a habit of underlining a
+                figure twice when a delivery arrived short, and the pattern
+                of those double underlinings is the closest thing the region
+                has to a record of the drought — it is not what the book was
+                for, and it is the only reason anybody reads it now.
+              </p>
+            </div>
+
+            <a class="m-readMore__toggle" href="#story-ledger" data-readmore-toggle>
+              Read the full note
+            </a>
+          </div>
+        </section>
+
+        <section class="demo__example">
+          <h2>A text that fits: the control removes itself</h2>
+
+          <p class="stage__intro">
+            The same markup around a short text. The module measures — with
+            the cut in force, because an uncut box would report that
+            everything fits — finds nothing below the cut, and takes the
+            control away: a "Read more" under a complete text is the one
+            thing this component must never show. <strong>Narrow the
+            window</strong> until the text needs more than six lines and the
+            control comes back, because the answer depends on the width, the
+            font and the words, and none of them are known in advance.
+          </p>
+
+          <div class="m-readMore" data-js-behavior="readMore">
+
+            <div class="m-readMore__body prose" data-readmore-body id="story-short">
+              <p>
+                Four lines at this width, and six are allowed — so there is
+                nothing below the cut and nothing to open, which is why the
+                control is not here. The same four lines become seven in a
+                column half as wide, and that is the whole point: the length
+                of a text is not a property of the text.
+              </p>
+            </div>
+
+            <a class="m-readMore__toggle" href="#story-short" data-readmore-toggle>
+              Read more
+            </a>
+          </div>
+        </section>
+
+        <section class="demo__example">
+          <h2>A link below the cut</h2>
+
+          <p class="stage__intro">
+            The cut text is <em>clipped</em>, not hidden — it stays in the
+            accessibility tree, so a screen reader reads all of it in either
+            state. Which also means the two links in the last paragraph keep
+            their place in the tab order. <strong>Tab into the text</strong>:
+            the region opens as soon as focus reaches something below the cut,
+            rather than leaving you on a link the box is not painting (WCAG
+            2.4.11) — and it stays put for a link in the painted part, which
+            needs no rescue. The two links also point at the first two
+            examples: following one jumps there <em>and</em> opens that
+            region, before this module has loaded (through <code>:target</code>)
+            and afterwards alike.
+          </p>
+
+          <div class="m-readMore" data-js-behavior="readMore" style="--readMore-lines: 4">
+
+            <div class="m-readMore__body prose" data-readmore-body id="story-links">
+              <p>
+                The archive's catalogue was typed in 1962 and has been
+                photocopied so often that the descenders on the lower half of
+                every page have closed up into a grey line. The digitised
+                version reproduces the grey line faithfully, which nobody has
+                ever explained.
+              </p>
+              <p>
+                Two of the entries point somewhere else entirely: to
+                <a href="#story-observatory">the observatory series</a> in the
+                first example, and to
+                <a href="#story-ledger">the ledger</a> in the second. Both
+                links sit below the cut — and both are reachable by keyboard
+                before the region is open.
+              </p>
+            </div>
+
+            <a class="m-readMore__toggle" href="#story-links" data-readmore-toggle>
+              Read more
+            </a>
+          </div>
+        </section>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</body>
+</html>

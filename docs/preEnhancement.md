@@ -98,10 +98,38 @@ Three ways a component can satisfy it:
 
 - **Nothing is lost.** `backToTop` hides a shortcut to a place the reader can
   still scroll to. Purely additive controls are always safe.
-- **A fragment escape hatch.** `tabs` and `offCanvasNav` are both built on
-  in-page links, so `:target` reveals the hidden content without any script.
-  The hiding rules exempt `:target`, which turns "hidden" into "one click
-  away".
+- **A fragment escape hatch.** `tabs`, `offCanvasNav` and `readMore` are all
+  built on in-page links, so `:target` reveals the hidden content without any
+  script. The hiding rules exempt `:target`, which turns "hidden" into "one
+  click away".
+
+  Two things follow for any component built on it, and both are easy to miss.
+
+  **It owes the reader the same answer once the module has arrived**, because
+  setting the ready attribute is what stops `:target` from answering. `tabs`
+  and `readMore` both watch `hashchange` for that reason; without it, an
+  in-page link worked before the chunk loaded and did nothing afterwards — the
+  one shape of regression this whole layer exists to rule out. So check it
+  whenever the escape is a fragment: the question is whether anything *other
+  than the component's own control* can set that fragment. `offCanvasNav`
+  needs none of it — the only link to its drawer is the burger, and the module
+  handles that click itself.
+
+  **A fragment pointing *into* the hidden part counts as naming it.** The
+  browser scrolls to the target whether or not the component reacted, so
+  exempting only the element that carries the id leaves the reader on
+  something still out of the flow. Both halves need it, the CSS rule and the
+  module: `readMore` also opens when the target sits inside its text region
+  (`:has(:target)` / `querySelector(':target')`), and `tabs` also selects the
+  panel that *contains* the target (`:has(:target)` / `panel.contains`). This
+  is what lets the two nest in either order — a `readMore` inside a tab panel
+  is only reachable by deep link because `tabs` answers the second case, and
+  a tabs widget inside a cut text only because `readMore` does.
+
+  One CSS note from doing that in `tabs`: "a later sibling panel that
+  contains the target" cannot be written as `:has(~ [data-tabs-panel]:has(:target))`,
+  because `:has()` may not be nested inside `:has()`. The descendant form
+  `:has(~ [data-tabs-panel] :target)` says the same thing and is valid.
 - **The module lifts the state on its own bail-outs.** A component that gives
   up on unusable markup must set its ready attribute anyway — otherwise a
   reported author error turns into permanently missing content. `tabs` sets it
@@ -192,9 +220,10 @@ of them, and the wrong one for most.
 
 | Component | Flash without a pre-state | Pre-state | Why |
 | --- | --- | --- | --- |
-| `tabs` | all panels stacked, then one — several screens of jump | **ships it** | `:target` keeps every panel reachable; the module lifts the state even when it bails |
+| `tabs` | all panels stacked, then one — several screens of jump | **ships it** | `:target` keeps every panel reachable, plus a `:has(:target)` for a fragment naming something *inside* a panel; the module lifts the state even when it bails |
 | `offCanvasNav` | full menu expanded on a narrow viewport, then a burger | **ships it** | burger is a link to the drawer, so `:target` reveals it; scoped to `[id]`, which is both the fragment's precondition and the module's only bail-out |
 | `backToTop` | control visible, then gone | **ships it** | purely additive — a failure costs a shortcut, nothing more |
+| `readMore` | the whole text, then a preview of it — screens of content moving up | **ships it** | the toggle is a link into the region, so `:target` hands the full text back — plus a `:has(:target)` for a fragment addressing an anchor *inside* the text; scoped to `[id]`, which is the fragment's precondition, and the module sets its attribute first so a bail-out lifts the cut |
 | `siteSearch` | search form visible, then folded shut | documented opt-in | the toggle is a `<button>`, dead without the script, and there is no fragment fallback |
 | `dropdownNav` | full nested list, then a bar with flyouts | documented opt-in | the disclosure buttons are injected by the script; nothing reopens a collapsed submenu without it |
 | `accordion` | none | not needed | `<details>` renders closed either way; its ready attribute only picks the animation |

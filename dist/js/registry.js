@@ -26,6 +26,7 @@ export const registry = {
   parseNonNegative: () => import('./modules/parseNonNegative.min.js'),
   popover: () => import('./modules/popover.min.js'),
   rafThrottle: () => import('./modules/rafThrottle.min.js'),
+  readMore: () => import('./modules/readMore.min.js'),
   resolveLocale: () => import('./modules/resolveLocale.min.js'),
   scaleSVG: () => import('./modules/scaleSVG.min.js'),
   scrollSpy: () => import('./modules/scrollSpy.min.js'),

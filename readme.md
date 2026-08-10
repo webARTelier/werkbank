@@ -90,6 +90,7 @@ components downloads two chunks — nothing else.
 | `marquee`            | Infinitely scrolling content strip (news ticker).                   |
 | `offCanvasNav`       | Burger menu / off-canvas drawer on the native `<dialog>`.           |
 | `popover`            | Anchor-positioned popover on the native Popover API.                |
+| `readMore`           | Long text cut to a preview, with the control that opens it.         |
 | `scaleSVG`           | Scales SVGs from their `viewBox`.                                   |
 | `scrollSpy`          | IntersectionObserver-driven TOC highlight via `aria-current`.       |
 | `siteSearch`         | Site search form expanding out of a toggle, on `<search>`.          |

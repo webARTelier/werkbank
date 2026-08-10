@@ -32,6 +32,16 @@
       hashchange; any other hash on the page is ignored. Fragments are
       independent of path and query string, so this works with any URL
       scheme (query parameters, rewritten/pretty URLs).
+    - A fragment naming something INSIDE a panel selects that panel too —
+      a heading, or another component's region. The browser scrolls there
+      either way, so the panel holding it has to come along. This is what
+      makes a panel safe to fill with anchored content (a readMore names
+      its text region, for instance), and it holds before the module has
+      loaded as well: the pre-enhancement rule exempts a panel that
+      contains the target, not just one that IS it.
+    - The fragment the reader arrived with is never rewritten, so a
+      component further in still sees its own :target. data-tabs-deeplink
+      only writes the fragment when the READER switches tabs.
     - With data-tabs-deeplink the selected tab is also written back to the
       URL via history.replaceState (no history spam). Leave it off on pages
       whose hash is owned by something else (e.g. a hash-based SPA router).
@@ -58,9 +68,9 @@
       module has loaded, so the page does not paint every panel stacked and
       then snap to a single one a round trip later. It lifts as soon as the
       module sets data-tabs-ready. Nothing is lost if the chunk never
-      arrives — a panel named by the URL fragment is exempt from the rule,
-      so the list of jump links above still reaches all of them. See
-      docs/preEnhancement.md.
+      arrives — a panel the URL fragment names, or holds the target of, is
+      exempt from the rule, so the list of jump links above still reaches
+      all of them. See docs/preEnhancement.md.
 -->
 
 
