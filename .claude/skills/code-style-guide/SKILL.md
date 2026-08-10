@@ -4,9 +4,10 @@ description: >-
   Björn Müller's personal Code Style Guide (from webartelier.de/csg). Apply
   these conventions when writing, reviewing or reworking HTML, SCSS/CSS and
   JavaScript. Covers naming, BEM namespacing, ITCSS structure, formatting,
-  whitespace, attribute/property ordering, separation of concerns, progressive
-  enhancement, accessibility and asset/performance defaults. Load before
-  authoring or editing front-end code.
+  whitespace, attribute/property ordering, separation of concerns, the rule of
+  least power (markup before styling before script), progressive enhancement,
+  accessibility and asset/performance defaults. Load before authoring or
+  editing front-end code.
 ---
 
 # Code Style Guide
@@ -30,6 +31,64 @@ is stated as an actionable instruction; ✅ / ❌ mark do / don't.
 ### Language
 - Write **all** code in English: class names, id names, comments, variable
   names, file names. No German identifiers.
+
+### Rule of least power
+- **Pick the least powerful language that does the job** (W3C TAG,
+  *The Rule of Least Power*): markup before styling, styling before script.
+  A weaker language is easier to read and analyse, degrades on its own, needs
+  no bundle to arrive before it works, and has fewer ways to break.
+- Work **down** this ladder and stop at the first rung that carries the
+  requirement:
+  1. **A native element or attribute** — `<details>`, `<dialog>`,
+     `<input type="date">`, native constraint validation, a real `<a href>`,
+     `loading="lazy"`, `popover`. Semantics, keyboard behaviour and the
+     accessible name come with it.
+  2. **CSS** — `:target`, `:has()`, `:focus-within`, `position: sticky`,
+     `aspect-ratio`, `scroll-behavior`, `@starting-style`, transitions,
+     container and media queries.
+  3. **A declarative browser API** — `IntersectionObserver`,
+     `ResizeObserver`, `MutationObserver`, the Web Animations API: the
+     browser does the watching and the script only reacts to it.
+  4. **Imperative JavaScript** — own state, own measurement, own event
+     bookkeeping. The last resort, not the starting point.
+- **Never reimplement a rung you already have.**
+
+```html
+<!-- ❌ a widget rebuilt in JS that the platform already ships -->
+<div class="c-accordion" data-js-behavior="accordion" role="button"
+  tabindex="0" aria-expanded="false">…</div>
+
+<!-- ✅ the native element; script only adds what it lacks -->
+<details class="m-accordion__item">…</details>
+```
+
+```js
+// ❌ a scroll listener that measures offsets by hand
+window.addEventListener('scroll', () => {
+  bar.classList.toggle('is-pinned', bar.getBoundingClientRect().top <= 0);
+});
+
+// ✅ CSS holds the position, an observer reports the state
+// .c-stickyBar { position: sticky; inset-block-start: 0; }
+new IntersectionObserver(([entry]) => {
+  bar.classList.toggle('is-pinned', !entry.isIntersecting);
+}).observe(sentinel);
+```
+
+- **Moving up a rung needs a reason you can name**: a behaviour the lower rung
+  genuinely cannot express (a value that must be computed, a native control
+  that cannot be styled to spec, state CSS cannot hold). "It is easier to
+  control from JS" and "we use that library anyway" are not reasons.
+- **The ladder ranks power, not cleverness.** A CSS-only trick that fakes
+  behaviour through markup it does not mean — a checkbox standing in for a
+  disclosure button, a label as a tab — is *not* the lower rung; it trades
+  semantics and keyboard behaviour for the appearance of restraint. Prefer
+  honest JavaScript over a semantic lie. Declarative CSS state built on
+  markup that is true anyway (`:target` on a real in-page link) is fine, and
+  is what the `:target` escapes elsewhere in this guide rely on.
+- This rule is the *why* behind the two that follow: enhancement has a base
+  layer to enhance because the lower rungs came first, and concerns stay
+  separated because each one is answered in its own language.
 
 ### Progressive enhancement
 - Build so the markup is **usable without CSS or JavaScript**. Treat the
@@ -182,6 +241,9 @@ List attributes in this sequence:
 ## JavaScript
 
 ### Language level & modules
+- **Before writing any of it, check the rung below** — a native element, a CSS
+  state or an observer may already carry the requirement (see General › *Rule
+  of least power*). What is left after that check is what the module does.
 - Author in modern **ES modules** — one module per file. No code on the global
   scope and no implicit globals.
 - Load behaviour as `<script type="module">` or with `defer`; never
