@@ -65,7 +65,7 @@
 
           Wiring
             - data-js-behavior="dataTable" boots the module on the BOX around
-              the table (class="m-dataTable"), because that box is what
+              the table (class="c-dataTable"), because that box is what
               scrolls when the table is wider than the space it was given.
             - The table itself is ordinary markup: <thead>, <th scope> and
               <caption> carry the semantics, so there are no classes and no
@@ -78,10 +78,10 @@
               column on load.
             - data-datatable-value / <time datetime> give a formatted cell a
               machine-readable value to sort by.
-            - m-dataTable--stickyHead needs a height to scroll inside
+            - c-dataTable--stickyHead needs a height to scroll inside
               (--dataTable-max-block-size), because a sticky cell sticks
               within its own scroll container.
-            - m-dataTable--stickyColumn freezes the first cell of every row.
+            - c-dataTable--stickyColumn freezes the first cell of every row.
             - data-datatable-stacked asks for the card layout below 575px.
 
           Progressive enhancement
@@ -135,7 +135,7 @@
             small value but no value.
           </p>
 
-          <div class="m-dataTable" data-js-behavior="dataTable">
+          <div class="c-dataTable" data-js-behavior="dataTable">
             <table>
               <caption>Edge regions, last 24 hours</caption>
 
@@ -204,7 +204,7 @@
             to.
           </p>
 
-          <div class="m-dataTable m-dataTable--stickyHead m-dataTable--stickyColumn"
+          <div class="c-dataTable c-dataTable--stickyHead c-dataTable--stickyColumn"
                data-js-behavior="dataTable" style="--dataTable-max-block-size: 18rem">
             <table>
               <caption>Deployments per region</caption>
@@ -350,7 +350,7 @@
             module, this stays the scrolling table above.
           </p>
 
-          <div class="m-dataTable" data-js-behavior="dataTable" data-datatable-stacked>
+          <div class="c-dataTable" data-js-behavior="dataTable" data-datatable-stacked>
             <table>
               <caption>Open incidents</caption>
 
@@ -412,7 +412,7 @@
             the tab order.
           </p>
 
-          <div class="m-dataTable" data-js-behavior="dataTable">
+          <div class="c-dataTable" data-js-behavior="dataTable">
             <table>
               <caption>Retention windows per bucket</caption>
 

@@ -158,7 +158,7 @@ const defaults = {
   // and roles that layout needs
   stackedAttr: 'data-datatable-stacked',
 
-  // the injected sort control. A data attribute, not an m-* class: the
+  // the injected sort control. A data attribute, not a c-* class: the
   // module does not own the stylesheet's class names — same reason toast
   // addresses its injected dismiss control this way.
   buttonAttr: 'data-datatable-sortbutton',

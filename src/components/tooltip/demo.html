@@ -166,7 +166,7 @@
           One tooltip per element with data-js-behavior="tooltip".
 
           Wiring
-            - The root is the wrapper (class="m-tooltip"); the control
+            - The root is the wrapper (class="c-tooltip"); the control
               (data-tooltip-trigger) and the hint (data-tooltip-bubble) both
               live inside it. The wrapper is the positioning context and the
               element the show rules key on, so the hint cannot sit next to
@@ -230,10 +230,10 @@
           </p>
 
           <p class="demo__row">
-            <span class="m-tooltip" data-js-behavior="tooltip">
+            <span class="c-tooltip" data-js-behavior="tooltip">
               <button type="button" class="demo__button" data-tooltip-trigger>Save draft</button>
 
-              <span class="m-tooltip__bubble" role="tooltip" data-tooltip-bubble>
+              <span class="c-tooltip__bubble" role="tooltip" data-tooltip-bubble>
                 Keeps the editor open.
               </span>
             </span>
@@ -246,34 +246,34 @@
           <h2>Placement (<code>data-tooltip-position</code>)</h2>
 
           <p class="demo__row">
-            <span class="m-tooltip" data-js-behavior="tooltip" data-tooltip-position="top">
+            <span class="c-tooltip" data-js-behavior="tooltip" data-tooltip-position="top">
               <button type="button" class="demo__button" data-tooltip-trigger>Top</button>
 
-              <span class="m-tooltip__bubble" role="tooltip" data-tooltip-bubble>
+              <span class="c-tooltip__bubble" role="tooltip" data-tooltip-bubble>
                 Above the trigger — the default.
               </span>
             </span>
 
-            <span class="m-tooltip" data-js-behavior="tooltip" data-tooltip-position="right">
+            <span class="c-tooltip" data-js-behavior="tooltip" data-tooltip-position="right">
               <button type="button" class="demo__button" data-tooltip-trigger>Right</button>
 
-              <span class="m-tooltip__bubble" role="tooltip" data-tooltip-bubble>
+              <span class="c-tooltip__bubble" role="tooltip" data-tooltip-bubble>
                 Centred to the right of the trigger.
               </span>
             </span>
 
-            <span class="m-tooltip" data-js-behavior="tooltip" data-tooltip-position="bottom">
+            <span class="c-tooltip" data-js-behavior="tooltip" data-tooltip-position="bottom">
               <button type="button" class="demo__button" data-tooltip-trigger>Bottom</button>
 
-              <span class="m-tooltip__bubble" role="tooltip" data-tooltip-bubble>
+              <span class="c-tooltip__bubble" role="tooltip" data-tooltip-bubble>
                 Below the trigger.
               </span>
             </span>
 
-            <span class="m-tooltip" data-js-behavior="tooltip" data-tooltip-position="left">
+            <span class="c-tooltip" data-js-behavior="tooltip" data-tooltip-position="left">
               <button type="button" class="demo__button" data-tooltip-trigger>Left</button>
 
-              <span class="m-tooltip__bubble" role="tooltip" data-tooltip-bubble>
+              <span class="c-tooltip__bubble" role="tooltip" data-tooltip-bubble>
                 Centred to the left of the trigger.
               </span>
             </span>
@@ -295,7 +295,7 @@
           </p>
 
           <p class="demo__row">
-            <span class="m-tooltip" data-js-behavior="tooltip" data-tooltip-position="right">
+            <span class="c-tooltip" data-js-behavior="tooltip" data-tooltip-position="right">
               <button type="button" class="demo__button demo__button--icon" aria-label="Billing period" data-tooltip-trigger>
                 <!-- decorative glyph: the button carries the name -->
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
@@ -304,15 +304,15 @@
                 </svg>
               </button>
 
-              <span class="m-tooltip__bubble" role="tooltip" data-tooltip-bubble>
+              <span class="c-tooltip__bubble" role="tooltip" data-tooltip-bubble>
                 Invoices are issued on the first of each month.
               </span>
             </span>
 
-            <span class="m-tooltip" data-js-behavior="tooltip">
+            <span class="c-tooltip" data-js-behavior="tooltip">
               <a class="demo__button" href="#tooltip-explained" data-tooltip-trigger>A link works too</a>
 
-              <span class="m-tooltip__bubble" role="tooltip" data-tooltip-bubble>
+              <span class="c-tooltip__bubble" role="tooltip" data-tooltip-bubble>
                 Jumps to the explainer at the bottom of this page.
               </span>
             </span>
@@ -335,13 +335,13 @@
             never overwritten.
           </p>
 
-          <span class="m-tooltip" data-js-behavior="tooltip" data-tooltip-position="bottom" style="--tooltip-display: block">
+          <span class="c-tooltip" data-js-behavior="tooltip" data-tooltip-position="bottom" style="--tooltip-display: block">
             <label class="demo__field" for="recoveryCode">
               Recovery code
               <input id="recoveryCode" type="text" name="recoveryCode" autocomplete="off" data-tooltip-trigger />
             </label>
 
-            <span class="m-tooltip__bubble" role="tooltip" data-tooltip-bubble>
+            <span class="c-tooltip__bubble" role="tooltip" data-tooltip-bubble>
               Twelve characters, printed on the sheet you saved when the
               account was created.
             </span>
@@ -363,18 +363,18 @@
           </p>
 
           <p class="demo__row demo__row--edges">
-            <span class="m-tooltip" data-js-behavior="tooltip">
+            <span class="c-tooltip" data-js-behavior="tooltip">
               <button type="button" class="demo__button" data-tooltip-trigger>Left edge</button>
 
-              <span class="m-tooltip__bubble" role="tooltip" data-tooltip-bubble>
+              <span class="c-tooltip__bubble" role="tooltip" data-tooltip-bubble>
                 A hint long enough to run past the edge of a narrow window.
               </span>
             </span>
 
-            <span class="m-tooltip" data-js-behavior="tooltip">
+            <span class="c-tooltip" data-js-behavior="tooltip">
               <button type="button" class="demo__button" data-tooltip-trigger>Right edge</button>
 
-              <span class="m-tooltip__bubble" role="tooltip" data-tooltip-bubble>
+              <span class="c-tooltip__bubble" role="tooltip" data-tooltip-bubble>
                 A hint long enough to run past the edge of a narrow window.
               </span>
             </span>
@@ -400,10 +400,10 @@
           </p>
 
           <p class="demo__row">
-            <span class="m-tooltip" data-js-behavior="tooltip" data-tooltip-position="right">
+            <span class="c-tooltip" data-js-behavior="tooltip" data-tooltip-position="right">
               <button type="button" class="demo__button" data-tooltip-trigger>Notify reviewers</button>
 
-              <span class="m-tooltip__bubble" role="tooltip" data-tooltip-bubble>
+              <span class="c-tooltip__bubble" role="tooltip" data-tooltip-bubble>
                 Sends the draft to everyone on the review list and keeps a
                 copy in the outbox until each of them has confirmed receipt.
               </span>
@@ -426,10 +426,10 @@
           </p>
 
           <p class="demo__row">
-            <span class="m-tooltip" data-js-behavior="tooltip" data-tooltip-position="top">
+            <span class="c-tooltip" data-js-behavior="tooltip" data-tooltip-position="top">
               <button type="button" class="demo__button" data-tooltip-trigger>Scroll me to the top</button>
 
-              <span class="m-tooltip__bubble" role="tooltip" data-tooltip-bubble>
+              <span class="c-tooltip__bubble" role="tooltip" data-tooltip-bubble>
                 No room above, so this went below.
               </span>
             </span>
@@ -453,10 +453,10 @@
           arrives after a delay nobody can change. A hint worth writing is
           worth showing to everyone, so it goes into the markup:
         </p>
-        <pre><code>&lt;span class="m-tooltip" data-js-behavior="tooltip"&gt;
+        <pre><code>&lt;span class="c-tooltip" data-js-behavior="tooltip"&gt;
   &lt;button type="button" data-tooltip-trigger&gt;Save draft&lt;/button&gt;
 
-  &lt;span class="m-tooltip__bubble" role="tooltip" data-tooltip-bubble&gt;
+  &lt;span class="c-tooltip__bubble" role="tooltip" data-tooltip-bubble&gt;
     Keeps the editor open.
   &lt;/span&gt;
 &lt;/span&gt;</code></pre>

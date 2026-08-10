@@ -41,11 +41,17 @@ is stated as an actionable instruction; ✅ / ❌ mark do / don't.
   styles — so appearance stays owned by CSS.
 
 ### Modules & reuse
-- A **module** is a standalone, once-per-page entity (the masthead, the main
-  navigation, the footer, an on-page table of contents). A **component** is a
-  reusable building block that can appear inside any module (a button, a link,
-  a dialog). Modules **compose** components; the precise decision rule and
-  prefixes live in SASS/CSS › *BEM namespacing*.
+- A **module** is *placed*: it brings its own markup, which would have no
+  reason to exist without it, and it occupies a region of the page (the
+  masthead, the main navigation, the footer, an on-page table of contents).
+  A **component** is *attached*: it wraps, annotates or reinforces a host that
+  is complete and usable without it, and it is the shared vocabulary reused
+  across unrelated modules (a button, a link, a dialog, a tooltip). A
+  **function** is neither — it only enhances existing markup with state
+  classes/attributes and owns no vocabulary at all, so it gets no prefix
+  (a sticky-state observer, an input mask, a validation behaviour).
+  Modules **compose** components; the precise decision rule and prefixes live
+  in SASS/CSS › *BEM namespacing*.
 - A module (and a component) must look **consistent regardless of where it
   sits** in the layout. It therefore owns only its *intrinsic* look, never its
   *position* in a parent. Where it sits — `order`, `flex-basis`, the margins
@@ -345,25 +351,43 @@ Prefix every class by its role:
 | Prefix    | Role       | Notes                                   |
 | --------- | ---------- | --------------------------------------- |
 | `o-`      | object     | abstract, reusable layout               |
-| `m-`      | module     | standalone, once-per-page entity (topbar, navigation, footer, table of contents) |
-| `c-`      | component  | module-independent reusable building block (button, link, dialog) |
+| `m-`      | module     | a *placed* entity that occupies a region and brings its own markup (topbar, navigation, footer, table of contents) |
+| `c-`      | component  | an *attached*, module-independent building block (button, link, dialog, tooltip) |
 | `u-`      | utility    | one very specific style                 |
 | `v-`      | vendor     | third-party code                        |
 | `is-`/`has-` | state   | conditional styling                     |
 
 - BEM structure: `block__element--modifier`.
-- **`m-` vs `c-` is purely semantic.** `m-` is a **module** — a standalone,
-  once-per-page entity that stands on its own (`m-topbar`, `m-nav`, `m-footer`,
-  `m-toc`). `c-` is a **component** — a module-independent building block that
-  can appear inside *any* module (`c-button`, `c-link`, `c-dialog`). Modules
+- **`m-` vs `c-` is purely semantic**, and one question settles it: **is there
+  a host that is already complete without this thing?**
+  - **No → `m-` (module).** It is *placed*. Its markup exists only because it
+    does, and it occupies a region of the page (`m-topbar`, `m-nav`,
+    `m-footer`, `m-toc`, an accordion, a lightbox).
+  - **Yes → `c-` (component).** It is *attached* to that host — a full text it
+    cuts down, a plain table it makes sortable, a native field it dresses, a
+    control it explains (`c-button`, `c-link`, `c-dialog`, `c-tooltip`).
+  - **Neither, and it owns no vocabulary → no prefix (function).** It writes
+    only state classes/attributes onto existing markup and leaves the look to
+    the project. Where such a behaviour ships a ready-made look anyway, that
+    look is a `c-` component or an `o-` object in its own right — the
+    behaviour neither needs nor reads it.
+
+  Supporting signals: a module usually manages a **collection or a region**
+  (n panels, n images, n messages) while a component treats **one** host; and
+  a component is what an unrelated feature reuses verbatim. Modules
   **compose** components; a component never depends on a specific module.
-  Decision rule: standalone unique entity → `m-`; reusable building block →
-  `c-`.
-- **The prefix does not decide bundling.** How a style is loaded (core bundle
-  vs its own on-demand file) is an **independent** axis — a `m-` module can
-  live in the core bundle (a site-wide one like `m-topbar`) and a `c-`
-  component can compile to its own on-demand file (a page-specific one like
-  `c-dialog`). See *Build / compile pipeline*.
+  A trigger-invoked overlay with no footprint in the page flow (dialog,
+  popover, tooltip) is a **component**, not a module — it occupies no region.
+- **The prefix does not decide bundling, nor how much CSS ships.** Both are
+  **independent** axes. A `m-` module can live in the core bundle (a site-wide
+  one like `m-topbar`) and a `c-` component can compile to its own on-demand
+  file (a page-specific one like `c-dialog`) — see *Build / compile pipeline*.
+  And a module may ship almost no CSS (a widget that leaves every visual to
+  the project) while a component ships hundreds of lines: a component that
+  *leaves* the design to the project is still a component, whereas a function
+  is one that has **no** vocabulary to leave.
+- **The block, not the folder, carries the prefix.** One delivery unit may
+  ship several blocks with different roles.
 - **No `js-` hook classes.** JavaScript binds to `data-` attributes, not to
   classes (see HTML › *Data & JS hooks*).
 

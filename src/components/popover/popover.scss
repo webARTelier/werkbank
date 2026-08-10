@@ -20,7 +20,7 @@
 // script never writes top/left itself. Without anchor support AND without
 // JS, the UA default (centered in the viewport) keeps the popover usable.
 //
-// The "m-popover*" classes (BEM "m-" prefix) are used for styling only.
+// The "c-popover*" classes (BEM "c-" prefix) are used for styling only.
 // popover.js does NOT hook onto them; it targets the element via
 // data-js-behavior="popover" and the data-popover-position attribute.
 // Restyle freely without touching the behaviour.
@@ -51,7 +51,7 @@
 // component root rather than in :root, so they stay scoped to the component
 // and a single instance can be retuned in place — including --popover-offset,
 // which popover.js reads back off this very element.
-.m-popover {
+.c-popover {
 
   // Animation maps to the shared animation tokens
   // (see _shared/scss/_foundations.scss). Half the shared duration: a
@@ -119,7 +119,7 @@
 // in popover.js — keep the two in sync.
 @supports (anchor-name: --a) and (position-area: bottom) {
 
-  .m-popover {
+  .c-popover {
 
     // Undo the UA centering (inset: 0 + margin: auto) so the anchor grid
     // decides; the margin becomes the visual gap to the trigger.
@@ -162,7 +162,7 @@
 // into the actual fixed position. Until the class is present (or without
 // JS at all) the UA's centered default keeps the popover perfectly usable.
 @supports not ((anchor-name: --a) and (position-area: bottom)) {
-  .m-popover {
+  .c-popover {
 
     &.is-jsAnchored {
       inset: auto;
@@ -182,7 +182,7 @@
 // there, or that content would be invisible with no way to reveal it.
 @supports selector(:popover-open) {
 
-  .m-popover {
+  .c-popover {
 
     // Closed resting state. When the popover opens, :popover-open matches
     // and it animates from the @starting-style values below to open.
@@ -220,7 +220,7 @@
 
 
 
-.m-popover {
+.c-popover {
 
   &__header {
     display: flex;
@@ -291,7 +291,7 @@
 // Respect reduced motion: keep the open/close instant.
 @include reduced-motion {
 
-  .m-popover {
+  .c-popover {
     transition-duration: 0.01ms !important;
   }
 }

@@ -44,11 +44,11 @@ against that container's edge, so the class must flip against the same edge:
 point `data-sticky-root` at the container. Element and sentinel must sit
 inside it.
 
-The shipped stylesheet provides `m-stickyBar` as a convenience look: a bar
+The shipped stylesheet provides `c-stickyBar` as a convenience look: a bar
 that sticks to the top of the viewport and, while pinned, lifts off the page
 with an elevated background, a hairline and a soft shadow. `is-stuck` is a
 styling hook — override or replace those rules to make the pinned state look
-however your project needs. The script does not read `m-stickyBar`.
+however your project needs. The script does not read `c-stickyBar`.
 
 ### Configuration (optional, attributes on the sticky element)
 - `data-sticky-sentinel` – CSS selector for an author-placed sentinel (first

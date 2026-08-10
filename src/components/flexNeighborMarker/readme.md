@@ -31,7 +31,7 @@ The shipped stylesheet uses the class to draw a hairline divider between
 row-neighbours — a sensible default and a starting point. `has-neighbor` is a
 styling hook: override or replace the rules to style a same-row relationship
 however your project needs. The class name itself is fixed, since the shipped
-SCSS keys its divider off it. The optional `m-flexNeighbor` class is a convenience
+SCSS keys its divider off it. The optional `o-flexNeighbor` class is a convenience
 flex container (wrap + gap + the default divider); the script does not read it,
 so you can lay the container out any way you like.
 

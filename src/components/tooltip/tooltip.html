@@ -19,7 +19,7 @@
      and without the module.
 
   Wiring
-    - The root is the wrapper with class="m-tooltip" and
+    - The root is the wrapper with class="c-tooltip" and
       data-js-behavior="tooltip". It is the positioning context, so the hint
       has to be inside it, not next to it.
     - data-tooltip-trigger marks the control being described. It must be a
@@ -73,10 +73,10 @@
 
 
 <!-- The hint sits inside the wrapper, after the control it describes -->
-<span class="m-tooltip" data-js-behavior="tooltip">
+<span class="c-tooltip" data-js-behavior="tooltip">
   <button type="button" data-tooltip-trigger>Save draft</button>
 
-  <span class="m-tooltip__bubble" role="tooltip" data-tooltip-bubble>
+  <span class="c-tooltip__bubble" role="tooltip" data-tooltip-bubble>
     Keeps the editor open.
   </span>
 </span>

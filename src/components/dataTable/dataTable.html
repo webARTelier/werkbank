@@ -19,7 +19,7 @@
      adds the sort controls on top.
 
   Wiring
-    - The root is the element with class="m-dataTable" and
+    - The root is the element with class="c-dataTable" and
       data-js-behavior="dataTable". It is the box that scrolls when the table
       is wider than the space it was given, so the <table> has to be inside
       it, not next to it.
@@ -36,12 +36,12 @@
     - <caption> names the table — and the module borrows it to name the
       scroll box once that becomes keyboard focusable (see Notes). Give the
       root an aria-label instead if you would rather not show a caption.
-    - class="m-dataTable--stickyHead" keeps the header row in view while the
+    - class="c-dataTable--stickyHead" keeps the header row in view while the
       rows scroll past it. It only does something when the box has a height
       to scroll inside, because a sticky cell sticks within its own scroll
       container: set style="--dataTable-max-block-size: 24rem" (or your own
       CSS) along with it.
-    - class="m-dataTable--stickyColumn" freezes the first cell of every row
+    - class="c-dataTable--stickyColumn" freezes the first cell of every row
       against the inline edge, so a wide table can still be read row by row.
       Both sticky modifiers cover an edge of the scroll box; the module
       measures how deep and the stylesheet turns that into scroll-padding, so
@@ -116,7 +116,7 @@
 
 
 <!-- The scroll box is the component; the table inside it is plain markup -->
-<div class="m-dataTable m-dataTable--stickyHead" data-js-behavior="dataTable"
+<div class="c-dataTable c-dataTable--stickyHead" data-js-behavior="dataTable"
      data-datatable-stacked style="--dataTable-max-block-size: 24rem">
   <table>
     <caption>Server response times, last 24 hours</caption>

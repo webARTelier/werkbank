@@ -17,13 +17,13 @@ rows read as stacked cards below the `small` breakpoint.
 
 ## Usage
 
-The **scroll box** carries `class="m-dataTable"` and
+The **scroll box** carries `class="c-dataTable"` and
 `data-js-behavior="dataTable"`; the `<table>` goes inside it and stays ordinary
 markup — `<thead>`, `<th scope>` and `<caption>` already carry the semantics, so
 the component adds no classes and no ARIA to the table itself.
 
 ```html
-<div class="m-dataTable" data-js-behavior="dataTable">
+<div class="c-dataTable" data-js-behavior="dataTable">
   <table>
     <caption>Server response times, last 24 hours</caption>
     <thead>
@@ -137,11 +137,11 @@ state is normally *lifted* by it (see [`docs/preEnhancement.md`](../../../docs/p
 
 ### Sticky modifiers (pure CSS)
 
-- `m-dataTable--stickyHead` keeps the header row in view. It only does something
+- `c-dataTable--stickyHead` keeps the header row in view. It only does something
   when the box has a height to scroll inside — a sticky cell sticks within its
   own scroll container, not within the page. Set `--dataTable-max-block-size`
   along with it.
-- `m-dataTable--stickyColumn` freezes the first cell of every row against the
+- `c-dataTable--stickyColumn` freezes the first cell of every row against the
   inline edge. It copies the row's own colour onto the frozen cell to cover what
   scrolls underneath, so **every row colour has to stay opaque** if you retune
   them.

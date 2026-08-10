@@ -9,7 +9,7 @@ A short hint about a control, on hover and on keyboard focus — shown by CSS al
 - `_shared/js/rafThrottle.js`, `_shared/js/getCssCustomProperty.js`, `_shared/js/focusableSelector.js`, `_shared/js/uniqueId.js` and `_shared/js/describedBy.js` – bundled into the module by the build; copy them alongside `tooltip.js` when pasting into a plain project.
 
 ## Usage
-The root is a wrapper (`class="m-tooltip"`, `data-js-behavior="tooltip"`) holding two marked parts: the control being described (`data-tooltip-trigger`) and the hint (`data-tooltip-bubble`). The hint has to be *inside* the wrapper — that is both the positioning context and the element the show rules key on.
+The root is a wrapper (`class="c-tooltip"`, `data-js-behavior="tooltip"`) holding two marked parts: the control being described (`data-tooltip-trigger`) and the hint (`data-tooltip-bubble`). The hint has to be *inside* the wrapper — that is both the positioning context and the element the show rules key on.
 
 Showing and hiding is pure CSS. `tooltip.scss` reveals the hint on `:hover` and on `:has([data-tooltip-trigger]:focus-visible)`, places it on one of four sides with an arrow, and fades it in — all of that works before the module arrives and without it.
 

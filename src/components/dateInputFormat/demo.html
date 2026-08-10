@@ -67,10 +67,10 @@
           automatically. Try editing in the middle, or backspacing onto a dot —
           the caret stays where you expect.
         </p>
-        <p class="m-dateField">
-          <label class="m-dateField__label" for="date-single">Date of birth</label>
+        <p class="c-dateField">
+          <label class="c-dateField__label" for="date-single">Date of birth</label>
           <input
-            class="m-dateField__control"
+            class="c-dateField__control"
             id="date-single"
             type="text"
             name="dob"
@@ -80,7 +80,7 @@
             data-js-behavior="dateInputFormat"
             data-dateinputformat
           />
-          <span class="m-dateField__hint" id="date-single-hint">Format: DD.MM.YYYY</span>
+          <span class="c-dateField__hint" id="date-single-hint">Format: DD.MM.YYYY</span>
         </p>
 
         <!-- Example 2: attribute on a wrapper — formats every field inside -->
@@ -90,10 +90,10 @@
           inside it is formatted.
         </p>
         <div data-js-behavior="dateInputFormat">
-          <p class="m-dateField">
-            <label class="m-dateField__label" for="date-from">From</label>
+          <p class="c-dateField">
+            <label class="c-dateField__label" for="date-from">From</label>
             <input
-              class="m-dateField__control"
+              class="c-dateField__control"
               id="date-from"
               type="text"
               placeholder="DD.MM.YYYY"
@@ -101,10 +101,10 @@
               data-dateinputformat
             />
           </p>
-          <p class="m-dateField" style="margin-top: var(--space-s);">
-            <label class="m-dateField__label" for="date-to">To</label>
+          <p class="c-dateField" style="margin-top: var(--space-s);">
+            <label class="c-dateField__label" for="date-to">To</label>
             <input
-              class="m-dateField__control"
+              class="c-dateField__control"
               id="date-to"
               type="text"
               placeholder="DD.MM.YYYY"
@@ -112,7 +112,7 @@
               data-dateinputformat
             />
           </p>
-          <span class="m-dateField__hint" id="date-range-hint">Format: DD.MM.YYYY</span>
+          <span class="c-dateField__hint" id="date-range-hint">Format: DD.MM.YYYY</span>
         </div>
 
         <!-- Example 3: per-field mask via a pattern value on the attribute -->
@@ -122,10 +122,10 @@
           for that field — here <code>MM/DD/YYYY</code>. Different locales can
           coexist on one page.
         </p>
-        <p class="m-dateField">
-          <label class="m-dateField__label" for="date-us">Date (US format)</label>
+        <p class="c-dateField">
+          <label class="c-dateField__label" for="date-us">Date (US format)</label>
           <input
-            class="m-dateField__control"
+            class="c-dateField__control"
             id="date-us"
             type="text"
             placeholder="MM/DD/YYYY"
@@ -133,7 +133,7 @@
             data-js-behavior="dateInputFormat"
             data-dateinputformat="MM/DD/YYYY"
           />
-          <span class="m-dateField__hint" id="date-us-hint">Format: MM/DD/YYYY</span>
+          <span class="c-dateField__hint" id="date-us-hint">Format: MM/DD/YYYY</span>
         </p>
 
       </section>

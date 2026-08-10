@@ -15,7 +15,7 @@
 
   2) Drop the markup below where the scrollable area should appear, then:
        - Give the box a constrained height so its content can overflow. The
-         .m-scrollFade class only supplies overflow-y: auto; the overflow is
+         .c-scrollFade class only supplies overflow-y: auto; the overflow is
          what the fade reacts to. The inline max-block-size below just keeps
          this snippet self-contained — in a real project the height usually
          comes from the layout, so move it into your CSS or drop it once the
@@ -41,7 +41,7 @@
 
 
 <!-- Basic: default fade depth (--space-xl) -->
-<div class="m-scrollFade" data-js-behavior="adaptiveScrollFade"
+<div class="c-scrollFade" data-js-behavior="adaptiveScrollFade"
      aria-label="Scrollable content" style="max-block-size: 12rem;">
   <p>First paragraph …</p>
   <p>More content that overflows the fixed height so the box becomes scrollable …</p>
@@ -51,7 +51,7 @@
 
 
 <!-- With optional config: custom fade depth + edge threshold -->
-<div class="m-scrollFade" data-js-behavior="adaptiveScrollFade"
+<div class="c-scrollFade" data-js-behavior="adaptiveScrollFade"
      aria-label="Scrollable content" data-fade-threshold="2"
      style="max-block-size: 12rem; --scrollFade-size: 24px;">
   <p>First paragraph …</p>

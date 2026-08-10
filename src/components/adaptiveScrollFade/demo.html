@@ -36,7 +36,7 @@
 
             Wiring
               - data-js-behavior="adaptiveScrollFade" boots the module on the box.
-              - .m-scrollFade supplies overflow-y: auto; give the box a
+              - .c-scrollFade supplies overflow-y: auto; give the box a
                 constrained height (below via max-block-size) so it can overflow
                 — that overflow is what the fade reacts to.
               - data-fade-threshold (optional) px tolerance before an edge counts
@@ -70,7 +70,7 @@
         </p>
 
         <!-- Demo-only sizing: height tracks the viewport, capped so Full-HD shows all text; shorter viewports overflow and fade -->
-        <div class="m-scrollFade" data-js-behavior="adaptiveScrollFade"
+        <div class="c-scrollFade" data-js-behavior="adaptiveScrollFade"
              aria-label="About this component"
              style="max-block-size: min(32rem, calc(100dvh - 27rem));">
           <p>

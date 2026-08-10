@@ -27,7 +27,7 @@
  *    every open()/close(), so any trigger present by the time the dialog is
  *    first used ends up fully wired.
  * 2. Light dismiss: clicking the backdrop closes the dialog. This is not
- *    native. Because the visible surface lives in an inner .m-dialog__panel
+ *    native. Because the visible surface lives in an inner .c-dialog__panel
  *    and the <dialog> itself is padding-free, a click whose target IS the
  *    <dialog> element can only have landed on the backdrop — no coordinate
  *    math needed. Opt out per dialog with data-dialog-static (also blocks

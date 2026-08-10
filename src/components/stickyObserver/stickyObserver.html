@@ -25,7 +25,7 @@
          (flex/grid gap slots, :first-child / sibling selectors, list or
          table markup), or when several elements share one sentinel. The
          class flips once the sentinel is completely above the trigger edge.
-       - .m-stickyBar is an optional convenience look: position: sticky at
+       - .c-stickyBar is an optional convenience look: position: sticky at
          the viewport top plus a default pinned-state surface (background,
          hairline, shadow). The script does not read it — style the element
          however you like and key your own rules off .is-stuck.
@@ -69,7 +69,7 @@
 
 <!-- Basic: the sticky element is the module element; the sentinel is
      injected automatically -->
-<header class="m-stickyBar" data-js-behavior="stickyObserver">
+<header class="c-stickyBar" data-js-behavior="stickyObserver">
   <strong>Sticky bar</strong> — gains its surface while pinned
 </header>
 
@@ -80,7 +80,7 @@
      independent of where the bar itself sits. The offset lives only in the
      CSS: the script reads the bar's computed `top` by itself. -->
 <section id="heroSection">…</section>
-<header class="m-stickyBar" style="--stickyBar-offset: 16px;"
+<header class="c-stickyBar" style="--stickyBar-offset: 16px;"
         data-js-behavior="stickyObserver"
         data-sticky-sentinel="#heroSection">
   <strong>Offset bar</strong> — pins 16px below the viewport top
@@ -92,7 +92,7 @@
      (styling owned by your project), so it pins against that box's top
      edge — data-sticky-root points the observer at the same box. -->
 <div id="scrollBox">
-  <header class="m-stickyBar" data-js-behavior="stickyObserver"
+  <header class="c-stickyBar" data-js-behavior="stickyObserver"
           data-sticky-root="#scrollBox">
     <strong>Container bar</strong> — pins inside the scroll box
   </header>

@@ -18,11 +18,13 @@
 // `.is-stuck` is a styling hook, so override or replace these rules to make
 // the pinned state look like whatever your project needs.
 //
-// The "m-stickyBar" class (BEM "m-" prefix) is styling only — a convenience
-// look so the demo/snippet works out of the box. The JS hooks onto the
-// element via data-js-behavior and toggles the class above; it does not need
-// or read "m-stickyBar", so the sticky element can be styled any way you
-// like.
+// stickyObserver itself owns no vocabulary: it enhances a sticky element the
+// project already has and writes nothing but the state class above. The
+// "c-stickyBar" class (BEM "c-" prefix) is the convenience component that
+// ships alongside it — styling only, so the demo/snippet works out of the
+// box. The JS hooks onto the element via data-js-behavior and toggles the
+// class above; it does not need or read "c-stickyBar", so the sticky element
+// can be styled any way you like.
 
 @use "mediaqueries" as *;
 
@@ -36,7 +38,7 @@
 // component root rather than in :root, so they stay scoped to the component
 // and a single instance can be retuned in place (`style="--stickyBar-offset: …"`
 // on this element still wins over the defaults below).
-.m-stickyBar {
+.c-stickyBar {
 
   // Pin distance from the top edge of the viewport (or of the scroll
   // container, with data-sticky-root). Changing it here is enough: the

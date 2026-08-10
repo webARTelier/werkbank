@@ -16,10 +16,13 @@
 // styling hook, so override or replace these rules to draw whatever a same-row
 // relationship should look like in your project.
 //
-// The "m-flexNeighbor" class (BEM "m-" prefix) is styling only — a convenience
-// flex container so the demo/snippet works out of the box. The JS hooks onto
-// the element via data-js-behavior and toggles the class above; it does not need
-// or read "m-flexNeighbor", so you may lay the container out however you like.
+// flexNeighborMarker itself owns no vocabulary: it enhances a flex container
+// the project already has and writes nothing but the state class above. The
+// "o-flexNeighbor" class is a layout OBJECT (BEM "o-" prefix) that ships
+// alongside it — a wrapping flex row with the shared gap, so the demo/snippet
+// works out of the box. The JS hooks onto the element via data-js-behavior and
+// toggles the class above; it does not need or read "o-flexNeighbor", so you
+// may lay the container out however you like.
 
 // Convenience container: a wrapping flex row with the shared gap. Optional —
 // the JS marks the items whatever the container's display model is.
@@ -28,7 +31,7 @@
 // component root rather than in :root, so they stay scoped to the component
 // and a single instance can be retuned in place (`style="--flexNeighbor-gap: …"`
 // on this element still wins over the defaults below).
-.m-flexNeighbor {
+.o-flexNeighbor {
 
   // Gap between items. Drives both the flex `gap` and where the divider sits,
   // so the divider stays centred in the gutter at any spacing. Maps to the

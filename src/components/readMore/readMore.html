@@ -17,7 +17,7 @@
      made of; the component never looks inside it.
 
   Wiring
-    - The root is the element with class="m-readMore" and
+    - The root is the element with class="c-readMore" and
       data-js-behavior="readMore".
     - data-readmore-body marks the region that gets cut down to a preview.
       Give it an id: that id is what the toggle links to, and it is what
@@ -92,9 +92,9 @@
 
 
 <!-- The region carries the id the toggle links to -->
-<div class="m-readMore" data-js-behavior="readMore">
+<div class="c-readMore" data-js-behavior="readMore">
 
-  <div class="m-readMore__body" data-readmore-body id="readMore-story">
+  <div class="c-readMore__body" data-readmore-body id="readMore-story">
     <p>
       The first paragraph is what the reader sees in any case — the preview
       is cut at six lines by default, which is roughly a paragraph and the
@@ -107,7 +107,7 @@
     </p>
   </div>
 
-  <a class="m-readMore__toggle" href="#readMore-story" data-readmore-toggle>
+  <a class="c-readMore__toggle" href="#readMore-story" data-readmore-toggle>
     Read more
   </a>
 </div>

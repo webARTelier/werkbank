@@ -226,7 +226,7 @@ Boot (`_shared/js/boot.js`) lazily imports the module when it sees
   the **contract with the JS**: which class/attribute the JS toggles and that
   the script sets no inline styles.
 - Declare the `--<name>-*` custom properties **on the component root**
-  (`.m-<name> { … }`), not in `:root`, so the override surface stays scoped to
+  (`.m-<name>` / `.c-<name> { … }`), not in `:root`, so the override surface stays scoped to
   the component and a single instance can be retuned in place (an inline
   `style="--<name>-x: …"` on that element still wins). They **map to the shared
   tokens** (`--space-*`, `--color-*`, `--an-duration`, `--an-ease`,
@@ -248,14 +248,19 @@ Boot (`_shared/js/boot.js`) lazily imports the module when it sees
   **state values the JS writes or a state rule flips** — those belong next
   to the rule that explains them (`--scrollFade-top`,
   `--offCanvasNav-panel-offset`, `--popover-fallback-*`).
-- **BEM with an `m-` prefix** for styling classes (`.m-dialog__panel`); the JS
-  must **not** hook onto `m-*` classes — it targets the element via
+- **BEM with a role prefix** for styling classes (`.c-dialog__panel`). Which
+  prefix — `m-` module, `c-` component, `o-` object — is settled by the
+  question in the module/component/function section of `CLAUDE.md`: *is there
+  a host that is already complete without this thing?* A folder may ship more
+  than one block, and a folder whose script owns no vocabulary (a function)
+  can still ship a convenience `c-`/`o-` block alongside it. The JS must
+  **not** hook onto those classes — it targets the element via
   `data-js-behavior` and behavioural `data-*` attributes. State classes the JS
   writes (`is-invalid`, `has-neighbor`, `is-scrollLocked`) are the styling hook.
 - **Elements and modifiers are written inside the block, as `&__x` / `&--y`:**
 
   ```scss
-  .m-dialog {
+  .c-dialog {
     --dialog-radius: var(--borderRadius);   // the token block, first
     …
 
@@ -285,7 +290,7 @@ Boot (`_shared/js/boot.js`) lazily imports the module when it sees
   `@starting-style`).
 
   This is concatenation, not descendant nesting: `&__panel` compiles to
-  `.m-dialog__panel`, so the emitted selector and its specificity are exactly
+  `.c-dialog__panel`, so the emitted selector and its specificity are exactly
   those of the flat form — which is the point of BEM. It keeps everything the
   block owns in one place and reads as the component's outline. What stays
   **outside** is what cannot be expressed relative to the block: rules on

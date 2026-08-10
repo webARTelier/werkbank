@@ -2,7 +2,7 @@
 // Dialog — accessible modal/non-modal built on native <dialog>
 // =============================================================
 //
-// The visible surface is styled on an inner ".m-dialog__panel", NOT on the
+// The visible surface is styled on an inner ".c-dialog__panel", NOT on the
 // <dialog> element itself: the <dialog> is kept padding- and border-free so a
 // click that lands on it (rather than on the panel) can only have come from the
 // backdrop — which is exactly how dialog.js detects a light-dismiss without any
@@ -15,7 +15,7 @@
 // their own duration/easing — see the animation block for why that takes two
 // rules.
 //
-// The "m-dialog*" classes (BEM "m-" prefix) are used for styling only.
+// The "c-dialog*" classes (BEM "c-" prefix) are used for styling only.
 // dialog.js does NOT hook onto them; it targets the <dialog> element (via
 // data-js-behavior="dialog") and the behavioural data attributes in the
 // markup ("data-open-dialog", "data-close-dialog", "data-dialog-static",
@@ -34,7 +34,7 @@
 // component root rather than in :root, so they stay scoped to the component
 // and a single instance can be retuned in place. ::backdrop inherits from its
 // originating element, so --dialog-backdrop-color still reaches it from here.
-.m-dialog {
+.c-dialog {
 
   // Animation maps to the shared animation tokens
   // (see _shared/scss/_foundations.scss). Opening and closing are timed
@@ -305,7 +305,7 @@ body.is-scrollLocked {
 // than zeroing the duration tokens) so it also beats the transition declared
 // on the higher-specificity [open] rules above.
 @include reduced-motion {
-  .m-dialog {
+  .c-dialog {
 
     &,
     &::backdrop {

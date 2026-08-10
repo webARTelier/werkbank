@@ -8,7 +8,9 @@
 // needs none of these styles — a bare <input data-dateinputformat> is formatted
 // just the same.
 //
-// The "m-dateField*" classes (BEM "m-" prefix) are used for styling only.
+// dateInputFormat itself owns no vocabulary: it enhances a date field the
+// project already has. The "c-dateField*" classes (BEM "c-" prefix) are the
+// component that ships alongside it — styling only.
 // dateInputFormat.js does NOT hook onto them; it targets the data attribute in
 // the markup ("data-dateinputformat"). Keeping the JS hook and the style hook
 // separate lets you restyle the field freely without touching the behaviour.
@@ -22,7 +24,7 @@
 // The custom properties are the component's override surface. They live on the
 // component root rather than in :root, so they stay scoped to the component
 // and a single instance can be retuned in place.
-.m-dateField {
+.c-dateField {
 
   // Spacing maps to the shared spacing scale
   // (see _shared/scss/_foundations.scss).

@@ -49,7 +49,7 @@
 // that has to survive the chunk failing and carries hints near its right
 // edge wants overflow-x: clip on its own scroll container.
 //
-// The "m-tooltip*" classes (BEM "m-" prefix) are used for styling only.
+// The "c-tooltip*" classes (BEM "c-" prefix) are used for styling only.
 // tooltip.js does NOT hook onto them; it finds its parts via the
 // data-tooltip-* attributes and is loaded via data-js-behavior="tooltip".
 //
@@ -165,7 +165,7 @@
 // the root rather than in :root, so they stay scoped to the component and a
 // single instance can be retuned in place — including --tooltip-offset,
 // which tooltip.js reads back off this very element.
-.m-tooltip {
+.c-tooltip {
 
   // Animation maps to the shared animation tokens
   // (see _shared/scss/_foundations.scss). A third of the shared duration: a
@@ -389,7 +389,7 @@
 // carries no meaning of its own — goes.
 @include forced-colors {
 
-  .m-tooltip {
+  .c-tooltip {
 
     &__bubble {
       border: 1px solid CanvasText;
@@ -408,7 +408,7 @@
 // while the pointer is only passing through.
 @include reduced-motion {
 
-  .m-tooltip {
+  .c-tooltip {
 
     &__bubble {
       transition-duration: 0.01ms !important;

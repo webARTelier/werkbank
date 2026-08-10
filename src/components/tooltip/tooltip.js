@@ -141,7 +141,7 @@ import { addDescribedBy, removeDescribedBy } from './describedBy.js';
 const defaults = {
 
   // The two parts, marked in the markup. Data attributes rather than the
-  // m-tooltip__* classes, so the styling stays free to change.
+  // c-tooltip__* classes, so the styling stays free to change.
   triggerSelector: '[data-tooltip-trigger]',
   bubbleSelector: '[data-tooltip-bubble]',
 

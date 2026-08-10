@@ -10,7 +10,7 @@ beyond an edge, that edge fades out to signal "there is more to scroll".
 - `_shared/js/rafThrottle.js` – utility imported by the behavior (copy alongside it)
 
 ## Usage
-The scrollable container itself gets `class="m-scrollFade"` and
+The scrollable container itself gets `class="c-scrollFade"` and
 `data-js-behavior="adaptiveScrollFade"`. `overflow-y: auto` is applied by the
 class; you only have to give the element a **constrained height** (e.g.
 `max-block-size`/`height`) so its content can overflow.

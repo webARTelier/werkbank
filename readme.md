@@ -72,33 +72,41 @@ components downloads two chunks — nothing else.
 
 ## Components
 
-| Component            | What it does                                                        |
-| -------------------- | ------------------------------------------------------------------- |
-| `accordion`          | Expand/collapse panels on native `<details>`/`<summary>`.           |
-| `adaptiveScrollFade` | Fade-out edges on scrollable containers, only where overflow is.    |
-| `backToTop`          | Jump back to the top, shown once the page is scrolled far enough.   |
-| `countdown`          | Live countdown to a target date/time.                               |
-| `dataTable`          | Sortable columns on a plain `<table>`, scrolling or stacked.        |
-| `dateInputFormat`    | Auto-formats a text field into a grouped date mask (`DD.MM.YYYY`).  |
-| `dialog`             | Modal dialogs on the native `<dialog>` element.                     |
-| `dropdownNav`        | Multi-level dropdown / mega-menu nav on the ARIA disclosure pattern.|
-| `flexNeighborMarker` | Marks flex items that have a neighbour on the same row.             |
-| `formValidation`     | Inline validation messages on the Constraint Validation API.        |
-| `inlineSVG`          | Replaces `<img>` SVG references with inline SVG.                    |
-| `inputCharCount`     | Character-count display for inputs and textareas.                   |
-| `lightbox`           | Image/gallery viewer on the native `<dialog>`, from image links.    |
-| `marquee`            | Infinitely scrolling content strip (news ticker).                   |
-| `offCanvasNav`       | Burger menu / off-canvas drawer on the native `<dialog>`.           |
-| `popover`            | Anchor-positioned popover on the native Popover API.                |
-| `readMore`           | Long text cut to a preview, with the control that opens it.         |
-| `scaleSVG`           | Scales SVGs from their `viewBox`.                                   |
-| `scrollSpy`          | IntersectionObserver-driven TOC highlight via `aria-current`.       |
-| `siteSearch`         | Site search form expanding out of a toggle, on `<search>`.          |
-| `stickyObserver`     | Sentinel-driven "is stuck" class toggle for `position: sticky`.     |
-| `tabs`               | ARIA tabs enhancement of an anchor-link table of contents.          |
-| `toast`              | Transient messages in a stack, announced via a live region.         |
-| `tooltip`            | Hoverable, dismissible hint on a control, shown by CSS alone.       |
-| `video`              | CMS-maintainable video embeds with responsive sources.              |
+The **role** column says what a piece is in BEM terms: a **module** (`m-`) is
+*placed* and occupies a region of the page, a **component** (`c-`) is
+*attached* to a host that is complete without it, and a **function** owns no
+vocabulary at all — it only enhances existing markup, so the look belongs to
+your project. Four functions ship a ready-made look alongside them anyway;
+the class in brackets is that offer, and the behaviour neither needs nor
+reads it. The full decision rule is in [`CLAUDE.md`](CLAUDE.md).
+
+| Component            | Role                          | What it does                                                        |
+| -------------------- | ----------------------------- | ------------------------------------------------------------------- |
+| `accordion`          | module                        | Expand/collapse panels on native `<details>`/`<summary>`.           |
+| `adaptiveScrollFade` | function (`c-scrollFade`)     | Fade-out edges on scrollable containers, only where overflow is.    |
+| `backToTop`          | module                        | Jump back to the top, shown once the page is scrolled far enough.   |
+| `countdown`          | module                        | Live countdown to a target date/time.                               |
+| `dataTable`          | component                     | Sortable columns on a plain `<table>`, scrolling or stacked.        |
+| `dateInputFormat`    | function (`c-dateField`)      | Auto-formats a text field into a grouped date mask (`DD.MM.YYYY`).  |
+| `dialog`             | component                     | Modal dialogs on the native `<dialog>` element.                     |
+| `dropdownNav`        | module                        | Multi-level dropdown / mega-menu nav on the ARIA disclosure pattern.|
+| `flexNeighborMarker` | function (`o-flexNeighbor`)   | Marks flex items that have a neighbour on the same row.             |
+| `formValidation`     | function                      | Inline validation messages on the Constraint Validation API.        |
+| `inlineSVG`          | function                      | Replaces `<img>` SVG references with inline SVG.                    |
+| `inputCharCount`     | function                      | Character-count display for inputs and textareas.                   |
+| `lightbox`           | module                        | Image/gallery viewer on the native `<dialog>`, from image links.    |
+| `marquee`            | module                        | Infinitely scrolling content strip (news ticker).                   |
+| `offCanvasNav`       | module                        | Burger menu / off-canvas drawer on the native `<dialog>`.           |
+| `popover`            | component                     | Anchor-positioned popover on the native Popover API.                |
+| `readMore`           | component                     | Long text cut to a preview, with the control that opens it.         |
+| `scaleSVG`           | function                      | Scales SVGs from their `viewBox`.                                   |
+| `scrollSpy`          | function                      | IntersectionObserver-driven TOC highlight via `aria-current`.       |
+| `siteSearch`         | module                        | Site search form expanding out of a toggle, on `<search>`.          |
+| `stickyObserver`     | function (`c-stickyBar`)      | Sentinel-driven "is stuck" class toggle for `position: sticky`.     |
+| `tabs`               | module                        | ARIA tabs enhancement of an anchor-link table of contents.          |
+| `toast`              | module                        | Transient messages in a stack, announced via a live region.         |
+| `tooltip`            | component                     | Hoverable, dismissible hint on a control, shown by CSS alone.       |
+| `video`              | module                        | CMS-maintainable video embeds with responsive sources.              |
 
 Each folder under `src/components/<name>/` contains exactly:
 
@@ -183,7 +191,7 @@ so repeated forms do not need to worry about it.
 
 Per-component theming happens through CSS custom properties: every stylesheet
 declares its `--<name>-*` variables on the component root (e.g.
-`.m-dialog { … }`), mapped to the shared tokens — override those instead of the
+`.c-dialog { … }`), mapped to the shared tokens — override those instead of the
 rules themselves, either in your own CSS or inline on the element itself. Two
 behaviour-only components keep their tokens in `:root` because they own no root
 element to scope them to (`formValidation`) or document the override on an

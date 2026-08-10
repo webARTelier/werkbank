@@ -23,6 +23,91 @@ Folder and file names are written in **camelCase**.
   - `dev_` prefix (developer tools): `dev_pageInfo.js`, `dev_qrCode.js`
   - `_shared/` (leading underscore = shared/internal folder)
 
+## Module, component, function: what the BEM prefix says
+
+The `m-` / `c-` / `o-` prefix states a **role**, and the role is settled by
+one question: **is there a host that is already complete without this
+thing?** Decided 2026-08-10; it replaces the older "standalone, once-per-page
+entity" reading of `m-`, which nothing in this collection matches (every
+component here is reusable and most can appear several times).
+
+- **Module (`m-`) — it is *placed*.** It brings its own DOM, which would have
+  no reason to exist without it, and it occupies a region of the page. It may
+  contain other modules and components; it is the purpose, not the means.
+  `accordion`, `backToTop`, `countdown`, `dropdownNav`, `lightbox`,
+  `marquee`, `offCanvasNav`, `siteSearch`, `tabs`, `toast`, `video`.
+- **Component (`c-`) — it is *attached*.** It wraps, annotates or reinforces
+  a host that is complete and usable without it: a full text (`readMore`), a
+  plain table (`dataTable`), a native field (`dateInputFormat`), a scrolling
+  box (`adaptiveScrollFade`), a control that needs explaining (`tooltip`,
+  `popover`). It always presupposes something else, and it is the shared
+  vocabulary of the design system — styled once, reused in unrelated
+  features. A component never depends on one specific module.
+- **Function (no prefix of its own) — it *enhances*.** It brings no
+  vocabulary at all: it writes state classes/attributes onto markup that is
+  already there, and the look belongs to the consuming project.
+  `formValidation`, `inlineSVG`, `inputCharCount`, `scaleSVG`, `scrollSpy`,
+  `stickyObserver`, and the scripts behind `adaptiveScrollFade`,
+  `dateInputFormat`, `flexNeighborMarker`.
+
+Two supporting signals where the question feels balanced: a module usually
+manages a **collection or a region** (n panels, n images, n messages) while a
+component treats **one** host; and a component is what an unrelated feature
+would reuse verbatim.
+
+**`dialog` is a component**, and it is the one case the question does not
+decide — nothing hosts it, and it hosts arbitrary content itself. Three
+things settle it: it has **no footprint in the page flow** (invisible until a
+trigger opens it, so it occupies no region); it is the **same species as
+`popover` and `tooltip`** — trigger-invoked overlay surfaces — and splitting
+those three would be arbitrary; and it is pure system vocabulary, styled once
+and identical in every feature. `lightbox` and `toast` stay modules despite
+also being overlays: the lightbox owns a thumbnail gallery that really is in
+the page and manages a collection, and toast owns a once-per-page stack
+region plus its queue.
+
+### The folder is not the unit that carries the prefix
+
+A component folder is a **delivery unit**, not a role. `offCanvasNav` ships
+two blocks, and four folders are a function that happens to ship a ready-made
+look alongside it:
+
+| Folder               | Role     | What it ships                       |
+| -------------------- | -------- | ----------------------------------- |
+| `adaptiveScrollFade` | function | `c-scrollFade` — carries the mask   |
+| `dateInputFormat`    | function | `c-dateField*` — dresses the field  |
+| `flexNeighborMarker` | function | `o-flexNeighbor` — a layout object  |
+| `stickyObserver`     | function | `c-stickyBar` — the pinned look     |
+
+Each of those stylesheets said as much before the classification existed
+("styling only — a convenience look so the demo/snippet works out of the
+box"). The class is an offer; the function neither needs nor reads it.
+`m-offCanvasNavToggle` stays a module although it is a single control: it
+works only with `offCanvasNav` (it reads `data-offcanvasnav-open`), so it
+cannot be a `c-`.
+
+### Three independent axes
+
+Never read one of these off another:
+
+1. **Role** — module / component / function, decided by the question above.
+   This and only this is what the prefix states.
+2. **How much CSS ships** — a full vocabulary, state hooks only, or nothing.
+   `tabs` is unambiguously a module and ships only its pre-enhancement block;
+   `dataTable` is a component with ~690 lines. A component that leaves the
+   design to the project does not thereby become a function — a function is
+   one that has *no* vocabulary to leave.
+3. **Bundling** — core stylesheet vs. its own on-demand file (every component
+   here is on-demand).
+
+### "module" in the JS sense is a different word
+
+The loader and the snippets keep calling every chunk a *module*
+(`boot.min.js lazily loads the tooltip module`) — there it means the lazily
+imported ES module, not the `m-` role, which is exactly why the markup hook
+is called `data-js-behavior`. Where the CSS role is meant, say
+module / component / function; where the chunk is meant, "module" is right.
+
 ## Structure / Build
 
 - `_shared/js/registry.js` is **auto-generated by Gulp** — do not treat it as a manual source;

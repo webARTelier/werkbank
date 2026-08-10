@@ -12,7 +12,7 @@
 // Contract with the JS (readMore.js)
 //   - "data-readmore-body" marks the region that gets cut, and
 //     "data-readmore-toggle" the control that opens it. Behavioural
-//     attributes, not the m-* classes below: the script does not own this
+//     attributes, not the c-* classes below: the script does not own this
 //     file's class names.
 //   - "data-readmore-collapsed" on the root says the region is closed, and
 //     it is the only thing the module writes that paints anything.
@@ -81,7 +81,7 @@
 // component and a single instance can be retuned in place
 // (`style="--readMore-lines: 3"` on the root still wins over the defaults
 // below).
-.m-readMore {
+.c-readMore {
 
   // Animation maps to the shared animation tokens (see
   // _shared/scss/_foundations.scss).
@@ -228,7 +228,7 @@
   // same way an unresolvable --readMore-collapsed-size fails.
   @include pre-enhancement("data-readmore-ready") {
 
-    .m-readMore__body[id]:not(:target):not(:has(:target)):not(:focus-within) {
+    .c-readMore__body[id]:not(:target):not(:has(:target)):not(:focus-within) {
       max-block-size: var(--readMore-collapsed-size);
       mask-image: var(--readMore-fade-mask);
     }
@@ -342,7 +342,7 @@
 // -------------------------------------------------------------
 @include forced-colors {
 
-  .m-readMore {
+  .c-readMore {
     --readMore-fade-mask: none;
   }
 }
@@ -355,8 +355,8 @@
 // -------------------------------------------------------------
 @include reduced-motion {
 
-  .m-readMore__body,
-  .m-readMore__toggle::after {
+  .c-readMore__body,
+  .c-readMore__toggle::after {
     transition-duration: 0.01ms;
   }
 }
@@ -373,12 +373,12 @@
 // -------------------------------------------------------------
 @include print-only {
 
-  .m-readMore {
+  .c-readMore {
     --readMore-collapsed-size: none;
     --readMore-fade-mask: none;
   }
 
-  .m-readMore__toggle {
+  .c-readMore__toggle {
     display: none;
   }
 }

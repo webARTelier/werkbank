@@ -5,7 +5,7 @@
 // The block class sits on the box AROUND the table, because that box is the
 // only element the component adds to the markup: it is what scrolls when the
 // table is wider than the column it was put in. Everything inside it is
-// addressed by element, not by an "m-dataTable__*" class — the parts of a
+// addressed by element, not by a "c-dataTable__*" class — the parts of a
 // table are named by HTML (thead, th, caption), and asking an author to put
 // a class on every <td> would be asking for a second vocabulary for the
 // same thing. (A table nested inside a cell is out of scope; the cell rules
@@ -61,7 +61,7 @@
 
 
 
-.m-dataTable {
+.c-dataTable {
 
   // Keyboard focus ring: while the table is wider than this box and holds
   // nothing focusable, the module makes the box itself a tab stop so the
@@ -647,7 +647,7 @@
 // -------------------------------------------------------------
 @include forced-colors {
 
-  .m-dataTable [data-datatable-sortbutton]::after {
+  .c-dataTable [data-datatable-sortbutton]::after {
     background-color: CanvasText;
   }
 }
@@ -662,9 +662,9 @@
 // -------------------------------------------------------------
 @include reduced-motion {
 
-  .m-dataTable tbody tr,
-  .m-dataTable [data-datatable-sortbutton],
-  .m-dataTable [data-datatable-sortbutton]::after {
+  .c-dataTable tbody tr,
+  .c-dataTable [data-datatable-sortbutton],
+  .c-dataTable [data-datatable-sortbutton]::after {
     transition-duration: 0.01ms;
   }
 }
@@ -680,7 +680,7 @@
 // -------------------------------------------------------------
 @include print-only {
 
-  .m-dataTable {
+  .c-dataTable {
     overflow: visible;
     max-block-size: none;
 

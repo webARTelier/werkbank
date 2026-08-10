@@ -14,18 +14,18 @@ and without ever showing a "Read more" under a text that is already complete.
 
 ## Usage
 
-The **root** carries `class="m-readMore"` and `data-js-behavior="readMore"`. It
+The **root** carries `class="c-readMore"` and `data-js-behavior="readMore"`. It
 holds two things: the region that gets cut, and the control that opens it.
 
 ```html
-<div class="m-readMore" data-js-behavior="readMore">
+<div class="c-readMore" data-js-behavior="readMore">
 
-  <div class="m-readMore__body" data-readmore-body id="readMore-story">
+  <div class="c-readMore__body" data-readmore-body id="readMore-story">
     <p>…</p>
     <p>…</p>
   </div>
 
-  <a class="m-readMore__toggle" href="#readMore-story" data-readmore-toggle>
+  <a class="c-readMore__toggle" href="#readMore-story" data-readmore-toggle>
     Read more
   </a>
 </div>

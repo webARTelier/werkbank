@@ -17,10 +17,10 @@
        - Put data-js-behavior="flexNeighborMarker" on the flex container. Its
          direct children are the items; whenever an item is followed by a
          sibling in the SAME visual row it receives the class "has-neighbor".
-       - .m-flexNeighbor is an optional convenience: a wrapping flex row + gap
+       - .o-flexNeighbor is an optional convenience: a wrapping flex row + gap
          plus a default hairline divider between row-neighbours. Lay the
          container out however you like and restyle .has-neighbor to taste — the
-         script only toggles the class, it does not read .m-flexNeighbor.
+         script only toggles the class, it does not read .o-flexNeighbor.
 
   Notes
     - Pure progressive enhancement: without JavaScript the class is never added,
@@ -38,7 +38,7 @@
 
 
 <!-- Basic: the flex container is the module element -->
-<ul class="m-flexNeighbor" data-js-behavior="flexNeighborMarker">
+<ul class="o-flexNeighbor" data-js-behavior="flexNeighborMarker">
   <li>First</li>
   <li>Second</li>
   <li>Third</li>
@@ -51,12 +51,12 @@
 
 <!-- Advanced: one wrapper drives several flex containers -->
 <div data-js-behavior="flexNeighborMarker">
-  <ul class="m-flexNeighbor" data-neighbor-container>
+  <ul class="o-flexNeighbor" data-neighbor-container>
     <li>Group A · one</li>
     <li>Group A · two</li>
     <li>Group A · three</li>
   </ul>
-  <ul class="m-flexNeighbor" data-neighbor-container>
+  <ul class="o-flexNeighbor" data-neighbor-container>
     <li>Group B · one</li>
     <li>Group B · two</li>
     <li>Group B · three</li>
