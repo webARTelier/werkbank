@@ -153,6 +153,13 @@
 // the first paint. The resize handle goes with it unconditionally — nothing
 // has to arrive for the growing to work, so there is nothing the reader
 // could be left needing it for.
+//
+// Past the cap it would be inert anyway, which is worth knowing before
+// anyone offers it back: dragging a field writes an inline "height", and
+// max-block-size beats a height whatever the specificity (measured in
+// Chromium — "height: 347px" written to the field while its box stayed at
+// 144px; in WebKit the drag does not take at all). What keeps a capped
+// value reachable is the field's own scrolling, not the handle.
 @supports (field-sizing: content) {
 
   .c-autoGrowTextarea {

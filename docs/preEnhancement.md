@@ -269,6 +269,14 @@ sets the flag where it delivers and withholds it where it does not — its one
 bail-out (the module on something that is not a `<textarea>`) returns before
 the attribute is written.
 
+It is also the one component whose flag outlives a teardown, and the exception
+is worth stating rather than reading as an oversight: in the `field-sizing`
+lane `init()` returns before it has registered anything, so it returns no
+cleanup function and nothing takes the attribute off again. That is harmless
+here for the same reason the lane needs no cleanup — the only rule that reads
+the flag sits in the *other* lane's half of the stylesheet, and a second
+`init()` simply writes it once more.
+
 
 ## 5. What changed in the loader
 

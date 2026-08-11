@@ -136,6 +136,19 @@ asked in both languages; keep the two in sync when touching either file.
    difference — a scrollbar too early, not a loss. Lane 1 has none of this:
    the engine re-sizes on its own.
 
+**When lane 2 can go.** It exists for released engines that have no
+`field-sizing`: Safari before 26 and Firefox before 137 (Chromium has had it
+since 123). Once those are outside a project's support window, the whole lane
+can be deleted in one go — `autoGrowTextarea.js`, its entry in
+`build/config.js`, the `@supports not (…)` block in the stylesheet and the
+`data-js-behavior="autoGrowTextarea"` hook in the markup — and the component is
+the class alone, four declarations plus the token block. Nothing else in the
+collection reads any of it. The two lanes are verified to be the same field, so
+the deletion changes no rendering: measured over the demo's six fields in four
+states (empty, 8 lines, 40 lines past the cap, and the column narrowed to
+420px) with the lane forced by stubbing `CSS.supports`, every height came out
+pixel-identical.
+
 ## Accessibility
 - **Progressive enhancement.** In lane 1 there is nothing to enhance. In lane
   2 the field before (or without) the module is a plain textarea at its `rows`
@@ -144,7 +157,13 @@ asked in both languages; keep the two in sync when touching either file.
   unconditionally; in lane 2 only once the module is running
   (`data-autogrowtextarea-ready`), because until then dragging the field open
   is the reader's only way out of a value that does not fit — a chunk that
-  never arrives must not take that away.
+  never arrives must not take that away. Where growth *is* delivered, keeping
+  the handle would offer a way out that does not exist: dragging a field
+  writes an inline `height`, and `max-block-size` beats a height whatever the
+  specificity — measured in Chromium, `height: 347px` written to the field
+  while its box stayed at 144px; in WebKit the drag does not take at all. Past
+  the cap it is the field's own scrolling that keeps the value reachable, not
+  the handle.
 - **Nothing is announced and nothing is claimed.** The value is in the field
   either way and the only thing that changes is the size of the field's own
   box, so no ARIA is set and no state class is written. Every state the
@@ -193,8 +212,10 @@ authored: the `load` listener, the `reset` listener on the form and the
 observer are taken down, the measured length is dropped because it describes a
 value at a width the next render may not have, and the ready attribute goes
 too — which puts the resize handle back and is exactly the state a second
-`init()` expects to find. In lane 1 there is nothing to clean up and nothing
-is returned.
+`init()` expects to find. In lane 1 there is nothing to clean up and nothing is
+returned — which leaves the ready attribute standing on the field, harmlessly:
+the only rule that reads it is in lane 2's half of the stylesheet, and a second
+`init()` writes it again.
 
 `services.reporter` (dependency injection via `boot.js`) is **optional** — it
 is only used to warn about author mistakes (the module on something that is

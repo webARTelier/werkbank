@@ -108,11 +108,15 @@ import { rafThrottle } from './rafThrottle.js';
 
 const defaults = {
 
-  // "The module is running here." Set on the field by init() in both lanes,
-  // removed again by the cleanup function, and only ever written — never
-  // read back. The stylesheet drops the resize handle on it in the fallback
-  // lane: until the measuring is actually being done, dragging the field
-  // open is the reader's only way out of a value that does not fit.
+  // "The module is running here." Set on the field by init() in both lanes
+  // and only ever written — never read back. In the fallback lane the
+  // cleanup function takes it off again; in the native one init() returns
+  // before there is anything to clean up, so it stays for as long as the
+  // element does — which costs nothing, because the only rule that reads it
+  // is in the fallback lane's half of the stylesheet. That rule drops the
+  // field's resize handle: until the measuring is actually being done,
+  // dragging the field open is the reader's only way out of a value that
+  // does not fit.
   readyAttr: 'data-autogrowtextarea-ready',
 
   // The height of the value as a LENGTH, measured by this module and written
