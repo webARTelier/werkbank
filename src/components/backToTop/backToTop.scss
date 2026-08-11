@@ -102,15 +102,16 @@
     --backToTop-bg-color-hover: var(--color-bg-surface-strong);
     // Unlike the components that sit on a known surface, this one floats
     // over whatever the page happens to scroll past, so its outline is
-    // the only thing separating it from that content. The shared
-    // --color-border (12% white) reaches 1.99:1 against the page
-    // background — fine for a border that merely decorates a shape the
-    // text already identifies, thin for one doing the separating on its
-    // own. Mixed here to clear the 3:1 of WCAG 1.4.11 both ways: 4.23:1
-    // against the page background and 3.10:1 against the control's own
-    // fill (hover: 6.53:1 / 4.79:1).
-    --backToTop-border-color: color-mix(in srgb, var(--c-white) 35%, transparent);
-    --backToTop-border-color-hover: color-mix(in srgb, var(--c-white) 50%, transparent);
+    // the only thing separating it from that content — the control-boundary
+    // case of WCAG 1.4.11, which is what --color-border-control is for (see
+    // _shared/scss/_colors_semantic.scss; the quiet --color-border reaches
+    // only 1.32:1 here). Re-measured when the tokens were introduced, in
+    // Chromium and WebKit and by hand: 3.11:1 against the page background
+    // and 3.10:1 against this control's own fill (hover: 5.31:1 / 4.79:1).
+    // The earlier note here claimed 4.23:1 / 6.53:1 for the two page-
+    // background figures, which no calculation reproduces.
+    --backToTop-border-color: var(--color-border-control);
+    --backToTop-border-color-hover: var(--color-border-control-strong);
     --backToTop-shadow: 0 12px 24px -12px var(--color-shadow);
 
     // Transition of the two states. Maps to the shared motion tokens.

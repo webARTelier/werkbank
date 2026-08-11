@@ -38,8 +38,9 @@ component here is reusable and most can appear several times).
   `marquee`, `offCanvasNav`, `siteSearch`, `tabs`, `toast`, `video`.
 - **Component (`c-`) — it is *attached*.** It wraps, annotates or reinforces
   a host that is complete and usable without it: a full text (`readMore`), a
-  plain table (`dataTable`), a native field (`dateInputFormat`), a scrolling
-  box (`adaptiveScrollFade`), a control that needs explaining (`tooltip`,
+  plain table (`dataTable`), a native field (`dateInputFormat`), a field that
+  should follow its own value (`autoGrowTextarea`), a scrolling box
+  (`adaptiveScrollFade`), a control that needs explaining (`tooltip`,
   `popover`). It always presupposes something else, and it is the shared
   vocabulary of the design system — styled once, reused in unrelated
   features. A component never depends on one specific module.

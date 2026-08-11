@@ -1,0 +1,207 @@
+// =============================================================
+// autoGrowTextarea — a field as tall as what is written in it
+// =============================================================
+//
+// The component is one class, and it goes on the <textarea> itself: there is
+// nothing to wrap, because the box being sized is the field's own. What it
+// states is a policy — how few lines the field may be, how many it may grow
+// to, and that it scrolls past that — and the two blocks below say who
+// carries it out.
+//
+// Two lanes, one condition
+//   - "@supports (field-sizing: content)": the engine sizes the field to its
+//     value on its own, from the first paint, with no script involved at
+//     all. This is the component; autoGrowTextarea.js does nothing here (see
+//     its init()) and a reader with scripting off gets the whole feature.
+//   - "@supports not (field-sizing: content)": the module measures the value
+//     and hands the height over as a length. The condition mirrors the
+//     CSS.supports check in autoGrowTextarea.js — keep the two in sync, the
+//     way popover does for anchor positioning.
+//
+// Contract with the JS (autoGrowTextarea.js)
+//   - "--autoGrowTextarea-content-size" is the height of the value, measured
+//     on the field and written to it as a length, in the fallback lane only.
+//     It is the one thing the module puts in a style attribute, and it is a
+//     measurement, not a setting: only a measurement can answer how tall a
+//     text is at this width in the font that arrived. Do not set it by hand.
+//     Note that it is measured WITHOUT the cap — the clamps below are what
+//     apply it, so the length is the whole value's height either way (which
+//     is what the print block at the end relies on).
+//   - "data-autogrowtextarea-ready" says the module is running here. The
+//     fallback lane drops the resize handle on it and nothing else, because
+//     until the measuring is actually being done, dragging the field open is
+//     the reader's only way out of a value that does not fit — a chunk that
+//     never arrives must not take that away. The native lane needs no such
+//     qualifier: there the growth is in force at the first paint.
+//   - The module writes nothing else. There is no state class, no ARIA and
+//     no attribute for a state, because the field has none it did not have
+//     before: the value is in it, and the box is now the value's size.
+//
+// Three things worth knowing before touching this file
+//   - "field-sizing: content" cannot be told which axis it may act on. It
+//     sizes the field to its value in the INLINE direction as well — an empty
+//     field in normal flow comes out at cursor width (measured: 19px against
+//     180px without the component, in Chromium 151 and WebKit 26.5 alike),
+//     "cols" is ignored, and the box would widen and narrow while the reader
+//     types. That is why --autoGrowTextarea-inline-size is stated for both
+//     lanes: the block axis is what this component is about, and the width
+//     stays the container's, the way it is everywhere else in this
+//     collection.
+//   - "rows" is not the minimum in the native lane. An engine that sizes a
+//     field to its content ignores the attribute (verified in Chromium 151
+//     and WebKit 26.5: a rows="3" field is one row tall while empty), which
+//     is why the minimum is stated here in "lh". Keep the markup's rows
+//     matching --autoGrowTextarea-min-rows anyway: that IS the minimum in
+//     the fallback lane before the module has measured, and with scripting
+//     off it is the field, full stop.
+//   - The two clamps are lengths on the field's whole box, padding and
+//     border included, so a row count on a padded field is a box that many
+//     lines tall rather than that many lines of text.
+//     --autoGrowTextarea-box-extra is where a project states the difference
+//     (see the token block) — CSS cannot ask an element about its own
+//     padding, so it has to be told. Left at zero it costs a fraction of a
+//     line, never correctness.
+//     An engine that knows neither field-sizing nor the "lh" unit drops both
+//     clamps as invalid: before the module has measured the field is its
+//     markup's rows, and afterwards it follows the value with no minimum and
+//     no cap. Nothing is lost either way.
+//
+// Everything visible stays the project's: no colours, no border, no radius,
+// no focus ring (see the CLAUDE.md focus-ring convention, which is why
+// _focus.scss is not @used here). This file ships the mechanism, the way
+// marquee ships only its clipping row — a project could not write it later,
+// and it is structure rather than design. demo.html shows one worked design
+// around it.
+//
+// There is deliberately no transition on the height, and therefore no
+// reduced-motion block: the box has to be there when the caret arrives, and
+// an animated one would put the caret behind an edge that is still moving.
+
+@use "mediaqueries" as *;
+
+
+
+// The custom properties are the component's override surface. They live on
+// the component root — which here is the field itself — rather than in
+// :root, so they stay scoped to the component and a single instance can be
+// retuned in place (`style="--autoGrowTextarea-max-rows: 4"` on the field
+// still wins over the defaults below).
+.c-autoGrowTextarea {
+
+  // Sizing
+  //
+  // In lines, because that is the unit the decision is made in: "lh" is the
+  // height of one line box of this very field, so a change to the project's
+  // type scale is followed without a second decision. Override the whole
+  // length for a measure of another kind (--autoGrowTextarea-max-size: 20rem),
+  // or with "none" to let the field grow as far as its value goes.
+  --autoGrowTextarea-min-rows: 3;
+  --autoGrowTextarea-max-rows: 12;
+
+  // Everything of the field's box that is not a line of text: its block-axis
+  // padding plus its borders, both sides together. It is an input because
+  // CSS has no way of asking an element about its own padding, and the two
+  // clamps below are lengths on the whole box — so a padded field left at
+  // zero here shows slightly LESS than min-rows lines of text (a box three
+  // lines tall, of which the padding takes its share). State it and a row
+  // count means exactly that many rows:
+  //
+  //   .myField { --autoGrowTextarea-box-extra: calc(2 * 12px + 2px); }
+  //
+  // It has to be the same value in both lanes, which it is: the module
+  // measures the box the stylesheet leaves it, cap and minimum included.
+  --autoGrowTextarea-box-extra: 0px;
+
+  --autoGrowTextarea-min-size: calc(
+    var(--autoGrowTextarea-min-rows) * 1lh + var(--autoGrowTextarea-box-extra)
+  );
+  --autoGrowTextarea-max-size: calc(
+    var(--autoGrowTextarea-max-rows) * 1lh + var(--autoGrowTextarea-box-extra)
+  );
+
+  // The one thing on the other axis, and it is here because the platform
+  // leaves no choice: "field-sizing: content" sizes the field to its value
+  // in BOTH directions (see the header), so a field left to itself is as
+  // wide as its longest line and, while empty, as wide as the caret. A
+  // width has to be stated for that not to happen, and stating it in both
+  // lanes is what keeps them the same field: without it an engine without
+  // field-sizing shows the "cols" width where the others show this one.
+  // It is a default, not a claim on the axis — set a length of your own
+  // here, or let your own field styles carry it (a rule of the same weight
+  // declared after this stylesheet wins). Same box-sizing caveat as
+  // --autoGrowTextarea-box-extra above: under "content-box" a field at 100%
+  // overflows its container by its padding and border.
+  --autoGrowTextarea-inline-size: 100%;
+
+  inline-size: var(--autoGrowTextarea-inline-size);
+  min-block-size: var(--autoGrowTextarea-min-size);
+  max-block-size: var(--autoGrowTextarea-max-size);
+
+  // The cap is a maximum, not a lid: past it the field scrolls, so no part of
+  // the value is ever unreachable. This is the UA's own default for a
+  // textarea, restated because it is what makes the cap above survivable —
+  // and it is the state an engine that supports none of this leaves the field
+  // in anyway.
+  overflow-y: auto;
+}
+
+
+
+// ----- growth by the engine (field-sizing) -----
+// One declaration is the entire component here: the field sizes itself to
+// its value, on every keystroke, at every width, in the real font, and from
+// the first paint. The resize handle goes with it unconditionally — nothing
+// has to arrive for the growing to work, so there is nothing the reader
+// could be left needing it for.
+@supports (field-sizing: content) {
+
+  .c-autoGrowTextarea {
+    field-sizing: content;
+    resize: none;
+  }
+}
+
+
+
+// ----- growth by the module (measured length) -----
+// autoGrowTextarea.js measures the value and writes its height into the
+// custom property; this is the rule that applies it. Until it arrives (and
+// without JS at all) the field keeps the markup's rows and its scrollbar,
+// which is a working field — nothing is hidden, and that is what makes this
+// lane a pure enhancement.
+//
+// The clamps from the block above still apply: min-block-size and
+// max-block-size beat block-size whatever the specificity, so the minimum,
+// the cap and the scrolling past it are the same rules in both lanes.
+@supports not (field-sizing: content) {
+
+  .c-autoGrowTextarea {
+    block-size: var(--autoGrowTextarea-content-size, auto);
+  }
+
+
+
+  // Only once the module is actually doing the measuring — see the contract
+  // in the header. Before that, and if the chunk never arrives, the handle is
+  // the reader's way out of a value that does not fit.
+  .c-autoGrowTextarea[data-autogrowtextarea-ready] {
+    resize: none;
+  }
+}
+
+
+
+// -------------------------------------------------------------
+// Print: paper cannot scroll, so a capped field is one whose
+// last lines nobody can reach. Lifting the cap is a matter of
+// taking the length away — both lanes read it from the same
+// property, and the measured height in the fallback lane is the
+// whole value's (it is taken without the cap), so the field
+// prints as tall as what is in it.
+// -------------------------------------------------------------
+@include print-only {
+
+  .c-autoGrowTextarea {
+    --autoGrowTextarea-max-size: none;
+  }
+}

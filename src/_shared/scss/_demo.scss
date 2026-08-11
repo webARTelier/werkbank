@@ -103,6 +103,19 @@ body {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
+// Inline code in the explanatory prose — attribute names, custom properties,
+// whole data-js-behavior values. As far as line breaking goes these are
+// single unbreakable tokens, and .shell above deliberately lets its content
+// be wider than the panel, so at 320px one of them took the whole document
+// with it (measured on autoGrowTextarea's demo: 376px of scrollWidth in a
+// 320px viewport, WCAG 1.4.10). "anywhere" rather than "break-word" because
+// it also lowers the element's min-content width, which is what the reflow
+// needs: break-word alone leaves the intrinsic minimum at the longest token
+// and the page still scrolls sideways.
+code {
+  overflow-wrap: anywhere;
+}
+
 // Secondary explanatory text placed above a live example. Kept visually
 // subordinate (smaller + muted) so the example itself reads as the primary
 // level in the hierarchy.

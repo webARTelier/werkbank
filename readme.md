@@ -84,6 +84,7 @@ reads it. The full decision rule is in [`CLAUDE.md`](CLAUDE.md).
 | -------------------- | ----------------------------- | ------------------------------------------------------------------- |
 | `accordion`          | module                        | Expand/collapse panels on native `<details>`/`<summary>`.           |
 | `adaptiveScrollFade` | function (`c-scrollFade`)     | Fade-out edges on scrollable containers, only where overflow is.    |
+| `autoGrowTextarea`   | component                     | A `<textarea>` as tall as its value, on `field-sizing` where there is one. |
 | `backToTop`          | module                        | Jump back to the top, shown once the page is scrolled far enough.   |
 | `countdown`          | module                        | Live countdown to a target date/time.                               |
 | `dataTable`          | component                     | Sortable columns on a plain `<table>`, scrolling or stacked.        |

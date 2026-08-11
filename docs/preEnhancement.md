@@ -228,6 +228,7 @@ of them, and the wrong one for most.
 | `dropdownNav` | full nested list, then a bar with flyouts | documented opt-in | the disclosure buttons are injected by the script; nothing reopens a collapsed submenu without it |
 | `accordion` | none | not needed | `<details>` renders closed either way; its ready attribute only picks the animation |
 | `dataTable` | none | not needed | the table is complete and readable in its scrolling box either way, and the sort controls do not exist until the script builds them out of the header labels — its ready attribute switches the stacked layout *on* (see below) |
+| `autoGrowTextarea` | none | not needed | where the engine has `field-sizing` the growing is CSS from the first paint, so there is no gap at all; where it has not, the field is a plain textarea at its `rows` height with a scrollbar until the module has measured — additive, nothing hidden. Its ready attribute gates the resize handle *off* instead of lifting a pre-state (see below) |
 | `dialog`, `popover` | none | not needed | closed at rest, and the behaviour is native |
 | `lightbox` | none | not needed | the gallery is a list of links to the images either way; the viewer is closed at rest and does not exist in the markup at all — the script injects it |
 | `toast` | none | not needed | the stack is empty at rest, and a message authored into it is a static notice that simply keeps standing; the one control the component owns is injected, so it cannot exist before it works |
@@ -255,6 +256,18 @@ cells once they stop being table boxes. So the flag says "these are in place"
 withholds it on a bail, leaving the scrolling table that needs no script. Same
 attribute, same "only ever written" rule; what differs is which side of the
 condition the enhanced state sits on.
+
+`autoGrowTextarea` is the same inversion on a smaller subject, and it shows
+that the attribute is worth owning even where there is no pre-state to lift.
+Nothing about that component is hidden before `init()`, so it ships no block —
+but its stylesheet takes the field's **resize handle** away only where growth
+is actually being delivered: unconditionally in the lane where CSS does the
+growing (`field-sizing`), and on `[data-autogrowtextarea-ready]` in the lane
+where the module does. Otherwise a chunk that never arrived would leave a
+field that can neither grow nor be dragged open. Like `dataTable` it therefore
+sets the flag where it delivers and withholds it where it does not — its one
+bail-out (the module on something that is not a `<textarea>`) returns before
+the attribute is written.
 
 
 ## 5. What changed in the loader

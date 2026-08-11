@@ -33,6 +33,7 @@ module.exports = {
       // loaded by that component's demo.html alongside shared.min.css.
       p("src", "components", "accordion", "accordion.scss"),
       p("src", "components", "adaptiveScrollFade", "adaptiveScrollFade.scss"),
+      p("src", "components", "autoGrowTextarea", "autoGrowTextarea.scss"),
       p("src", "components", "backToTop", "backToTop.scss"),
       p("src", "components", "countdown", "countdown.scss"),
       p("src", "components", "dataTable", "dataTable.scss"),
@@ -74,6 +75,7 @@ module.exports = {
       // component modules
       accordion: p("src", "components", "accordion", "accordion.js"),
       adaptiveScrollFade: p("src", "components", "adaptiveScrollFade", "adaptiveScrollFade.js"),
+      autoGrowTextarea: p("src", "components", "autoGrowTextarea", "autoGrowTextarea.js"),
       backToTop: p("src", "components", "backToTop", "backToTop.js"),
       countdown: p("src", "components", "countdown", "countdown.js"),
       dataTable: p("src", "components", "dataTable", "dataTable.js"),

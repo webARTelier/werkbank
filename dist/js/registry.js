@@ -2,6 +2,7 @@
 export const registry = {
   accordion: () => import('./modules/accordion.min.js'),
   adaptiveScrollFade: () => import('./modules/adaptiveScrollFade.min.js'),
+  autoGrowTextarea: () => import('./modules/autoGrowTextarea.min.js'),
   backToTop: () => import('./modules/backToTop.min.js'),
   countdown: () => import('./modules/countdown.min.js'),
   dataTable: () => import('./modules/dataTable.min.js'),

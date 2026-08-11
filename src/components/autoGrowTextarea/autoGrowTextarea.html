@@ -1,0 +1,145 @@
+<!--
+  autoGrowTextarea — copy-paste snippet
+  ============================================================================
+  Copy the block(s) below into your own project.
+
+  1) In <head> (or before </body>): load the shared styles, this component's
+     stylesheet and the boot script. boot.min.js lazily loads the
+     autoGrowTextarea module as soon as it finds
+     data-js-behavior="autoGrowTextarea" in the DOM — you do not import
+     autoGrowTextarea.js yourself. Adjust the paths to where you serve /dist.
+
+       <link rel="stylesheet" href="/dist/css/shared.min.css" />
+       <link rel="stylesheet" href="/dist/css/autoGrowTextarea.min.css" />
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+  2) Put class="c-autoGrowTextarea" and data-js-behavior="autoGrowTextarea" on
+     EACH <textarea> that should follow its own value. The class carries the
+     component (it is the growing itself, not a look), the data attribute
+     boots the module. There is no wrapper and nothing is injected.
+
+  Wiring
+    - Both hooks go on the <textarea> itself, not a container. (Combine with
+      other modules via a comma: data-js-behavior="autoGrowTextarea,
+      inputCharCount".)
+    - Keep a rows attribute matching --autoGrowTextarea-min-rows. It is what
+      an engine without field-sizing shows until the module has measured, and
+      what a reader with scripting off keeps for good.
+    - Style the field as you style your other fields — border, padding,
+      colours, and its own :focus-visible ring. This component ships none of
+      that; it ships the box's behaviour (see Styling below).
+    - Code that sets textarea.value programmatically should dispatch an
+      input event afterwards (`field.dispatchEvent(new Event('input'))`) —
+      that is the signal the module listens for. A user's own typing,
+      pasting, cutting and undoing all fire it by themselves, and a form
+      reset is handled without it.
+    - Is the field an address? Then it takes autocomplete="street-address",
+      the one autocomplete token that expects a multi-line control — which
+      makes it the one case where WCAG 1.3.5 applies to a <textarea>. The
+      other tokens name single-line values and do not belong here.
+
+  Options (all of them are CSS, and all of them belong on the FIELD)
+    - --autoGrowTextarea-min-rows   how few lines the field may be (3)
+    - --autoGrowTextarea-max-rows   how many it may grow to (12); past that
+                                    the field scrolls, nothing is cut off
+    - --autoGrowTextarea-box-extra  the part of your field's box that is not
+                                    text: block-axis padding + borders, both
+                                    sides together (0px). CSS cannot ask an
+                                    element about its own padding, so state
+                                    it here and a row count means exactly
+                                    that many rows of text
+    - --autoGrowTextarea-inline-size  the field's width (100%). It is stated
+                                    because "field-sizing: content" sizes the
+                                    inline axis too: left to itself the field
+                                    is as wide as its longest line, and as
+                                    wide as the caret while it is empty
+    - --autoGrowTextarea-min-size   the same minimum as a length, if lines
+                                    are not the unit you think in
+                                    (calc(min-rows * 1lh + box-extra))
+    - --autoGrowTextarea-max-size   likewise; "none" lets the field grow as
+                                    far as its value goes
+                                    (calc(max-rows * 1lh + box-extra))
+
+    Not on an ancestor: the component declares every one of them on its own
+    root, and a declaration on the element beats an inherited value whatever
+    the ancestor's specificity is. So set them inline
+    (style="--autoGrowTextarea-max-rows: 4") or in a rule that hits the field
+    itself (.myField). A rule of yours has the same weight as the
+    component's, so it also has to be declared after
+    autoGrowTextarea.min.css — load your own stylesheet last, or reach for
+    the inline form.
+
+  Notes / progressive enhancement
+    - Where the engine has field-sizing — all three current ones do (verified
+      in Chromium 151, WebKit 26.5 and Firefox 153) — this component is CSS
+      only: the field grows from the first paint, with scripting on or off,
+      and the module does nothing at all. There is no gap to cover, so there
+      is no pre-enhancement state and nothing can flash.
+    - Where it does not, the module measures the value and hands the height
+      to the stylesheet. Until it arrives — and if the chunk never does —
+      the field is a plain textarea at its rows height with a scrollbar:
+      usable, and with nothing hidden. That is why the resize handle is only
+      dropped once the module is there (data-autogrowtextarea-ready), so a
+      reader is never left with a field that can neither grow nor be dragged
+      open.
+    - The two clamps are lengths on the field's whole box, padding and border
+      included, so a row count on a padded field is a box that many lines
+      tall. State --autoGrowTextarea-box-extra next to your own field styles
+      and it becomes that many lines of text:
+        .myField { padding: 8px 12px; border: 1px solid;
+                   --autoGrowTextarea-box-extra: calc(2 * 8px + 2px); }
+    - On paper the cap is lifted (the field prints as tall as its value),
+      because nobody can scroll a sheet of paper.
+    - The field grows DOWNWARDS, so check the cap against anything your page
+      pins to the bottom of the viewport. A field at 12 rows in a short
+      viewport reaches past the fold (measured: a lower edge at 411px in a
+      400px viewport), and behind a sticky bar that is WCAG 2.4.11 — the
+      focused control must not be obscured. The cap is what keeps this
+      bounded; lower it where a sticky element sits at the bottom.
+
+  Styling
+    - autoGrowTextarea.min.css ships the mechanism only: the two clamps, the
+      scrolling past the cap, field-sizing where the engine has it, the
+      resize handle, and the width (see --autoGrowTextarea-inline-size — an
+      engine that sizes a field to its content sizes it in both directions,
+      so a width has to be stated for the box not to follow the value
+      sideways as well). Everything visible is yours — including the
+      :focus-visible ring. demo.html shows one complete example design.
+-->
+
+
+
+<!-- The default: 3 lines to start with, growing to at most 12 -->
+<label class="myLabel" for="agt-message">Your message</label>
+<textarea
+  class="myField c-autoGrowTextarea"
+  id="agt-message"
+  name="message"
+  rows="3"
+  data-js-behavior="autoGrowTextarea"
+></textarea>
+
+
+<!-- Retuned per instance: two lines to start with, no cap at all -->
+<label class="myLabel" for="agt-note">Short note</label>
+<textarea
+  class="myField c-autoGrowTextarea"
+  id="agt-note"
+  name="note"
+  rows="2"
+  style="--autoGrowTextarea-min-rows: 2; --autoGrowTextarea-max-size: none"
+  data-js-behavior="autoGrowTextarea"
+></textarea>
+
+
+<!-- Together with the character counter: two modules on one field -->
+<label class="myLabel" for="agt-summary">Summary</label>
+<textarea
+  class="myField c-autoGrowTextarea"
+  id="agt-summary"
+  name="summary"
+  rows="3"
+  maxlength="280"
+  data-icc-countdown
+  data-js-behavior="autoGrowTextarea,inputCharCount"
+></textarea>

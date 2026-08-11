@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>autoGrowTextarea – Demo</title>
+  <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
+  <link rel="stylesheet" href="../../../dist/css/autoGrowTextarea.min.css" />
+  <link rel="stylesheet" href="../../../dist/css/inputCharCount.min.css" />
+  <script type="module" src="../../../dist/js/boot.min.js"></script>
+
+  <!-- for development only -->
+  <script type="module" src="../../../src/_shared/js/dev_pageInfo.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_a11yInspector.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_qrCode.js"></script>
+  <!-- end for development only -->
+
+  <!--
+      DEMO-ONLY STYLES
+      ----------------------------------------------------------------------
+      autoGrowTextarea.min.css ships the box's behaviour and nothing else:
+      the two clamps, the scrolling past the cap, field-sizing where the
+      engine has it, the resize handle, and the width — that last one
+      because field-sizing has no way of naming an axis and would make the
+      field as narrow as its value as well. Everything below is what a
+      project brings — the field's border, padding, colours, typography and
+      its focus ring — because a component that grows a field by its line
+      height does not get to decide what that line height is.
+
+      The one exception worth pointing at is .lane: which of the two lanes
+      this browser is in is decided by the same @supports condition the
+      component uses, so the note you read below is the truth about the
+      engine you are reading it in.
+  -->
+
+  <style>
+    .demo {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2xl);
+    }
+
+    .demo__example {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-s);
+    }
+
+    .demo__example h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      color: var(--color-text);
+    }
+
+    /* The project's field design. font/line-height matter here: the
+       component's clamps are counted in "lh", the line box of this field. */
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3xs);
+      max-width: 58ch;
+    }
+
+    .field__label {
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    .field__control {
+      /* The one thing the component cannot read off the field: how much of
+         its box is not text. Stated here, a row count means exactly that
+         many rows — 2 × 8px padding + 2 × 1px border. */
+      --autoGrowTextarea-box-extra: calc(2 * var(--space-2xs) + 2px);
+
+      /* --color-border-control, not --color-border: this field's fill sits
+         1.12:1 from the page, so the border is the only thing saying there
+         is something to type in — the 3:1 case of WCAG 1.4.11. Measured
+         here: 3.21:1 against this fill, where the quiet --color-border
+         reached 1.41:1. See _shared/scss/_colors_semantic.scss. */
+      border: 1px solid var(--color-border-control);
+      border-radius: var(--borderRadius);
+      padding: var(--space-2xs) var(--space-xs);
+
+      font: inherit;
+      line-height: 1.5;
+
+      color: var(--color-text);
+      background-color: var(--color-bg-surface);
+    }
+
+    .field__control:hover {
+      border-color: var(--color-border-control-strong);
+    }
+
+    .field__control:focus-visible {
+      outline: 2px solid var(--color-focus-ring-light);
+      outline-offset: var(--outlineOffset);
+    }
+
+    .field__hint {
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+    }
+
+    /* The character counter inputCharCount injects in the last example. */
+    .icc-counter {
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+    }
+
+    .is-atLimit + .icc-counter {
+      color: var(--color-accent-secondary);
+    }
+
+    /* A box the reader can drag narrower, to watch the height answer a
+       width change. Not part of the component — it is here to make the
+       ResizeObserver's job visible. */
+    .squeeze {
+      resize: horizontal;
+      overflow: auto;
+      padding: var(--space-2xs);
+
+      /* The reader is asked to drag this box, so its outline is a control
+         boundary too (WCAG 1.4.11) — the .lane note below keeps the quiet
+         --color-border, because nothing there is operable. */
+      border: 1px dashed var(--color-border-control);
+      border-radius: var(--borderRadius);
+      inline-size: min(100%, 46ch);
+      min-inline-size: 18ch;
+      max-inline-size: 100%;
+    }
+
+    .squeeze .field {
+      max-width: none;
+    }
+
+    .actions {
+      display: flex;
+      gap: var(--space-2xs);
+    }
+
+    .actions button {
+      cursor: pointer;
+
+      /* Same reason as the field: a transparent fill leaves the border
+         doing the identifying (WCAG 1.4.11). */
+      border: 1px solid var(--color-border-control);
+      border-radius: var(--borderRadius);
+      padding: var(--space-3xs) var(--space-s);
+
+      font: inherit;
+      font-weight: 600;
+
+      color: var(--color-text);
+      background-color: transparent;
+    }
+
+    .actions button:focus-visible {
+      outline: 2px solid var(--color-focus-ring-light);
+      outline-offset: var(--outlineOffset);
+    }
+
+    /* Which lane is this browser in? Decided by the same @supports
+       condition the component asks — the fallback note is the default, and
+       an engine with field-sizing swaps the two. */
+    .lane {
+      margin: 0 0 var(--space-l);
+      padding: var(--space-xs) var(--space-s);
+      border: 1px solid var(--color-border);
+      border-radius: var(--borderRadius);
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: var(--color-text-secondary);
+    }
+
+    .lane--native {
+      display: none;
+    }
+
+    @supports (field-sizing: content) {
+      .lane--native {
+        display: block;
+      }
+
+      .lane--fallback {
+        display: none;
+      }
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <main class="shell">
+
+    <section class="hero">
+      <a class="back" href="../../../index.html">← Overview</a>
+      <h1>autoGrowTextarea</h1>
+      <p>A textarea that is as tall as what is written in it — no half-empty box, no inner scrollbar until it has to be one.</p>
+    </section>
+
+    <section class="stage" aria-label="Live demo">
+
+      <!--
+          A field that follows its own value. The platform has one
+          declaration for it, and this component is that declaration plus
+          the fallback for the engines without it.
+
+          Wiring
+            - class="c-autoGrowTextarea" carries the component and
+              data-js-behavior="autoGrowTextarea" boots the module — both on
+              the <textarea> itself. No wrapper, nothing injected.
+            - rows in the markup matches --autoGrowTextarea-min-rows: it is
+              the field until the module has measured, and with scripting
+              off it is the field for good.
+            - --autoGrowTextarea-min-rows / --autoGrowTextarea-max-rows are
+              the whole configuration, and they are CSS, because how tall a
+              box may be is a question about a box. Set the *-size lengths
+              instead where lines are not the unit you think in ("none" for
+              the cap lets the field grow as far as its value goes).
+            - The look — border, padding, colours, focus ring — is the
+              project's; see DEMO-ONLY STYLES in the head.
+
+          Progressive enhancement
+            - Where the engine has field-sizing, the growing is pure CSS: it
+              works at the first paint and with scripting off, and the
+              module does nothing at all. Nothing can flash, so there is no
+              pre-enhancement state.
+            - Where it does not, the module measures the value and hands the
+              height over as a length. Until then the field is a plain
+              textarea at its rows height with a scrollbar — usable, with
+              nothing hidden, which is what makes this a pure enhancement.
+            - Which is why the resize handle is only dropped once the module
+              is running (data-autogrowtextarea-ready): a chunk that never
+              arrives must not leave a field that can neither grow nor be
+              dragged open. Turn JavaScript off and try it.
+
+          Accessibility
+            - There is nothing to announce and nothing to hide: the value is
+              in the field either way, and the only thing that changes is
+              the size of the field's own box. No ARIA, no state class.
+            - The cap is a maximum, not a lid — past it the field scrolls,
+              so no part of a value is ever unreachable (example 3).
+            - The growth is not animated on purpose: the box has to be there
+              when the caret arrives.
+        -->
+
+      <p class="lane lane--native">
+        <strong>This engine sizes the field itself.</strong> It has
+        <code>field-sizing: content</code>, so everything below is CSS —
+        <code>autoGrowTextarea.js</code> sets its ready attribute and returns
+        without registering a single listener. Switch scripting off and
+        nothing changes.
+      </p>
+
+      <p class="lane lane--fallback">
+        <strong>This engine needs the module.</strong> It has no
+        <code>field-sizing: content</code>, so
+        <code>autoGrowTextarea.js</code> measures each value and hands the
+        height to the stylesheet as a length. Switch scripting off and the
+        fields stay at their <code>rows</code> height, with a scrollbar and a
+        resize handle.
+      </p>
+
+      <div class="demo">
+
+        <section class="demo__example">
+          <h2>The default: three lines, growing to twelve</h2>
+
+          <p class="stage__intro">
+            <strong>Type into it.</strong> The field starts at three lines —
+            the same three its <code>rows</code> attribute states, so the
+            first paint is already right — and follows the value line by
+            line up to twelve. The count is in <code>lh</code>, the height of
+            one line box of <em>this</em> field, so it follows the page's
+            typography instead of a number somebody guessed.
+          </p>
+
+          <div class="field">
+            <label class="field__label" for="agt-message">Your message</label>
+            <textarea
+              class="field__control c-autoGrowTextarea"
+              id="agt-message"
+              name="message"
+              rows="3"
+              data-js-behavior="autoGrowTextarea"
+            ></textarea>
+            <p class="field__hint">Three lines to start with, twelve at most.</p>
+          </div>
+        </section>
+
+        <section class="demo__example">
+          <h2>A value that is already there</h2>
+
+          <p class="stage__intro">
+            The same field, rendered with a value in it — a draft loaded from
+            a CMS, a form coming back from a failed validation. It is
+            <strong>the right height on arrival</strong>: in this engine's
+            lane either the stylesheet had it from the first paint, or the
+            module measured it in its constructor, before any frame it could
+            have been seen in.
+          </p>
+
+          <div class="field">
+            <label class="field__label" for="agt-draft">Saved draft</label>
+            <textarea
+              class="field__control c-autoGrowTextarea"
+              id="agt-draft"
+              name="draft"
+              rows="3"
+              data-js-behavior="autoGrowTextarea"
+            >The plates were carried down the ridge on foot, because the postal service had twice ruled that the road up to the observatory was not a road. Eleven years of weekly exposures went down that path in a wooden case, and the only complaint anyone recorded about the arrangement was that the case was the wrong shape for a mule.
+
+What the series eventually showed was one faint point of light that moved. Nobody was looking for it, and the man who had ordered the photographs stopped them four years before there was enough of them to prove anything.</textarea>
+          </div>
+        </section>
+
+        <section class="demo__example">
+          <h2>A tighter cap: one line, at most five</h2>
+
+          <p class="stage__intro">
+            <code>--autoGrowTextarea-min-rows: 1</code> and
+            <code>--autoGrowTextarea-max-rows: 5</code>, set on this one
+            instance. It starts as a single line and stops growing at five —
+            and then <strong>scrolls</strong>, because the cap is a maximum
+            and not a lid: keep typing and every line stays reachable. A
+            field that grew without limit would push the button below it off
+            the screen instead.
+          </p>
+
+          <div class="field">
+            <label class="field__label" for="agt-comment">Add a comment</label>
+            <textarea
+              class="field__control c-autoGrowTextarea"
+              id="agt-comment"
+              name="comment"
+              rows="1"
+              style="--autoGrowTextarea-min-rows: 1; --autoGrowTextarea-max-rows: 5"
+              data-js-behavior="autoGrowTextarea"
+            ></textarea>
+          </div>
+        </section>
+
+        <section class="demo__example">
+          <h2>No cap, and a column that changes width</h2>
+
+          <p class="stage__intro">
+            <code>--autoGrowTextarea-max-size: none</code> takes the cap off
+            entirely. <strong>Drag the dashed box narrower</strong> by its
+            bottom-right corner: the value rewraps into more lines and the
+            field gets taller, because how tall a text is was never a
+            property of the text. In the module's lane that is what the
+            <code>ResizeObserver</code> is for — the field's own width is the
+            signal, not the window's.
+          </p>
+
+          <div class="squeeze">
+            <div class="field">
+              <label class="field__label" for="agt-wide">Notes</label>
+              <textarea
+                class="field__control c-autoGrowTextarea"
+                id="agt-wide"
+                name="notes"
+                rows="3"
+                style="--autoGrowTextarea-max-size: none"
+                data-js-behavior="autoGrowTextarea"
+              >The catalogue was typed in 1962 and photocopied so often that the descenders on the lower half of every page have closed up into a grey line. The digitised version reproduces the grey line faithfully, which nobody has ever explained.</textarea>
+            </div>
+          </div>
+        </section>
+
+        <section class="demo__example">
+          <h2>Inside a form: resetting the value</h2>
+
+          <p class="stage__intro">
+            A form reset puts the authored value back
+            <strong>without firing an input event</strong> — the one value
+            change the module cannot hear. So it listens for
+            <code>reset</code> on the form itself and measures again on the
+            next frame. Type something, then press Reset: the field returns
+            to the draft above <em>and</em> to that draft's height.
+          </p>
+
+          <form class="field" action="javascript:;">
+            <label class="field__label" for="agt-form">Reply</label>
+            <textarea
+              class="field__control c-autoGrowTextarea"
+              id="agt-form"
+              name="reply"
+              rows="3"
+              data-js-behavior="autoGrowTextarea"
+            >Two lines of a reply that was already in the form when the page arrived.
+The second one is here to make the reset visible.</textarea>
+            <div class="actions">
+              <button type="reset">Reset</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="demo__example">
+          <h2>Two modules on one field</h2>
+
+          <p class="stage__intro">
+            <code>data-js-behavior="autoGrowTextarea,inputCharCount"</code> —
+            the loader runs both, in source order, on the same element. The
+            counter counts down from the native <code>maxlength</code>, the
+            box follows the value, and neither knows about the other:
+            <strong>one behaviour per module, composed in the markup</strong>.
+          </p>
+
+          <div class="field">
+            <label class="field__label" for="agt-summary">Summary</label>
+            <textarea
+              class="field__control c-autoGrowTextarea"
+              id="agt-summary"
+              name="summary"
+              rows="3"
+              maxlength="280"
+              data-icc-countdown
+              data-js-behavior="autoGrowTextarea,inputCharCount"
+            ></textarea>
+          </div>
+        </section>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</body>
+</html>

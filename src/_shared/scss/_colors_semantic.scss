@@ -16,9 +16,34 @@
   --color-text-on-accent: var(--c-white);
 
   // Borders
+  // The three below decorate a shape that something else already identifies —
+  // a panel, a divider, a table rule. 12% white reaches 1.99:1 against the
+  // page background, which is right for that job and deliberately quiet.
   --color-border: color-mix(in srgb, var(--c-white) 12%, transparent);
   --color-border-subtle: color-mix(in srgb, var(--c-white) 8%, transparent);
   --color-border-strong: color-mix(in srgb, var(--c-white) 20%, transparent);
+
+  // The boundary of a CONTROL, where the border is the only thing saying
+  // that there is something to operate: a text field, a select, an outlined
+  // button. WCAG 1.4.11 asks for 3:1 there, and against these dark surfaces
+  // the quiet tokens above cannot deliver it — a field whose fill sits
+  // 1.12:1 from the page is identified by its border alone.
+  //
+  // Measured against the three surfaces a control sits on in this theme
+  // (--color-bg / -surface / -bg-elevated), computed and confirmed in
+  // Chromium and WebKit:
+  //   35%: 3.11 / 3.21 / 3.10   — clears 3:1 on all three, by about 0.1
+  //   50%: 5.31 / 5.23 / 4.79   — the emphasis tone (hover, active)
+  // The margin on the base tone is deliberately thin: it is the quietest
+  // border that still passes. Do not lower it, and re-measure before
+  // introducing a surface lighter than --color-bg-elevated.
+  //
+  // Pick these by the element's ROLE, not by preference: a border that
+  // merely draws a box keeps --color-border.
+  --color-border-control: color-mix(in srgb, var(--c-white) 35%, transparent);
+  --color-border-control-strong: color-mix(
+    in srgb, var(--c-white) 50%, transparent
+  );
 
   // Accents
   --color-accent: var(--c-violet-600);
