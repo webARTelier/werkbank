@@ -6,44 +6,43 @@
 // only element the component adds to the markup: it is what scrolls when the
 // table is wider than the column it was put in. Everything inside it is
 // addressed by element, not by a "c-dataTable__*" class — the parts of a
-// table are named by HTML (thead, th, caption), and asking an author to put
-// a class on every <td> would be asking for a second vocabulary for the
-// same thing. (A table nested inside a cell is out of scope; the cell rules
-// below would reach it.)
+// table are named by HTML (thead, th, caption), and asking an author to put a
+// class on every <td> would be asking for a second vocabulary for the same
+// thing. (A table nested inside a cell is out of scope; the cell rules below
+// would reach it.)
 //
 // Contract with the JS (dataTable.js)
 //   - "data-datatable-sortbutton" marks the control the module moves each
-//     sortable header's content into. Addressed by attribute rather than by
-//     a class for the same reason toast addresses its injected dismiss
-//     control that way: the script does not own this file's class names.
+//     sortable header's content into. Addressed by attribute rather than by a
+//     class for the same reason toast addresses its injected dismiss control
+//     that way: the script does not own this file's class names.
 //   - "aria-sort" on a header cell is the sort state AND the styling hook —
 //     it is what assistive tech reads, so there is no second state class to
-//     keep in step with it. It picks the direction indicator below. Every
-//     sortable header carries it: "none" until it is the sorted one, which
-//     is how a screen reader learns the column offers sorting at all. So
-//     the active rules below key off the two DIRECTION values, never off
-//     the presence of the attribute.
+//     keep in step with it, and it picks the direction indicator below. Every
+//     sortable header carries it: "none" until it is the sorted one, which is
+//     how a screen reader learns the column offers sorting at all. So the
+//     active rules below key off the two DIRECTION values, never off the
+//     attribute's presence.
 //   - "data-datatable-status" is the injected live region the module
 //     announces a sort through. Its one rule here — visually hidden — is an
-//     accessibility necessity, not a design choice (same case as
-//     inputCharCount's status region).
+//     accessibility necessity, not a design choice (as with inputCharCount's
+//     status region).
 //   - "--dataTable-sticky-head-block-size" and
 //     "--dataTable-sticky-column-inline-size" are measured by the module on
-//     every resize and written to the root. They are the depth of the two
-//     frozen edges, and the sticky modifiers below turn them into
-//     scroll-padding so the browser stops parking a focused control
-//     underneath them (WCAG 2.4.11). The module writes them unconditionally
-//     and knows nothing about the modifier classes — which of the two edges
-//     is actually frozen is answered here.
+//     every resize and written to the root: the depth of the two frozen
+//     edges. The sticky modifiers below turn them into scroll-padding so the
+//     browser stops parking a focused control underneath them (WCAG 2.4.11).
+//     The module writes them unconditionally and knows nothing about the
+//     modifier classes — which edge is actually frozen is answered here.
 //   - "data-datatable-ready" says the module has been here. Note the
-//     direction: the stacked layout at the bottom of this file is switched
-//     ON by its presence, not lifted by it (the usual case, see
-//     docs/preEnhancement.md) — because that layout needs two things only
-//     the script can write, the cell labels and the explicit roles. Without
-//     the script, or when it bails, the table stays the scrolling one, which
-//     is fully usable at every width.
+//     direction: the stacked layout at the bottom of this file is switched ON
+//     by its presence, not lifted by it (the usual case, see
+//     docs/preEnhancement.md) — because that layout needs two things only the
+//     script can write, the cell labels and the explicit roles. Without the
+//     script, or when it bails, the table stays the scrolling one, fully
+//     usable at every width.
 //   - Beyond those two custom properties the script writes attributes only:
-//     nothing it sets paints, and nothing it sets changes a layout.
+//     nothing it sets paints, nothing it sets changes a layout.
 //
 // Two knobs are worth knowing before touching this file:
 //   - --dataTable-max-block-size is what makes --stickyHead do anything. A
@@ -63,38 +62,36 @@
 
 .c-dataTable {
 
-  // Keyboard focus ring: while the table is wider than this box and holds
-  // nothing focusable, the module makes the box itself a tab stop so the
-  // arrow keys can scroll it (see dataTable.js) — so it has to be able to
-  // show where focus is. The box on a dark surface -> the light ring.
+  // While the table is wider than this box and holds nothing focusable, the
+  // module makes the box itself a tab stop so the arrow keys can scroll it
+  // (see dataTable.js) — so it has to show where focus is. Dark surface ->
+  // light.
   @include focus-ring(light);
 
   & {
 
-    // Animation maps to the shared animation tokens (see
-    // _shared/scss/_foundations.scss). The only thing that moves here is a
-    // colour under the pointer, so the duration is a fraction of the shared
-    // one: a row that takes half a second to acknowledge the pointer feels
-    // slower than one that does not react at all.
+    // Animation (shared tokens, _shared/scss/_foundations.scss). The only
+    // thing that moves here is a colour under the pointer, so the duration is
+    // a fraction of the shared one: a row taking half a second to acknowledge
+    // the pointer feels slower than one that does not react at all.
     --dataTable-duration: calc(var(--an-duration) * 0.3);
     --dataTable-easing: var(--an-ease);
 
     // Sizing
     //
-    // The height is uncapped by default: a table is as tall as its data.
-    // Cap it to scroll the rows inside the box — which is also the
-    // precondition for --stickyHead (see the header note).
+    // The height is uncapped by default: a table is as tall as its data. Cap
+    // it to scroll the rows inside the box — also the precondition for
+    // --stickyHead (see the header note).
     --dataTable-max-block-size: none;
     --dataTable-radius: var(--borderRadius);
     --dataTable-border-width: 1px;
 
-    // The narrowest a column may get before the table gives up squeezing
-    // and starts to overflow instead. This is what makes the box scroll
-    // rather than shrink every column into a two-character stack.
+    // The narrowest a column may get before the table stops squeezing and
+    // overflows instead — what makes the box scroll rather than shrink every
+    // column into a two-character stack.
     --dataTable-cell-min-inline-size: 6ch;
 
-    // Spacing maps to the shared spacing scale (see
-    // _shared/scss/_foundations.scss).
+    // Spacing (shared scale, _shared/scss/_foundations.scss)
     --dataTable-cell-padding-block: var(--space-2xs);
     --dataTable-cell-padding-inline: var(--space-s);
     --dataTable-caption-padding: var(--space-2xs) var(--space-s);
@@ -108,16 +105,14 @@
     --dataTable-head-white-space: nowrap; // keep a column label on one line
 
     // Figures in a column line up under each other, which is most of what
-    // makes a numeric column readable. Set it to "normal" for a table of
-    // text.
+    // makes a numeric column readable. "normal" for a table of text.
     --dataTable-numeric: tabular-nums;
 
-    // Colors map to the shared semantic tokens (see
-    // _shared/scss/_colors_semantic.scss).
+    // Colors (shared semantic tokens, _shared/scss/_colors_semantic.scss).
     //
     // The three row colours are opaque on purpose (see the header note):
-    // --stickyColumn copies whichever one a row has onto the frozen cell so
-    // it covers the columns scrolling under it.
+    // --stickyColumn copies whichever one a row has onto the frozen cell so it
+    // covers the columns scrolling under it.
     --dataTable-text-color: var(--color-text);
     --dataTable-muted-color: var(--color-text-muted);
     --dataTable-border-color: var(--color-border);
@@ -132,20 +127,18 @@
       var(--color-bg-elevated)
     );
 
-    // The direction indicator: muted while a column only offers sorting,
-    // in the accent once it is the column the table is sorted by.
+    // The direction indicator: muted while a column only offers sorting, in
+    // the accent once it is the column the table is sorted by.
     --dataTable-sort-color: var(--dataTable-muted-color);
     --dataTable-sort-color-active: var(--color-accent-secondary);
 
-    // The indicator's three shapes, as masks rather than background images:
-    // a mask takes its colour from this element, so one shape follows the
-    // state's colour and survives a forced-colors context (see the block at
-    // the end of the file). Drawn from the same 24x24 grid as
-    // src/_shared/media/img/icons/.
-    // In em, so the indicator scales with the header label rather than
-    // needing a second decision — and just over 1em, because the label is
-    // the smallest type in the component and a chevron drawn at 9px reads as
-    // a dot.
+    // The indicator's three shapes, as masks rather than background images: a
+    // mask takes its colour from this element, so one shape follows the
+    // state's colour and survives a forced-colors context (see the end of
+    // this file). Drawn from the same 24x24 grid as
+    // src/_shared/media/img/icons/. In em, so the indicator scales with the
+    // header label — and just over 1em, because that label is the smallest
+    // type here and a chevron at 9px reads as a dot.
     --dataTable-sort-icon-size: 1.15em;
     --dataTable-sort-icon-unsorted: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 9 5-5 5 5M7 15l5 5 5-5'/%3E%3C/svg%3E");
     --dataTable-sort-icon-ascending: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 14.5 6-6 6 6'/%3E%3C/svg%3E");
@@ -162,10 +155,10 @@
     --dataTable-stack-chip-padding: var(--space-3xs) var(--space-2xs);
 
     // The scroll box. "overflow: auto" and not "overflow-x", although the
-    // inline axis is the point: a box that is scrollable on one axis cannot
-    // stay "visible" on the other (the value computes to auto), so writing
-    // both is the honest version of what the browser does anyway — and the
-    // block axis is what --dataTable-max-block-size then scrolls.
+    // inline axis is the point: a box scrollable on one axis cannot stay
+    // "visible" on the other (the value computes to auto), so writing both is
+    // the honest version of what the browser does anyway — and the block axis
+    // is what --dataTable-max-block-size then scrolls.
     overflow: auto;
     max-block-size: var(--dataTable-max-block-size);
 
@@ -182,16 +175,15 @@
 
 
 
-  // The table fills the box and only overflows it once its columns cannot
-  // get any narrower (see --dataTable-cell-min-inline-size) — the point at
-  // which scrolling sideways beats squeezing.
+  // The table fills the box and only overflows it once its columns cannot get
+  // any narrower (see --dataTable-cell-min-inline-size) — the point at which
+  // scrolling sideways beats squeezing.
   & > table {
     inline-size: 100%;
 
-    // Separate borders, spacing zero: a collapsed border belongs to the
-    // table rather than to the cell, so a sticky cell scrolls away from the
-    // line that should stay with it. The row rules below are therefore
-    // drawn per cell.
+    // Separate borders, spacing zero: a collapsed border belongs to the table
+    // rather than the cell, so a sticky cell scrolls away from the line that
+    // should stay with it. Hence the row rules below are drawn per cell.
     border-collapse: separate;
     border-spacing: 0;
   }
@@ -216,8 +208,8 @@
     padding: var(--dataTable-cell-padding-block) var(--dataTable-cell-padding-inline);
     min-inline-size: var(--dataTable-cell-min-inline-size);
 
-    // The browser centres a <th> and bottom-aligns nothing in particular;
-    // a column of values reads as a column when it starts on one line.
+    // The browser centres a <th> and bottom-aligns nothing in particular; a
+    // column of values reads as a column when it starts on one line.
     text-align: start;
     vertical-align: baseline;
 
@@ -226,7 +218,7 @@
 
 
 
-  // The colour sits on the ROW, not on the cells: --stickyColumn inherits it
+  // The colour sits on the ROW, not the cells: --stickyColumn inherits it
   // onto the frozen cell, and a colour declared per cell could not be
   // inherited.
   & thead tr {
@@ -245,12 +237,11 @@
 
 
 
-  // A header that holds a sort control hands its padding to that control
-  // (see the block below). The cell keeps the same box either way — the
-  // padding only changes owner — but the control grows from a line of text
-  // to the full cell, which is the difference between an 18px-high click
-  // target and one that clears the 24px of WCAG 2.5.8 on its own rather
-  // than through the spacing exception.
+  // A header holding a sort control hands its padding to that control (see
+  // the block below). The cell keeps the same box — the padding only changes
+  // owner — but the control grows from a line of text to the full cell: the
+  // difference between an 18px-high target and one that clears the 24px of
+  // WCAG 2.5.8 on its own rather than through the spacing exception.
   & thead th:has([data-datatable-sortbutton]) {
     padding: 0;
   }
@@ -274,8 +265,8 @@
 
 
 
-  // A row header is the name of its row, so it carries the weight the
-  // reader needs to find it again after a sort moved it.
+  // A row header is the name of its row, so it carries the weight the reader
+  // needs to find it again after a sort moved it.
   & tbody th {
     color: var(--dataTable-text-color);
     font-weight: 600;
@@ -285,7 +276,7 @@
 
   // The last row needs no rule of its own — the box's border is right
   // underneath it. Scoped to a tbody that is the table's last child, so a
-  // <tfoot> below keeps the line that separates it.
+  // <tfoot> below keeps the line separating it.
   & tbody:last-child tr:last-child :is(th, td) {
     border-block-end-width: 0;
   }
@@ -296,15 +287,15 @@
   //
   // Injected by the module around the header's own content, so the column
   // label is the control's name. Everything here is a reset plus the
-  // indicator: the button has to look like the header it replaced, not like
-  // a button.
+  // indicator: the button has to look like the header it replaced, not like a
+  // button.
   & [data-datatable-sortbutton] {
 
     // An inset ring, not the default outset one: the control now fills its
     // header cell, so an outline drawn outside it would be cut off by the
     // scroll box at the first and the last column — the two places a wide
-    // table is most likely to be scrolled to. Same reason
-    // adaptiveScrollFade passes a negative offset.
+    // table is most likely to be scrolled to. Same reason adaptiveScrollFade
+    // passes a negative offset.
     @include focus-ring(light, -2px);
 
     & {
@@ -325,8 +316,7 @@
       gap: var(--dataTable-sort-gap);
 
       // Everything typographic comes from the header cell, including the
-      // letter-spacing and the uppercasing, which "font: inherit" does not
-      // cover.
+      // letter-spacing and uppercasing "font: inherit" does not cover.
       font: inherit;
       letter-spacing: inherit;
       text-transform: inherit;
@@ -341,8 +331,8 @@
 
 
     // The direction indicator. A pseudo-element, so it adds nothing to the
-    // accessibility tree — what it shows is in aria-sort on the header,
-    // which is where assistive tech reads it.
+    // accessibility tree — what it shows is in aria-sort on the header, where
+    // assistive tech reads it.
     &::after {
       content: '';
 
@@ -372,11 +362,11 @@
 
 
 
-  // The sorted column, in three of its own properties. aria-sort is both the
-  // state and the hook, so the indicator cannot disagree with what a screen
-  // reader announces. Matched on the two direction values rather than on the
-  // attribute itself: every sortable header carries aria-sort, and the third
-  // value it can hold — "none" — is precisely the unsorted state.
+  // The sorted column, in three of its own properties. aria-sort is both
+  // state and hook, so the indicator cannot disagree with what a screen
+  // reader announces. Matched on the two direction values rather than the
+  // attribute itself: every sortable header carries aria-sort, and its third
+  // value — "none" — is precisely the unsorted state.
   & th:is([aria-sort='ascending'], [aria-sort='descending']) {
 
     & [data-datatable-sortbutton] {
@@ -404,13 +394,13 @@
 
   // ----- the sort announcement -----
   //
-  // The injected live region (see the contract at the top). It exists only
-  // to be read out, so it is taken out of the visual layout — not hidden:
+  // The injected live region (see the contract at the top). It exists only to
+  // be read out, so it leaves the visual layout — but is not hidden:
   // "display: none" and "visibility: hidden" would take it out of the
   // accessibility tree too, and a live region nothing can observe announces
-  // nothing. This is the one rule in this file that is an accessibility
-  // necessity rather than a design decision, which is why it ships even
-  // though the module injects the element (same case as inputCharCount).
+  // nothing. The one rule in this file that is an accessibility necessity
+  // rather than a design decision, which is why it ships even though the
+  // module injects the element (as with inputCharCount).
   & [data-datatable-status] {
     @include visually-hidden;
   }
@@ -419,17 +409,17 @@
 
   // ----- the header stays in view -----
   //
-  // Only does something when the box has a height to scroll inside: a
-  // sticky cell sticks within its own scroll container, and that is this
-  // box, not the page. Set --dataTable-max-block-size along with it.
+  // Only does something when the box has a height to scroll inside: a sticky
+  // cell sticks within its own scroll container, and that is this box, not
+  // the page. Set --dataTable-max-block-size along with it.
   &--stickyHead {
 
-    // Where a focused control has to land for the frozen header not to be
-    // on top of it. The browser scrolls a control just inside the box and
-    // knows nothing about what is stuck to that edge, so without this a
-    // keyboard user can end up on a control they cannot see (WCAG 2.4.11).
-    // The length is measured by the module; the fallback keeps the
-    // declaration harmless before the first measurement and without it.
+    // Where a focused control has to land for the frozen header not to be on
+    // top of it. The browser scrolls a control just inside the box and knows
+    // nothing about what is stuck to that edge, so without this a keyboard
+    // user can end up on a control they cannot see (WCAG 2.4.11). The length
+    // is measured by the module; the fallback keeps the declaration harmless
+    // before the first measurement and without it.
     scroll-padding-block-start: var(--dataTable-sticky-head-block-size, 0px);
 
     & thead th {
@@ -439,9 +429,8 @@
       // Above the body cells it travels over.
       z-index: 2;
 
-      // A sticky cell moves out of the area its row painted, so it has to
-      // carry the colour itself — the row's background stays where the row
-      // is.
+      // A sticky cell moves out of the area its row painted, so it carries
+      // the colour itself — the row's background stays where the row is.
       background-color: var(--dataTable-head-bg-color);
     }
   }
@@ -450,8 +439,8 @@
 
   // ----- the first column stays in view -----
   //
-  // The column that says which row this is, frozen against the inline edge
-  // so a wide table can be read row by row.
+  // The column that says which row this is, frozen against the inline edge so
+  // a wide table can be read row by row.
   &--stickyColumn {
 
     // The same correction on the inline axis, and the one that actually
@@ -460,14 +449,14 @@
     // frozen first column — 0 of 74 visible pixels, in Chromium and WebKit
     // alike, which is SC 2.4.11 failed outright.
     //
-    // What it does not reach: both engines consult scroll-padding when they
-    // decide WHERE to scroll, but not when they decide WHETHER to. A
-    // control that is inside the box and merely underneath the frozen
-    // column counts as visible and is left where it is, so it can still end
-    // up half covered. That is the AA line ("not entirely hidden") and not
-    // the AAA one — going further would mean scrolling the box from a
-    // focusin handler, i.e. taking scroll-into-view away from the browser
-    // and racing its own smooth scrolling for a fraction of a control.
+    // What it does not reach: both engines consult scroll-padding when
+    // deciding WHERE to scroll, not WHETHER to. A control inside the box and
+    // merely underneath the frozen column counts as visible and is left where
+    // it is, so it can still end up half covered. That is the AA line ("not
+    // entirely hidden") and not the AAA one — going further would mean
+    // scrolling the box from a focusin handler, i.e. taking scroll-into-view
+    // away from the browser and racing its own smooth scrolling for a
+    // fraction of a control.
     scroll-padding-inline-start: var(--dataTable-sticky-column-inline-size, 0px);
 
     & tr > :first-child {
@@ -480,14 +469,14 @@
       // colour in the token block is opaque.
       background-color: inherit;
 
-      // The frozen column reads as an edge rather than as a cell that
-      // happens to stay put.
+      // The frozen column reads as an edge rather than a cell that happens to
+      // stay put.
       border-inline-end: var(--dataTable-border-width) solid var(--dataTable-border-color);
     }
 
-    // Where both sticky modes are on, the corner cell belongs to both and
-    // has to be above either. Harmless on its own: nothing else claims a
-    // stacking order here.
+    // Where both sticky modes are on, the corner cell belongs to both and has
+    // to be above either. Harmless on its own: nothing else claims a stacking
+    // order here.
     & thead tr > :first-child {
       z-index: 3;
     }
@@ -499,16 +488,15 @@
   //
   // Below the "small" breakpoint a table of more than a few columns is a
   // sideways scroll through fragments of rows. Stacked, every row becomes a
-  // card of label/value pairs, which is the same data in the shape a narrow
-  // screen can hold.
+  // card of label/value pairs: the same data in the shape a narrow screen can
+  // hold.
   //
   // Both conditions are load-bearing. The attribute is the opt-in: whether a
   // table has too many columns for a phone is a question about the data, not
-  // about the component. The ready flag is the script: the labels below come
-  // from attributes it writes, and the table semantics survive the display
-  // change below only because it writes the explicit roles as well. Without
-  // it, the scrolling table stays — which is a working table, only wider
-  // than the screen.
+  // the component. The ready flag is the script: the labels below come from
+  // attributes it writes, and the table semantics survive the display change
+  // only because it writes the explicit roles as well. Without it the
+  // scrolling table stays — a working table, only wider than the screen.
   &[data-datatable-stacked][data-datatable-ready] {
 
     @include vp-only(tiny) {
@@ -533,9 +521,9 @@
       }
 
       // The header row does not disappear: it becomes the bar of sort
-      // controls, which is the one part of a table a narrow screen wants
-      // MORE than a wide one. A column that offers no control has nothing
-      // to show here — its label is on every card.
+      // controls, the one part of a table a narrow screen wants MORE than a
+      // wide one. A column offering no control has nothing to show here — its
+      // label is on every card.
       & thead tr {
         display: flex;
         flex-wrap: wrap;
@@ -550,18 +538,17 @@
         border: 0;
       }
 
-      // A column that offers no control has nothing to show in that bar —
-      // but "display: none" would take the cell out of the accessibility
-      // tree with it, and an ARIA table maps a body cell to its header by
-      // position: one missing header cell and every column after it reads
-      // under its neighbour's name. Visually hidden keeps the cell, and
-      // being out of flow keeps it out of the flex row's gaps.
+      // "display: none" would take such a cell out of the accessibility tree,
+      // and an ARIA table maps a body cell to its header by position: one
+      // missing header cell and every column after it reads under its
+      // neighbour's name. Visually hidden keeps the cell, and being out of
+      // flow keeps it out of the flex row's gaps.
       & thead th:not([data-datatable-sort]) {
         @include visually-hidden;
       }
 
-      // A chip, so it is recognisably a control now that it is no longer
-      // sitting in a header row.
+      // A chip, so it is recognisably a control now that it no longer sits in
+      // a header row.
       & thead th [data-datatable-sortbutton] {
         inline-size: auto;
         padding: var(--dataTable-stack-chip-padding);
@@ -610,14 +597,13 @@
       & tbody td::before,
       & tfoot td::before {
 
-        // Twice, and the second one is the point: generated TEXT does land
-        // in the accessibility tree, and this label is already there as the
-        // cell's column header — which the explicit roles kept intact. The
-        // "/ ''" form gives it empty alternative text, so it is shown and
-        // not announced. An engine that does not parse that syntax drops
-        // the second declaration and keeps the first, i.e. the label stays
-        // visible and is read out twice; the other way round it would
-        // vanish.
+        // Twice, and the second one is the point: generated TEXT does land in
+        // the accessibility tree, and this label is already there as the
+        // cell's column header — which the explicit roles kept intact. The "/
+        // ''" form gives it empty alternative text, so it is shown and not
+        // announced. An engine that cannot parse that drops the second
+        // declaration and keeps the first, i.e. the label stays visible and
+        // is read out twice; the other way round it would vanish.
         content: attr(data-datatable-label);
         content: attr(data-datatable-label) / '';
 
@@ -635,15 +621,14 @@
 // -------------------------------------------------------------
 // A forced-colors context (the Windows contrast themes): the
 // indicator is a mask painted with a background colour, and every
-// background colour in that context is forced to Canvas — i.e. to
-// the colour it sits on, which would make the shape disappear
-// exactly where it carries the sort state. A system colour is the
-// one kind an author may still choose here. Same case as toast's
-// variant icons.
+// background colour there is forced to Canvas — the colour it sits
+// on — which would make the shape disappear exactly where it
+// carries the sort state. A system colour is the one kind an author
+// may still choose here. Same case as toast's variant icons.
 //
-// Nothing else needs saying: the borders and the text are forced
-// to system colours that keep the table legible, and the zebra
-// stripes going flat costs nothing that meaning depends on.
+// Nothing else needs saying: borders and text are forced to system
+// colours that keep the table legible, and the zebra stripes going
+// flat costs nothing that meaning depends on.
 // -------------------------------------------------------------
 @include forced-colors {
 
@@ -655,10 +640,10 @@
 
 
 // -------------------------------------------------------------
-// Respect reduced motion: the colour changes are instant. There
-// is nothing else to switch off — sorting reorders rows without
-// animating them, which is deliberate: a row travelling to its
-// new position is a table that cannot be read while it settles.
+// Respect reduced motion: the colour changes are instant. Nothing
+// else to switch off — sorting reorders rows without animating
+// them, deliberately: a row travelling to its new position is a
+// table that cannot be read while it settles.
 // -------------------------------------------------------------
 @include reduced-motion {
 
@@ -674,9 +659,8 @@
 // -------------------------------------------------------------
 // Print: paper does not scroll. The box gives up its height cap
 // and its overflow so every row is printed instead of one
-// screenful, and both sticky modes go static — a sticky cell has
-// no viewport to stick to here and would print in the one place
-// it happened to be.
+// screenful, and both sticky modes go static — a sticky cell has no
+// viewport to stick to and would print where it happened to be.
 // -------------------------------------------------------------
 @include print-only {
 

@@ -6,37 +6,37 @@
 // component is its reference file): the consuming project wraps each instance
 // in its own media container that dictates the rendered size and aspect ratio
 // (e.g. `aspect-ratio` on the wrapper). The module root fills that container
-// and the actual media — <video>, facade poster, injected iframe — fills
-// the root with `object-fit: cover`. Note that object-fit cannot reach
-// INTO an iframe: the YouTube player letterboxes footage whose ratio
-// differs from the container; real cover-cropping of an iframe is a
-// project-level decision (oversize + clip), not shipped here.
+// and the actual media — <video>, facade poster, injected iframe — fills the
+// root with `object-fit: cover`. object-fit cannot reach INTO an iframe: the
+// YouTube player letterboxes footage whose ratio differs from the container;
+// real cover-cropping of an iframe is a project-level decision (oversize +
+// clip), not shipped here.
 //
-// The "m-video*" classes (BEM "m-" prefix) are styling only.
-// video.js does NOT hook onto them; it targets the behavioural
-// data attributes (data-video-toggle / -fallback / -poster)
-// and writes exactly these hooks, never inline styles:
+// The "m-video*" classes (BEM "m-" prefix) are styling only. video.js does
+// NOT hook onto them; it targets the behavioural data attributes
+// (data-video-toggle / -fallback / -poster) and writes exactly these hooks,
+// never inline styles:
 //   is-playing on the module element      drives the play/pause icon swap
 //   hidden on toggle / fallback / poster  reveals and swaps the controls
-//   [data-video-embed]          stamped on the injected iframe
+//   [data-video-embed]                    stamped on the injected iframe
 //
-// The ambient variant (autoplaying loop) is the author-set modifier
-// class m-video--ambient: it parks the persistent play/pause
-// toggle in a corner instead of centering it. The JS derives its
-// behaviour from the native `autoplay` attribute independently, so the
-// class stays a pure styling choice.
+// The ambient variant (autoplaying loop) is the author-set modifier class
+// m-video--ambient: it parks the persistent play/pause toggle in a corner
+// instead of centering it. The JS derives its behaviour from the native
+// `autoplay` attribute independently, so the class stays a pure styling
+// choice.
 
 @use "focus" as *;
 @use "mediaqueries" as *;
 
 
 
-// Module root: fills the project's media container and anchors the
-// overlay controls.
+// Module root: fills the project's media container and anchors the overlay
+// controls.
 //
-// The custom properties are the component's override surface. They live on
-// the component root rather than in :root, so they stay scoped to the
-// component and a single instance can be retuned in place.
+// The custom properties are the override surface: declared on the component
+// root, not in :root, so they stay scoped and a single instance can be
+// retuned in place.
 .m-video {
 
   // Diameter of the centered play button; the ambient corner toggle is
@@ -45,13 +45,13 @@
   --video-toggle-size: clamp(3rem, 10vw, 4.5rem);
   --video-toggle-ambient-size: 2.75rem;
 
-  // Corner offset of the ambient toggle; maps to the shared spacing
-  // scale (_shared/scss/_foundations.scss).
+  // Corner offset of the ambient toggle (shared spacing scale,
+  // _shared/scss/_foundations.scss).
   --video-toggle-inset: var(--space-s);
 
   // The buttons render the shared play/pause SVGs (currentColor ring and
   // glyph over a baked-in darkened disc) at a reduced resting opacity;
-  // hover/focus raise it to 1. Colors map to the shared semantic tokens
+  // hover/focus raise it to 1. Colors: shared semantic tokens
   // (_shared/scss/_colors_semantic.scss).
   --video-toggle-color: var(--color-text-light);
   --video-toggle-opacity: 0.75;
@@ -61,18 +61,18 @@
   --video-an-duration: calc(var(--an-duration) / 2);
   --video-an-easing: var(--an-ease);
 
-  // The facade's no-JS fallback link. Placement and box map to the shared
-  // spacing/radius tokens (_shared/scss/_foundations.scss); the colour to
-  // the shared semantic tokens.
+  // The facade's no-JS fallback link. Placement and box: the shared
+  // spacing/radius tokens (_shared/scss/_foundations.scss); the colour: the
+  // shared semantic tokens.
   --video-fallback-inset: var(--space-s);
   --video-fallback-padding: var(--space-3xs) var(--space-xs);
   --video-fallback-radius: var(--borderRadius);
   --video-fallback-color: var(--color-text-light);
 
-  // Scrim behind that link so it stays readable on arbitrary poster
-  // footage. Deliberately anchored to plain black, not a theme surface
-  // token: it sits on user media, not on the page's own surfaces (the
-  // button SVGs bake the same darkened disc in).
+  // Scrim behind that link so it stays readable on arbitrary poster footage.
+  // Deliberately anchored to plain black, not a theme surface token: it sits
+  // on user media, not on the page's own surfaces (the button SVGs bake the
+  // same darkened disc in).
   --video-scrim-color: rgba(0, 0, 0, 0.55);
 
   position: relative;
@@ -83,17 +83,16 @@
 
   // The JS swaps elements in and out via the `hidden` attribute. Author
   // styles override the user-agent's `[hidden] { display: none }`, so the
-  // display declarations below (e.g. on the poster) would silently defeat
-  // it — restore its authority explicitly.
+  // display declarations below (e.g. on the poster) would silently defeat it
+  // — restore its authority explicitly.
   & [hidden] {
     display: none;
   }
 
 
 
-  // The media itself fills the root. object-fit crops <video> and the
-  // facade poster to cover; on the iframe it is inert (see the header
-  // note) but harmless.
+  // The media itself fills the root. object-fit crops <video> and the facade
+  // poster to cover; on the iframe it is inert (see the header) but harmless.
   &__video,
   &__poster,
   & [data-video-embed] {
@@ -108,8 +107,8 @@
 
 
 
-  // The play (or play/pause) overlay button. Ships `hidden` in the markup
-  // and is revealed by the JS, so no dead control appears without script.
+  // The play (or play/pause) overlay button. Ships `hidden` in the markup and
+  // is revealed by the JS, so no dead control appears without script.
   // Centered via inset + auto margins (writing-mode safe); the ambient
   // modifier moves it into a corner below.
   &__toggle {
@@ -166,8 +165,8 @@
 
 
 
-  // Ambient loops keep their persistent toggle out of the footage's
-  // center: pinned to the block-end/inline-end corner, smaller.
+  // Ambient loops keep their persistent toggle out of the footage's center:
+  // pinned to the block-end/inline-end corner, smaller.
   &--ambient &__toggle {
     inset: auto;
     inset-block-end: var(--video-toggle-inset);
@@ -181,7 +180,7 @@
 
 
   // Facade no-JS fallback: a plain link to YouTube, readable on top of the
-  // poster. The JS hides it once the play button is functional.
+  // poster. Hidden by the JS once the play button is functional.
   &__fallback {
     @include focus-ring(light);
 

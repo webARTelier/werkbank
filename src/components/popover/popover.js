@@ -1,11 +1,11 @@
 /**
  * popover.js
  * ----------------------------------------------------------------------------
- * Progressive-enhancement companion for a native [popover] element whose
- * placement next to its trigger is done by CSS anchor positioning (see
- * popover.scss). The platform and the stylesheet carry the behaviour; this
- * script only validates the declarative wiring and back-fills the anchored
- * placement in engines that do not support CSS anchor positioning yet.
+ * Companion for a native [popover] element whose placement next to its
+ * trigger is done by CSS anchor positioning (see popover.scss). The platform
+ * and the stylesheet carry the behaviour; this script only validates the
+ * declarative wiring and back-fills the anchored placement in engines without
+ * CSS anchor positioning.
  *
  * What the platform already does (so this script does NOT reimplement it)
  * ----------------------------------------------------------------------
@@ -15,30 +15,29 @@
  * trigger's expanded state to assistive tech. On top of that, a popover
  * opened via popovertarget receives that trigger as its *implicit anchor
  * element*, so the stylesheet can place it with position-area without any
- * anchor-name wiring — and the browser re-anchors it on scroll and resize
- * and flips it at the viewport edge (position-try-fallbacks), all without
+ * anchor-name wiring — and the browser re-anchors it on scroll and resize and
+ * flips it at the viewport edge (position-try-fallbacks), all without
  * JavaScript.
  *
  * What this script adds
  * ---------------------
- * 1. Wiring validation: the declarative API fails silently, so we warn via
- *    the reporter when the element is missing the popover attribute, has
- *    no id, no trigger on the page points at it, or the placement
- *    attribute carries an unknown value.
+ * 1. Wiring validation: the declarative API fails silently, so the reporter
+ *    warns where the element is missing the popover attribute, has no id, no
+ *    trigger on the page points at it, or the placement attribute carries an
+ *    unknown value.
  * 2. Anchored-placement fallback: an engine without CSS anchor positioning
  *    shows the popover centered in the viewport (the UA default) — usable,
- *    but detached from its trigger. Detected once via CSS.supports (the
- *    same condition the stylesheet tests), this script mirrors the CSS
- *    placement: it measures the trigger and the open popover, puts the
- *    popover on the configured side, flips to the opposite side when the
- *    viewport runs out of room and clamps the result to the viewport. The
- *    measured coordinates are written as --popover-fallback-* custom
- *    properties (plus the is-jsAnchored state class) and consumed by the
- *    "@supports not" block in popover.scss — the script never writes
- *    top/left itself, so appearance stays owned by the CSS. While the
- *    popover is open the position follows scroll and resize (rafThrottle
- *    collapses the bursts into one measurement per frame); the listeners
- *    are torn down on close.
+ *    but detached from its trigger. Detected once via CSS.supports (the same
+ *    condition the stylesheet tests), this script mirrors the CSS placement:
+ *    it measures the trigger and the open popover, puts the popover on the
+ *    configured side, flips to the opposite side when the viewport runs out
+ *    of room and clamps the result to the viewport. The measured coordinates
+ *    go into --popover-fallback-* custom properties (plus the is-jsAnchored
+ *    state class) and are consumed by the "@supports not" block in
+ *    popover.scss — the script never writes top/left itself, so appearance
+ *    stays owned by the CSS. While the popover is open the position follows
+ *    scroll and resize (rafThrottle collapses the bursts into one measurement
+ *    per frame); the listeners are torn down on close.
  *
  * Accessibility
  * -------------
@@ -49,12 +48,12 @@
  *
  * Configuration
  * -------------
- * data-popover-position="top | right | bottom | left"  (optional)
- *   The side of the trigger the popover sits on; default "bottom". The
- *   attribute is read by the CSS (position-area) and by this fallback, so
- *   one attribute is the single source of truth for both. The values are
- *   physical on purpose: an anchored overlay points at a spot on the
- *   screen, not at a spot in the reading direction.
+ * data-popover-position="top | right | bottom | left" (optional) The side of
+ *   the trigger the popover sits on; default "bottom". Read by the CSS
+ *   (position-area) and by this fallback, so one attribute is the single
+ *   source of truth for both. The values are physical on purpose: an anchored
+ *   overlay points at a spot on the screen, not at a spot in the reading
+ *   direction.
  * ----------------------------------------------------------------------------
  */
 
@@ -83,15 +82,15 @@ const defaults = {
   topProp: '--popover-fallback-top',
   leftProp: '--popover-fallback-left',
 
-  // Custom property holding the trigger→popover gap. Registered as a
-  // <length> in popover.scss (@property), so its computed value always
-  // resolves to pixels and can be read back as one number here.
+  // Custom property holding the trigger→popover gap. Registered as a <length>
+  // in popover.scss (@property), so its computed value always resolves to
+  // pixels and can be read back as one number here.
   offsetProp: '--popover-offset',
 
   // Gap (px) used when that property cannot be read as a number — a project
   // whose stylesheet does not ship the token. Its own value, not the inset
-  // below: the two happen to match in the shipped CSS, but one is the distance
-  // to the trigger and the other the distance to the viewport edge.
+  // below: the two happen to match in the shipped CSS, but one is the
+  // distance to the trigger and the other the distance to the viewport edge.
   offsetFallback: 8,
 
   // Minimum distance (px) the fallback keeps to the viewport edges.
@@ -100,8 +99,8 @@ const defaults = {
 
 
 
-// The exact condition the stylesheet tests — keep the two in sync, or the
-// script and the CSS would disagree about who positions the popover.
+// The exact condition the stylesheet tests — keep the two in sync, or script
+// and CSS would disagree about who positions the popover.
 const supportsAnchorPositioning =
   CSS.supports('anchor-name: --a') && CSS.supports('position-area: bottom');
 
@@ -134,7 +133,7 @@ class Popover {
 
 
 
-  // Finds the triggers that reference this popover by id. Without an id the
+  // The triggers referencing this popover by id. Without an id the
   // declarative API cannot address the popover at all, so that is warned as
   // an authoring error; so is a popover no trigger points at (it could still
   // be opened programmatically, hence init continues).
@@ -216,8 +215,8 @@ class Popover {
 
   // Position on open and follow the anchor while the popover stays open; a
   // closed popover needs no listeners, so they are torn down again. The
-  // capturing scroll listener also catches scrollable containers between
-  // the root and the trigger (scroll events do not bubble).
+  // capturing scroll listener also catches scrollable containers between the
+  // root and the trigger (scroll events do not bubble).
   handleToggle = (event) => {
     if (event.newState === 'open') {
       this.reposition();
@@ -241,9 +240,9 @@ class Popover {
 
     const anchor = trigger.getBoundingClientRect();
 
-    // offsetWidth/-Height are layout sizes: unlike getBoundingClientRect
-    // they ignore the scale of a still-running open animation, so the
-    // popover is not positioned from a transiently shrunken box.
+    // offsetWidth/-Height are layout sizes: unlike getBoundingClientRect they
+    // ignore the scale of a still-running open animation, so the popover is
+    // not positioned from a transiently shrunken box.
     const size = {
       width: this.popover.offsetWidth,
       height: this.popover.offsetHeight,
@@ -276,8 +275,8 @@ class Popover {
 
     // Clamp into the viewport. On the cross axis this mirrors the anchored
     // behaviour (the popover slides along the trigger); on the main axis it
-    // may overlap the trigger, which is the least-bad option once both
-    // sides are too small anyway.
+    // may overlap the trigger, the least-bad option once both sides are too
+    // small anyway.
     coords.left = Math.min(
       Math.max(coords.left, inset),
       viewport.width - size.width - inset
@@ -318,9 +317,9 @@ class Popover {
 
 
 
-  // The gap between trigger and popover, from the same token the anchored
-  // CSS uses as margin. @property registers it as a <length>, so the
-  // computed value is always in px regardless of the unit it was set in.
+  // The gap between trigger and popover, from the same token the anchored CSS
+  // uses as margin. @property registers it as a <length>, so the computed
+  // value is always in px whatever unit it was set in.
   readOffset = () => {
     const raw = getCssCustomProperty(this.popover, this.config.offsetProp);
     const parsed = parseFloat(raw);
@@ -329,12 +328,11 @@ class Popover {
 
 
 
-  // Optional teardown for hosts that mount/unmount this subtree repeatedly
-  // instead of doing a full page (re)load — see destroyModulesInScope() in
-  // boot.js. No-op in engines with native CSS anchor positioning, which
-  // never wire any of this; in the fallback path it removes the toggle
-  // listener, the trigger click listeners and — in case the popover is
-  // destroyed while still open — the transient window scroll/resize
+  // Optional teardown for hosts that mount/unmount this subtree repeatedly —
+  // see destroyModulesInScope() in boot.js. A no-op in engines with native
+  // CSS anchor positioning, which wire none of this; in the fallback path it
+  // removes the toggle listener, the trigger click listeners and — for a
+  // popover destroyed while still open — the transient window scroll/resize
   // listeners handleToggle would otherwise never get to remove.
   destroy = () => {
     if (supportsAnchorPositioning) return;
@@ -350,8 +348,7 @@ class Popover {
 
 
 
-// loader-compatible entry point
-// (boot.js -> mod.init(el, services))
+// loader-compatible entry point (boot.js -> mod.init(el, services))
 export function init(el, services = {}) {
   const reporter = services.reporter;
 
@@ -374,8 +371,8 @@ export function init(el, services = {}) {
 
   // An engine without the Popover API treats the attribute as inert and
   // renders the element as normal in-flow content (the stylesheet keeps it
-  // visible there, see popover.scss). That is the intended degradation,
-  // not an error — nothing to enhance, so bail silently.
+  // visible there, see popover.scss). The intended degradation, not an error
+  // — nothing to enhance, so bail silently.
   if (!('popover' in HTMLElement.prototype)) return;
 
   // Double-init is prevented by the loader (boot.js sets a per-element,

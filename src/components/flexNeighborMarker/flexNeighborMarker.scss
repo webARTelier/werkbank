@@ -2,44 +2,42 @@
 // flexNeighborMarker — dividers between items sharing a flex row
 // =============================================================
 //
-// The companion script (flexNeighborMarker.js) measures the laid-out rows of a
-// wrapping flex container and toggles ONE state class on the items:
+// flexNeighborMarker.js measures the laid-out rows of a wrapping flex
+// container and toggles ONE state class on the items:
 //   .has-neighbor -> this item has a following sibling in the SAME visual row
-// It sets no inline styles — exactly like a class toggle — so everything visual
-// lives here and reacts to that class. Without JS the class is never added, the
-// rules below simply do not match, and the layout is completely intact: the
-// marking is a pure progressive enhancement.
+// It sets no inline styles — exactly like a class toggle — so everything
+// visual lives here and reacts to that class. Without JS the class is never
+// added, the rules below do not match, and the layout is intact: the marking
+// is a pure progressive enhancement.
 //
-// This stylesheet ships a sensible DEFAULT: a hairline divider drawn between
-// row-neighbours (and never a trailing one at a row's end, which is the whole
-// point of the component). It is only a starting point — `.has-neighbor` is a
-// styling hook, so override or replace these rules to draw whatever a same-row
-// relationship should look like in your project.
+// This stylesheet ships a DEFAULT: a hairline divider between row-neighbours
+// (and never a trailing one at a row's end, the whole point of the
+// component). Only a starting point — `.has-neighbor` is a styling hook, so
+// override or replace these rules to draw whatever a same-row relationship
+// should look like.
 //
-// flexNeighborMarker itself owns no vocabulary: it enhances a flex container
-// the project already has and writes nothing but the state class above. The
-// "o-flexNeighbor" class is a layout OBJECT (BEM "o-" prefix) that ships
-// alongside it — a wrapping flex row with the shared gap, so the demo/snippet
-// works out of the box. The JS hooks onto the element via data-js-behavior and
-// toggles the class above; it does not need or read "o-flexNeighbor", so you
-// may lay the container out however you like.
+// flexNeighborMarker owns no vocabulary: it enhances a flex container the
+// project already has and writes nothing but the state class above.
+// "o-flexNeighbor" is a layout OBJECT shipped alongside it — a wrapping flex
+// row with the shared gap, so the demo/snippet works out of the box. The JS
+// hooks onto the element via data-js-behavior and never reads
+// "o-flexNeighbor", so lay the container out however you like.
 
 // Convenience container: a wrapping flex row with the shared gap. Optional —
 // the JS marks the items whatever the container's display model is.
 //
-// The custom properties are the component's override surface. They live on the
-// component root rather than in :root, so they stay scoped to the component
-// and a single instance can be retuned in place (`style="--flexNeighbor-gap: …"`
-// on this element still wins over the defaults below).
+// The override surface: declared on the component root, not in :root, so it
+// stays scoped and a single instance can be retuned in place
+// (`style="--flexNeighbor-gap: …"` on this element still wins).
 .o-flexNeighbor {
 
   // Gap between items. Drives both the flex `gap` and where the divider sits,
-  // so the divider stays centred in the gutter at any spacing. Maps to the
-  // shared spacing scale (see _shared/scss/_foundations.scss).
+  // so the divider stays centred in the gutter at any spacing. Shared spacing
+  // scale (_shared/scss/_foundations.scss).
   --flexNeighbor-gap: var(--space-m);
 
-  // Divider appearance. A bright hairline so a single rule stays clearly
-  // legible in the wide gutters between wrapped items.
+  // Divider appearance. A bright hairline, so a single rule stays legible in
+  // the wide gutters between wrapped items.
   --flexNeighbor-divider-width: 1px;
   --flexNeighbor-divider-color: color-mix(in srgb, var(--c-white) 55%, transparent);
 
@@ -56,11 +54,11 @@
 
 
 
-  // Divider between an item and its same-row neighbour. Drawn as an absolutely
-  // positioned pseudo-element centred in the gutter: it adds NO box size, so it
-  // never changes how items wrap and cannot feed back into the script's
-  // ResizeObserver. Only items the script marked as having a following
-  // neighbour in the same row get one — a row's last item stays clean.
+  // Divider between an item and its same-row neighbour: an absolutely
+  // positioned pseudo-element centred in the gutter, adding NO box size, so
+  // it never changes how items wrap and cannot feed back into the script's
+  // ResizeObserver. Only marked items get one — a row's last item stays
+  // clean.
   > .has-neighbor::after {
     position: absolute;
     pointer-events: none;
@@ -68,9 +66,9 @@
     inset-block: 0;
     inline-size: var(--flexNeighbor-divider-width);
 
-    // Centre the stroke in the gutter: push it half a gap past the item's
-    // inline-end edge, then back off half its own width — an inset rather than
-    // a transform, so the stroke stays out of the compositor's way.
+    // Centre the stroke in the gutter: half a gap past the item's inline-end
+    // edge, then back off half its own width — an inset rather than a
+    // transform, so the stroke stays out of the compositor's way.
     inset-inline-end: calc(-0.5 * (var(--flexNeighbor-gap) + var(--flexNeighbor-divider-width)));
 
     content: "";

@@ -15,21 +15,21 @@
 //    becomes the containing block of a fixed-position element and would drag
 //    the top-layer overlay back into the page box. Every node in it carries
 //    "data-lightbox-ui=<part>", and those attributes are the styling hooks:
-//    generated chrome gets no m-* classes, the same way dropdownNav styles
-//    its injected toggles through [data-dropdownnav-toggle].
+//    generated chrome gets no m-* classes, the way dropdownNav styles its
+//    injected toggles through [data-dropdownnav-toggle].
 //
 // The consequence for the override surface: the two roots are in different
 // trees, so the custom properties are declared twice — see the token block.
 //
 // Contract with the JS
 //   - "data-lightbox-ui" marks every generated node and names the part.
-//   - "is-loading" on the viewer means the current image has not arrived
-//     yet: the picture is held back and the stage shows a spinner. The
-//     script removes it on load AND on error, so a broken image ends up
-//     showing its alt text rather than a spinner that never stops.
-//   - "hidden" on the controls, the counter and the bar is how a single
-//     image loses its navigation. An author-level display declaration beats
-//     the UA's [hidden] rule, so it is restored explicitly at the bottom.
+//   - "is-loading" on the viewer means the current image has not arrived yet:
+//     the picture is held back and the stage shows a spinner. The script
+//     removes it on load AND on error, so a broken image ends up showing its
+//     alt text rather than a spinner that never stops.
+//   - "hidden" on the controls, the counter and the bar is how a single image
+//     loses its navigation. An author-level display declaration beats the
+//     UA's [hidden] rule, so it is restored explicitly at the bottom.
 //   - "aria-disabled" on the controls is the end of a non-looping gallery —
 //     ARIA rather than a state class, so the look and what a screen reader
 //     hears cannot disagree.
@@ -38,10 +38,9 @@
 // The open/close animation is a pure CSS progressive enhancement
 // (@starting-style + allow-discrete), mirroring dialog: opening and closing
 // carry their own duration/easing, which takes two rules — a transition is
-// timed by the state it animates *to*, so the entrance timing lives on
-// [open] and the exit timing on the base rule. Engines without "overlay"
-// (everything but Chromium today) close instantly, which is the intended
-// fallback.
+// timed by the state it animates *to*, so the entrance timing lives on [open]
+// and the exit timing on the base rule. Engines without "overlay" (everything
+// but Chromium today) close instantly, the intended fallback.
 
 @use "focus" as *;
 @use "mediaqueries" as *;
@@ -53,48 +52,46 @@
 // Custom properties: the component's override surface, all of it,
 // in one place — but on two roots.
 //
-// The gallery and the viewer are in different trees (see the file header),
-// so nothing declared on the gallery root can reach the injected dialog.
-// Both blocks therefore sit here, next to each other, and each knob is
-// declared on the surface that uses it — only --lightbox-radius is in both,
-// because both sides round something. Where a name would have to mean two
-// different values it is not shared at all but spelled out per surface
-// (--lightbox-thumb-duration vs --lightbox-duration).
+// The gallery and the viewer are in different trees (see the file header), so
+// nothing declared on the gallery root can reach the injected dialog. Both
+// blocks therefore sit here, next to each other, and each knob is declared on
+// the surface that uses it — only --lightbox-radius is in both, because both
+// sides round something. Where a name would have to mean two different values
+// it is spelled out per surface instead (--lightbox-thumb-duration vs
+// --lightbox-duration).
 // -------------------------------------------------------------
 
 // ----- the authored gallery -----
 .m-lightbox {
 
-  // Animation maps to the shared animation tokens
-  // (see _shared/scss/_foundations.scss). Half the shared duration: a
-  // thumbnail reacting to the pointer is a small move, timed like the other
-  // small ones in this collection. Named after the thumbnail rather than
-  // after the component, because the viewer below has a timing of its own
-  // and one name cannot carry two values.
+  // Animation (shared tokens, _shared/scss/_foundations.scss). Half the
+  // shared duration: a thumbnail reacting to the pointer is a small move,
+  // timed like the other small ones in this collection. Named after the
+  // thumbnail rather than the component, because the viewer below has a
+  // timing of its own and one name cannot carry two values.
   --lightbox-thumb-duration: calc(var(--an-duration) / 2);
   --lightbox-thumb-easing: var(--an-ease);
 
-  // Sizing. The narrowest a thumbnail may get before the grid drops a
-  // column, and the shape they are all cropped to. The ratio is applied to
-  // the tile link, i.e. to the container, not to the image (the media-sizing
-  // rule in CLAUDE.md) — set it to "auto" for a gallery that wants to keep
-  // every image's own proportions.
+  // Sizing. The narrowest a thumbnail may get before the grid drops a column,
+  // and the shape they are all cropped to. The ratio applies to the tile
+  // link, i.e. the container, not the image (the media-sizing rule in
+  // CLAUDE.md) — "auto" for a gallery that wants to keep every image's own
+  // proportions.
   --lightbox-thumb-min: 12rem;
   --lightbox-thumb-ratio: 3 / 2;
   --lightbox-thumb-hover-scale: 1.04;
   --lightbox-radius: var(--borderRadius);
 
-  // Spacing maps to the shared spacing scale
-  // (see _shared/scss/_foundations.scss).
+  // Spacing (shared scale, _shared/scss/_foundations.scss)
   --lightbox-gap: var(--space-s); // between the tiles of the grid
   --lightbox-tile-gap: var(--space-2xs); // between a thumbnail and its caption
 
   // Type
   --lightbox-thumb-caption-font-size: 0.85rem;
 
-  // Colors map to the shared semantic tokens
-  // (see _shared/scss/_colors_semantic.scss). The surface behind a
-  // thumbnail is what fills the reserved box until the image is there.
+  // Colors (shared semantic tokens, _shared/scss/_colors_semantic.scss). The
+  // surface behind a thumbnail fills the reserved box until the image is
+  // there.
   --lightbox-thumb-bg-color: var(--color-bg-surface);
   --lightbox-thumb-caption-color: var(--color-text-muted);
 }
@@ -104,35 +101,34 @@
 [data-lightbox-ui='viewer'] {
 
   // Animation. Opening and closing are timed separately: --an-ease is an
-  // ease-OUT (fast start, slow settle), which is what an entrance wants —
-  // but reused for the exit it front-loads the fade so hard that the viewer
-  // is visually gone in the first quarter of the duration and the close
-  // reads as a snap. So the exit gets an accelerating curve over a shorter
-  // duration, the usual asymmetry for overlays: appear eagerly, leave
-  // briskly without lingering. (dialog carries the same pair, for the same
-  // reason.)
+  // ease-OUT (fast start, slow settle), which is what an entrance wants — but
+  // reused for the exit it front-loads the fade so hard that the viewer is
+  // visually gone in the first quarter of the duration and the close reads as
+  // a snap. So the exit gets an accelerating curve over a shorter duration,
+  // the usual overlay asymmetry: appear eagerly, leave briskly without
+  // lingering. (dialog carries the same pair, for the same reason.)
   --lightbox-duration: var(--an-duration);
   --lightbox-easing: var(--an-ease);
   --lightbox-duration-exit: calc(var(--lightbox-duration) * 0.6);
   --lightbox-easing-exit: cubic-bezier(0.4, 0, 1, 1);
 
-  // The scale the picture grows out of while opening and sinks back to
-  // while closing. Two knobs because the two ends live in different rules
-  // (see the animation block).
+  // The scale the picture grows out of while opening and sinks back to while
+  // closing. Two knobs because the two ends live in different rules (see the
+  // animation block).
   --lightbox-enter-scale: 0.96;
   --lightbox-exit-scale: 0.98;
 
   // One turn of the loading spinner.
   --lightbox-spinner-duration: 0.9s;
 
-  // Sizing. 2.75rem is 44px: the minimum target size for a control
-  // (WCAG 2.5.8), and these three sit on top of a photograph where a small
-  // one would be both hard to hit and hard to see.
+  // Sizing. 2.75rem is 44px: the minimum target size for a control (WCAG
+  // 2.5.8), and these three sit on top of a photograph where a small one
+  // would be both hard to hit and hard to see.
   --lightbox-control-size: 2.75rem;
   --lightbox-control-border-width: 1px;
 
-  // The keyboard ring is drawn INSIDE the control, on its own dark disc —
-  // see the focus comment at the controls for why it cannot sit outside.
+  // The keyboard ring is drawn INSIDE the control, on its own dark disc — see
+  // the focus comment at the controls for why it cannot sit outside.
   --lightbox-control-ring-offset: calc(-1 * var(--outlineOffset));
   --lightbox-icon-size: 1.25rem;
   --lightbox-spinner-size: 2.25rem;
@@ -142,17 +138,16 @@
 
   // The floor under the picture. The stage is the elastic row of the figure,
   // so without a floor a long caption takes the image all the way down to
-  // nothing — measured at 400% zoom (a 320x256 viewport, the BITV/WCAG
-  // reflow case): four caption lines and the picture was 0x0, gone with no
-  // scroll position that could bring it back. 10rem minus the stage's own
-  // padding leaves ~96px of photograph, which is small but is a photograph;
-  // past that point the figure grows instead and the viewer scrolls
-  // (WCAG 1.4.10).
+  // nothing — measured at 400% zoom (a 320x256 viewport, the BITV/WCAG reflow
+  // case): four caption lines and the picture was 0x0, gone with no scroll
+  // position that could bring it back. 10rem minus the stage's own padding
+  // leaves ~96px of photograph, small but a photograph; past that point the
+  // figure grows instead and the viewer scrolls (WCAG 1.4.10).
   --lightbox-stage-min-size: 10rem;
 
-  // Spacing. The block-start padding is the deep one: that is where the
-  // close control sits (its own size plus its inset comes to 60px), and a
-  // portrait image reaching under it would be covered by it.
+  // Spacing. The block-start padding is the deep one: the close control sits
+  // there (its own size plus its inset comes to 60px), and a portrait image
+  // reaching under it would be covered.
   --lightbox-stage-padding: var(--space-2xl) var(--space-s) var(--space-s);
   --lightbox-bar-padding: var(--space-s);
   --lightbox-bar-gap: var(--space-s);
@@ -162,25 +157,25 @@
   --lightbox-caption-font-size: 0.95rem;
   --lightbox-counter-font-size: 0.85rem;
 
-  // Colors. The backdrop is nearly opaque: a photograph needs the page
-  // behind it out of the way, not dimmed.
+  // Colors. The backdrop is nearly opaque: a photograph needs the page behind
+  // it out of the way, not dimmed.
   --lightbox-backdrop-color: color-mix(in srgb, var(--c-blue-black) 92%, transparent);
   --lightbox-caption-color: var(--color-text);
   --lightbox-counter-color: var(--color-text-muted);
 
-  // The three controls are the one part of this component that sits on
+  // The three controls are the one part of this component sitting on
   // arbitrary user media rather than on a surface of the theme, so they are
-  // built the way video builds its play button: a darkened disc, a light
-  // ring around it and a light glyph inside — except that video bakes the
-  // disc into its SVG and here it is the button's own background. Hence a
-  // scrim anchored to plain black rather than to a surface token (a token
-  // that brightens, as an overlay usually does, is exactly what fails over
-  // a light photograph), and a ring in currentColor, mirroring the
+  // built the way video builds its play button: a darkened disc, a light ring
+  // around it and a light glyph inside — except that video bakes the disc
+  // into its SVG and here it is the button's own background. Hence a scrim
+  // anchored to plain black rather than a surface token (a token that
+  // brightens, as an overlay usually does, is exactly what fails over a light
+  // photograph), and a ring in currentColor, mirroring the
   // stroke="currentColor" of those SVGs: it follows the glyph through hover
-  // and the disabled state, so the two can never drift apart. The pairing
-  // is what makes the control readable over ANY picture — the disc carries
-  // the boundary over a light one, the ring over a dark one, and the glyph
-  // sees only the disc either way (WCAG 1.4.11, all three well past 3:1).
+  // and the disabled state, so the two cannot drift apart. The pairing is
+  // what makes the control readable over ANY picture — the disc carries the
+  // boundary over a light one, the ring over a dark one, and the glyph sees
+  // only the disc either way (WCAG 1.4.11, all three well past 3:1).
   --lightbox-control-color: var(--color-text-light);
   --lightbox-control-color-disabled: var(--color-text-muted);
   --lightbox-control-bg-color: rgba(0, 0, 0, 0.65);
@@ -195,9 +190,9 @@
 // -------------------------------------------------------------
 // The authored gallery.
 //
-// None of this is required for the behaviour: the module only needs the
-// [data-lightbox-item] links, so a project with its own layout keeps it and
-// drops the classes.
+// None of it is required for the behaviour: the module only needs the
+// [data-lightbox-item] links, so a project with its own layout keeps
+// it and drops the classes.
 // -------------------------------------------------------------
 .m-lightbox {
   font-family: system-ui, sans-serif;
@@ -206,8 +201,8 @@
 
   // auto-fill rather than a breakpoint list: the gallery drops a column
   // whenever a thumbnail would go below --lightbox-thumb-min. The min() guard
-  // is what keeps a single column from overflowing a viewport narrower than
-  // that floor.
+  // keeps a single column from overflowing a viewport narrower than that
+  // floor.
   &__grid {
     margin: 0;
     padding: 0;
@@ -223,8 +218,8 @@
 
 
   // One tile: the thumbnail and, optionally, its caption. The caption is real
-  // page content — it is also what the viewer picks up when the item carries
-  // no data-lightbox-caption of its own.
+  // page content — and what the viewer picks up when the item carries no
+  // data-lightbox-caption of its own.
   &__tile {
     margin: 0;
 
@@ -239,11 +234,12 @@
   // every thumbnail is cropped to, so the grid keeps its rhythm whatever the
   // sources are — and the box is there before the image is, so nothing shifts
   // when it arrives. Same division of labour as in `video`, where the box
-  // comes from the project's own wrapper (the media-sizing rule in CLAUDE.md).
+  // comes from the project's own wrapper (the media-sizing rule in
+  // CLAUDE.md).
   &__link {
 
-    // Thumbnails on a dark surface -> the light (bright) ring. An element's
-    // own overflow does not clip its own outline, so the ring survives the
+    // Thumbnails on a dark surface -> the light tone. An element's own
+    // overflow does not clip its own outline, so the ring survives the
     // clipping box below.
     @include focus-ring(light);
 
@@ -261,11 +257,11 @@
 
 
   // The image only fills that box and object-fit crops it. With the ratio set
-  // to "auto" the link has no definite height, the percentage resolves to auto
-  // and the thumbnail keeps its own proportions — which is what that setting
-  // is for, and the one case in which the markup's width/height attributes
-  // still reserve anything: with a ratio on the link the box is there before
-  // the first paint anyway, this stylesheet being render-blocking.
+  // to "auto" the link has no definite height, the percentage resolves to
+  // auto and the thumbnail keeps its own proportions — what that setting is
+  // for, and the one case in which the markup's width/height attributes still
+  // reserve anything: with a ratio on the link the box is there before the
+  // first paint anyway, this stylesheet being render-blocking.
   &__thumb {
     display: block;
     inline-size: 100%;
@@ -278,8 +274,8 @@
 
 
 
-  // The pointer affordance. Scale rather than a filter or a shadow: it is the
-  // one property that cannot repaint anything outside the clipping box above.
+  // The pointer affordance. Scale rather than a filter or a shadow: the one
+  // property that cannot repaint anything outside the clipping box above.
   &__link:hover &__thumb {
     scale: var(--lightbox-thumb-hover-scale);
   }
@@ -300,10 +296,10 @@
 // The generated viewer: a chrome-free box filling the viewport,
 // with the picture centred in it.
 //
-// The <dialog> itself carries no padding and no surface of its own, so a
-// press that lands on it can only have missed the picture — which is how
-// lightbox.js recognises a light dismiss without any coordinate math (the
-// same trick dialog plays with its panel).
+// The <dialog> carries no padding and no surface of its own, so a
+// press landing on it can only have missed the picture — which is how
+// lightbox.js recognises a light dismiss without coordinate math (the
+// trick dialog plays with its panel).
 // -------------------------------------------------------------
 [data-lightbox-ui='viewer'] {
   inset: 0;
@@ -324,10 +320,10 @@
   background-color: transparent;
 
   // ----- open/close animation (progressive enhancement) -----
-  // Closed resting state — and therefore the *exit* target: removing [open]
+  // Closed resting state — and so the *exit* target: removing [open]
   // transitions the viewer from the open values back to these, so this rule
-  // carries the exit timing and &[open] below the entrance one (see the
-  // token comment for why the two differ).
+  // carries the exit timing and &[open] below the entrance one (see the token
+  // comment for why they differ).
   opacity: 0;
   scale: var(--lightbox-exit-scale);
 
@@ -335,10 +331,9 @@
     opacity var(--lightbox-duration-exit) var(--lightbox-easing-exit),
     scale var(--lightbox-duration-exit) var(--lightbox-easing-exit),
 
-    // "overlay" + "display" are discrete top-layer properties:
-    // allow-discrete keeps the element in the top layer (and displayed)
-    // until the fade-out has finished, so the close can animate instead of
-    // snapping away.
+    // "overlay" + "display" are discrete top-layer properties: allow-discrete
+    // keeps the element in the top layer (and displayed) until the fade-out
+    // has finished, so the close can animate instead of snapping away.
     overlay var(--lightbox-duration-exit) allow-discrete,
     display var(--lightbox-duration-exit) allow-discrete;
 
@@ -355,9 +350,9 @@
       display var(--lightbox-duration) allow-discrete;
   }
 
-  // Entry starting point: the very first rendered frame after [open]
-  // appears. Browsers without @starting-style ignore this block and simply
-  // show the viewer.
+  // Entry starting point: the very first rendered frame after [open] appears.
+  // Browsers without @starting-style ignore this block and just show the
+  // viewer.
   @starting-style {
 
     &[open] {
@@ -368,17 +363,17 @@
 
 
 
-  // The backdrop. Same split as the viewer itself: this rule is the exit,
-  // the [open] one below the entrance.
+  // The backdrop. Same split as the viewer itself: this rule is the exit, the
+  // [open] one below the entrance.
   &::backdrop {
     opacity: 0;
 
     background-color: var(--lightbox-backdrop-color);
 
-    // Progressive: modern engines blur the page behind the backdrop. It is
-    // not cosmetic here — at 92% the brightest bits of a page still read
-    // through, and next to a photograph a legible word from the page below
-    // is a distraction the viewer cannot afford.
+    // Progressive: modern engines blur the page behind the backdrop. Not
+    // cosmetic here — at 92% the brightest bits of a page still read through,
+    // and next to a photograph a legible word from below is a distraction the
+    // viewer cannot afford.
     backdrop-filter: blur(var(--lightbox-backdrop-blur));
 
     transition:
@@ -410,16 +405,15 @@
 // The figure owns the vertical split: the picture takes whatever is left
 // (1fr) and the bar only what it needs, so a long caption never pushes the
 // image out of the viewport — it takes room from it, down to the floor the
-// stage sets below. Past that floor the two rows no longer fit and simply
-// overflow this box, which the <dialog> then scrolls (the UA gives it
-// overflow: auto). Deliberately that way round: the height stays *definite*
-// (block-size, not min-block-size), because that is what lets the image's own
-// "max-block-size: 100%" resolve against the row and keep the picture fitted
-// to the viewport instead of at its natural size with the viewer scrolling
-// under it. And the scroll container is the dialog rather than the bar,
-// because a scroll container holding no focusable element is one a keyboard
-// user cannot scroll — trading a reflow problem for a keyboard one is no
-// trade.
+// stage sets below. Past that floor the two rows no longer fit and overflow
+// this box, which the <dialog> then scrolls (the UA gives it overflow: auto).
+// Deliberately that way round: the height stays *definite* (block-size, not
+// min-block-size), which is what lets the image's own "max-block-size: 100%"
+// resolve against the row and keep the picture fitted to the viewport instead
+// of at its natural size with the viewer scrolling under it. And the scroll
+// container is the dialog rather than the bar, because a scroll container
+// holding no focusable element is one a keyboard user cannot scroll — trading
+// a reflow problem for a keyboard one is no trade.
 [data-lightbox-ui='figure'] {
   margin: 0;
   block-size: 100%;
@@ -432,9 +426,9 @@
 
 // The centring box for the picture (see the padding token for why its
 // block-start is the deep side). The min-block-size does two things at once:
-// any explicit value overrides a grid item's automatic minimum — which for an
-// <img> is its intrinsic height, i.e. a row that cannot shrink at all — and
-// the value chosen is the floor the picture keeps (see the token).
+// any explicit value overrides a grid item's automatic minimum — for an <img>
+// its intrinsic height, i.e. a row that cannot shrink at all — and the value
+// chosen is the floor the picture keeps (see the token).
 [data-lightbox-ui='stage'] {
   position: relative;
 
@@ -448,13 +442,13 @@
 
 
 
-// The picture. Both maxima are needed and they do different jobs: the inline
-// one keeps a wide image inside the stage, the block one inside the row —
-// and object-fit is the safety net for the moment the flex/grid layout
-// resolves the two into a box that is not the image's own ratio, which
-// would otherwise stretch the photograph rather than letterbox it.
+// The picture. Both maxima are needed and do different jobs: the inline one
+// keeps a wide image inside the stage, the block one inside the row — and
+// object-fit is the safety net for the moment the flex/grid layout resolves
+// the two into a box that is not the image's own ratio, which would otherwise
+// stretch the photograph rather than letterbox it.
 //
-// This is the documented exception to the project's media-sizing rule (see
+// The documented exception to the project's media-sizing rule (see
 // CLAUDE.md): here the image keeps its own proportions inside the stage
 // instead of taking the container's, and `contain` letterboxes rather than
 // crops — a viewer the reader opened in order to look at a photograph must
@@ -475,8 +469,8 @@
 
 
 // The bar under the picture: the caption at the reading edge, the position
-// counter at the other one. It wraps rather than shrinking the caption,
-// because a caption is a sentence and a counter is three characters.
+// counter at the other. It wraps rather than shrinking the caption, because a
+// caption is a sentence and a counter is three characters.
 [data-lightbox-ui='bar'] {
   padding: var(--lightbox-bar-padding);
 
@@ -521,7 +515,7 @@
   // rely on (sky-400 reaches 2.1:1 over a white one). Inside, it is drawn on
   // the control's own darkened disc and keeps its contrast whatever the
   // picture does — the same reason adaptiveScrollFade pulls its ring inwards,
-  // there because a mask would clip it.
+  // there because of a mask.
   @include focus-ring(light, var(--lightbox-control-ring-offset));
 
   & {
@@ -564,8 +558,8 @@
 
 
   // The disc deepens rather than brightening: over a light photograph a
-  // brightening overlay walks towards the picture instead of away from it,
-  // and the hover state would be the moment the control disappears.
+  // brightening overlay walks towards the picture instead of away, and the
+  // hover state would be the moment the control disappears.
   &:hover {
     background-color: var(--lightbox-control-bg-color-hover);
   }
@@ -594,8 +588,8 @@
 }
 
 
-// Centred on the viewport rather than on the picture: the picture changes
-// size with every image, the controls should not move with it.
+// Centred on the viewport rather than the picture: the picture changes size
+// with every image, the controls should not move with it.
 [data-lightbox-ui='prev'],
 [data-lightbox-ui='next'] {
   inset-block-start: 50%;
@@ -616,8 +610,7 @@
 
 
 // The name of each control: a real text node next to an aria-hidden glyph
-// (see the JS), so it is hidden from the layout but never from the
-// accessibility tree.
+// (see the JS), hidden from the layout but never from the accessibility tree.
 [data-lightbox-ui='controlLabel'] {
   @include visually-hidden;
 }
@@ -635,11 +628,11 @@
 
 // ----- while the current image is still loading -----
 //
-// The picture is held back until it can be shown in one piece: an <img>
-// whose src has just changed paints as an empty box first, and on a reopen
-// it would still be showing the previous image. The spinner is a
-// pseudo-element, so the state needs no extra node and adds nothing to the
-// accessibility tree — the live region already says where the reader is.
+// The picture is held back until it can be shown in one piece: an <img> whose
+// src has just changed paints as an empty box first, and on a reopen it would
+// still be showing the previous image. The spinner is a pseudo-element, so
+// the state needs no extra node and adds nothing to the accessibility tree —
+// the live region already says where the reader is.
 [data-lightbox-ui='viewer'].is-loading {
 
   [data-lightbox-ui='image'] {
@@ -673,10 +666,10 @@
 
 
 
-// The parts a single image does not need: the script sets the "hidden"
-// attribute on the controls, the counter and the bar. Restored explicitly
-// because the display declarations above are author-level and therefore beat
-// the UA's own [hidden] rule, however it is written.
+// The parts a single image does not need: the script sets "hidden" on the
+// controls, the counter and the bar. Restored explicitly because the display
+// declarations above are author-level and beat the UA's own [hidden] rule,
+// however it is written.
 [data-lightbox-ui][hidden] {
   display: none;
 }
@@ -685,7 +678,7 @@
 
 // Body scroll lock, toggled by lightbox.js while the viewer is open (shared
 // with dialog and offCanvasNav). A modal dialog makes the page behind it
-// inert but does not stop it from scrolling, so we suppress it here.
+// inert but does not stop it from scrolling.
 body.is-scrollLocked {
   overflow: hidden;
 }
@@ -696,9 +689,9 @@ body.is-scrollLocked {
 // Respect reduced motion: the viewer appears and disappears
 // instantly, the thumbnail no longer grows under the pointer and
 // the spinner holds still (a static ring still says "not there
-// yet", which is the part that carries the meaning).
-// !important (rather than zeroing the duration tokens) so it also
-// beats the transitions declared on the [open] rules above.
+// yet", the part that carries the meaning). !important rather than
+// zeroed duration tokens, so it also beats the transitions
+// declared on the [open] rules above.
 // -------------------------------------------------------------
 @include reduced-motion {
 
@@ -729,27 +722,27 @@ body.is-scrollLocked {
 // A forced-colors context (the Windows contrast themes): every
 // colour declared above is replaced by one from the system
 // palette, and two things here carry their whole meaning in a
-// colour difference — so both have to be said again in colours
-// the forcing keeps. System colours inside this query are the
-// one kind an author may still choose.
+// colour difference — so both have to be said again in colours the
+// forcing keeps. System colours inside this query are the one kind
+// an author may still choose.
 // -------------------------------------------------------------
 @include forced-colors {
 
   // The end of a non-looping gallery is a dimmed glyph and nothing else (see
   // the aria-disabled rule above), so forcing the colour takes the state with
   // it and a wall looks exactly like a way on. GrayText is the system colour
-  // that means this, and it is what a forced-colors context paints its own
-  // disabled controls in.
+  // that means this, and what a forced-colors context paints its own disabled
+  // controls in.
   [data-lightbox-ui='prev'][aria-disabled='true'],
   [data-lightbox-ui='next'][aria-disabled='true'] {
     color: GrayText;
   }
 
   // The spinner says "turning" by having one edge in a different colour from
-  // the rest of the ring. Forced to a single colour it becomes an even
-  // circle, whose rotation nobody can see — a loading indicator that has
-  // stopped indicating. Highlight is the accent of the chosen theme, so the
-  // leading edge stays the part that stands out.
+  // the rest of the ring. Forced to a single colour it becomes an even circle
+  // whose rotation nobody can see — a loading indicator that has stopped
+  // indicating. Highlight is the accent of the chosen theme, so the leading
+  // edge stays the part that stands out.
   [data-lightbox-ui='viewer'].is-loading [data-lightbox-ui='stage']::after {
     border-color: GrayText;
     border-block-start-color: Highlight;

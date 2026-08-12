@@ -1,9 +1,9 @@
 /**
  * tabs.js
  * ----------------------------------------------------------------------------
- * Progressive-enhancement script that upgrades an anchor-link table of
- * contents plus plain, stacked content sections into an accessible tabs
- * widget following the ARIA APG "Tabs" pattern.
+ * Upgrades an anchor-link table of contents plus plain, stacked content
+ * sections into an accessible tabs widget following the ARIA APG "Tabs"
+ * pattern.
  *
  * What works without this script
  * ------------------------------
@@ -19,8 +19,8 @@
  * snaps. That state lifts on data-tabs-ready, which the constructor sets
  * before anything else — so markup this script bails on falls back to the
  * plain stacked document rather than staying collapsed. A panel the URL
- * fragment names, or holds the target of, is exempt from it either way —
- * the same two cases itemForHash() answers once the module runs.
+ * fragment names, or holds the target of, is exempt either way — the same two
+ * cases itemForHash() answers once the module runs.
  *
  * What the script adds
  * --------------------
@@ -33,38 +33,37 @@
  *    with wrap-around, Home/End jump to the first/last tab. Activation is
  *    automatic on focus by default (APG recommendation for instantly
  *    displayable panels), or explicit via Enter/Space with data-tabs-manual.
- * 4. Deep linking: a URL fragment naming a panel — or anything inside one
- *    — selects that tab on load and on hashchange (foreign hashes are
- *    ignored). With data-tabs-deeplink the selected tab is also written
- *    back to the URL via history.replaceState — path and query stay
- *    untouched, no history entries pile up. The fragment the reader
- *    arrived with is never rewritten, so a component further in (a
- *    readMore naming its text region) still sees its own :target.
+ * 4. Deep linking: a URL fragment naming a panel — or anything inside one —
+ *    selects that tab on load and on hashchange (foreign hashes are ignored).
+ *    With data-tabs-deeplink the selected tab is also written back to the URL
+ *    via history.replaceState — path and query stay untouched, no history
+ *    entries pile up. The fragment the reader arrived with is never
+ *    rewritten, so a component further in (a readMore naming its text region)
+ *    still sees its own :target.
  *
  * Accessibility
  * -------------
- * Follows the APG tabs pattern: roving tabindex on the tabs, aria-selected
- * on the active tab, each panel labelled by its tab. A panel without
- * focusable content gets tabindex="0" so keyboard users can reach and
- * scroll it. The tablist needs an accessible name (aria-label or
- * aria-labelledby on the list element); a missing name is reported rather
- * than silently shipped.
+ * Follows the APG tabs pattern: roving tabindex on the tabs, aria-selected on
+ * the active tab, each panel labelled by its tab. A panel without focusable
+ * content gets tabindex="0" so keyboard users can reach and scroll it. The
+ * tablist needs an accessible name (aria-label or aria-labelledby on the list
+ * element); a missing name is reported rather than silently shipped.
  *
  * Configuration (all optional, on the data-js-behavior element)
  * -----------------------------------------------------------
- * - data-tabs-manual                  select on Enter/Space instead of on
- *                                     focus ("manual activation")
- * - data-tabs-orientation="vertical"  sets aria-orientation="vertical" and
+ * - data-tabs-manual                  select on Enter/Space instead of on focus
+ *                                     ("manual activation")
+ * - data-tabs-orientation="vertical" sets aria-orientation="vertical" and
  *                                     switches the arrow keys to Up/Down
- * - data-tabs-deeplink                mirror the selected tab into the URL
- *                                     fragment (history.replaceState)
+ * - data-tabs-deeplink                mirror the selected tab into the URL fragment
+ *                                     (history.replaceState)
  * ----------------------------------------------------------------------------
  */
 
 
 
-// focusableSelector decides whether a panel needs tabindex="0" of its own
-// (APG): one that already holds something focusable is reachable without it.
+// focusableSelector decides whether a panel needs a tabindex="0" of its own
+// (APG): one already holding something focusable is reachable without it.
 // decodeFragment resolves a tab's href fragment to its panel id.
 import { focusableSelector } from './focusableSelector.js';
 import { decodeFragment } from './decodeFragment.js';
@@ -79,12 +78,12 @@ const defaults = {
   // the in-page anchor links inside the list that become the tabs
   tabSelector: '[data-tabs-tab]',
 
-  // the content sections that become the panels; each is resolved via
-  // its tab's href fragment (href="#id" -> element with that id)
+  // the content sections that become the panels; each is resolved via its
+  // tab's href fragment (href="#id" -> element with that id)
   panelSelector: '[data-tabs-panel]',
 
   // presence switches from automatic (select on focus) to manual
-  // (select on Enter/Space) activation
+  // (Enter/Space) activation
   manualAttr: 'data-tabs-manual',
 
   // 'vertical' switches the arrow-key axis and sets aria-orientation
@@ -93,11 +92,11 @@ const defaults = {
   // presence mirrors the selected tab into the URL fragment
   deeplinkAttr: 'data-tabs-deeplink',
 
-  // "This container is no longer waiting for a script." Set on the
-  // container by the constructor, which is what lifts the pre-enhancement
-  // state in tabs.scss — including when the constructor then bails on
-  // unusable markup. Only ever WRITTEN, never read back; see the
-  // constructor for why it goes first.
+  // "This container is no longer waiting for a script." Set on the container
+  // by the constructor, which is what lifts the pre-enhancement state in
+  // tabs.scss — including when the constructor then bails on unusable
+  // markup. Only ever WRITTEN, never read back; see the constructor for why
+  // it goes first.
   readyAttr: 'data-tabs-ready',
 };
 
@@ -118,14 +117,14 @@ class Tabs {
     // the flow until this attribute appears; the panels only get their real
     // `hidden` state further down. Setting it up front is safe because
     // everything in this constructor runs in one synchronous task — the
-    // browser cannot paint the moment in between, so there is no frame in
-    // which the panels are all visible.
+    // browser cannot paint in between, so there is no frame in which the
+    // panels are all visible.
     //
-    // What it buys is the bail-outs below. If the markup has no list or no
-    // usable tabs, this widget never happens, and leaving the pre-state in
-    // force would hide panels behind a widget that does not exist — with
-    // not even a table of contents to reach them by. Lifting it here means
-    // a bail always lands on the plain stacked document instead.
+    // What it buys is the bail-outs below. With no list or no usable tabs
+    // this widget never happens, and leaving the pre-state in force would
+    // hide panels behind a widget that does not exist — with not even a table
+    // of contents to reach them by. Lifting it here means a bail always lands
+    // on the plain stacked document.
     container.setAttribute(params.readyAttr, '');
 
     this.list = container.querySelector(params.listSelector);
@@ -194,8 +193,8 @@ class Tabs {
       }
 
       // Two tabs claiming the same panel would fight over `hidden` in
-      // select() (the last write wins) — keep the first pairing, drop
-      // and report the duplicate.
+      // select() (the last write wins) — the first pairing stays, the
+      // duplicate is dropped and reported.
       if (this.items.some((item) => item.panel === panel)) {
         this.reporter?.report(
           'tabs',
@@ -226,8 +225,8 @@ class Tabs {
 
 
 
-  // Assigns the APG roles and relationships at runtime, so the no-JS
-  // document never carries ARIA that promises behaviour it cannot deliver.
+  // Assigns the APG roles and relationships at runtime, so the no-JS document
+  // never carries ARIA that promises behaviour it cannot deliver.
   applySemantics = () => {
     this.list.setAttribute('role', 'tablist');
     if (this.isVertical) {
@@ -260,7 +259,7 @@ class Tabs {
       panel.setAttribute('role', 'tabpanel');
       panel.setAttribute('aria-labelledby', tab.id);
 
-      // A panel without focusable content becomes focusable itself so
+      // A panel without focusable content becomes focusable itself, so
       // keyboard users can reach and scroll it (APG).
       if (!panel.querySelector(focusableSelector)) {
         panel.setAttribute('tabindex', '0');
@@ -270,9 +269,9 @@ class Tabs {
 
 
 
-  // Selects the tab the URL fragment points to, if any; otherwise the
-  // first tab. When the fragment matches, the browser has already jumped
-  // to the section natively — nothing to re-scroll.
+  // Selects the tab the URL fragment points to, if any; otherwise the first
+  // tab. When the fragment matches, the browser has already jumped there —
+  // nothing to re-scroll.
   selectInitialItem = () => {
     const linkedItem = this.itemForHash(location.hash);
     this.select(linkedItem || this.items[0]);
@@ -289,10 +288,10 @@ class Tabs {
 
 
   // Activates a clicked tab. preventDefault stops the native anchor jump —
-  // the panel is shown in place; when deep-linking is enabled the fragment
-  // is written explicitly (without scrolling) in select(). Enter on a
-  // focused link fires a click natively, so manual activation via Enter
-  // lands here too.
+  // the panel is shown in place; with deep-linking enabled the fragment is
+  // written explicitly (without scrolling) in select(). Enter on a focused
+  // link fires a click natively, so manual activation via Enter lands here
+  // too.
   handleClick = (e) => {
     const tab = e.target.closest(this.params.tabSelector);
     if (!tab) return;
@@ -309,9 +308,9 @@ class Tabs {
 
 
   // Roving-tabindex keyboard support: arrows move between tabs with
-  // wrap-around (axis follows the orientation), Home/End jump to the
-  // ends. Automatic mode selects the tab the focus lands on; manual mode
-  // only moves focus and selects on Enter (native click) / Space (here).
+  // wrap-around (axis follows the orientation), Home/End jump to the ends.
+  // Automatic mode selects the tab the focus lands on; manual mode only moves
+  // focus and selects on Enter (native click) or Space (here).
   handleKeydown = (e) => {
     const tab = e.target.closest(this.params.tabSelector);
     const currentItem = this.items.find((item) => item.tab === tab);
@@ -319,8 +318,8 @@ class Tabs {
 
     if (e.key === ' ') {
 
-      // A link has no native Space activation (Space scrolls the page),
-      // so select explicitly.
+      // A link has no native Space activation (Space scrolls the page), hence
+      // the explicit select.
       e.preventDefault();
       if (currentItem !== this.selectedItem) {
         this.select(currentItem, { updateHash: true });
@@ -351,9 +350,9 @@ class Tabs {
 
 
 
-  // Reacts to fragment navigation (back/forward, in-page links elsewhere
-  // on the page). Foreign hashes never match a panel id and are ignored,
-  // so hash-using neighbours (skip links, other anchors) cannot clash.
+  // Reacts to fragment navigation (back/forward, in-page links elsewhere on
+  // the page). Foreign hashes never match a panel id and are ignored, so
+  // hash-using neighbours (skip links, other anchors) cannot clash.
   handleHashChange = () => {
     const item = this.itemForHash(location.hash);
     if (!item || item === this.selectedItem) return;
@@ -362,9 +361,9 @@ class Tabs {
 
 
 
-  // Selects one tab: aria-selected + roving tabindex on the tabs, hidden
-  // on the panels. These ARIA attributes are also the styling hooks — the
-  // script writes no state class and no inline styles.
+  // Selects one tab: aria-selected + roving tabindex on the tabs, hidden on
+  // the panels. Those ARIA attributes are also the styling hooks — no state
+  // class, no inline styles.
   select = (selected, { setFocus = false, updateHash = false } = {}) => {
     this.items.forEach((item) => {
       const isSelected = item === selected;
@@ -379,28 +378,27 @@ class Tabs {
     if (!updateHash || !this.useDeeplink) return;
 
     // replaceState keeps path and query untouched, adds no history entry,
-    // does not scroll, and does not fire hashchange (no feedback loop).
+    // does not scroll, and fires no hashchange (no feedback loop).
     history.replaceState(null, '', `#${encodeURIComponent(selected.id)}`);
   };
 
 
 
-  // Maps a URL fragment to a tab item, or null when it points elsewhere
-  // or is not decodable.
+  // Maps a URL fragment to a tab item, or null when it points elsewhere or
+  // is not decodable.
   //
-  // A panel's own id is the documented case; something INSIDE a panel is
-  // the other one, and it counts just as much. The browser scrolls to the
-  // fragment either way, so a heading — or another component's region —
-  // deep in an inactive panel would otherwise take the reader to an
-  // element that is not in the flow, with nothing on screen to say so.
-  // That is not exotic: it happens as soon as a panel holds content with
-  // anchors of its own, and `readMore` gives its text region an id for
-  // exactly that reason.
+  // A panel's own id is the documented case; something INSIDE a panel is the
+  // other one, and it counts as much. The browser scrolls to the fragment
+  // either way, so a heading — or another component's region — deep in an
+  // inactive panel would otherwise take the reader to an element that is not
+  // in the flow, with nothing on screen to say so. Not exotic: it happens as
+  // soon as a panel holds content with anchors of its own, and `readMore`
+  // gives its text region an id for exactly that reason.
   //
-  // Checked in that order because the id is the cheap answer and the
-  // common one. A nested tabs widget resolves correctly through the same
-  // rule: the outer instance finds the panel that contains the inner
-  // panel, the inner one matches it by id.
+  // Checked in that order because the id is the cheap answer and the common
+  // one. A nested tabs widget resolves correctly through the same rule: the
+  // outer instance finds the panel containing the inner panel, the inner one
+  // matches it by id.
   itemForHash = (hash) => {
     if (!hash || hash.length < 2) return null;
 
@@ -418,7 +416,7 @@ class Tabs {
 
 
 
-  // Returns the neighbouring item with wrap-around.
+  // The neighbouring item, with wrap-around.
   siblingItem = (item, direction) => {
     const index = this.items.indexOf(item);
     const length = this.items.length;
@@ -427,11 +425,10 @@ class Tabs {
 
 
 
-  // Optional teardown for hosts that mount/unmount this subtree repeatedly
-  // instead of doing a full page (re)load — see destroyModulesInScope() in
-  // boot.js. The click/keydown listeners are bound to the tablist itself and
-  // would die naturally with it; only the window hashchange listener
-  // outlives this subtree unless explicitly removed.
+  // Optional teardown for hosts that mount/unmount this subtree repeatedly —
+  // see destroyModulesInScope() in boot.js. The click/keydown listeners are
+  // bound to the tablist and die with it; only the window hashchange listener
+  // outlives this subtree.
   destroy = () => {
     this.list?.removeEventListener('click', this.handleClick);
     this.list?.removeEventListener('keydown', this.handleKeydown);
@@ -443,8 +440,7 @@ class Tabs {
 
 
 
-// loader-compatible entry point
-// (boot.js -> mod.init(el, services))
+// loader-compatible entry point (boot.js -> mod.init(el, services))
 export function init(el, services = {}) {
   const reporter = services.reporter;
 

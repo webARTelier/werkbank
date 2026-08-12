@@ -5,9 +5,9 @@
 // Showing and hiding is CSS alone. The hint lives inside the component root
 // next to the control it describes, and two state selectors on that root
 // reveal it: :hover, and :has([data-tooltip-trigger]:focus-visible) for the
-// keyboard. So the component is complete with this stylesheet — tooltip.js
-// only adds the three things a stylesheet cannot do (the aria-describedby
-// wiring, Escape, and keeping the bubble inside the viewport).
+// keyboard. The component is complete with this stylesheet — tooltip.js only
+// adds the three things a stylesheet cannot do (the aria-describedby wiring,
+// Escape, and keeping the bubble inside the viewport).
 //
 // Contract with the JS
 // --------------------
@@ -26,32 +26,31 @@
 //                           bounds the bubble's width, which is the only
 //                           thing that helps a hint placed left or right
 //
-// Both properties are 0 without the module, which is the right answer for
-// the common case: a wrapper that fits its control tightly, on a control
-// that is nowhere near the edge of the window.
+// The two shifts are 0 without the module, the right answer for the common
+// case: a wrapper that fits its control tightly, on a control nowhere near
+// the edge of the window.
 //
-// Where it is not the right answer, the cost is paid by more than the hint.
-// The bubble is hidden with visibility rather than display (see below), so
-// it is a real, absolutely positioned box even while nobody is looking at
-// it, and a box reaching past the right edge of the viewport lands in the
-// document's scroll region: one un-measured hint on a control near the edge
-// of a narrow window puts a horizontal scrollbar under the whole page
-// before anything has been hovered — WCAG 1.4.10, and it is the page's
-// problem, not the hint's. So tooltip.js measures every hint at init, again
-// on resize and again once a webfont has swapped in, not only the one on
-// screen, and --tooltip-shift is already right by the time anything is
-// shown.
+// Where it is not, the cost is paid by more than the hint. The bubble is
+// hidden with visibility rather than display (see below), so it is a real,
+// absolutely positioned box even while nobody is looking at it, and a box
+// reaching past the right edge of the viewport lands in the document's scroll
+// region: one un-measured hint on a control near the edge of a narrow window
+// puts a horizontal scrollbar under the whole page before anything has been
+// hovered — WCAG 1.4.10, and the page's problem, not the hint's. So
+// tooltip.js measures every hint at init, again on resize and again once a
+// webfont has swapped in, not only the one on screen, and --tooltip-shift is
+// already right by the time anything is shown.
 //
 // Without the module that is unfixable here, and knowingly so: taking an
-// absolutely positioned box out of the scroll region needs either
-// display: none — which would cost the measurement and the fade — or
-// overflow: clip on an ancestor, which would clip the hint itself. A page
-// that has to survive the chunk failing and carries hints near its right
-// edge wants overflow-x: clip on its own scroll container.
+// absolutely positioned box out of the scroll region needs either display:
+// none — which would cost the measurement and the fade — or overflow: clip on
+// an ancestor, which would clip the hint itself. A page that has to survive
+// the chunk failing and carries hints near its right edge wants overflow-x:
+// clip on its own scroll container.
 //
-// The "c-tooltip*" classes (BEM "c-" prefix) are used for styling only.
-// tooltip.js does NOT hook onto them; it finds its parts via the
-// data-tooltip-* attributes and is loaded via data-js-behavior="tooltip".
+// The "c-tooltip*" classes (BEM "c-" prefix) are styling only. tooltip.js
+// does NOT hook onto them; it finds its parts via the data-tooltip-*
+// attributes and is loaded via data-js-behavior="tooltip".
 //
 // No pre-enhancement state: the first paint already is the enhanced resting
 // rendering (the hint is out of the way until it is asked for), so there is
@@ -75,24 +74,23 @@
 
 
 // ----- placement -----
-// One mixin per side, and each is nothing but a set of custom properties
-// that the single bubble rule further down consumes. Writing the sides as
-// values rather than as four copies of the same declarations is what keeps
-// the flip to one line per case below: "flipped" is simply "include the
-// opposite side".
+// One mixin per side, each nothing but a set of custom properties the single
+// bubble rule further down consumes. Writing the sides as values rather than
+// four copies of the same declarations is what keeps the flip to one line per
+// case below: "flipped" is simply "include the opposite side".
 //
 // The values are logical (inset-block / inset-inline) while the attribute
 // values are physical ("left"). Right-to-left is out of scope for this
 // project (see CLAUDE.md), so the two coincide — nothing here mirrors.
 //
-// The arrow sits on the bubble's far edge, and it follows the trigger
-// rather than the bubble: --tooltip-arrow-shift is its distance from the
-// middle of the bubble, so a hint that had to move still points at the
-// control it belongs to. clamp() stops the arrow from sliding into a
-// rounded corner when that distance grows past the bubble's half; the min()
-// and max() around its bounds keep the middle reachable on a bubble too
-// small to hold two insets, where the bounds would otherwise cross and
-// push a perfectly centred arrow off centre.
+// The arrow sits on the bubble's far edge and follows the trigger rather than
+// the bubble: --tooltip-arrow-shift is its distance from the middle of the
+// bubble, so a hint that had to move still points at the control it belongs
+// to. clamp() stops the arrow from sliding into a rounded corner when that
+// distance grows past the bubble's half; the min() and max() around its
+// bounds keep the middle reachable on a bubble too small to hold two insets,
+// where the bounds would otherwise cross and push a perfectly centred arrow
+// off centre.
 
 @mixin place-top {
   --tooltip-bubble-inset-block: auto calc(100% + var(--tooltip-offset));
@@ -157,19 +155,19 @@
 
 
 // The component root: the control and its hint, side by side in the markup
-// and stacked in the layout. It is the positioning context for the bubble,
-// and it is the element the two state selectors below key on — which is why
-// the hint has to sit inside it rather than next to the trigger.
+// and stacked in the layout. It is the positioning context for the bubble and
+// the element the two state selectors below key on — which is why the hint
+// has to sit inside it rather than next to the trigger.
 //
-// The custom properties are the component's override surface. They live on
-// the root rather than in :root, so they stay scoped to the component and a
-// single instance can be retuned in place — including --tooltip-offset,
-// which tooltip.js reads back off this very element.
+// The custom properties are the override surface: declared on the root, not
+// in :root, so they stay scoped and a single instance can be retuned in place
+// — including --tooltip-offset, which tooltip.js reads back off this very
+// element.
 .c-tooltip {
 
-  // Animation maps to the shared animation tokens
-  // (see _shared/scss/_foundations.scss). A third of the shared duration: a
-  // hint that fades in slowly is a hint the reader has already read past.
+  // Animation (shared tokens, _shared/scss/_foundations.scss). A third of the
+  // shared duration: a hint that fades in slowly is one the reader has
+  // already read past.
   --tooltip-duration: calc(var(--an-duration) / 3);
   --tooltip-easing: var(--an-ease);
 
@@ -190,8 +188,7 @@
     var(--tooltip-radius) + var(--tooltip-arrow-size) / 2
   );
 
-  // Spacing maps to the shared spacing scale
-  // (see _shared/scss/_foundations.scss).
+  // Spacing (shared scale, _shared/scss/_foundations.scss)
   --tooltip-offset: var(--space-2xs); // gap between trigger and bubble
   --tooltip-padding: var(--space-3xs) var(--space-2xs);
 
@@ -199,8 +196,7 @@
   --tooltip-font-size: 0.875rem;
   --tooltip-line-height: 1.4;
 
-  // Colors map to the shared semantic tokens
-  // (see _shared/scss/_colors_semantic.scss).
+  // Colors (shared semantic tokens, _shared/scss/_colors_semantic.scss)
   --tooltip-bg-color: var(--color-bg-elevated);
   --tooltip-text-color: var(--color-text);
   --tooltip-shadow: 0 6px 18px var(--color-shadow);
@@ -214,17 +210,17 @@
   // The three state values written by tooltip.js, declared here so the
   // placement below resolves without it. Zero is the honest default for the
   // two shifts: the rules put the bubble in the middle of this element and
-  // the arrow in the middle of the bubble, which is where they belong as
-  // long as this element fits its control and the control is not against
-  // the edge of the window. 100vw is the honest default for the third — a
-  // bound that bounds nothing. Deciding otherwise takes a measurement, and
-  // without the module nothing has been measured.
+  // the arrow in the middle of the bubble, where they belong as long as this
+  // element fits its control and the control is not against the edge of the
+  // window. 100vw is the honest default for the third — a bound that bounds
+  // nothing. Deciding otherwise takes a measurement, and without the module
+  // nothing has been measured.
   --tooltip-shift: 0px;
   --tooltip-arrow-shift: 0px;
   --tooltip-available: 100vw;
 
-  // "top" is the default side and therefore the base; the three rules
-  // after it are the alternatives.
+  // "top" is the default side and therefore the base; the three rules after
+  // it are the alternatives.
   @include place-top;
 
 
@@ -247,11 +243,11 @@
 
 
 
-  // tooltip.js writes data-tooltip-flipped when the preferred side ran out
-  // of room; each case then renders as its opposite. Every selector here is
-  // one attribute more specific than the plain side rules above (the first
-  // one via :not, since the default side carries no attribute at all), so
-  // the flip wins wherever it applies without depending on source order.
+  // tooltip.js writes data-tooltip-flipped when the preferred side ran out of
+  // room; each case then renders as its opposite. Every selector here is one
+  // attribute more specific than the plain side rules above (the first via
+  // :not, since the default side carries no attribute at all), so the flip
+  // wins wherever it applies without depending on source order.
   &:not([data-tooltip-position])[data-tooltip-flipped],
   &[data-tooltip-position='top'][data-tooltip-flipped] {
     @include place-bottom;
@@ -289,16 +285,16 @@
     border-radius: var(--tooltip-radius);
     padding: var(--tooltip-padding);
 
-    // max-content, or the absolutely positioned box would shrink to the
-    // width of the trigger it is anchored to.
+    // max-content, or the absolutely positioned box would shrink to the width
+    // of the trigger it is anchored to.
     //
-    // Three bounds on that width, and each answers a different question:
-    // how wide a hint should ever be, how much of a narrow window it may
-    // take, and — measured by tooltip.js — how much room its side actually
-    // has. The last one is the one that keeps a hint beside its control
-    // from reaching out of the window: the shift slides a hint along the
-    // cross axis, and for a hint on the left or the right that axis is the
-    // vertical one, so nothing else here can help it.
+    // Three bounds on that width, each answering a different question: how
+    // wide a hint should ever be, how much of a narrow window it may take,
+    // and — measured by tooltip.js — how much room its side actually has. The
+    // last is what keeps a hint beside its control from reaching out of the
+    // window: the shift slides a hint along the cross axis, and for a hint on
+    // the left or the right that axis is the vertical one, so nothing else
+    // here can help it.
     inline-size: max-content;
     max-inline-size: min(
       var(--tooltip-max-inline),
@@ -317,8 +313,8 @@
     // matter: the box survives, so tooltip.js can measure the bubble before
     // it is ever shown, and visibility transitions in every engine without
     // needing allow-discrete. Being hidden costs the hint nothing with
-    // assistive tech either — a node that aria-describedby points at
-    // directly is read out whether it is visible or not.
+    // assistive tech either — a node that aria-describedby points at directly
+    // is read out whether it is visible or not.
     //
     // The box surviving is also what makes the un-measured hint a page-wide
     // problem rather than a cosmetic one; see the contract at the top.
@@ -329,18 +325,18 @@
       visibility var(--tooltip-duration) var(--tooltip-easing);
 
     // Hover bridge. WCAG 1.4.13 asks that the pointer be able to travel to
-    // the hint, and the gap to the trigger is a strip of "nothing" that
-    // would take the hint away mid-transit. An invisible extension of the
-    // bubble by exactly that gap closes it on whichever side it sits.
+    // the hint, and the gap to the trigger is a strip of "nothing" that would
+    // take the hint away mid-transit. An invisible extension of the bubble by
+    // exactly that gap closes it on whichever side it sits.
     &::before {
       content: '';
       position: absolute;
       inset: calc(var(--tooltip-offset) * -1);
     }
 
-    // The arrow is decorative, and it is a clip-path triangle sitting
-    // outside the bubble's edge rather than a rotated square overlapping
-    // it — there is no border seam to hide that way.
+    // The arrow is decorative, and a clip-path triangle sitting outside the
+    // bubble's edge rather than a rotated square overlapping it — there is no
+    // border seam to hide that way.
     &::after {
       content: '';
       position: absolute;
@@ -359,13 +355,13 @@
 
 
   // The two ways a hint is asked for. Both are guarded against
-  // data-tooltip-dismissed, which is how Escape takes the hint away
-  // without the reader having to move the pointer or the focus first
-  // (WCAG 1.4.13, "dismissible").
+  // data-tooltip-dismissed, which is how Escape takes the hint away without
+  // the reader having to move the pointer or the focus first (WCAG 1.4.13,
+  // "dismissible").
   //
-  // The hover rule waits out --tooltip-delay; the focus rule does not, and
-  // it is a selector more specific, so a control that is hovered *and*
-  // focused from the keyboard shows its hint at once.
+  // The hover rule waits out --tooltip-delay; the focus rule does not, and is
+  // a selector more specific, so a control that is hovered *and* focused from
+  // the keyboard shows its hint at once.
   &:not([data-tooltip-dismissed]):hover &__bubble {
     visibility: visible;
     opacity: 1;
@@ -383,10 +379,10 @@
 
 
 
-// Forced colors: the system palette replaces both backgrounds, which would
-// leave the bubble indistinguishable from the page and the arrow invisible
-// against it. A border gives the hint its edge back, and the arrow — which
-// carries no meaning of its own — goes.
+// Forced colors: the system palette replaces both backgrounds, leaving the
+// bubble indistinguishable from the page and the arrow invisible against it.
+// A border gives the hint its edge back, and the arrow — which carries no
+// meaning of its own — goes.
 @include forced-colors {
 
   .c-tooltip {

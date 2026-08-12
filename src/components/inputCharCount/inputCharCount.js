@@ -1,22 +1,22 @@
 /**
  * inputCharCount.js
  * --------------------------------------------------------------------------
- * Progressive-enhancement controller that shows a live character counter
- * for a text field, and — when the field declares a `maxlength` — how much
- * of that budget is used or left. It is a pure enhancement layered on top
- * of a plain <input>/<textarea>: without JavaScript the field still works
- * and, if it has a `maxlength`, the browser still enforces the limit.
+ * Shows a live character counter for a text field, and — when the field
+ * declares a `maxlength` — how much of that budget is used or left. A pure
+ * enhancement on top of a plain <input>/<textarea>: without JavaScript the
+ * field still works and, with a `maxlength`, the browser still enforces the
+ * limit.
  *
  * Strategy (like the other components: derive state from the native source)
  * ------------------------------------------------------------------------
- * The single source of truth is the field itself: the current length is
- * always read from `field.value.length`, and the limit from the native
- * `maxlength` attribute. We keep no parallel model of "how many characters
- * are there" — every render recomputes from the live element, so the
- * counter cannot drift out of sync (paste, undo, autofill, cut all just
- * fire `input` and we re-read). Measuring length the same way the platform
- * does (UTF-16 code units) keeps the counter consistent with how
- * `maxlength` and the `tooLong` constraint themselves count.
+ * The single source of truth is the field itself: the current length comes
+ * from `field.value.length`, the limit from the native `maxlength`. There is
+ * no parallel model of "how many characters are there" — every render
+ * recomputes from the live element, so the counter cannot drift out of sync
+ * (paste, undo, autofill, cut all fire `input` and it re-reads). Measuring
+ * length the way the platform does (UTF-16 code units) keeps the counter
+ * consistent with how `maxlength` and the `tooLong` constraint themselves
+ * count.
  *
  * What the platform already does (so this script does NOT reimplement it)
  * ----------------------------------------------------------------------
@@ -29,27 +29,27 @@
  * What this script adds
  * ---------------------
  * 1. A visible counter injected after the field, updated instantly on every
- *    `input`. It is `aria-hidden` so it is purely a sighted-user affordance
- *    and does not compete with the announcement channel below.
+ *    `input`. `aria-hidden`, so it is purely a sighted-user affordance and
+ *    does not compete with the announcement channel below.
  * 2. An accessible announcement: a separate visually-hidden status region
  *    (`role="status"`, polite) tied to the field via `aria-describedby`, so
  *    the current count is read when the field takes focus and — debounced,
- *    once typing pauses — announced as it changes. Debouncing is what keeps
- *    a screen reader from reciting the count on every single keystroke.
- * 3. Limit awareness: when the field has a `maxlength`, the counter shows
- *    "used / max" (or, in countdown mode, the remaining budget), and the
- *    field gets an `is-atLimit` state class the moment the budget is spent,
- *    plus a spoken "limit reached" note. The class is only a styling hook —
- *    being at the limit is a valid state, so no `aria-invalid` is set.
- * 4. Localized text (de/en) chosen from <html lang>, with token
- *    interpolation ({count} {max} {remaining}); a field may override the
- *    visible wording with `data-icc-text`.
+ *    once typing pauses — announced as it changes. The debouncing is what
+ *    keeps a screen reader from reciting the count on every keystroke.
+ * 3. Limit awareness: with a `maxlength` the counter shows "used / max" (or,
+ *    in countdown mode, the remaining budget), and the field gets an
+ *    `is-atLimit` state class the moment the budget is spent, plus a spoken
+ *    "limit reached" note. The class is only a styling hook — being at the
+ *    limit is a valid state, so no `aria-invalid` is set.
+ * 4. Localized text (de/en) chosen from <html lang>, with token interpolation
+ *    ({count} {max} {remaining}); a field may override the visible wording
+ *    with `data-icc-text`.
  *
  * Accessibility
  * -------------
  * - The visible number is `aria-hidden`; the announcement goes through one
- *   quiet, polite status region (never `assertive`), debounced so live
- *   typing is not a burst of interruptions.
+ *   quiet, polite status region (never `assertive`), debounced so live typing
+ *   is not a burst of interruptions.
  * - The status region is linked with `aria-describedby` (author-set ids are
  *   preserved), so on focus the field is described by its current count.
  * - `maxlength` stays the real limit (enforced by the platform even without
@@ -58,21 +58,21 @@
  * Configuration (all optional; put `data-js-behavior="inputCharCount"` on the
  * <input>/<textarea> itself)
  * --------------------------------------------------------------------------
- * - `maxlength` (native)        enables the "used / max" display, the
- *                               countdown mode and the `is-atLimit` state.
- * - `data-icc-countdown`        show the remaining budget instead of the
- *                               used count (needs `maxlength`).
+ * - `maxlength` (native)        enables the "used / max" display, the countdown
+ *                               mode and the `is-atLimit` state.
+ * - `data-icc-countdown`        show the remaining budget instead of the used
+ *                               count (needs `maxlength`).
  * - `data-icc-text="…"`         override the VISIBLE template for this field
  *                               (tokens: {count} {max} {remaining}). The
- *                               spoken text keeps its natural-language
- *                               locale wording.
+ *                               spoken text keeps its natural-language locale
+ *                               wording.
  *
  * Styling contract
  * ----------------
  * Behaviour-first: the component ships only the one style it must own — the
- * visually-hidden rule for its injected status region (an a11y necessity,
- * not a design choice). Everything visible is a hook the consuming project
- * styles and the JS only ever writes, never reads back:
+ * visually-hidden rule for its injected status region (an a11y necessity, not
+ * a design choice). Everything visible is a hook the consuming project styles
+ * and the JS only writes, never reads back:
  *   - `.icc-counter` / `[data-icc-counter]`  the visible counter element
  *   - `.is-atLimit` on the field             set while the budget is spent
  * See `inputCharCount.scss`.
@@ -90,8 +90,8 @@ import { addDescribedBy, removeDescribedBy } from './describedBy.js';
 
 const defaults = {
 
-  // Field opt-ins (behavioural data attributes, not style classes, so the
-  // JS stays decoupled from the CSS).
+  // Field opt-ins (behavioural data attributes, not style classes, so the JS
+  // stays decoupled from the CSS).
   countdownAttr: 'data-icc-countdown', // show remaining instead of used
   textAttr: 'data-icc-text',           // per-field visible template override
 
@@ -103,12 +103,12 @@ const defaults = {
   statusClass: 'icc-srStatus',
   statusAttr: 'data-icc-status',
 
-  // State hook (styling only; the JS owns writing it, never reads it back).
+  // State hook (styling only; the JS writes it, never reads it back).
   atLimitClass: 'is-atLimit',
 
-  // How long typing must pause before the polite status region is updated,
-  // so a screen reader announces the count once the user settles rather than
-  // on every keystroke.
+  // How long typing must pause before the polite status region is updated, so
+  // a screen reader announces the count once the user settles rather than on
+  // every keystroke.
   announceDelay: 500,
 
   // <html lang> matching none of these falls back to this locale.
@@ -147,9 +147,9 @@ const labels = {
 
 
 
-// Distinguishes multiple counted fields on one page so their generated
-// status-region ids never collide (a field without its own id still gets a
-// unique one).
+// Distinguishes multiple counted fields on one page, so their generated
+// status-region ids never collide (a field without its own id still gets
+// one).
 let instanceCount = 0;
 
 
@@ -159,7 +159,7 @@ class InputCharCount {
   // Set by destroy(), read by the debounced announcement: a queued one cannot
   // be cancelled from the outside (debounceThenExecute hands back no handle),
   // so it has to find out for itself that there is nothing left to write —
-  // the same guard scrollSpy and backToTop carry for their debounced work.
+  // the guard scrollSpy and backToTop carry for their debounced work too.
   destroyed = false;
 
 
@@ -187,12 +187,12 @@ class InputCharCount {
       this.countdown = false;
     }
 
-    // A per-field override for the visible wording (the spoken text keeps
-    // its locale wording for clarity).
+    // A per-field override for the visible wording (the spoken text keeps its
+    // locale wording for clarity).
     this.textOverride = field.getAttribute(config.textAttr) || '';
 
-    // Announce debounced: the visible counter updates instantly, but the
-    // polite status region only settles after typing pauses (see renderSr).
+    // Announce debounced: the visible counter updates instantly, the polite
+    // status region only settles after typing pauses (see renderSr).
     this.announce = debounceThenExecute(this.renderSr, config.announceDelay);
 
     this.setup();
@@ -205,7 +205,7 @@ class InputCharCount {
     this.buildStatus();
 
     // First paint is immediate for BOTH channels: the visible number so it is
-    // never blank, and the status text so a field focused before typing is
+    // never blank, the status text so a field focused before typing is
     // already described by its current count (aria-describedby, set here).
     this.renderVisible();
     this.renderSr();
@@ -215,8 +215,9 @@ class InputCharCount {
 
 
 
-  // The visible counter, right after the field. aria-hidden so it is a purely
-  // sighted affordance and does not double up with the spoken status region.
+  // The visible counter, right after the field. aria-hidden, so it is a
+  // purely sighted affordance and does not double up with the spoken status
+  // region.
   buildCounter = () => {
     this.counter = document.createElement('div');
     this.counter.className = this.config.counterClass;
@@ -228,8 +229,8 @@ class InputCharCount {
 
 
   // The visually-hidden, polite status region. role="status" makes it a live
-  // region announced without stealing focus; a stable id lets us describe the
-  // field with it (addDescribedBy) so the count is read on focus too.
+  // region announced without stealing focus; a stable id lets the field be
+  // described by it (addDescribedBy), so the count is read on focus too.
   buildStatus = () => {
     this.statusId = `iccStatus${++instanceCount}`;
 
@@ -248,7 +249,7 @@ class InputCharCount {
 
   handleInput = () => {
 
-    // Visible feedback is instant; the spoken announcement is debounced so a
+    // Visible feedback is instant; the spoken announcement is debounced, so a
     // screen reader is not interrupted on every keystroke.
     this.renderVisible();
     this.announce();
@@ -256,8 +257,8 @@ class InputCharCount {
 
 
 
-  // Live values, recomputed from the field on every render so the counter can
-  // never drift from the actual value.
+  // Live values, recomputed from the field on every render, so the counter
+  // can never drift from the actual value.
   tokens = () => {
     const count = this.field.value.length;
     return {
@@ -277,8 +278,8 @@ class InputCharCount {
     const template = this.textOverride || this.visibleTemplate();
     this.counter.textContent = formatTemplate(template, tokens);
 
-    // At-limit is meaningful only when there is a limit. Toggle it on the
-    // field so the project can style the field and/or its sibling counter.
+    // At-limit is meaningful only when there is a limit. It goes on the
+    // field, so the project can style the field and/or its sibling counter.
     if (this.max) {
       this.field.classList.toggle(
         this.config.atLimitClass, tokens.count >= this.max
@@ -288,7 +289,7 @@ class InputCharCount {
 
 
 
-  // Writes the spoken status text. At the limit we say so explicitly, so a
+  // Writes the spoken status text. At the limit it says so explicitly, so a
   // screen-reader user learns the field will accept no more input.
   renderSr = () => {
     if (this.destroyed) return;
@@ -319,14 +320,13 @@ class InputCharCount {
 
 
 
-  // Optional teardown for hosts that mount/unmount this subtree repeatedly
-  // instead of doing a full page (re)load — see destroyModulesInScope() in
-  // boot.js. The input listener sits on the field and would die with it, but
-  // the two nodes this module injects are the field's SIBLINGS: a host that
-  // keeps the field and initialises it again would end up with a second
-  // counter and, worse, a second status region announcing the same count. The
-  // link to it and the state class go too, so the field is handed back exactly
-  // as it was authored.
+  // Optional teardown for hosts that mount/unmount this subtree repeatedly —
+  // see destroyModulesInScope() in boot.js. The input listener sits on the
+  // field and dies with it, but the two injected nodes are the field's
+  // SIBLINGS: a host that keeps the field and initialises it again would end
+  // up with a second counter and, worse, a second status region announcing
+  // the same count. The link to it and the state class go too, so the field
+  // is handed back as authored.
   destroy = () => {
     this.destroyed = true;
 

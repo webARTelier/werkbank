@@ -1,45 +1,39 @@
 /**
  * accordion.js
  * ----------------------------------------------------------------------------
- * Progressive-enhancement script for animated <details> accordions: it adds a
- * smooth open/close height animation on top of native <details>, without
+ * Adds a smooth open/close height animation to native <details>, without
  * taking over any of the base behaviour.
  *
  * What works without this script
  * ------------------------------
- * The base functionality (open/close, aria-expanded, single-open grouping via
- * the name attribute) already works without any JavaScript. This script only
- * adds the smooth height animation for browsers that do not yet support
- * ::details-content + interpolate-size (currently e.g. Firefox and Safari) —
- * so the animation is a pure progressive enhancement.
+ * Open/close, aria-expanded and single-open grouping via the name attribute
+ * are all native. This script only supplies the height animation for
+ * browsers without ::details-content + interpolate-size (currently Firefox
+ * and Safari), so the animation is a pure progressive enhancement.
  *
  * Strategy
  * --------
- * 1. Feature detection: if the browser supports the modern native solution,
- *    the script does nothing and CSS handles the animation fully.
+ * 1. Feature detection: where the native solution exists the script does
+ *    nothing and CSS handles the animation on its own.
  *
  * 2. Otherwise the panel content is wrapped in an extra element and animated
- *    via CSS Grid (grid-template-rows: 0fr <-> 1fr). The click on <summary>
- *    is intercepted (preventDefault) so we fully control the open/close:
+ *    via CSS Grid (grid-template-rows: 0fr <-> 1fr), with the <summary>
+ *    click intercepted (preventDefault) so we control open/close entirely:
  *      - opening simply sets 'open'; CSS animates 0fr -> 1fr.
  *      - closing sets a 'data-closing' state attribute — a pure CSS state
  *        toggle (grid-template-rows -> 0fr), exactly like toggling a class.
- *        'open' stays set so the 1fr -> 0fr transition can run, and is only
+ *        'open' stays set so the 1fr -> 0fr transition can run and is
  *        removed once it ends.
- *    We deliberately do NOT touch inline styles / requestAnimationFrame for
- *    the animation (that caused a stutter), and do NOT listen to 'toggle'
- *    (modifying 'open' from there would create a feedback loop).
+ *    Deliberately no inline styles / requestAnimationFrame (that stuttered)
+ *    and no 'toggle' listener (writing 'open' from there would loop).
  *
- * 3. Grouping (single-open) is taken over by JS as well. Native grouping via
- *    the 'name' attribute makes the browser close the open sibling *instantly*
- *    by removing its 'open' attribute -> the sibling's content is hidden at
- *    once and it snaps shut without any animation (and is left in a broken
- *    state for later toggles). Since the browser enforces exclusivity by
- *    removing 'open' immediately, the outgoing panel cannot be animated while
- *    the 'name' attribute is present. We therefore drop the native 'name' in
- *    the fallback and animate-close the open sibling(s) ourselves. Both panels
- *    may then be 'open' at the same moment, so the outgoing one collapses
- *    (1fr -> 0fr) while the incoming one expands (0fr -> 1fr).
+ * 3. Grouping (single-open) moves to JS as well. Native 'name' grouping
+ *    makes the browser remove the open sibling's 'open' attribute
+ *    *instantly*: it snaps shut unanimated and is left broken for later
+ *    toggles, and no animation is possible while 'name' is present. So the
+ *    fallback drops 'name' and animate-closes the open sibling(s) itself.
+ *    Both panels may be 'open' at the same moment, so the outgoing one
+ *    collapses (1fr -> 0fr) while the incoming one expands (0fr -> 1fr).
  * ----------------------------------------------------------------------------
  */
 
@@ -51,20 +45,19 @@ const defaults = {
   wrapperAttr: 'data-accordion-wrapper',
   clipAttr: 'data-accordion-clip',
 
-  // "The module has taken over." Set on the container the moment the
-  // fallback enhancement starts; the stylesheet switches from the native
-  // animation to the grid one on it. The standard ready attribute every
-  // component owns (see docs/preEnhancement.md) — accordion needs no
-  // pre-enhancement state of its own, because a <details> renders closed
-  // with or without this script, but the name stays the shared one.
+  // "The module has taken over." Set on the container when the fallback
+  // enhancement starts; the stylesheet switches from the native animation
+  // to the grid one on it. The standard ready attribute every component
+  // owns (see docs/preEnhancement.md) — accordion needs no pre-enhancement
+  // state of its own, since a <details> renders closed either way, but the
+  // name stays the shared one.
   readyAttr: 'data-accordion-ready',
 };
 
 
 
 /**
- * Checks whether the browser already supports the modern native
- * animation (::details-content + interpolate-size).
+ * Does the browser animate natively (::details-content + interpolate-size)?
  * @returns {boolean}
  */
 function supportsNativeAnimation() {
@@ -126,11 +119,10 @@ class AccordionEnhancer {
     // Two nested elements:
     //   wrapper -> the CSS grid that animates grid-template-rows 0fr <-> 1fr
     //   clip    -> the grid item (min-height:0, overflow:hidden, NO padding)
-    // The clip MUST be padding-free: a grid item's border box cannot
-    // shrink below its own padding, so padding on the collapsing item
-    // would leave a residual "half line" at the end of the close. The
-    // panel keeps its padding safely inside the clip, where it is simply
-    // clipped away.
+    // The clip MUST be padding-free: a border box cannot shrink below its
+    // own padding, so padding here would leave a residual "half line" at
+    // the end of the close. The panel keeps its padding inside the clip,
+    // where it is simply clipped away.
     const wrapper = document.createElement('div');
     wrapper.setAttribute(this.wrapperAttr, '');
     const clip = document.createElement('div');
@@ -140,22 +132,19 @@ class AccordionEnhancer {
     wrapper.appendChild(clip);
     clip.appendChild(panel);
 
-    // Take over grouping ourselves: remember the group name, then drop
-    // the native 'name' so the browser no longer closes siblings
-    // instantly (which would bypass our animation). We enforce
-    // single-open in JS below.
+    // Take grouping over: remember the group name, then drop the native
+    // 'name' so the browser stops closing siblings instantly (which would
+    // bypass our animation). Single-open is enforced in JS below.
     const group = details.getAttribute('name');
     if (group) details.removeAttribute('name');
 
     const record = { details, wrapper, group, summary, isAnimating: false };
     this.records.push(record);
 
-    // We take over the native toggling entirely: preventDefault stops
-    // the browser from flipping 'open' itself, so no 'toggle' feedback
-    // loop can occur. Works for mouse and keyboard (Enter/Space on a
-    // <summary> dispatches a click). Named and kept on the record (not
-    // an inline anonymous listener) so destroy() can remove exactly this
-    // function later.
+    // preventDefault stops the browser from flipping 'open' itself, so no
+    // 'toggle' feedback loop can occur. Works for mouse and keyboard
+    // (Enter/Space on a <summary> dispatches a click). Kept on the record
+    // rather than inline so destroy() can remove exactly this function.
     record.handleSummaryClick = (event) => {
       event.preventDefault();
       if (record.isAnimating) return;
@@ -166,9 +155,8 @@ class AccordionEnhancer {
         return;
       }
 
-      // Opening: animate-close any open sibling in the same group
-      // first (see class doc), then open this one. CSS animates the
-      // incoming panel 0fr -> 1fr while the sibling runs 1fr -> 0fr.
+      // Opening: animate-close any open sibling in the same group first
+      // (see file header), then open this one — CSS runs both at once.
       if (group) this.closeGroupSiblings(record);
       details.open = true;
     };
@@ -178,9 +166,9 @@ class AccordionEnhancer {
 
 
 
-  // Animates the open sibling(s) of the given record closed. Only used
-  // for grouped (single-open) accordions, where we drive exclusivity
-  // ourselves after dropping the native 'name' attribute.
+  // Animates the record's open sibling(s) closed. Only for grouped
+  // (single-open) accordions, where we drive exclusivity ourselves after
+  // dropping the native 'name' attribute.
   closeGroupSiblings = (record) => {
     this.records.forEach((other) => {
       if (other === record || other.group !== record.group) return;
@@ -195,11 +183,10 @@ class AccordionEnhancer {
 
 
 
-  // Closes an open item. Setting 'data-closing' is a pure CSS state
-  // toggle (see SCSS: it forces grid-template-rows back to 0fr while
-  // 'open' is still set), so the browser runs the 1fr -> 0fr transition
-  // just like a class toggle would. Only once the transition ends do we
-  // remove 'open'. No inline styles, no requestAnimationFrame.
+  // Closes an open item. 'data-closing' is a pure CSS state toggle (the
+  // SCSS forces grid-template-rows back to 0fr while 'open' is still set),
+  // so the browser runs the 1fr -> 0fr transition just like a class would.
+  // 'open' comes off only once the transition ends. No inline styles.
   animateClose = (details, wrapper, onDone) => {
     const onTransitionEnd = (event) => {
       if (event.propertyName !== 'grid-template-rows') return;
@@ -216,12 +203,10 @@ class AccordionEnhancer {
 
 
   // Optional teardown for hosts that mount/unmount this subtree repeatedly
-  // instead of doing a full page (re)load — see destroyModulesInScope() in
-  // boot.js. Every listener here is bound to elements inside this
-  // container and would die naturally with it; this exists for the case
-  // where a host keeps the same <details> elements (e.g. only their
-  // content changed) and wants a clean summary click listener before
-  // re-initializing, rather than accumulating one per re-init.
+  // — see destroyModulesInScope() in boot.js. Every listener here sits
+  // inside the container and dies with it; this is for the host that keeps
+  // the same <details> elements (only their content changed) and would
+  // otherwise accumulate one summary click listener per re-init.
   destroy = () => {
     this.records?.forEach((record) => {
       record.summary.removeEventListener('click', record.handleSummaryClick);
@@ -231,8 +216,7 @@ class AccordionEnhancer {
 
 
 
-// loader-compatible entry point 
-// (boot.js -> mod.init(el, services))
+// loader-compatible entry point (boot.js -> mod.init(el, services))
 export function init(el, services = {}) {
   const reporter = services.reporter;
 

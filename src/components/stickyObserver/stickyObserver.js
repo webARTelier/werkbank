@@ -2,73 +2,69 @@
  * stickyObserver.js
  * ----------------------------------------------------------------------------
  * `position: sticky` pins an element natively — no script needed for the
- * pinning itself. What CSS cannot do is *style* the pinned state: there is
- * no `:stuck` selector, so "add a shadow / a solid background / a hairline
- * once the header actually sticks" is impossible to express in pure CSS.
+ * pinning itself. What CSS cannot do is *style* the pinned state: there is no
+ * `:stuck` selector, so "add a shadow / a solid background / a hairline once
+ * the header actually sticks" is impossible to express in pure CSS.
  *
  * This module closes that gap with the sentinel pattern. The module element
- * is the sticky element itself (the "target"). A sentinel sits in the
- * normal flow above it — by default a zero-size <div> this script injects
- * directly before the target, or any element the author points at via
+ * is the sticky element itself (the "target"). A sentinel sits in the normal
+ * flow above it — by default a zero-size <div> this script injects directly
+ * before the target, or any element the author points at via
  * data-sticky-sentinel. An IntersectionObserver watches the sentinel: the
- * moment it is completely above the (offset) top edge of the viewport — or
- * of the scroll container given via data-sticky-root — the target must be
+ * moment it is completely above the (offset) top edge of the viewport — or of
+ * the scroll container given via data-sticky-root — the target must be
  * pinned, so ONE state class is toggled on the target:
- *   - is-stuck -> the target is currently pinned by position: sticky
- * CSS keys off that class. The script sets no inline styles and runs no
- * animations — the transition between the two states lives in the SCSS
- * (which also honours prefers-reduced-motion). Without JavaScript no
- * sentinel is injected and the class is never added: the element still
- * sticks natively and simply keeps its unstuck look — the styling hook is
- * a pure progressive enhancement.
+ *   - is-stuck -> the target is currently pinned by position: sticky CSS keys
+ * off that class. The script sets no inline styles and runs no animations —
+ * the transition between the two states lives in the SCSS (which also honours
+ * prefers-reduced-motion). Without JavaScript no sentinel is injected and the
+ * class is never added: the element still sticks natively and keeps its
+ * unstuck look — the styling hook is a pure progressive enhancement.
  *
  * The observer is passive: no scroll listener, no per-frame measuring. The
- * browser reports the sentinel's edge crossings; everything between two
- * flips costs nothing. The observer also fires once right after observing,
- * so a page restored mid-scroll starts with the correct state.
+ * browser reports the sentinel's edge crossings; everything between two flips
+ * costs nothing. It also fires once right after observing, so a page restored
+ * mid-scroll starts correct.
  *
  * Every instance owns its sentinel and its observer, so any number of
  * stickyObserver elements can live on one page. Several targets may also
  * share one author-placed sentinel by pointing data-sticky-sentinel at the
- * same element — each instance then simply observes it independently.
+ * same element — each instance then observes it independently.
  *
  * Accessibility
  * -------------
  * "Currently pinned" is a purely visual, viewport-dependent layout fact, so
  * the module adds no ARIA, no roles and no focus behaviour (the injected
- * sentinel is empty and aria-hidden), and the styling keyed on the class
- * must stay decorative (surface, shadow, spacing): nothing that carries
- * meaning to assistive technology may depend on it.
+ * sentinel is empty and aria-hidden), and the styling keyed on the class must
+ * stay decorative (surface, shadow, spacing): nothing carrying meaning to
+ * assistive technology may depend on it.
  *
  * Configuration (all optional, read from the module element)
  * ----------------------------------------------------------
- *   - data-sticky-sentinel="..."
- *       CSS selector (first match in the document) for an author-placed
- *       sentinel. Use it when the trigger should sit somewhere else in the
- *       layout than directly before the target, when an injected sibling
- *       would disturb the layout (flex/grid `gap` slots, :first-child or
- *       sibling selectors, list/table markup), or when several targets
- *       share one sentinel. Any element works — the class flips once it is
- *       COMPLETELY above the trigger edge. Without the attribute a
- *       zero-size, aria-hidden <div> is injected directly before the
- *       target.
- *   - data-sticky-root="..."
- *       CSS selector (first match in the document) for the scroll
- *       container the target sticks in. Without the attribute the
+ *   - data-sticky-sentinel="..." CSS selector (first match in the document)
+ *       for an author-placed sentinel. Use it when the trigger should sit
+ *       somewhere else in the layout than directly before the target, when
+ *       an injected sibling would disturb the layout (flex/grid `gap` slots,
+ *       :first-child or sibling selectors, list/table markup), or when
+ *       several targets share one sentinel. Any element works — the class
+ *       flips once it is COMPLETELY above the trigger edge. Without the
+ *       attribute a zero-size, aria-hidden <div> is injected directly before
+ *       the target.
+ *   - data-sticky-root="..." CSS selector (first match in the document) for
+ *       the scroll container the target sticks in. Without the attribute the
  *       observer watches the viewport — correct for the common page-level
- *       sticky bar. Set it when the target lives inside an
- *       overflow: auto/scroll ancestor: position: sticky then pins
- *       against that container's edge, so the class must flip against
- *       the same edge, not the viewport's. Target and sentinel must both
- *       sit inside the root element.
- *   - data-sticky-offset="..."
- *       px pin distance from the top of the viewport/root — the target's
- *       `inset-block-start` / `top` value. Normally NOT needed: the
- *       script reads the target's computed `top` by itself, so the CSS
- *       pin position is the single source of truth. Set the attribute
- *       only when that value is unusable (`auto`, or not resolvable to
- *       px). Either way the observer shrinks its root by the offset so
- *       the class flips exactly when the target reaches its pin
+ *       sticky bar. Set it when the target lives inside an overflow:
+ *       auto/scroll ancestor: position: sticky then pins against that
+ *       container's edge, so the class has to flip against the same edge, not
+ *       the viewport's. Target and sentinel must both sit inside the root
+ *       element.
+ *   - data-sticky-offset="..." px pin distance from the top of the
+ *       viewport/root — the target's `inset-block-start` / `top` value.
+ *       Normally NOT needed: the script reads the target's computed `top` by
+ *       itself, so the CSS pin position is the single source of truth. Set
+ *       the attribute only when that value is unusable (`auto`, or not
+ *       resolvable to px). Either way the observer shrinks its root by the
+ *       offset, so the class flips exactly when the target reaches its pin
  *       position, not a moment late.
  * ----------------------------------------------------------------------------
  */
@@ -82,8 +78,8 @@ import { parseNonNegative } from './parseNonNegative.js';
 const defaults = {
 
   // Toggled on the target while it is pinned. Not overridable from the
-  // markup: the shipped SCSS keys its pinned-state rules off this exact
-  // name, so a renamed class would only take the styling away.
+  // markup: the shipped SCSS keys its pinned-state rules off this exact name,
+  // so a renamed class would only take the styling away.
   stateClass: 'is-stuck',
 
   offset: 0, // px pin distance from the viewport top (data-sticky-offset)
@@ -97,10 +93,9 @@ class StickyObserver {
     this.target = target;
     this.reporter = reporter;
 
-    // Very old engines without IntersectionObserver stay unenhanced —
-    // the element still sticks natively, only the class is never
-    // toggled. Bail before touching the DOM so no orphaned sentinel
-    // is injected.
+    // Very old engines without IntersectionObserver stay unenhanced — the
+    // element still sticks natively, only the class is never toggled. Bail
+    // before touching the DOM so no orphaned sentinel is injected.
     if (!('IntersectionObserver' in window)) return;
 
     this.offset = this.resolveOffset();
@@ -118,13 +113,12 @@ class StickyObserver {
 
 
 
-  // The pin distance from the trigger edge. An explicit
-  // data-sticky-offset wins; without it the offset is read from the
-  // target's own computed `top` (the resolved value of
-  // `inset-block-start`), so the CSS pin position is the single source
-  // of truth and needs no double bookkeeping in the markup. Only px
-  // values are usable — `auto` (or anything else non-px) falls back to
-  // 0; set data-sticky-offset explicitly in those cases.
+  // The pin distance from the trigger edge. An explicit data-sticky-offset
+  // wins; without it the offset comes from the target's own computed `top`
+  // (the resolved value of `inset-block-start`), so the CSS pin position is
+  // the single source of truth and needs no double bookkeeping in the markup.
+  // Only px values are usable — `auto` (or anything else non-px) falls back
+  // to 0; set data-sticky-offset explicitly there.
   resolveOffset = () => {
     const computedTop = getComputedStyle(this.target).top;
     const fallback = computedTop.endsWith('px')
@@ -139,14 +133,14 @@ class StickyObserver {
 
 
 
-  // Which box does the target stick in? Without data-sticky-root the
-  // observer watches the viewport (root: null). With the attribute the
-  // first match in the document becomes the observer root — required
-  // inside an overflow: auto/scroll container, where position: sticky
-  // pins against that container's edge, not the viewport's. Returns
-  // undefined on a bad config so the constructor bails instead of
-  // silently watching the wrong box; the target must sit inside the
-  // root, otherwise its sentinel could never intersect it.
+  // Which box does the target stick in? Without data-sticky-root the observer
+  // watches the viewport (root: null). With the attribute the first match in
+  // the document becomes the observer root — required inside an overflow:
+  // auto/scroll container, where position: sticky pins against that
+  // container's edge rather than the viewport's. undefined on a bad config,
+  // so the constructor bails instead of silently watching the wrong box; the
+  // target has to sit inside the root, or its sentinel could never intersect
+  // it.
   resolveRoot = () => {
     const selector = this.target.dataset.stickyRoot?.trim();
     if (!selector) return null;
@@ -182,10 +176,10 @@ class StickyObserver {
 
 
 
-  // Which element is the sentinel? An explicit data-sticky-sentinel
-  // selector wins (author-placed trigger, resolved against the
-  // document — use unique selectors per instance); without it a
-  // sentinel is injected directly before the target.
+  // Which element is the sentinel? An explicit data-sticky-sentinel selector
+  // wins (author-placed trigger, resolved against the document — use unique
+  // selectors per instance); without it a sentinel is injected directly
+  // before the target.
   resolveSentinel = () => {
     const selector = this.target.dataset.stickySentinel?.trim();
     if (!selector) return this.injectSentinel();
@@ -201,11 +195,11 @@ class StickyObserver {
         return null;
       }
 
-      // An author-placed sentinel outside the scroll-container root
-      // could never intersect it — the class would sit frozen on
-      // whatever the first callback decided. (The injected sentinel
-      // cannot end up outside: it is a sibling of the target, and the
-      // target is verified to sit inside the root.)
+      // An author-placed sentinel outside the scroll-container root could
+      // never intersect it — the class would sit frozen on whatever the first
+      // callback decided. (The injected sentinel cannot end up outside: it is
+      // a sibling of the target, and the target is verified to sit inside the
+      // root.)
       if (this.root && !this.root.contains(sentinel)) {
         this.reporter?.report(
           'stickyObserver',
@@ -226,13 +220,12 @@ class StickyObserver {
 
 
 
-  // Inject the default sentinel: an empty, zero-size <div> right
-  // before the target — invisible, aria-hidden and without any layout
-  // footprint in normal block flow. Inside a flex/grid container with
-  // `gap` (or next to :first-child / sibling selectors) an extra
-  // sibling is NOT free — point data-sticky-sentinel at an
-  // author-placed element there instead. The marker attribute only
-  // makes the injected node identifiable in the inspector.
+  // The default sentinel: an empty, zero-size <div> right before the target —
+  // invisible, aria-hidden and without a layout footprint in normal block
+  // flow. Inside a flex/grid container with `gap` (or next to :first-child /
+  // sibling selectors) an extra sibling is NOT free — point
+  // data-sticky-sentinel at an author-placed element there instead. The
+  // marker attribute only makes the node identifiable in the inspector.
   injectSentinel = () => {
     const sentinel = document.createElement('div');
     sentinel.setAttribute('aria-hidden', 'true');
@@ -243,17 +236,16 @@ class StickyObserver {
 
 
 
-  // Watch the sentinel from the configured root — the viewport by
-  // default, a scroll container via data-sticky-root. The negative top
-  // rootMargin shrinks that root by the pin offset so "sentinel gone"
-  // and "target pinned" coincide even when the target sticks below the
-  // root's top edge. The huge bottom expansion keeps the sentinel
-  // "intersecting" while it is anywhere BELOW that edge, even far
-  // under the fold: crossing the edge is then always a status change
-  // the observer reports — including instant scroll jumps (anchor
-  // links, "back to top", the Home key), during which the sentinel
-  // never appears inside the bare root box and which would otherwise
-  // produce no notification at all, leaving a stale class behind.
+  // Watch the sentinel from the configured root — the viewport by default, a
+  // scroll container via data-sticky-root. The negative top rootMargin
+  // shrinks that root by the pin offset, so "sentinel gone" and "target
+  // pinned" coincide even when the target sticks below the root's top edge.
+  // The huge bottom expansion keeps the sentinel "intersecting" while it is
+  // anywhere BELOW that edge, even far under the fold: crossing the edge is
+  // then always a status change the observer reports — including instant
+  // scroll jumps (anchor links, "back to top", the Home key), during which
+  // the sentinel never appears inside the bare root box and which would
+  // otherwise produce no notification at all, leaving a stale class behind.
   observe = () => {
     this.observer = new IntersectionObserver(this.handleIntersection, {
       root: this.root,
@@ -265,14 +257,13 @@ class StickyObserver {
 
 
 
-  // With the expanded root the sentinel only stops intersecting when
-  // it is completely above the (offset) top edge — exactly while the
-  // target is pinned. The rect check is belt and braces for pages
-  // deeper than the bottom expansion; rootBounds is only null for a
-  // root detached from the document — fall back to the configured
-  // offset (the same top edge) in that case. The write is idempotent:
-  // classList.toggle with an explicit force flag only mutates the
-  // attribute when the state actually changes.
+  // With the expanded root the sentinel only stops intersecting once it is
+  // completely above the (offset) top edge — exactly while the target is
+  // pinned. The rect check is belt and braces for pages deeper than the
+  // bottom expansion; rootBounds is null only for a root detached from the
+  // document, where the configured offset (the same top edge) stands in. The
+  // write is idempotent: classList.toggle with an explicit force flag mutates
+  // the attribute only when the state changes.
   handleIntersection = (entries) => {
     const entry = entries[entries.length - 1];
     if (!entry) return;
@@ -285,16 +276,14 @@ class StickyObserver {
 
 
 
-  // Optional teardown for hosts that mount/unmount this subtree
-  // repeatedly instead of doing a full page (re)load — see
-  // destroyModulesInScope() in boot.js. Disconnects the observer and
-  // removes the injected sentinel — it is the target's PRECEDING
-  // SIBLING, not a descendant, so a host that replaces only the target
-  // node (not its parent) would otherwise leave it behind as an orphan.
-  // A no-op for an author-placed sentinel (data-sticky-sentinel), which
-  // this module does not own. Guarded throughout because construction
-  // can bail out early (no IntersectionObserver, bad root/sentinel
-  // config) before any of these exist.
+  // Optional teardown for hosts that mount/unmount this subtree repeatedly —
+  // see destroyModulesInScope() in boot.js. Disconnects the observer and
+  // removes the injected sentinel — the target's PRECEDING SIBLING, not a
+  // descendant, so a host that replaces only the target node (not its parent)
+  // would otherwise leave it behind as an orphan. A no-op for an
+  // author-placed sentinel (data-sticky-sentinel), which this module does not
+  // own. Guarded throughout because construction can bail out early (no
+  // IntersectionObserver, bad root/sentinel config).
   destroy = () => {
     this.observer?.disconnect();
     if (!this.target.dataset.stickySentinel) this.sentinel?.remove();
@@ -303,8 +292,7 @@ class StickyObserver {
 
 
 
-// loader-compatible entry point
-// (boot.js -> mod.init(el, services))
+// loader-compatible entry point (boot.js -> mod.init(el, services))
 export function init(el, services = {}) {
   const reporter = services.reporter;
 
@@ -316,9 +304,8 @@ export function init(el, services = {}) {
     return;
   }
 
-  // Double-init is prevented by the loader (boot.js sets a
-  // per-element, per-module flag before calling init), so no
-  // extra guard is needed here.
+  // Double-init is prevented by the loader (boot.js sets a per-element,
+  // per-module flag before calling init), so no extra guard is needed here.
   const instance = new StickyObserver(el, reporter);
   return instance.destroy;
 }

@@ -3,50 +3,47 @@
 // =============================================================
 //
 // The module upgrades an anchor-link table of contents into an ARIA tabs
-// widget — pure behaviour, every visual (including the focus ring) belongs
-// to the consuming project. It sets no inline styles and writes no state
-// class; the ARIA it maintains doubles as the styling hook:
+// widget — pure behaviour, every visual (including the focus ring) belongs to
+// the consuming project. It sets no inline styles and writes no state class;
+// the ARIA it maintains doubles as the styling hook:
 //   [data-tabs-tab][aria-selected='true']   the active tab
 //   [data-tabs-panel][hidden]               inactive panels (display:none
 //                                           comes free from `hidden`)
 //
-// What this file does ship is the pre-enhancement state below. That is not
-// a visual, and it is not the project's to write: it has to be in force
-// before the module exists, and getting it wrong makes content unreachable
-// rather than ugly. Same reason marquee ships its clipping row — structure
-// the behaviour cannot work without, not design.
+// What this file does ship is the pre-enhancement state below. Not a visual,
+// and not the project's to write: it has to be in force before the module
+// exists, and getting it wrong makes content unreachable rather than ugly.
+// Same reason marquee ships its clipping row — structure the behaviour cannot
+// work without, not design.
 
 @use "mediaqueries" as *;
 
 
 
 // -------------------------------------------------------------
-// The pre-enhancement state (see
-// _shared/scss/_progressiveEnhancement.scss).
+// The pre-enhancement state (see _shared/scss/_progressiveEnhancement.scss).
 //
-// Without it every page load paints all panels stacked one under the other
-// — the honest no-JS rendering — and then collapses them to one the moment
-// the module lands, a round trip later. On a tabs widget that is the most
-// violent flash in the set: the page is several screens too long, and then
-// it snaps.
+// Without it every page load paints all panels stacked one under the other —
+// the honest no-JS rendering — and then collapses them to one the moment the
+// module lands, a round trip later. On a tabs widget that is the most violent
+// flash in the set: the page is several screens too long, and then it snaps.
 //
 // So the panels start in their enhanced resting position instead: one
-// visible, the rest out of the flow. Which one is visible is decided the
-// same way the module decides it, and that is what makes hiding the others
-// survivable. The tabs are in-page anchor links, so a URL fragment naming a
-// panel makes it :target — and a targeted panel is exempt here, exactly as
-// the module would select it on load. So is a panel that merely CONTAINS
-// the target, which is the case a panel full of anchored content brings
-// with it; the two rules below carry both, and itemForHash() in the module
-// answers the same pair. If this component's chunk never arrives, the list
-// above the panels is still a working table of contents: every panel stays
-// one click away, and the widget degrades to the document it was authored
-// as.
+// visible, the rest out of the flow. Which one is visible is decided the way
+// the module decides it, and that is what makes hiding the others survivable.
+// The tabs are in-page anchor links, so a URL fragment naming a panel makes
+// it :target — and a targeted panel is exempt here, exactly as the module
+// would select it on load. So is a panel that merely CONTAINS the target, the
+// case a panel full of anchored content brings with it; the two rules below
+// carry both, and itemForHash() in the module answers the same pair. If this
+// component's chunk never arrives, the list above the panels is still a
+// working table of contents: every panel stays one click away, and the widget
+// degrades to the document it was authored as.
 //
-// A note on the failure direction: an engine that does not know :has()
-// throws each of those selectors out whole, which un-hides the panels and
-// leaves the plain stacked document — the same place a missing chunk lands
-// the reader. Nothing becomes unreachable either way.
+// A note on the failure direction: an engine without :has() throws each of
+// those selectors out whole, which un-hides the panels and leaves the plain
+// stacked document — where a missing chunk lands the reader too. Nothing
+// becomes unreachable either way.
 //
 // Written out rather than through the shared pre-enhancement() mixin, and
 // this is the one component where that is right. The mixin guards with
@@ -62,14 +59,14 @@
 // -------------------------------------------------------------
 @include scripting-enabled {
 
-  // Every panel that has another panel before it: the first one is the
-  // module's default selection, so it is the one that stays.
+  // Every panel with another panel before it: the first one is the module's
+  // default selection, so it is the one that stays.
   //
   // Two exemptions, and they are the two cases itemForHash() answers in the
   // module: the fragment names this panel, or it names something inside it.
-  // The second one is what a panel holding anchored content needs — a
-  // readMore names its text region, and a fragment pointing at that region
-  // would otherwise scroll the reader to an element still out of the flow.
+  // The second is what a panel holding anchored content needs — a readMore
+  // names its text region, and a fragment pointing at that region would
+  // otherwise scroll the reader to an element still out of the flow.
   [data-tabs-panel] ~ [data-tabs-panel]:not([data-tabs-ready] *):not(:target):not(:has(:target)) {
     display: none;
   }
@@ -80,8 +77,8 @@
   //
   // The second half of that list is a descendant selector inside :has()
   // rather than a nested ":has(~ [data-tabs-panel]:has(:target))" — which
-  // would say the same thing and is invalid, because :has() cannot be
-  // nested inside :has().
+  // would say the same thing and is invalid, because :has() cannot be nested
+  // inside :has().
   [data-tabs-panel]:not([data-tabs-ready] *):has(
     ~ [data-tabs-panel]:target,
     ~ [data-tabs-panel] :target

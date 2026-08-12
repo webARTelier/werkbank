@@ -8,29 +8,29 @@
  *
  * Why this is needed
  * ------------------
- * An inline <svg> that carries only a viewBox has no concrete size: its
- * width/height default to auto, which resolves to 100% of the container
- * width — the graphic blows up to fill whatever holds it. This hits every
- * SVG pasted or inlined without explicit dimensions (the inlineSVG sibling
+ * An inline <svg> carrying only a viewBox has no concrete size: its
+ * width/height default to auto, which resolves to 100% of the container width
+ * — the graphic blows up to fill whatever holds it. This hits every SVG
+ * pasted or inlined without explicit dimensions (the inlineSVG sibling
  * produces exactly such nodes when the source file declares no size). The
  * missing piece is pure arithmetic: the viewBox already knows the intrinsic
- * geometry; someone just has to turn it into a size.
+ * geometry; someone has to turn it into a size.
  *
  * Strategy (like the other components: lean on the platform, fill the gap)
  * ------------------------------------------------------------------------
  * The viewBox is the source of truth — the browser parses it natively
- * (viewBox.baseVal) — and the width/height presentation attributes are
- * SVG's built-in sizing mechanism. The module only multiplies the two
- * numbers and writes the two attributes. Presentation attributes rank
- * below every CSS rule, so project CSS keeps full override power; no
- * inline styles are written. Like its sibling inlineSVG it is a stateless
- * DOM transform — plain functions, no lifecycle class.
+ * (viewBox.baseVal) — and the width/height presentation attributes are SVG's
+ * built-in sizing mechanism. The module only multiplies the two numbers and
+ * writes the two attributes. Presentation attributes rank below every CSS
+ * rule, so project CSS keeps full override power; no inline styles are
+ * written. Like its sibling inlineSVG a stateless DOM transform — plain
+ * functions, no lifecycle class.
  *
  * What this transform adds
  * ------------------------
- * 1. Sizing: every svg[data-scale] in the boot scope gets
- *    width/height = viewBox size × scale factor. An SVG without a usable
- *    viewBox is left untouched and reported.
+ * 1. Sizing: every svg[data-scale] in the boot scope gets width/height =
+ *    viewBox size × scale factor. An SVG without a usable viewBox is left
+ *    untouched and reported.
  * 2. Idempotence: a sized SVG is marked with the is-scaled state class and
  *    each candidate is examined at most once, so repeated passes over the
  *    same scope (re-scans, observer runs) are safe and stay silent.
@@ -45,18 +45,17 @@
  *
  * Accessibility
  * -------------
- * Sizing only — the module never touches roles, names or aria-*
- * attributes. Whether an SVG is meaningful (named) or decorative (hidden)
- * is owned by the markup author — or by inlineSVG when the SVG comes out
- * of an <img>.
+ * Sizing only — the module never touches roles, names or aria-* attributes.
+ * Whether an SVG is meaningful (named) or decorative (hidden) is owned by the
+ * markup author — or by inlineSVG when the SVG comes out of an <img>.
  *
  * Configuration
  * -------------
- * data-scale="<factor>" — multiplier for the viewBox size (0.5 halves it,
- * 3 triples it). The attribute doubles as the opt-in marker: only
+ * data-scale="<factor>" — multiplier for the viewBox size (0.5 halves it, 3
+ * triples it). The attribute doubles as the opt-in marker: only
  * svg[data-scale] elements are touched. A bare data-scale sizes the SVG to
- * its natural viewBox size (factor 1); a value that is not a positive
- * number is reported and falls back to 1 as well.
+ * its natural viewBox size (factor 1); a value that is not a positive number
+ * is reported and falls back to 1 as well.
  * ---------------------------------------------------------------------------
  */
 
@@ -70,27 +69,27 @@ const defaults = {
   // <img> elements that inlineSVG may still swap for such an SVG.
   sourceSelector: 'img[data-scale]',
 
-  // State class marking a sized SVG — the styling hook the JS hands to
-  // the CSS (e.g. reveal a graphic only once it has its final size).
+  // State class marking a sized SVG — the styling hook the JS hands to the
+  // CSS (e.g. reveal a graphic only once it has its final size).
   scaledClass: 'is-scaled',
 
-  // Scale factor used when data-scale carries no usable value: the SVG's
-  // natural viewBox size.
+  // Scale factor for a data-scale with no usable value: the natural viewBox
+  // size.
   fallbackScale: 1,
 };
 
 
 
-// Every SVG the module has already examined — sized or reported as
-// unusable — so repeated passes over the same scope are idempotent and
-// never repeat a warning.
+// Every SVG the module has already examined — sized or reported as unusable —
+// so repeated passes over the same scope are idempotent and never repeat a
+// warning.
 const examined = new WeakSet();
 
 
 
-// Reads the scale factor off one SVG. A bare/empty data-scale means "use
-// the natural size"; a non-numeric or non-positive value is an authoring
-// error, so it is reported before falling back.
+// Reads the scale factor off one SVG. A bare/empty data-scale means "use the
+// natural size"; a non-numeric or non-positive value is an authoring error,
+// so it is reported before falling back.
 function readScale(svg, reporter) {
   const raw = svg.dataset.scale;
   if (!raw) return defaults.fallbackScale;
@@ -109,9 +108,8 @@ function readScale(svg, reporter) {
 
 
 
-// Reads the intrinsic size from the SVG's viewBox, using the browser's own
-// parse (viewBox.baseVal). Reports and returns null when there is nothing
-// usable to derive a size from.
+// The intrinsic size from the SVG's viewBox, using the browser's own parse
+// (viewBox.baseVal). Reports and returns null when there is nothing usable.
 function readViewBoxSize(svg, reporter) {
   if (!svg.hasAttribute('viewBox')) {
     reporter?.report(
@@ -134,8 +132,8 @@ function readViewBoxSize(svg, reporter) {
 
 
 // Sizes one inline SVG: viewBox size × scale factor, written as the
-// width/height presentation attributes (never inline styles, so any CSS
-// rule can still override the result).
+// width/height presentation attributes (never inline styles, so any CSS rule
+// can still override).
 function scaleSvg(svg, reporter) {
   if (!(svg instanceof SVGSVGElement)) return;
   if (examined.has(svg)) return;
@@ -154,8 +152,8 @@ function scaleSvg(svg, reporter) {
 
 
 
-// Sizes every candidate inside one scope, the scope element itself
-// included when it matches.
+// Sizes every candidate inside one scope, the scope element included when it
+// matches.
 function scaleInScope(scope, reporter) {
   if (scope.matches(defaults.selector)) scaleSvg(scope, reporter);
 
@@ -171,11 +169,11 @@ function scaleInScope(scope, reporter) {
 // module to size — data-scale on an <img> does not resize the image.
 //
 // Chaining the two modules on the same element is what gets this right: boot
-// awaits inlineSVG before calling this one, so every conversion has already
-// happened by the time the sweep runs. This used to be a MutationObserver
-// waiting up to five seconds for swaps to appear, which only ever mattered for
-// the reverse wiring (inlineSVG on the images, scaleSVG on an ancestor) — one
-// no snippet and no demo uses. Naming the fix beats waiting for it.
+// awaits inlineSVG before calling this one, so every conversion has happened
+// by the time the sweep runs. Naming the fix beats waiting for it, which is
+// what the earlier MutationObserver did — for up to five seconds, and only
+// ever for the reverse wiring (inlineSVG on the images, scaleSVG on an
+// ancestor) that no snippet and no demo uses.
 function reportPendingSources(el, reporter) {
   const pending = el.querySelectorAll(defaults.sourceSelector).length
     + (el.matches(defaults.sourceSelector) ? 1 : 0);
@@ -193,8 +191,7 @@ function reportPendingSources(el, reporter) {
 
 
 
-// loader-compatible entry point
-// (boot.js -> mod.init(el, services))
+// loader-compatible entry point (boot.js -> mod.init(el, services))
 export function init(el, services = {}) {
   const reporter = services.reporter;
 
@@ -206,21 +203,20 @@ export function init(el, services = {}) {
     return;
   }
 
-  // Chained wiring (data-js-behavior="inlineSVG,scaleSVG" on one <img>):
-  // boot awaits inlineSVG's init before calling this one, so the <img> it
-  // hands over has already been swapped out of the document. The
-  // replacement is unreachable from the detached node, but it carries the
-  // data-scale that sat on the <img> — so pick up every not-yet-sized
-  // candidate in the document instead. The examined guard keeps this
-  // idempotent when several chained images each trigger the same sweep.
+  // Chained wiring (data-js-behavior="inlineSVG,scaleSVG" on one <img>): boot
+  // awaits inlineSVG's init before calling this one, so the <img> it hands
+  // over has already been swapped out of the document. The replacement is
+  // unreachable from the detached node but carries the data-scale that sat on
+  // the <img> — so every not-yet-sized candidate in the document is picked up
+  // instead. The examined guard keeps this idempotent when several chained
+  // images each trigger the same sweep.
   if (!el.isConnected && el.matches(defaults.sourceSelector)) {
     scaleInScope(document.documentElement, reporter);
     return;
   }
 
   // Double-init is prevented by the loader (boot.js sets a per-element,
-  // per-module flag before calling init), so no extra guard is needed
-  // here.
+  // per-module flag before calling init), so no extra guard is needed here.
   scaleInScope(el, reporter);
 
   reportPendingSources(el, reporter);

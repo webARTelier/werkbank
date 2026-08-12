@@ -2,19 +2,17 @@
 // Countdown — live countdown to a target date
 // =============================================================
 //
-// Layout: each unit (days / hours / minutes / seconds) is a column with
-// the numeric value on top and its label word underneath. The units sit
-// in a row, separated by a colon. The value uses a much larger font size
-// than the label so the numbers read as the primary content. The unit row
-// (.m-countdown__display) and the pause/resume control stack vertically in
-// the module root (.m-countdown).
+// Layout: each unit (days / hours / minutes / seconds) is a column with the
+// numeric value on top and its label word underneath, the units in a row
+// separated by a colon. The value's font size is much larger, so the numbers
+// read as the primary content. The unit row (.m-countdown__display) and the
+// pause/resume control stack vertically in the root (.m-countdown).
 //
-// The "m-countdown*" classes (BEM "m-" prefix) are used for styling only.
-// countdown.js does NOT hook onto them; it targets the data attributes in
-// the markup ("data-countdown-days" / "-hours" / "-minutes" / "-seconds",
-// plus "-display" / "-units" / "-summary" for the accessibility wiring).
-// The colon separator is a decorative pseudo-element between the units, so
-// it works with or without the optional seconds unit.
+// The "m-countdown*" classes are styling only. countdown.js does NOT hook
+// onto them; it targets the markup's data attributes ("data-countdown-days" /
+// "-hours" / "-minutes" / "-seconds", plus "-display" / "-units" / "-summary"
+// for the accessibility wiring). The colon separator is a decorative
+// pseudo-element, so it works with or without the optional seconds unit.
 
 @use "focus" as *;
 
@@ -22,38 +20,36 @@
 
 // Module root: stacks the unit display over the pause/resume control.
 //
-// The custom properties are the component's override surface. They live on the
-// component root rather than in :root, so they stay scoped to the component
-// and a single instance can be retuned in place.
+// The override surface: declared on the component root, not in :root, so it
+// stays scoped and a single instance can be retuned in place.
 .m-countdown {
 
-  // Spacing maps to the shared spacing scale
-  // (see _shared/scss/_foundations.scss).
+  // Spacing (shared scale, _shared/scss/_foundations.scss)
   --countdown-gap: var(--space-s); // gap between the units
   --countdown-value-label-gap: var(--space-3xs); // gap value <-> label
 
   // Gap between the unit display and the pause/resume control. Follows
-  // --countdown-gap unless it is set, because the two are the same distance
-  // in the stacked default — they are not once a host lays the countdown out
-  // inline, where the digits want to sit tight and the control does not.
+  // --countdown-gap unless set, because the two are the same distance in the
+  // stacked default — but not once a host lays the countdown out inline,
+  // where the digits want to sit tight and the control does not.
   --countdown-root-gap: var(--countdown-gap);
 
   --countdown-toggle-padding: var(--space-3xs) var(--space-xs);
   --countdown-toggle-radius: var(--borderRadius);
 
   // Layout of the root: the unit display stacked over the pause/resume
-  // control, top-aligned. A host that needs the countdown laid out inline —
-  // a ticker strip, a headline row — flips these two from the container it
-  // provides for it (the nesting convention in CLAUDE.md), which is what
-  // keeps such a host out of this component's internals.
+  // control, top-aligned. A host needing the countdown inline — a ticker
+  // strip, a headline row — flips these two from the container it provides
+  // (the nesting convention in CLAUDE.md), which keeps it out of this
+  // component's internals.
   --countdown-direction: column;
   --countdown-align: flex-start;
 
   // Floor under a single value box. "auto" hugs the digits; a fixed measure
   // (e.g. 2ch) keeps the box the same width whether it reads "9" or "59", so
-  // a ticking countdown cannot change its own layout width — which is what a
+  // a ticking countdown cannot change its own layout width — which a
   // surrounding marquee needs, since a width change makes it re-measure and
-  // re-clone the track.
+  // re-clone.
   --countdown-value-min-size: auto;
 
   // Type scale
@@ -61,8 +57,7 @@
   --countdown-label-size: var(--space-xs);
   --countdown-toggle-size: var(--space-xs);
 
-  // Colors map to the shared semantic tokens
-  // (see _shared/scss/_colors_semantic.scss).
+  // Colors (shared semantic tokens, _shared/scss/_colors_semantic.scss)
   --countdown-value-color: var(--color-text);
   --countdown-label-color: var(--color-text-muted);
   --countdown-separator-color: var(--color-text-muted);
@@ -92,10 +87,9 @@
 
 
 
-  // Each unit stacks its value over its label in a single grid column. A
-  // second column holds the colon separator, aligned to the value's row so
-  // it sits between the numbers rather than being centered on the taller
-  // value+label block.
+  // Each unit stacks its value over its label in one grid column. A second
+  // column holds the colon separator, aligned to the value's row so it sits
+  // between the numbers rather than centred on the taller value+label block.
   &__unit {
     display: grid;
     grid-template-columns: auto auto;
@@ -104,12 +98,12 @@
     row-gap: var(--countdown-value-label-gap);
     justify-items: center;
 
-    // Colon separator between units. Rendered only when a *visible* unit still
-    // follows, so it adapts whether or not the optional seconds unit is present
-    // and — crucially — when a unit is [hidden] under reduced motion. A purely
-    // structural :not(:last-child) would leave a dangling colon after the minutes
-    // when the trailing seconds unit is hidden (it stays the last child in the
-    // DOM), so we test for a following non-hidden sibling instead.
+    // Colon separator, rendered only when a *visible* unit still follows — so
+    // it adapts to the optional seconds unit and to a unit being [hidden]
+    // under reduced motion. A structural :not(:last-child) would leave a
+    // dangling colon after the minutes when the trailing seconds unit is
+    // hidden (it stays the last child in the DOM), hence the
+    // following-sibling test.
     &:not([hidden]):has(~ .m-countdown__unit:not([hidden]))::after {
       grid-column: 2;
       grid-row: 1;
@@ -126,9 +120,8 @@
 
 
   // The value box hugs its digits by default, so the centring is a no-op
-  // until --countdown-value-min-size widens the box past its content (see
-  // the token): there the digits sit in the middle of a slot that no longer
-  // changes width.
+  // until --countdown-value-min-size widens the box past its content (see the
+  // token): there the digits sit in the middle of a slot of unchanging width.
   &__value {
     grid-column: 1;
     grid-row: 1;
@@ -158,10 +151,8 @@
 
 
 
-  // Pause / resume control (injected by countdown.js). Satisfies WCAG 2.2.2
-  // by letting any user stop the auto-updating display. Understated by
-  // default; the keyboard focus ring (WCAG 2.4.7) is applied via the shared
-  // focus-ring() mixin.
+  // Pause / resume control (injected by countdown.js): it satisfies WCAG
+  // 2.2.2 by letting any user stop the auto-updating display.
   &__toggle {
 
     // Sits on a dark surface -> the light (bright) ring.
@@ -189,8 +180,8 @@
 
 
 
-  // Visually hidden, but available to assistive tech. Carries the coherent
-  // countdown sentence (data-countdown-summary) and the terminal status message.
+  // Visually hidden but available to assistive tech: carries the coherent
+  // countdown sentence (data-countdown-summary) and the terminal message.
   &__sr {
     position: absolute;
     width: 1px;

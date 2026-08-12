@@ -4,16 +4,14 @@
 //
 // This stylesheet dresses a plain date field (label + input + optional hint)
 // so the demo and copy-paste snippet look at home in the shared design. The
-// formatting behaviour itself is pure JavaScript progressive enhancement and
-// needs none of these styles — a bare <input data-dateinputformat> is formatted
-// just the same.
+// formatting itself is pure JavaScript progressive enhancement and needs none
+// of it — a bare <input data-dateinputformat> is formatted just the same.
 //
-// dateInputFormat itself owns no vocabulary: it enhances a date field the
-// project already has. The "c-dateField*" classes (BEM "c-" prefix) are the
-// component that ships alongside it — styling only.
-// dateInputFormat.js does NOT hook onto them; it targets the data attribute in
-// the markup ("data-dateinputformat"). Keeping the JS hook and the style hook
-// separate lets you restyle the field freely without touching the behaviour.
+// dateInputFormat owns no vocabulary: it enhances a date field the project
+// already has. The "c-dateField*" classes are the component shipped alongside
+// it — styling only. dateInputFormat.js does NOT hook onto them; it targets
+// the markup's data attribute ("data-dateinputformat"), so the field can be
+// restyled freely without touching the behaviour.
 
 @use "focus" as *;
 
@@ -21,24 +19,21 @@
 
 // Field wrapper: stacks the label, the control and the optional hint.
 //
-// The custom properties are the component's override surface. They live on the
-// component root rather than in :root, so they stay scoped to the component
-// and a single instance can be retuned in place.
+// The override surface: declared on the component root, not in :root, so it
+// stays scoped and a single instance can be retuned in place.
 .c-dateField {
 
-  // Spacing maps to the shared spacing scale
-  // (see _shared/scss/_foundations.scss).
+  // Spacing (shared scale, _shared/scss/_foundations.scss)
   --dateField-gap: var(--space-3xs); // gap label <-> control <-> hint
   --dateField-padding-block: var(--space-2xs);
   --dateField-padding-inline: var(--space-xs);
   --dateField-radius: var(--borderRadius);
 
-  // Type scale. The hint is set relative to the field's own font-size (em) so
-  // it scales with the surrounding text, instead of borrowing a spacing token.
+  // Type scale. The hint is in em, relative to the field's own font-size, so
+  // it scales with the surrounding text instead of borrowing a spacing token.
   --dateField-hint-fontSize: 0.875em;
 
-  // Colors map to the shared semantic tokens
-  // (see _shared/scss/_colors_semantic.scss).
+  // Colors (shared semantic tokens, _shared/scss/_colors_semantic.scss)
   --dateField-label-color: var(--color-text);
   --dateField-hint-color: var(--color-text-muted);
   --dateField-text-color: var(--color-text);
@@ -64,12 +59,12 @@
 
 
 
-  // The formatted input. tabular-nums keeps every digit the same width, so the
-  // value does not shift sideways as separators are inserted while typing.
+  // The formatted input. tabular-nums keeps every digit the same width, so
+  // the value does not shift sideways as separators are inserted while
+  // typing.
   &__control {
 
-    // Visible focus ring for keyboard users (WCAG 2.4.7). The control sits on a
-    // dark surface -> the light (bright) ring.
+    // The control sits on a dark surface -> the light tone.
     @include focus-ring(light);
 
     & {
@@ -96,8 +91,8 @@
 
 
 
-  // Format hint (e.g. "Format: DD.MM.YYYY"). Kept visually subordinate; wire it
-  // to the input via aria-describedby so screen-reader users hear it too.
+  // Format hint (e.g. "Format: DD.MM.YYYY"), visually subordinate. Wire it to
+  // the input via aria-describedby so screen-reader users hear it too.
   &__hint {
     font-size: var(--dateField-hint-fontSize);
     line-height: 1.4;

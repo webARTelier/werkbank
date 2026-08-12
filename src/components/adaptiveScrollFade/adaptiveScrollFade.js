@@ -7,47 +7,35 @@
  *
  * Strategy (mirrors the accordion's CSS-state approach)
  * -----------------------------------------------------
- * This script deliberately sets no inline styles. It only toggles two state
- * attributes on the container:
+ * No inline styles — the script only toggles two state attributes on the
+ * container:
  *   - data-fade-top    -> content is hidden above the scroll position
  *   - data-fade-bottom -> content is hidden below the scroll position
- * The mask-image gradient itself lives entirely in the SCSS, which reacts to
- * these attributes. Without JavaScript no attribute is set, the CSS mask stays
- * fully opaque, and the content remains completely readable — the fade is a
- * pure progressive enhancement.
+ * The mask-image gradient lives entirely in the SCSS, which reacts to them.
+ * Without JavaScript no attribute is set, the mask stays fully opaque and the
+ * content stays readable — the fade is a pure progressive enhancement.
  *
- * Accessibility — keyboard operability
- * ------------------------------------
+ * Accessibility
+ * -------------
  * A plain scrollable <div> is invisible to the keyboard: it cannot receive
  * focus, so arrow keys / PageUp / PageDown / Home / End / Space never reach
- * it. Whenever the container actually overflows, this script therefore makes
- * it focusable (tabindex="0") and the browser handles all scroll keys
- * natively. Once it stops overflowing the tabindex is removed again, so a box
- * that fits is not a dead tab stop. If the author already set a tabindex, we
- * leave it alone.
+ * it. While the container overflows this script makes it focusable
+ * (tabindex="0") and the browser handles every scroll key natively; once it
+ * fits again the tabindex goes, so a box that fits is not a dead tab stop.
+ * An author-set tabindex is left alone. This is the axe rule "scrollable
+ * region must be keyboard accessible".
  *
- * When the author gives the box an accessible name (aria-label /
- * aria-labelledby) we also promote it to role="region", so screen-reader
- * users hear what the focusable scroll area is; without a name we do not emit
- * an unlabelled landmark. This matches the axe rule "scrollable region must be
- * keyboard accessible".
- *
- * Accessibility — the accessible name is mandatory
- * ------------------------------------------------
- * A focusable scroll region without a name drops screen-reader users onto a
- * tab stop with no idea what they landed on (BITV/WCAG 4.1.2). We cannot
- * invent a meaningful name, so rather than degrade silently we report the
- * omission (once, via the reporter) as soon as the box actually becomes
- * focusable. Authors fix it by adding aria-label / aria-labelledby — which
- * also promotes the box to a named role="region".
+ * That tab stop must be named, or screen-reader users land on it with no idea
+ * what they landed on (BITV/WCAG 4.1.2). We cannot invent a meaningful name,
+ * so the omission is reported once, as soon as the box becomes focusable.
+ * Adding aria-label / aria-labelledby fixes it and also promotes the box to
+ * role="region" — unnamed we emit no landmark rather than an unlabelled one.
  *
  * Configuration (all optional, read from the container)
  * -----------------------------------------------------
  *   - data-fade-threshold="1"          px tolerance before an edge counts as
  *                                       "reached"
- *   - style="--scrollFade-size: 40px"  fade depth (a plain CSS custom
- *                                       property, handled by the SCSS — no JS
- *                                       involved)
+ *   - style="--scrollFade-size: 40px"  fade depth (pure CSS, no JS involved)
  * ----------------------------------------------------------------------------
  */
 
@@ -79,20 +67,18 @@ class ScrollFade {
     const parsed = raw !== null ? parseFloat(raw) : NaN;
     this.threshold = Number.isFinite(parsed) ? parsed : params.threshold;
 
-    // Keyboard a11y bookkeeping. If the author already manages focus we never
-    // touch the tabindex; otherwise we add/remove it as the box starts/stops
-    // overflowing. `scrollable` starts undefined so the first update() always
-    // syncs the initial state.
+    // Keyboard a11y bookkeeping. An author who manages focus keeps the
+    // tabindex to themselves; otherwise we add/remove it as the box
+    // starts/stops overflowing. `scrollable` starts undefined so the first
+    // update() always syncs the initial state.
     this.authorControlsFocus = container.hasAttribute('tabindex');
     this.scrollable = undefined;
 
-    // A focusable scroll region MUST have an accessible name. We warn at most
-    // once, the first time the box actually becomes focusable without one.
+    // Warn at most once, the first time the box becomes focusable unnamed.
     this.warnedMissingName = false;
 
-    // A focusable scroll area should tell assistive tech what it is. Only when
-    // the author supplied an accessible name do we expose it as a region — an
-    // unlabelled landmark would be noise. Never clobber an author-set role.
+    // Expose the scroll area as a region only if the author supplied a name —
+    // an unlabelled landmark would be noise. Never clobber an author's role.
     const hasName =
       container.hasAttribute('aria-label') ||
       container.hasAttribute('aria-labelledby');
@@ -114,12 +100,11 @@ class ScrollFade {
     window.addEventListener('resize', this.requestUpdate);
 
     // Catch layout/content size changes (font swap, responsive media, …).
-    // A ResizeObserver on the container alone only sees its own (constrained)
-    // content box, so it misses content that grows/shrinks *inside* a fixed
-    // height — the scrollHeight changes while the box stays the same size,
-    // and the fade/tabindex state would go stale. We therefore also observe the
-    // direct children: any reflow deeper in the tree changes the height of the
-    // child that contains it, which the observer then picks up.
+    // The container alone only reports its own (constrained) content box, so
+    // it misses content growing *inside* a fixed height — scrollHeight
+    // changes while the box does not, and the state goes stale. Hence the
+    // direct children too: any reflow deeper down changes the height of the
+    // child containing it, which the observer picks up.
     if ('ResizeObserver' in window) {
       this.resizeObserver = new ResizeObserver(this.requestUpdate);
       this.resizeObserver.observe(this.container);
@@ -128,9 +113,9 @@ class ScrollFade {
       }
     }
 
-    // Keep the set of observed children in sync as content is added/removed,
-    // and re-sync the state on every structural change. Only direct children
-    // need tracking (see above), so a shallow childList observation suffices.
+    // Keep the observed children in sync as content is added/removed, and
+    // re-sync the state on every structural change. Only direct children need
+    // tracking (see above), so a shallow childList observation suffices.
     if (this.resizeObserver && 'MutationObserver' in window) {
       this.mutationObserver = new MutationObserver(this.onChildListChange);
       this.mutationObserver.observe(this.container, { childList: true });
@@ -139,9 +124,9 @@ class ScrollFade {
 
 
 
-  // Mirror added/removed direct children into the ResizeObserver so newly
-  // inserted content is measured and detached nodes are dropped, then re-run
-  // update() for the size change the mutation itself may have caused.
+  // Mirror added/removed children into the ResizeObserver so new content is
+  // measured and detached nodes are dropped, then re-run update() for the
+  // size change the mutation itself may have caused.
   onChildListChange = (records) => {
     for (const record of records) {
       for (const node of record.addedNodes) {
@@ -156,8 +141,8 @@ class ScrollFade {
 
 
 
-  // adaptive fade: only fade an edge while there is still content beyond it.
-  // We only flip the state attributes here; the SCSS turns them into the mask.
+  // Fade an edge only while content is still beyond it. This flips the state
+  // attributes; the SCSS turns them into the mask.
   update = () => {
     const { scrollTop, scrollHeight, clientHeight } = this.container;
 
@@ -176,10 +161,9 @@ class ScrollFade {
 
 
 
-  // Enforce the accessible name (BITV/WCAG 4.1.2). Once the box overflows it
-  // becomes a keyboard tab stop, so an unnamed box leaves screen-reader users
-  // stranded. We re-read the attributes live (an author may set the name after
-  // init) and warn only once, and only while the box is actually focusable.
+  // Enforce the accessible name (BITV/WCAG 4.1.2) — see the file header. The
+  // attributes are re-read live (an author may set the name after init), and
+  // we warn once, only while the box is actually focusable.
   warnMissingName = (scrollable) => {
     if (this.warnedMissingName || !scrollable) return;
 
@@ -200,8 +184,8 @@ class ScrollFade {
 
 
 
-  // Make the box a tab stop only while it actually overflows, so keyboard users
-  // can scroll it with the arrow / paging keys the browser wires up for free.
+  // A tab stop only while the box overflows, so keyboard users get the arrow
+  // and paging keys the browser wires up for free.
   syncFocusability = (scrollable) => {
     if (this.authorControlsFocus) return;
     if (scrollable === this.scrollable) return; // no state change, nothing to do
@@ -212,9 +196,9 @@ class ScrollFade {
       return;
     }
 
-    // Don't yank the tabindex out from under a user who is focused here; drop
-    // it only once focus has moved on. Otherwise their focus would vanish
-    // mid-interaction (e.g. a resize that briefly makes the box fit).
+    // Never yank the tabindex out from under a user focused here — their
+    // focus would vanish mid-interaction (e.g. a resize that briefly makes
+    // the box fit). Drop it once focus has moved on.
     if (this.container === document.activeElement) return;
     this.container.removeAttribute('tabindex');
   };
@@ -222,10 +206,9 @@ class ScrollFade {
 
 
   // Optional teardown for hosts that mount/unmount this subtree repeatedly
-  // instead of doing a full page (re)load — see destroyModulesInScope() in
-  // boot.js. The scroll listener is bound to the container itself and would
-  // die naturally with it, but the window resize listener and both observers
-  // outlive the container unless explicitly stopped.
+  // — see destroyModulesInScope() in boot.js. The scroll listener dies with
+  // the container, but the window resize listener and both observers outlive
+  // it unless stopped here.
   destroy = () => {
     this.container.removeEventListener('scroll', this.requestUpdate);
     window.removeEventListener('resize', this.requestUpdate);
@@ -236,8 +219,7 @@ class ScrollFade {
 
 
 
-// loader-compatible entry point
-// (boot.js -> mod.init(el, services))
+// loader-compatible entry point (boot.js -> mod.init(el, services))
 export function init(el, services = {}) {
   const reporter = services.reporter;
 

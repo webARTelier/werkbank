@@ -12,16 +12,15 @@
  * - <table>, <thead>, <th scope> and <caption> carry the semantics. A screen
  *   reader announces which column a cell belongs to without a line of ARIA,
  *   and the caption names the table.
- * - overflow: auto scrolls a box that is narrower than its content, and the
- *   arrow keys scroll the nearest scroll container around the focus.
- * - A <button> is operated by Enter and Space, and aria-sort is the state
- *   the ARIA APG "Sortable Table" pattern asks for — no roving tabindex, no
- *   key handling of its own.
- * - Intl knows how the page's language writes a number, so "1.234,50" is
- *   read as one value on a German page and as something else on an English
- *   one.
- * The scroll box, the sticky header/column and the stacked layout are all
- * CSS (see dataTable.scss). This script adds what CSS cannot express.
+ * - overflow: auto scrolls a box narrower than its content, and the arrow
+ *   keys scroll the nearest scroll container around the focus.
+ * - A <button> is operated by Enter and Space, and aria-sort is the state the
+ *   ARIA APG "Sortable Table" pattern asks for — no roving tabindex, no key
+ *   handling of its own.
+ * - Intl knows how the page's language writes a number, so "1.234,50" is read
+ *   as one value on a German page and as something else on an English one.
+ * The scroll box, the sticky header/column and the stacked layout are all CSS
+ * (see dataTable.scss). This script adds what CSS cannot express.
  *
  * What the script adds
  * --------------------
@@ -30,15 +29,15 @@
  *    unenhanced markup carries no control that does nothing. Every sortable
  *    header starts at aria-sort="none", which is what tells a screen reader
  *    the column offers sorting at all.
- * 2. Sorting: rows are reordered inside each <tbody>, one write per body,
- *    by moving the existing <tr> nodes — nothing is re-rendered, so
- *    whatever sits inside a cell survives. Equal values keep their document
- *    order, and an empty cell always sorts last, in both directions.
+ * 2. Sorting: rows are reordered inside each <tbody>, one write per body, by
+ *    moving the existing <tr> nodes — nothing is re-rendered, so whatever
+ *    sits inside a cell survives. Equal values keep their document order, and
+ *    an empty cell always sorts last, in both directions.
  * 3. The value a column sorts by, in the order the platform offers it:
  *    data-datatable-value, then a <time datetime>, then the visible text.
- * 4. One polite announcement per sort, from a visually hidden status region
- *    — the rows below the header have all moved, and nothing about that
- *    reaches a screen reader on its own.
+ * 4. One polite announcement per sort, from a visually hidden status region —
+ *    every row below the header has moved, and nothing about that reaches a
+ *    screen reader on its own.
  * 5. Keyboard access to the scroll box: while it overflows and holds nothing
  *    focusable it becomes a tab stop (tabindex="0") named by the table's
  *    caption, so the arrow keys can scroll it.
@@ -46,75 +45,75 @@
  *    stylesheet turns into scroll-padding, so a control scrolled into view
  *    does not end up parked underneath them.
  * 7. The two things the stacked layout cannot do without: the column label
- *    each cell shows in front of its value, and the explicit roles that
- *    keep the table a table once its parts stop being table boxes.
- * 8. Reports for wiring the stylesheet cannot fix — a missing table, a
- *    merged header or body cell, a header that already holds a control, a
- *    scroll box that cannot be named.
+ *    each cell shows in front of its value, and the explicit roles that keep
+ *    the table a table once its parts stop being table boxes.
+ * 8. Reports for wiring the stylesheet cannot fix — a missing table, a merged
+ *    header or body cell, a header that already holds a control, a scroll box
+ *    that cannot be named.
  *
  * Accessibility
  * -------------
- * Follows the APG sortable-table pattern: the control is a real button
- * inside the columnheader, and the sort state lives in aria-sort on that
- * header — the one place assistive tech looks for it. The direction
- * indicator is a pseudo-element in the stylesheet, so it adds nothing to
- * the accessibility tree and cannot be read out twice.
+ * Follows the APG sortable-table pattern: the control is a real button inside
+ * the columnheader, and the sort state lives in aria-sort on that header —
+ * the one place assistive tech looks for it. The direction indicator is a
+ * pseudo-element in the stylesheet, so it adds nothing to the accessibility
+ * tree and cannot be read out twice.
  *
  * Every sortable column carries aria-sort, "none" until it is the one the
- * table is sorted by. The attribute is the only thing that distinguishes a
- * sort control from any other button in a header cell, so leaving it off
- * the unsorted columns would hide the feature from the readers who most
- * need to be told it is there.
+ * table is sorted by. The attribute is the only thing distinguishing a sort
+ * control from any other button in a header cell, so leaving it off the
+ * unsorted columns would hide the feature from the readers who most need to
+ * be told.
  *
- * A sort moves every row in the table while focus stays on the button that
- * did it. aria-sort states the new state, but a change to it on the
- * focused button's PARENT is not something NVDA or JAWS read out by
- * themselves — hence the polite status region (WCAG 4.1.3). It is written
- * only on an actual activation; an initial sort from the markup is the
- * table's resting state, not news.
+ * A sort moves every row while focus stays on the button that did it.
+ * aria-sort states the new state, but a change to it on the focused button's
+ * PARENT is not something NVDA or JAWS read out by themselves — hence the
+ * polite status region (WCAG 4.1.3). It is written only on an actual
+ * activation; an initial sort from the markup is the table's resting state,
+ * not news.
  *
  * The scroll box follows the same rule dialog applies to its own scroll
- * region: a tab stop only while it overflows AND contains nothing focusable
- * — a sortable table already offers a keyboard path through its buttons,
- * and the arrow keys scroll the box the focus is in. A focusable region
- * needs an accessible name (WCAG 4.1.2), so the module borrows the table's
- * <caption> and reports the case where there is nothing to borrow rather
- * than emitting an unlabelled landmark.
+ * region: a tab stop only while it overflows AND contains nothing focusable —
+ * a sortable table already offers a keyboard path through its buttons, and
+ * the arrow keys scroll the box the focus is in. A focusable region needs an
+ * accessible name (WCAG 4.1.2), so the module borrows the table's <caption>
+ * and reports the case where there is nothing to borrow rather than emitting
+ * an unlabelled landmark.
  *
  * The two sticky modifiers freeze an edge of that same box, and the browser
  * does not know about them when it scrolls a focused control into view: it
  * parks the control under the frozen header or behind the frozen first
  * column, where a keyboard user cannot see what they are on (WCAG 2.4.11).
- * Only a measurement can say how deep those edges are, so the module takes
- * it on every resize and hands it to the stylesheet, which is where the
- * question of whether an edge is frozen at all is answered.
+ * Only a measurement can say how deep those edges are, so the module takes it
+ * on every resize and hands it to the stylesheet, which is where the question
+ * of whether an edge is frozen at all is answered.
  *
  * Configuration (all optional)
  * ----------------------------
  * On the component root (the element with data-js-behavior="dataTable"):
  * - data-datatable-stacked         ask for the stacked layout on a narrow
- *                                  viewport; the module writes the labels
- *                                  and roles it needs (see 7.)
+ *                                  viewport; the module writes the labels and
+ *                                  roles it needs (see 7.)
  * - data-datatable-announce        your own template for the sort
  *                                  announcement, with {column} and
  *                                  {direction} (see `labels` below)
  * - aria-label / aria-labelledby   name the scroll box yourself instead of
  *                                  letting the caption name it
  * On a header cell in the <thead> row:
- * - data-datatable-sort            make the column sortable. The value
- *                                  names the kind of data — "text",
- *                                  "number" or "date"; empty means "guess"
- *                                  (numbers or text, never dates), which is
- *                                  re-made on every sort, like the keys
+ * - data-datatable-sort            make the column sortable. The value names
+ *                                  the kind of data — "text", "number" or
+ *                                  "date"; empty means "guess" (numbers or
+ *                                  text, never dates), re-made on every sort
+ *                                  like the keys
  * - data-datatable-sorted          "ascending" | "descending": sort by this
  *                                  column on load
  * On a body cell:
  * - data-datatable-value           the machine-readable value to sort by,
  *                                  where the visible text is formatted for
  *                                  people
- * - data-datatable-label           the column label the stacked layout
- *                                  shows; written by the module where the
- *                                  author left it out
+ * - data-datatable-label           the column label the stacked layout shows;
+ *                                  written by the module where the author
+ *                                  left it out
  * ----------------------------------------------------------------------------
  */
 
@@ -124,9 +123,9 @@
 // frame. focusableSelector answers both "is this box reachable already"
 // (scroll access) and "would the button wrap a control" (sort control).
 // uniqueId names a <caption> that has to be pointed at and has no id.
-// resolveLocale + formatTemplate are the pair every announcing component in
-// this collection uses (see inputCharCount): the page's language picks a
-// template, the template keeps word order with the translation.
+// resolveLocale + formatTemplate are the pair every announcing component here
+// uses (see inputCharCount): the page's language picks a template, the
+// template keeps word order with the translation.
 import { rafThrottle } from './rafThrottle.js';
 import { focusableSelector } from './focusableSelector.js';
 import { uniqueId } from './uniqueId.js';
@@ -153,14 +152,14 @@ const defaults = {
   // author wrote one.
   labelAttr: 'data-datatable-label',
 
-  // presence asks for the stacked layout (the stylesheet applies it below
-  // the "small" breakpoint) and is what makes the module write the labels
-  // and roles that layout needs
+  // presence asks for the stacked layout (the stylesheet applies it below the
+  // "small" breakpoint) and makes the module write the labels and roles that
+  // layout needs
   stackedAttr: 'data-datatable-stacked',
 
-  // the injected sort control. A data attribute, not a c-* class: the
-  // module does not own the stylesheet's class names — same reason toast
-  // addresses its injected dismiss control this way.
+  // the injected sort control. A data attribute, not a c-* class: the module
+  // does not own the stylesheet's class names — same reason toast addresses
+  // its injected dismiss control this way.
   buttonAttr: 'data-datatable-sortbutton',
 
   // the injected status region that announces a sort, and the one style it
@@ -170,24 +169,24 @@ const defaults = {
   // an author's own announcement template, on the root
   announceAttr: 'data-datatable-announce',
 
-  // The depth of the two frozen edges, measured on the root and written
-  // there for the stylesheet to turn into scroll-padding. They are the one
-  // thing this module puts in a style attribute, and deliberately so: only
-  // a measurement can answer how wide a content-sized sticky column is, and
-  // neither property paints anything or changes a layout, so the
-  // ResizeObserver below cannot be fed by them.
+  // The depth of the two frozen edges, measured on the root and written there
+  // for the stylesheet to turn into scroll-padding. The one thing this module
+  // puts in a style attribute, deliberately: only a measurement can answer
+  // how wide a content-sized sticky column is, and neither property paints
+  // anything or changes a layout, so the ResizeObserver below cannot be fed
+  // by them.
   stickyHeadProp: '--dataTable-sticky-head-block-size',
   stickyColumnProp: '--dataTable-sticky-column-inline-size',
 
   // "This table has been enhanced." Set on the root at the end of a
   // successful init, removed again by the cleanup function. Only ever
   // WRITTEN, never read back. Note the direction: the stacked layout in
-  // dataTable.scss is gated ON its presence rather than on its absence
-  // (see the constructor), so a bail-out must not set it.
+  // dataTable.scss is gated ON its presence rather than on its absence (see
+  // the constructor), so a bail-out must not set it.
   readyAttr: 'data-datatable-ready',
 
-  // the two directions, spelled the way aria-sort spells them, and the
-  // third value that says "sortable, but not the sorted one"
+  // the two directions, spelled the way aria-sort spells them, and the third
+  // value that says "sortable, but not the sorted one"
   ascending: 'ascending',
   descending: 'descending',
   none: 'none',
@@ -201,7 +200,7 @@ const defaults = {
 // What the status region says after a sort, keyed by locale then by
 // direction. Natural language, not "Region: ascending" — this is read out,
 // and a colon is a pause, not a word. {column} is the header's own text, so
-// the announcement names the column the same way the button does.
+// the announcement names the column the way the button does.
 const labels = {
 
   de: {
@@ -223,8 +222,8 @@ const labels = {
 
 // <html lang> as something Intl will accept, or undefined for the browser's
 // own default. An empty or malformed tag makes every Intl constructor throw,
-// and a table that cannot be sorted because a lang attribute has a typo in
-// it would be a poor trade.
+// and a table unsortable because a lang attribute has a typo would be a poor
+// trade.
 function pageLocale() {
   const lang = (document.documentElement.lang || '').trim();
   if (!lang) return undefined;
@@ -241,9 +240,8 @@ function pageLocale() {
 
 // The group and decimal separator of the page's language, asked of the
 // platform rather than assumed: "1.234" is one number in English and another
-// in German, and only the page's language says which of the two this is.
-// Visible text is parsed with these; a data-datatable-value is not (see
-// parseNumber).
+// in German. Visible text is parsed with these; a data-datatable-value is not
+// (see parseNumber).
 function numberSeparators(locale) {
   try {
     const parts = new Intl.NumberFormat(locale).formatToParts(12345.6);
@@ -278,9 +276,9 @@ class DataTable {
     }
 
     // Keyboard-access bookkeeping for the scroll box. An author-set tabindex
-    // means focus is being managed elsewhere, so the module keeps out of it;
-    // `scrollable` starts undefined so the first sync always writes the
-    // initial state.
+    // means focus is managed elsewhere, so the module keeps out of it;
+    // `scrollable` starts undefined so the first sync writes the initial
+    // state.
     this.authorControlsFocus = root.hasAttribute('tabindex');
     this.authorNamed =
       root.hasAttribute('aria-label') || root.hasAttribute('aria-labelledby');
@@ -303,15 +301,14 @@ class DataTable {
       labels[resolveLocale(Object.keys(labels), params.fallbackLocale)];
 
     // Before anything that can sort: an initial sort ends by asking for a
-    // measurement, and this is what collapses those requests into one per
-    // frame.
+    // measurement, and this collapses those requests into one per frame.
     this.requestSync = rafThrottle(this.syncBox);
 
-    // Both features below map a body cell to its column by position, so
-    // both need a header row they can trust AND body rows that count the
-    // same way. Neither is asked for unless the markup wants something from
-    // it — a table with neither sortable columns nor the stacked layout
-    // needs no <thead> at all.
+    // Both features below map a body cell to its column by position, so both
+    // need a header row they can trust AND body rows that count the same way.
+    // Neither is asked for unless the markup wants something from it — a
+    // table with neither sortable columns nor the stacked layout needs no
+    // <thead>.
     const wantsSorting = !!this.table.querySelector(`[${params.sortAttr}]`);
     const wantsStacked = root.hasAttribute(params.stackedAttr);
     this.headerRow = this.findHeaderRow();
@@ -324,11 +321,11 @@ class DataTable {
 
     // The stacked layout is the one thing here that cannot survive on its
     // own: cards without their labels are a column of bare values. So the
-    // ready flag — which is what switches that layout on — is withheld when
-    // it was asked for and could not be prepared, and the table stays the
-    // scrolling one it is at every wider viewport. This is the opposite
-    // direction from a pre-enhancement flag (tabs sets its own first, so a
-    // bail-out LIFTS the state); see docs/preEnhancement.md.
+    // ready flag — which switches that layout on — is withheld when it was
+    // asked for and could not be prepared, and the table stays the scrolling
+    // one it is at every wider viewport. The opposite direction from a
+    // pre-enhancement flag (tabs sets its own first, so a bail-out LIFTS the
+    // state); see docs/preEnhancement.md.
     const stacked = !wantsStacked || (mappable && this.prepareStackedLayout());
 
     this.startListening();
@@ -339,9 +336,9 @@ class DataTable {
 
 
 
-  // The row the columns are named in: the last row of the <thead>, so a
-  // table that groups its columns under a spanning row above still resolves
-  // to the row holding the individual column headers.
+  // The row the columns are named in: the last row of the <thead>, so a table
+  // grouping its columns under a spanning row above still resolves to the row
+  // holding the individual column headers.
   findHeaderRow = () => {
     const head = this.table.tHead;
     if (!head || !head.rows.length) return null;
@@ -351,15 +348,15 @@ class DataTable {
 
 
   // Sorting and the stacked labels both address a body cell by the position
-  // of its header — so a missing header row or a merged header cell makes
-  // the mapping a guess, and a guess would put values under the wrong
-  // label. Reported once here, with the reason, and both features stay off.
+  // of its header — so a missing header row or a merged header cell makes the
+  // mapping a guess, and a guess would put values under the wrong label.
+  // Reported once here, with the reason, and both features stay off.
   checkHeaderRow = (wantsStacked) => {
     if (!this.headerRow) {
 
-      // Two ways to end up here, and they are fixed differently: one table
-      // wants labels it has no source for, the other marked a column
-      // sortable outside the row that names the columns.
+      // Two ways to end up here, fixed differently: one table wants labels it
+      // has no source for, the other marked a column sortable outside the row
+      // that names the columns.
       const reason = wantsStacked
         ? 'the stacked layout needs a <thead> row to take the cell labels from.'
         : 'sortable columns have to sit in a <thead> row.';
@@ -383,21 +380,21 @@ class DataTable {
 
 
 
-  // The same mapping, one row further down — and the half that is easy to
-  // miss, because a spanning body cell breaks it without a symptom: sorting
+  // The same mapping one row further down — the half that is easy to miss,
+  // because a spanning body cell breaks it without a symptom: sorting
   // silently compares another column and the stacked layout prints another
   // column's label.
   //
-  // A colspan shifts every cell behind it out of its column. A rowspan is
-  // the worse of the two: it takes a cell out of the rows it reaches into,
-  // so those rows count one cell short from that position on — and sort()
-  // moves whole <tr> nodes, which would pull a block held together by one
-  // cell apart.
+  // A colspan shifts every cell behind it out of its column. A rowspan is the
+  // worse of the two: it takes a cell out of the rows it reaches into, so
+  // those rows count one cell short from that position on — and sort() moves
+  // whole <tr> nodes, which would pull a block held together by one cell
+  // apart.
   //
   // Only the <tbody> rows are asked. A spanning cell in a <tfoot> ("Total"
   // across three columns) is ordinary markup for a summary that is never
-  // sorted, so it costs the table neither feature; applyLabels() leaves
-  // such a row unlabelled rather than labelling it wrongly.
+  // sorted, so it costs the table neither feature; applyLabels() leaves such
+  // a row unlabelled rather than labelling it wrongly.
   checkBodyRows = () => {
     const spanning = Array.from(this.table.tBodies)
       .flatMap((body) => Array.from(body.rows))
@@ -425,11 +422,11 @@ class DataTable {
       const button = this.sortControl(cell);
       if (!button) return;
 
-      // "Sortable, and not the column we are sorted by." Without it a
-      // screen reader has a button in a column header and no way to know
-      // what it does — the visible chevron says it, and the chevron is a
-      // pseudo-element that says nothing to anyone else. sort() below moves
-      // exactly one of these to a direction and puts the rest back here.
+      // "Sortable, and not the column we are sorted by." Without it a screen
+      // reader has a button in a column header and no way to know what it
+      // does — the visible chevron is a pseudo-element that says nothing to
+      // anyone else. sort() moves exactly one of these to a direction and
+      // puts the rest back here.
       cell.setAttribute('aria-sort', this.params.none);
 
       this.columns.push({
@@ -443,19 +440,19 @@ class DataTable {
     if (!this.columns.length) return;
 
     // Before the initial sort, and before any click can reach it: a live
-    // region has to be in the document *before* the text lands in it, or
-    // the platform has nothing to notice a change against.
+    // region has to be in the document *before* the text lands in it, or the
+    // platform has nothing to notice a change against.
     this.buildStatus();
     this.applyInitialSort();
   };
 
 
 
-  // The visually hidden region a sort is announced through. role="status"
-  // is the polite live region of the platform — it never steals focus, and
-  // it waits its turn, which is what a result should do. It sits inside the
-  // root so it travels with the component; the one style it needs is in
-  // dataTable.scss, addressed by the same attribute.
+  // The visually hidden region a sort is announced through. role="status" is
+  // the platform's polite live region — it never steals focus and waits its
+  // turn, which is what a result should do. It sits inside the root so it
+  // travels with the component; the one style it needs is in dataTable.scss,
+  // addressed by the same attribute.
   buildStatus = () => {
     const existing = this.root.querySelector(`[${this.params.statusAttr}]`);
     if (existing) {
@@ -472,10 +469,10 @@ class DataTable {
 
 
 
-  // One sentence per activation. Not called by the initial sort: a table
-  // that arrives sorted is not reporting a change, and an announcement on
-  // load is something the reader has to sit through before reaching the
-  // page. An author template wins over the built-in one.
+  // One sentence per activation. Not called by the initial sort: a table that
+  // arrives sorted is not reporting a change, and an announcement on load is
+  // something the reader has to sit through before reaching the page. An
+  // author template wins over the built-in one.
   announce = (column, direction) => {
     if (!this.status) return;
 
@@ -494,12 +491,11 @@ class DataTable {
 
 
 
-  // Moves the header's own content into a button, so the column label IS
-  // the control's accessible name and the markup needs no second copy of
-  // it. An existing control is reused rather than wrapped again: init() can
-  // run a second time over the same markup after destroy() (see
-  // destroyModulesInScope() in boot.js), and a button inside a button would
-  // be the result.
+  // Moves the header's own content into a button, so the column label IS the
+  // control's accessible name and the markup needs no second copy of it. An
+  // existing control is reused rather than wrapped again: init() can run a
+  // second time over the same markup after destroy() (see
+  // destroyModulesInScope() in boot.js), giving a button inside a button.
   sortControl = (cell) => {
     const existing = cell.querySelector(`[${this.params.buttonAttr}]`);
     if (existing) return existing;
@@ -527,12 +523,12 @@ class DataTable {
 
 
 
-  // The kind of data a column holds as the MARKUP states it, or null where
-  // it does not — which is the request to guess (see sortType). Read once,
-  // at init, because an unknown value is a markup error and should be
-  // reported when the page loads rather than on the first click. It is
-  // reported and treated as "guess" rather than dropping the column: a typo
-  // should not cost the sorting.
+  // The kind of data a column holds as the MARKUP states it, or null where it
+  // does not — the request to guess (see sortType). Read once, at init,
+  // because an unknown value is a markup error and should be reported when
+  // the page loads rather than on the first click. Reported and treated as
+  // "guess" rather than dropping the column: a typo should not cost the
+  // sorting.
   declaredType = (cell) => {
     const raw = (cell.getAttribute(this.params.sortAttr) || '')
       .trim().toLowerCase();
@@ -552,24 +548,23 @@ class DataTable {
 
 
 
-  // The type a sort actually runs with: what the markup declared, or a
-  // fresh guess. Guessed per activation and not once at init, because that
-  // is the same promise sort() already makes about its keys — it reads them
-  // from the DOM every time, so a cell whose content changed since the last
-  // sort sorts by what it says now. A type frozen at init would be the one
-  // thing about a column that could not follow it: a column that was still
-  // empty when the module ran would stay "text" for good and then sort its
-  // numbers lexically ("100" before "20"). The declared type costs nothing
-  // to re-read, and the guess costs one pass over the column — on the click
-  // that is about to reorder every row of the table anyway.
+  // The type a sort actually runs with: what the markup declared, or a fresh
+  // guess. Guessed per activation, not once at init, because that is the same
+  // promise sort() makes about its keys — it reads them from the DOM every
+  // time, so a cell whose content changed sorts by what it says now. A type
+  // frozen at init would be the one thing about a column that could not
+  // follow it: a column still empty when the module ran would stay "text" for
+  // good and sort its numbers lexically ("100" before "20"). Re-reading the
+  // declared type costs nothing, and the guess costs one pass over the column
+  // — on the click that is about to reorder every row anyway.
   sortType = (column) => column.type || this.detectType(column.index);
 
 
 
-  // The guess is deliberately narrow: numbers or text. A date is only ever
-  // recognised where the author said so or where the cell holds a <time
-  // datetime>, because Date.parse() accepts a bare number in some engines —
-  // a column of years would turn into a column of dates.
+  // The guess is deliberately narrow: numbers or text. A date is recognised
+  // only where the author said so or the cell holds a <time datetime>,
+  // because Date.parse() accepts a bare number in some engines — a column of
+  // years would turn into a column of dates.
   detectType = (index) => {
     const values = this.columnCells(index)
       .map((cell) => this.cellValue(cell))
@@ -599,8 +594,8 @@ class DataTable {
   //      wins over everything, so a formatted cell sorts by its real value
   //   2. a <time datetime> — the platform's own machine-readable date
   //   3. the visible text, whitespace collapsed the way it is rendered
-  // `machine` says which of the two worlds the string comes from: an
-  // authored value is written in the machine's format, text in the reader's.
+  // `machine` says which world the string comes from: an authored value is
+  // written in the machine's format, text in the reader's.
   cellValue = (cell) => {
     if (!cell) return { raw: '', machine: true, time: false };
 
@@ -625,10 +620,10 @@ class DataTable {
   //
   // A machine-readable string (the attribute, a <time>) is a plain number
   // with a dot: parsing it in the page's language would read "1234.5" on a
-  // German page as 12345. Visible text is the other way round — it is
-  // written the way the page's language writes numbers, so the separators
-  // Intl reported are removed first, and everything else (a currency
-  // symbol, a percent sign, a unit) with them.
+  // German page as 12345. Visible text is the other way round — written the
+  // way the page's language writes numbers, so the separators Intl reported
+  // come out first, and everything else (a currency symbol, a percent sign, a
+  // unit) with them.
   parseNumber = (raw, machine) => {
     if (!raw) return null;
 
@@ -639,9 +634,9 @@ class DataTable {
 
     const { group, decimal } = this.separators;
 
-    // Spaces of every width, written as escapes so they stay legible in
-    // the source: several languages group with a space, and the ones Intl
-    // reports are the no-break and the narrow no-break variants.
+    // Spaces of every width, as escapes so they stay legible in the source:
+    // several languages group with a space, and the ones Intl reports are the
+    // no-break and the narrow no-break variants.
     let text = raw.replace(/[\s\u00a0\u202f\u2009]/g, '');
     text = text.replace(/\u2212/g, '-'); // the typographic minus
     if (group) text = text.split(group).join('');
@@ -657,8 +652,8 @@ class DataTable {
 
   // A timestamp, or null. Date.parse() understands the ISO form a <time
   // datetime> or a data-datatable-value carries; a date written for people
-  // ("7.8.2026") is not parsed the same way by two engines, which is
-  // exactly why those two attributes exist.
+  // ("7.8.2026") is not parsed the same way by two engines, which is why
+  // those two attributes exist.
   parseDate = (raw) => {
     if (!raw) return null;
     const value = Date.parse(raw);
@@ -668,8 +663,8 @@ class DataTable {
 
 
   // The comparable key of one cell. `empty` covers both a blank cell and a
-  // value that does not parse as what the column claims to hold — neither
-  // is a position in the order, so both go to the end (see sort()).
+  // value that does not parse as what the column claims to hold — neither is
+  // a position in the order, so both go to the end (see sort()).
   sortKey = (cell, type) => {
     const { raw, machine } = this.cellValue(cell);
 
@@ -696,16 +691,16 @@ class DataTable {
     const factor = direction === this.params.descending ? -1 : 1;
 
     // Once per sort, not once per body: every body holds the same columns,
-    // and a guess that read one body at a time could compare two of them by
+    // and a guess reading one body at a time could compare two of them by
     // different rules.
     const type = this.sortType(column);
 
     Array.from(this.table.tBodies).forEach((body) => {
 
-      // Every key is read before the first node moves: reading a cell after
-      // a move would read a layout the move just invalidated, and the keys
-      // come from the DOM on every sort so a cell whose content changed
-      // since the last one sorts by what it says now.
+      // Every key is read before the first node moves: reading a cell after a
+      // move would read a layout the move just invalidated. The keys come
+      // from the DOM on every sort, so a cell whose content changed since the
+      // last one sorts by what it says now.
       const entries = Array.from(body.rows, (row, index) => ({
         row,
         index,
@@ -714,9 +709,9 @@ class DataTable {
 
       entries.sort((a, b) => {
 
-        // An empty cell is not a small value, it is no value: it goes last
-        // in both directions, so nobody has to scroll past a block of
-        // blanks to reach the data.
+        // An empty cell is not a small value, it is no value: it goes last in
+        // both directions, so nobody has to scroll past a block of blanks to
+        // reach the data.
         if (a.key.empty !== b.key.empty) return a.key.empty ? 1 : -1;
 
         const order = this.compare(a.key, b.key, type) * factor;
@@ -727,9 +722,9 @@ class DataTable {
       });
 
       // One insertion per body: the fragment collects the moves and the
-      // append puts them back in one go. The rows are the original nodes,
-      // so anything inside a cell — a nested module, an open <details> —
-      // comes along untouched.
+      // append puts them back in one go. The rows are the original nodes, so
+      // anything inside a cell — a nested module, an open <details> — comes
+      // along.
       const fragment = document.createDocumentFragment();
       fragment.append(...entries.map((entry) => entry.row));
       body.append(fragment);
@@ -759,8 +754,8 @@ class DataTable {
 
 
 
-  // Sorts on load where a column asks for it. More than one column asking
-  // is a markup error — the last one would silently win.
+  // Sorts on load where a column asks for it. More than one column asking is
+  // a markup error — the last one would silently win.
   applyInitialSort = () => {
     const { sortedAttr, ascending, descending } = this.params;
     const asked = this.columns
@@ -802,25 +797,25 @@ class DataTable {
       .find((candidate) => candidate.button === button);
     if (!column) return;
 
-    // A new column starts ascending, the sorted one flips. There is no
-    // third state that puts the document order back: it reads as a broken
-    // toggle, and a reload is the honest way back.
+    // A new column starts ascending, the sorted one flips. No third state
+    // puts the document order back: it reads as a broken toggle, and a reload
+    // is the honest way back.
     const flip =
       column === this.sortedColumn && this.direction === this.params.ascending;
     const direction = flip ? this.params.descending : this.params.ascending;
 
     this.sort(column, direction);
 
-    // Only here, never from applyInitialSort(): this is the path where
-    // something changed under a reader who asked for it.
+    // Only here, never from applyInitialSort(): the path where something
+    // changed under a reader who asked for it.
     this.announce(column, direction);
   };
 
 
 
-  // The two things the stacked layout needs and CSS cannot state itself.
-  // Both are written only when that layout is asked for, so an ordinary
-  // table pays nothing for either.
+  // The two things the stacked layout needs and CSS cannot state itself. Both
+  // are written only when that layout is asked for, so an ordinary table pays
+  // nothing for either.
   prepareStackedLayout = () => {
     this.applyLabels();
     this.applyRoles();
@@ -829,12 +824,11 @@ class DataTable {
 
 
 
-  // The label a cell shows in front of its value once the rows are cards.
-  // CSS can print an attribute of the element it is styling (content:
-  // attr(...)), but it cannot read the text of another element — so the
-  // column's name has to be copied onto the cell. An authored label always
-  // wins: a long header ("Average response time in ms") often wants a
-  // shorter one on a card.
+  // The label a cell shows in front of its value once the rows are cards. CSS
+  // can print an attribute of the element it is styling (content: attr(...))
+  // but cannot read another element's text, so the column's name has to be
+  // copied onto the cell. An authored label always wins: a long header
+  // ("Average response time in ms") often wants a shorter one on a card.
   applyLabels = () => {
     const labels = Array.from(
       this.headerRow.cells,
@@ -844,10 +838,10 @@ class DataTable {
     Array.from(this.table.rows).forEach((row) => {
       if (this.table.tHead?.contains(row)) return;
 
-      // The <tfoot> summary checkBodyRows() let through: its spanning cell
-      // is legitimate markup, but every cell behind that one has moved out
-      // of its column, so the row gets no labels rather than wrong ones. A
-      // total says what it is in its own row header anyway.
+      // The <tfoot> summary checkBodyRows() let through: its spanning cell is
+      // legitimate markup, but every cell behind it has moved out of its
+      // column, so the row gets no labels rather than wrong ones. A total
+      // says what it is in its own row header anyway.
       if (Array.from(row.cells).some((cell) => cell.colSpan > 1)) return;
 
       Array.from(row.cells).forEach((cell) => {
@@ -866,24 +860,24 @@ class DataTable {
 
 
 
-  // The roles a display change would otherwise cost. The stacked layout
-  // turns the table's parts into blocks, and a <td> that is no longer a
-  // table-cell box stops being a cell in the accessibility tree — Chromium
-  // and WebKit both drop the table semantics with the display type. Writing
-  // the role each element already has puts them back, and costs nothing at
-  // any wider viewport: every one of them is that element's implicit role.
-  // An author-set role is never overwritten.
+  // The roles a display change would otherwise cost. The stacked layout turns
+  // the table's parts into blocks, and a <td> that is no longer a table-cell
+  // box stops being a cell in the accessibility tree — Chromium and WebKit
+  // both drop the table semantics with the display type. Writing the role
+  // each element already has puts them back, and costs nothing at any wider
+  // viewport: every one is that element's implicit role. An author-set role
+  // is never overwritten.
   applyRoles = () => {
     const setRole = (element, role) => {
       if (!element || element.hasAttribute('role')) return;
       element.setAttribute('role', role);
     };
 
-    // The <caption> deliberately gets none. ARIA in HTML allows no role on
-    // it at all (axe reports one as aria-allowed-role, and as an
-    // unpermitted child of the table with it), and it does not need one:
-    // the table takes its name from the caption through the parent/child
-    // relationship, which a display type cannot change.
+    // The <caption> deliberately gets none. ARIA in HTML allows no role on it
+    // at all (axe reports one as aria-allowed-role, and as an unpermitted
+    // child of the table with it), and it needs none: the table takes its
+    // name from the caption through the parent/child relationship, which a
+    // display type cannot change.
     setRole(this.table, 'table');
 
     const groups = [this.table.tHead, ...this.table.tBodies, this.table.tFoot];
@@ -915,10 +909,10 @@ class DataTable {
     window.addEventListener('resize', this.requestSync);
 
     // Two boxes, because either side of the comparison can move: the root
-    // when the layout around it changes, the table when its content does
-    // (a font swap, a cell whose text was replaced). The table is as wide
-    // as the box until its columns no longer fit, so its own resize is the
-    // signal that they stopped fitting.
+    // when the layout around it changes, the table when its content does (a
+    // font swap, a cell whose text was replaced). The table is as wide as the
+    // box until its columns no longer fit, so its own resize is the signal
+    // that they stopped fitting.
     if ('ResizeObserver' in window) {
       this.resizeObserver = new ResizeObserver(this.requestSync);
       this.resizeObserver.observe(this.root);
@@ -929,8 +923,8 @@ class DataTable {
 
 
   // Everything that has to be re-read when the box or its content changes
-  // size, in one rAF-throttled pass — both halves start from the same
-  // layout, and neither of them writes anything that would invalidate it.
+  // size, in one rAF-throttled pass — both halves start from the same layout,
+  // and neither writes anything that would invalidate it.
   syncBox = () => {
     this.syncStickyOffsets();
     this.syncScrollAccess();
@@ -939,17 +933,16 @@ class DataTable {
 
 
   // How deep the two frozen edges reach into the scroll box. The browser
-  // scrolls a focused control just far enough to be inside the box, which
-  // is not far enough when a sticky header or a sticky first column is
-  // sitting on top of that edge — the control ends up behind it (WCAG
-  // 2.4.11). scroll-padding is what moves the target region clear of them,
-  // and it needs a length nothing but a measurement can give: the sticky
-  // column is as wide as its content.
+  // scrolls a focused control just far enough to be inside the box, which is
+  // not far enough when a sticky header or first column sits on that edge —
+  // the control ends up behind it (WCAG 2.4.11). scroll-padding moves the
+  // target region clear of them, and it needs a length nothing but a
+  // measurement can give: the sticky column is as wide as its content.
   //
   // Written unconditionally, consumed conditionally. Whether an edge is
-  // frozen is a question the stylesheet answers — the modifier classes are
-  // its vocabulary, not this module's — so the module supplies the numbers
-  // and dataTable.scss decides under which modifier they mean anything.
+  // frozen is the stylesheet's question — the modifier classes are its
+  // vocabulary, not this module's — so the module supplies the numbers and
+  // dataTable.scss decides under which modifier they mean anything.
   syncStickyOffsets = () => {
     const { stickyHeadProp, stickyColumnProp } = this.params;
     const head = this.table.tHead;
@@ -968,13 +961,12 @@ class DataTable {
   // The cell to measure the frozen column on. Not the table's first cell
   // blindly: the first row of a <thead> may be a grouping row whose first
   // cell spans two or three columns (findHeaderRow() takes the LAST row for
-  // exactly that reason), and measuring that would push the scroll-padding
-  // out by columns that are not frozen at all. So the data rows are asked
-  // first — they are what a frozen first column exists for — then the row
-  // that names the columns, then whatever the table starts with; a spanning
-  // candidate is skipped rather than measured, and a table that is nothing
-  // but spanning cells measures as 0, which is what the stylesheet's
-  // fallback says anyway.
+  // that reason), and measuring it would push the scroll-padding out by
+  // columns that are not frozen. So the data rows are asked first — they are
+  // what a frozen first column exists for — then the row naming the columns,
+  // then whatever the table starts with. A spanning candidate is skipped
+  // rather than measured, and a table of nothing but spanning cells measures
+  // as 0, which is what the stylesheet's fallback says anyway.
   stickyColumnCell = () => [
     this.table.tBodies[0]?.rows[0],
     this.headerRow,
@@ -985,18 +977,18 @@ class DataTable {
 
 
 
-  // Makes the scroll box a tab stop exactly while it needs one, and only
-  // ever writes attributes that do not affect layout — so an observer
-  // cannot feed this back to itself.
+  // Makes the scroll box a tab stop exactly while it needs one, and only ever
+  // writes attributes that do not affect layout — so an observer cannot feed
+  // this back to itself.
   syncScrollAccess = () => {
     if (this.authorControlsFocus) return;
 
     const overflowing = this.root.scrollWidth - this.root.clientWidth > 1;
 
     // The rule dialog applies to its own scroll region: a box holding
-    // something focusable is already reachable, and the arrow keys scroll
-    // the scroll container the focus sits in — so a sortable table needs no
-    // tab stop of its own, and a table without controls does.
+    // something focusable is already reachable, and the arrow keys scroll the
+    // scroll container the focus sits in — so a sortable table needs no tab
+    // stop of its own, and a table without controls does.
     const hasFocusable = this.root.querySelector(focusableSelector) !== null;
     const scrollable = overflowing && !hasFocusable;
 
@@ -1008,7 +1000,7 @@ class DataTable {
       return;
     }
 
-    // Don't pull the tabindex out from under a reader parked on the box;
+    // Never pull the tabindex out from under a reader parked on the box;
     // leave it until focus has moved on, a later sync cleans it up.
     if (this.root === document.activeElement) return;
     this.scrollable = false;
@@ -1023,7 +1015,7 @@ class DataTable {
     // A focusable region has to say what it is (WCAG 4.1.2). An author-set
     // name or role is left alone; otherwise the table's <caption> names the
     // box that scrolls it, the way dialog borrows its own title. Only where
-    // there is nothing to borrow do we report it rather than emit an
+    // there is nothing to borrow is it reported rather than emitting an
     // unlabelled landmark.
     if (this.authorNamed || this.root.hasAttribute('role')) return;
 
@@ -1070,19 +1062,19 @@ class DataTable {
 
 
 
-  // Optional teardown for hosts that mount/unmount the same subtree instead
-  // of doing a full page (re)load — see destroyModulesInScope() in boot.js.
-  // The click listener is bound to the table and would die with it; the
-  // window listener and the observer outlive the subtree unless stopped.
+  // Optional teardown for hosts that mount/unmount the same subtree
+  // repeatedly — see destroyModulesInScope() in boot.js. The click listener
+  // dies with the table; the window listener and the observer outlive the
+  // subtree unless stopped.
   //
   // The ARIA and the sort controls stay in place, like the roles tabs
   // applies: they describe markup that is still there, and a second init()
   // over the same table reuses the buttons rather than wrapping them again.
-  // Three things do go, because each of them is a promise only a running
-  // module can keep: the ready flag (the stacked layout it switches on),
-  // the two measured offsets (a frozen edge that moved would leave a stale
-  // scroll-padding behind) and the status region (a live region nothing
-  // writes to any more is one more thing for a screen reader to walk past).
+  // Three things do go, each a promise only a running module can keep: the
+  // ready flag (the stacked layout it switches on), the two measured offsets
+  // (a frozen edge that moved would leave a stale scroll-padding behind) and
+  // the status region (a live region nothing writes to is one more thing to
+  // walk past).
   destroy = () => {
     this.table?.removeEventListener('click', this.handleClick);
     window.removeEventListener('resize', this.requestSync);
@@ -1099,8 +1091,7 @@ class DataTable {
 
 
 
-// loader-compatible entry point
-// (boot.js -> mod.init(el, services))
+// loader-compatible entry point (boot.js -> mod.init(el, services))
 export function init(el, services = {}) {
   const reporter = services.reporter;
 

@@ -3,23 +3,22 @@
 // =============================================================
 //
 // The visible surface is styled on an inner ".c-dialog__panel", NOT on the
-// <dialog> element itself: the <dialog> is kept padding- and border-free so a
-// click that lands on it (rather than on the panel) can only have come from the
-// backdrop — which is exactly how dialog.js detects a light-dismiss without any
-// coordinate math. Keep the panel wrapper if you want backdrop-click to close.
+// <dialog> itself: the <dialog> is kept padding- and border-free so a click
+// landing on it rather than on the panel can only have come from the backdrop
+// — which is how dialog.js detects a light-dismiss without coordinate math.
+// Keep the panel wrapper if you want backdrop-click to close.
 //
-// Animation is a pure CSS progressive enhancement: @starting-style + transition
-// on the top-layer properties (overlay/display via allow-discrete) animate the
-// open/close in browsers that support it, and older browsers simply show/hide
-// instantly. No JavaScript drives the animation. Opening and closing carry
-// their own duration/easing — see the animation block for why that takes two
-// rules.
+// Animation is a pure CSS progressive enhancement: @starting-style +
+// transition on the top-layer properties (overlay/display via allow-discrete)
+// animate the open/close where supported, and older browsers show/hide
+// instantly. No JavaScript drives it. Opening and closing carry their own
+// duration/easing — see the animation block for why that takes two rules.
 //
-// The "c-dialog*" classes (BEM "c-" prefix) are used for styling only.
-// dialog.js does NOT hook onto them; it targets the <dialog> element (via
-// data-js-behavior="dialog") and the behavioural data attributes in the
-// markup ("data-open-dialog", "data-close-dialog", "data-dialog-static",
-// "data-dialog-nonmodal"). Restyle freely without touching the behaviour.
+// The "c-dialog*" classes are styling only. dialog.js does NOT hook onto
+// them; it targets the <dialog> element (via data-js-behavior="dialog") and
+// the markup's behavioural data attributes ("data-open-dialog",
+// "data-close-dialog", "data-dialog-static", "data-dialog-nonmodal"). Restyle
+// freely.
 
 @use "focus" as *;
 @use "mediaqueries" as *;
@@ -27,23 +26,23 @@
 
 
 // The <dialog> element itself: a transparent, chrome-free positioning box.
-// Everything visible lives on the inner panel (see file header). Kept centered
-// via the UA's margin:auto for an open modal dialog.
+// Everything visible lives on the inner panel (see file header). Kept
+// centered via the UA's margin:auto for an open modal dialog.
 //
-// The custom properties are the component's override surface. They live on the
-// component root rather than in :root, so they stay scoped to the component
-// and a single instance can be retuned in place. ::backdrop inherits from its
-// originating element, so --dialog-backdrop-color still reaches it from here.
+// The override surface: declared on the component root, not in :root, so it
+// stays scoped and a single instance can be retuned in place. ::backdrop
+// inherits from its originating element, so --dialog-backdrop-color still
+// reaches it from here.
 .c-dialog {
 
-  // Animation maps to the shared animation tokens
-  // (see _shared/scss/_foundations.scss). Opening and closing are timed
-  // separately: --an-ease is an ease-OUT (fast start, slow settle), which is
-  // what an entrance wants — but reused for the exit it front-loads the fade
-  // so hard that the dialog is visually gone in the first quarter of the
-  // duration and the close reads as a snap. So the exit gets an accelerating
-  // curve (slow start, fast finish) over a shorter duration — the usual
-  // asymmetry for overlays: appear eagerly, leave briskly without lingering.
+  // Animation (shared tokens, _shared/scss/_foundations.scss). Opening and
+  // closing are timed separately: --an-ease is an ease-OUT (fast start, slow
+  // settle), which is what an entrance wants — but reused for the exit it
+  // front-loads the fade so hard that the dialog is visually gone in the
+  // first quarter of the duration and the close reads as a snap. So the exit
+  // gets an accelerating curve (slow start, fast finish) over a shorter
+  // duration — the usual overlay asymmetry: appear eagerly, leave briskly
+  // without lingering.
   --dialog-duration: var(--an-duration);
   --dialog-easing: var(--an-ease);
   --dialog-duration-exit: calc(var(--dialog-duration) * 0.6);
@@ -56,8 +55,7 @@
   --dialog-close-size: 2rem; // hit area of the header's close button
   --dialog-close-icon-size: 1.1rem; // the "×" glyph inside it
 
-  // Spacing maps to the shared spacing scale
-  // (see _shared/scss/_foundations.scss).
+  // Spacing (shared scale, _shared/scss/_foundations.scss)
   --dialog-padding: var(--space-m);
   --dialog-gap: var(--space-s); // gap between header / body / footer
   --dialog-footer-gap: var(--space-2xs); // gap between the action buttons
@@ -69,8 +67,7 @@
   --dialog-enter-offset: var(--space-s);
   --dialog-exit-offset: var(--space-s);
 
-  // Colors map to the shared semantic tokens
-  // (see _shared/scss/_colors_semantic.scss).
+  // Colors (shared semantic tokens, _shared/scss/_colors_semantic.scss)
   --dialog-bg-color: var(--color-bg-elevated);
   --dialog-text-color: var(--color-text);
   --dialog-border-color: var(--color-border);
@@ -90,12 +87,12 @@
   background-color: transparent;
 
   // ----- open/close animation (progressive enhancement) -----
-  // Closed resting state — and therefore also the *exit* target: removing
-  // [open] transitions the panel from the open values back to these. Which
-  // timing a transition uses is decided by the after-change style, i.e. by
-  // the state being animated *to*: closing lands here, so this rule carries
-  // the exit duration/easing and &[open] below the entrance one. A single
-  // shared transition declaration cannot express that — it would force both
+  // Closed resting state — and so also the *exit* target: removing [open]
+  // transitions the panel from the open values back to these. Which timing a
+  // transition uses is decided by the after-change style, i.e. the state
+  // being animated *to*: closing lands here, so this rule carries the exit
+  // duration/easing and &[open] below the entrance one. A single shared
+  // transition declaration cannot express that — it would force both
   // directions through the same curve (see the token comment above).
   opacity: 0;
   transform: translateY(var(--dialog-exit-offset));
@@ -125,7 +122,8 @@
   }
 
   // Entry starting point: the very first rendered frame after [open] appears.
-  // Browsers without @starting-style ignore this block and just show instantly.
+  // Browsers without @starting-style ignore this block and just show
+  // instantly.
   @starting-style {
 
     &[open] {
@@ -171,8 +169,8 @@
 
 
 
-  // The visible card. Carries the surface, padding and radius so the <dialog>
-  // stays chrome-free (see file header).
+  // The visible card: the surface, padding and radius, so the <dialog> stays
+  // chrome-free (see file header).
   &__panel {
     border: 1px solid var(--dialog-border-color);
     border-radius: var(--dialog-radius);
@@ -187,7 +185,7 @@
     box-shadow: var(--dialog-shadow);
 
     // Long content scrolls inside the panel instead of pushing it past the
-    // viewport; the header/footer stay put because only the body flexes.
+    // viewport; header and footer stay put because only the body flexes.
     overflow: hidden;
   }
 
@@ -214,8 +212,8 @@
 
 
 
-  // The scrollable region. Only the body flexes/scrolls so the title and actions
-  // remain visible while reading long content.
+  // The scrollable region. Only the body flexes and scrolls, so the title and
+  // actions stay visible while reading long content.
   &__body {
     flex: 1 1 auto;
     min-height: 0;
@@ -240,11 +238,11 @@
 
 
 
-  // Close affordance in the header corner. A real <button> so it is focusable and
-  // operable by keyboard/AT out of the box.
+  // Close affordance in the header corner. A real <button>, so keyboard and
+  // AT can operate it out of the box.
   &__close {
 
-    // Dialog sits on a dark elevated surface -> the light (bright) ring.
+    // The dialog sits on a dark elevated surface -> the light tone.
     @include focus-ring(light);
 
     & {
@@ -267,8 +265,9 @@
       cursor: pointer;
     }
 
-    // The inline "×" icon inherits the button's color via stroke="currentColor",
-    // so the hover recolour below (and its transition) apply to the glyph too.
+    // The inline "×" icon inherits the button's color via
+    // stroke="currentColor", so the hover recolour below applies to the glyph
+    // too.
     svg {
       width: var(--dialog-close-icon-size);
       height: var(--dialog-close-icon-size);
@@ -282,9 +281,8 @@
 
 
 
-  // The footer's action buttons are user-supplied and unclassed (see demo.html);
-  // give them the shared focus ring so keyboard focus matches the rest of the
-  // dialog instead of falling back to the browser default.
+  // The footer's action buttons are user-supplied and unclassed (see
+  // demo.html), so they get the shared ring rather than the browser default.
   &__footer button {
     @include focus-ring(light);
   }
@@ -292,18 +290,18 @@
 
 
 
-// Body scroll lock, toggled by dialog.js while a dialog is open.
-// Modal dialogs make the background inert but do not stop the page
-// behind them from scrolling, so we suppress it here.
+// Body scroll lock, toggled by dialog.js while a dialog is open. Modal
+// dialogs make the background inert but do not stop the page behind them from
+// scrolling.
 body.is-scrollLocked {
   overflow: hidden;
 }
 
 
 
-// Respect reduced motion: keep the open/close instant. !important (rather
-// than zeroing the duration tokens) so it also beats the transition declared
-// on the higher-specificity [open] rules above.
+// Respect reduced motion: the open/close stays instant. !important rather
+// than zeroed duration tokens, so it also beats the transition declared on
+// the higher-specificity [open] rules above.
 @include reduced-motion {
   .c-dialog {
 

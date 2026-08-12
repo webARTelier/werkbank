@@ -6,11 +6,11 @@
 // the consuming project's design, so this stylesheet ships almost nothing.
 // The single exception is an accessibility necessity, not a design choice:
 // the injected status region MUST be visually hidden (it exists only to be
-// announced by assistive tech), so the component owns that one rule rather
-// than hoping every project remembers to add it.
+// announced by assistive tech), so the component owns that rule rather than
+// hoping every project remembers to add it.
 //
 // Everything else hangs off the component's own contract hooks, which the JS
-// only ever WRITES (never reads back) — style them freely:
+// only WRITES (never reads back) — style them freely:
 //
 //   .icc-counter / [data-icc-counter]  the visible counter after the field
 //                                      (aria-hidden; sighted affordance only)
@@ -24,14 +24,14 @@
 //   .icc-counter                     { color: var(--color-text-muted); }
 //   .is-atLimit + .icc-counter       { color: var(--color-error); }
 //
-// The field's own :focus-visible ring is the project's too (see the
-// CLAUDE.md focus-ring convention; that is why _focus.scss is not @used
-// here). demo.html shows one fully worked example design.
+// The field's own :focus-visible ring is the project's too (see the CLAUDE.md
+// focus-ring convention, which is why _focus.scss is not @used here).
+// demo.html shows one fully worked example design.
 
 
 
 // The injected status region: in the DOM and announced (role="status",
-// aria-live="polite"), but removed from the visual/layout flow. Standard
+// aria-live="polite"), but out of the visual/layout flow. The standard
 // "visually hidden" recipe — accessible to AT, invisible to sighted users.
 .icc-srStatus {
   position: absolute;

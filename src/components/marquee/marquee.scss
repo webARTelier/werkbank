@@ -3,17 +3,17 @@
 // =============================================================
 //
 // marquee is behaviour-first: the LOOK of the strip (colors, borders,
-// typography, the pause button) is entirely the consuming project's
-// design. This stylesheet ships only what the animation cannot work
-// without — the clipping viewport and the non-wrapping track — keyed on
-// the behavioural data attributes so a pasted snippet works with no
-// extra classes. Without JS these rules are inert in the best sense:
-// the strip is simply a static, fully readable row.
+// typography, the pause button) is entirely the consuming project's design.
+// This stylesheet ships only what the animation cannot work without — the
+// clipping viewport and the non-wrapping track — keyed on the behavioural
+// data attributes, so a pasted snippet works with no extra classes. Without
+// JS these rules are inert in the best sense: the strip is a static, fully
+// readable row.
 //
-// Contract with the JS (marquee.js): the script sets NO inline styles.
-// It animates the tracks with the Web Animations API, appends clone
-// tracks ([data-marquee-clone], aria-hidden + inert) and toggles two
-// state classes on the module element — the project's styling hooks:
+// Contract with the JS (marquee.js): the script sets NO inline styles. It
+// animates the tracks with the Web Animations API, appends clone tracks
+// ([data-marquee-clone], aria-hidden + inert) and toggles two state classes
+// on the module element — the project's styling hooks:
 //   is-running   animations are built (e.g. reveal the pause button)
 //   is-paused    the user chose pause (toggle / prefers-reduced-motion)
 //
@@ -27,21 +27,20 @@
 // behavioural data attributes only (no class of its own), and the documented
 // per-instance override is `style="--marquee-gap: …"` on the OUTER module
 // element — above [data-marquee-container]. A default defined on the
-// container would sit closer to the track that consumes it and would
-// therefore shadow that inline override.
+// container would sit closer to the track that consumes it and would shadow
+// that inline override.
 :root {
 
-  // Space between the end of one repetition and the start of the next.
-  // Maps to the shared spacing scale (_shared/scss/_foundations.scss);
-  // override per instance via `style="--marquee-gap: 96px"` or your own
-  // CSS.
+  // Space between the end of one repetition and the start of the next. Shared
+  // spacing scale (_shared/scss/_foundations.scss); override per instance via
+  // `style="--marquee-gap: 96px"` or your own CSS.
   --marquee-gap: var(--space-l);
 }
 
 
 
-// The clipping viewport: a single non-wrapping row of identical tracks
-// (the original plus its clones); everything beyond the box is cut off.
+// The clipping viewport: a single non-wrapping row of identical tracks (the
+// original plus its clones); everything beyond the box is cut off.
 [data-marquee-container] {
   overflow: hidden;
   display: flex;
@@ -49,19 +48,19 @@
 
 
 
-// One track. It must keep its intrinsic width (no flex shrinking, no
-// line wrapping, no width clamp) because the animation translates each
-// track by exactly 100% of its own width per cycle. The repetition gap
-// is PADDING on the track — never a margin or a flex `gap` on the
-// container — because translateX(-100%) covers the border box only;
-// outside spacing would break the seamless loop.
+// One track. It has to keep its intrinsic width (no flex shrinking, no line
+// wrapping, no width clamp) because the animation translates each track by
+// exactly 100% of its own width per cycle. The repetition gap is PADDING on
+// the track — never a margin or a flex `gap` on the container — because
+// translateX(-100%) covers the border box only; outside spacing would break
+// the seamless loop.
 [data-marquee-animated] {
   flex: 0 0 auto;
 
-  // Prose rules like `p { max-width: 65ch }` are common in consuming
-  // projects and would clamp the track's box below its nowrap content,
-  // making the following clone overlap the overflowing text. The track
-  // must always size to its content, so the clamp is lifted here.
+  // Prose rules like `p { max-width: 65ch }` are common in consuming projects
+  // and would clamp the track's box below its nowrap content, making the
+  // following clone overlap the overflowing text. The track always sizes to
+  // its content, so the clamp is lifted here.
   padding-inline-end: var(--marquee-gap);
   max-inline-size: none;
 

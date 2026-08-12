@@ -1,96 +1,91 @@
 /**
  * video.js
  * --------------------------------------------------------------------------
- * Progressive-enhancement controller for CMS-maintained video embeds, in
- * two flavours picked from the markup:
+ * Progressive-enhancement controller for CMS-maintained video embeds, in two
+ * flavours picked from the markup:
  *
- *   A) Self-hosted <video> with responsive sources — art direction
- *      (different footage / aspect ratios per viewport) and resolution
- *      ladders (same footage, higher pixel density) are both declared as
- *      plain <source media="…"> elements.
- *   B) YouTube via a click-to-load facade — a locally hosted poster plus
- *      a play button; the actual iframe (youtube-nocookie.com) is only
- *      created after the user's click, so nothing is loaded from Google
- *      beforehand (GDPR-friendly "two-click" embed).
+ *   A) Self-hosted <video> with responsive sources — art direction (different
+ *      footage / aspect ratios per viewport) and resolution ladders (same
+ *      footage, higher pixel density), both declared as plain
+ *      <source media="…"> elements.
+ *   B) YouTube via a click-to-load facade — a locally hosted poster plus a
+ *      play button; the actual iframe (youtube-nocookie.com) is only created
+ *      after the user's click, so nothing is loaded from Google beforehand
+ *      (GDPR-friendly "two-click" embed).
  *
  * What the platform already does (so this script does NOT reimplement it)
  * ----------------------------------------------------------------------
- * - <source media="…"> inside <video> is native in current browsers: at
- *   load time the browser picks the first source whose media query
- *   matches. Without JavaScript a self-hosted video therefore already
- *   shows the right variant — and, with the `controls` attribute shipped
- *   in the markup, is fully operable.
+ * - <source media="…"> inside <video> is native in current browsers: at load
+ *   time the browser picks the first source whose media query matches.
+ *   Without JavaScript a self-hosted video therefore already shows the right
+ *   variant — and, with the `controls` attribute shipped in the markup, is
+ *   fully operable.
  * - `autoplay muted loop playsinline` runs an ambient video natively.
  * - What the platform does NOT do: re-evaluate the media queries when the
  *   viewport changes after load (rotate, resize), hide/show the native
  *   controls around a custom play button, pause ambient videos for
- *   reduced-motion users, or defer a YouTube iframe until consent-by-
- *   click. Those gaps are all this script fills.
+ *   reduced-motion users, or defer a YouTube iframe until consent-by-click.
+ *   Those gaps are all this script fills.
  *
  * What this script adds
  * ---------------------
- * 1. Source re-selection: it mirrors the native first-match-wins rule
- *    over the <source media> list via matchMedia, listens for media-query
- *    changes and — only when the chosen URL actually differs — swaps
- *    video.src while carrying playback position and play state over.
- * 2. Click-to-play mode (default): the native controls from the markup
- *    are taken over by a single centered play button; a click hides the
- *    button, reveals the native controls and plays. Pause/end hides the
- *    controls and brings the play button back.
- * 3. Ambient mode (the <video> carries `autoplay`): a persistent
- *    play/pause toggle (WCAG 2.2.2), and `prefers-reduced-motion: reduce`
- *    prevents the autostart — pressing play is the explicit opt-in.
- * 4. YouTube facade: extracts the video id from a full URL (watch,
- *    youtu.be, shorts, embed, live) or a bare 11-character id, and builds
- *    the youtube-nocookie iframe only on click.
+ * 1. Source re-selection: it mirrors the native first-match-wins rule over
+ *    the <source media> list via matchMedia, listens for media-query changes
+ *    and — only when the chosen URL actually differs — swaps video.src while
+ *    carrying playback position and play state over.
+ * 2. Click-to-play mode (default): the native controls from the markup are
+ *    taken over by a single centered play button; a click hides the button,
+ *    reveals the native controls and plays. Pause/end hides the controls and
+ *    brings the play button back.
+ * 3. Ambient mode (the <video> carries `autoplay`): a persistent play/pause
+ *    toggle (WCAG 2.2.2), and `prefers-reduced-motion: reduce` prevents the
+ *    autostart — pressing play is the explicit opt-in.
+ * 4. YouTube facade: extracts the video id from a full URL (watch, youtu.be,
+ *    shorts, embed, live) or a bare 11-character id, and builds the
+ *    youtube-nocookie iframe only on click.
  *
  * Accessibility
  * -------------
- * - The toggle button ships `hidden` in the markup and is only revealed
- *   by the script, so a page without JS never shows a dead control; the
- *   no-JS baseline is the native `controls` (self-hosted) or a plain link
- *   to YouTube (facade).
- * - Button labels are localized (de/en from <html lang>) and switch
- *   between "play" and "pause"; the icons are aria-hidden, the state is
- *   also mirrored as an `is-playing` class for styling.
- * - The injected iframe gets a `title` (from data-video-title)
- *   and receives focus after the facade button disappears, so keyboard
- *   users are not dropped into a void. The click-to-play mode hands
- *   focus over in both directions: when the focused play button hides,
- *   focus moves to the <video> (whose native controls just appeared);
- *   when a pause removes the native controls again, focus moves from
- *   the <video> back to the reappearing play button.
+ * - The toggle button ships `hidden` in the markup and is only revealed by
+ *   the script, so a page without JS never shows a dead control; the no-JS
+ *   baseline is the native `controls` (self-hosted) or a plain link to
+ *   YouTube (facade).
+ * - Button labels are localized (de/en from <html lang>) and switch between
+ *   "play" and "pause"; the icons are aria-hidden, the state is also mirrored
+ *   as an `is-playing` class for styling.
+ * - The injected iframe gets a `title` (from data-video-title) and receives
+ *   focus after the facade button disappears, so keyboard users are not
+ *   dropped into a void. The click-to-play mode hands focus over in both
+ *   directions: when the focused play button hides, focus moves to the
+ *   <video> (whose native controls just appeared); when a pause removes the
+ *   native controls again, focus moves from the <video> back to the
+ *   reappearing play button.
  * - Reduced motion starts ambient videos paused (see above).
  *
- * Configuration (on the element carrying
- * data-js-behavior="video")
- * --------------------------------------------------------------------------
- * - `data-video-youtube="URL-or-id"` switches the module into
- *                                        facade mode. Accepts a full
- *                                        YouTube URL or the bare video id.
- * - `data-video-title="…"`     accessible title for the embedded
- *                                        iframe / the facade play button.
- * - `[data-video-toggle]`      the play (or play/pause) button
- *                                        inside the module, shipped
- *                                        `hidden`.
- * - `[data-video-fallback]`    facade only: the no-JS link to
- *                                        YouTube; hidden once the script
- *                                        runs.
- * - `[data-video-poster]`      facade only: the locally hosted
- *                                        poster image; hidden once the
- *                                        iframe exists.
+ * Configuration (on the element carrying data-js-behavior="video")
+ * ---------------------------------------------------------------
+ * - `data-video-youtube="URL-or-id"`  switches the module into facade mode.
+ *                                     Accepts a full YouTube URL or the bare
+ *                                     video id.
+ * - `data-video-title="…"`            accessible title for the embedded iframe
+ *                                     / the facade play button.
+ * - `[data-video-toggle]`             the play (or play/pause) button inside
+ *                                     the module, shipped `hidden`.
+ * - `[data-video-fallback]`           facade only: the no-JS link to YouTube;
+ *                                     hidden once the script runs.
+ * - `[data-video-poster]`             facade only: the locally hosted poster
+ *                                     image; hidden once the iframe exists.
  * - Self-hosted mode is configured through native attributes alone:
- *   `controls` (no-JS baseline, taken over by the script), `autoplay
- *   muted loop playsinline` (ambient mode), `poster`, `preload` and the
- *   <source media> list.
+ *   `controls` (no-JS baseline, taken over by the script), `autoplay muted
+ *   loop playsinline` (ambient mode), `poster`, `preload` and the <source
+ *   media> list.
  *
  * Styling contract
  * ----------------
  * The script sets no inline styles. It toggles `hidden` on its elements,
- * writes `is-playing` on the module element and stamps the injected
- * iframe with [data-video-embed]; video.scss keys on
- * exactly these hooks. The m-video* classes are styling only —
- * the JS never touches them.
+ * writes `is-playing` on the module element and stamps the injected iframe
+ * with [data-video-embed]; video.scss keys on exactly these hooks. The
+ * m-video* classes are styling only — the JS never touches them.
  * --------------------------------------------------------------------------
  */
 
@@ -111,8 +106,8 @@ const defaults = {
   youtubeAttr: 'data-video-youtube',
   titleAttr: 'data-video-title',
 
-  // Flag written onto the injected YouTube iframe so the stylesheet can
-  // size it without the JS hooking onto styling classes.
+  // Flag written onto the injected YouTube iframe so the stylesheet can size
+  // it without the JS hooking onto styling classes.
   embedAttr: 'data-video-embed',
 
   // State class written on the module element (styling hook only; the JS
@@ -132,8 +127,8 @@ const defaults = {
 
 
 // Localized accessible names for the toggle button. The label switches
-// between play and pause (media-player convention) instead of a constant
-// label with aria-pressed, because "what pressing does next" is the
+// between play and pause (media-player convention) rather than staying
+// constant with aria-pressed, because "what pressing does next" is the
 // clearer announcement for a transport control.
 const labels = {
 
@@ -159,10 +154,10 @@ function isYouTubeId(value) {
 
 
 
-// Extracts the video id from whatever the CMS field holds: a bare id or
-// any of the common URL shapes (watch?v=, youtu.be/, shorts/, embed/,
-// live/ — with or without www./m., also youtube-nocookie). Returns ""
-// when nothing usable is found so the caller can warn.
+// Extracts the video id from whatever the CMS field holds: a bare id or any
+// of the common URL shapes (watch?v=, youtu.be/, shorts/, embed/, live/ —
+// with or without www./m., also youtube-nocookie). Returns "" when nothing
+// usable is found so the caller can warn.
 function extractYouTubeId(raw) {
   const value = (raw || '').trim();
 
@@ -211,14 +206,14 @@ class HostedVideo {
       resolveLocale(Object.keys(labels), config.fallbackLocale)
     ];
 
-    // The behaviour mode comes from the native attribute, read once: a
-    // video that declares `autoplay` is an ambient loop with a persistent
-    // toggle; anything else is click-to-play behind a single play button.
+    // The behaviour mode comes from the native attribute, read once: a video
+    // that declares `autoplay` is an ambient loop with a persistent toggle;
+    // anything else is click-to-play behind a single play button.
     this.ambient = video.hasAttribute('autoplay');
 
-    // Ordered snapshot of the <source> list. The script re-runs the
-    // native first-match-wins selection over it whenever a media query
-    // flips (see selectSource).
+    // Ordered snapshot of the <source> list. The script re-runs the native
+    // first-match-wins selection over it whenever a media query flips (see
+    // selectSource).
     this.sources = Array.from(video.querySelectorAll('source'))
       .map((source) => ({
         src: source.getAttribute('src') || '',
@@ -255,8 +250,8 @@ class HostedVideo {
 
 
 
-  // Ambient mode: the platform autostarts the muted loop; the script adds
-  // the WCAG 2.2.2 pause control and the reduced-motion opt-out.
+  // Ambient mode: the platform autostarts the muted loop; the script adds the
+  // WCAG 2.2.2 pause control and the reduced-motion opt-out.
   setupAmbient = () => {
     if (!this.toggle) {
       this.reporter?.report(
@@ -270,9 +265,9 @@ class HostedVideo {
     this.wireToggle();
 
     // Reduced motion: prevent the autostart instead of racing it. Clearing
-    // the autoplay flag stops a not-yet-started playback; pause() covers
-    // the case where it already began. Playing stays available as an
-    // explicit opt-in via the toggle.
+    // the autoplay flag stops a not-yet-started playback; pause() covers the
+    // case where it already began. Playing stays available as an explicit
+    // opt-in via the toggle.
     if (this.reducedMotion.matches) {
       this.video.autoplay = false;
       this.video.pause();
@@ -285,9 +280,9 @@ class HostedVideo {
 
 
   // Click-to-play mode: the markup ships native `controls` as the no-JS
-  // baseline; the script takes them over and puts the single centered
-  // play button in front. Without a toggle button there would be no way
-  // to start the video, so in that case the native controls stay.
+  // baseline; the script takes them over and puts the single centered play
+  // button in front. Without a toggle button there would be no way to start
+  // the video, so there the native controls stay.
   setupClickToPlay = () => {
     if (!this.toggle) {
       this.reporter?.report(
@@ -317,8 +312,8 @@ class HostedVideo {
 
   // Watches every media query the source list uses, so a viewport change
   // (resize, rotation, moving to a high-density screen) re-runs the
-  // selection. matchMedia change events fire exactly on a boundary cross —
-  // no debounce needed.
+  // selection. matchMedia change events fire exactly on a boundary cross — no
+  // debounce needed.
   observeMediaQueries = () => {
     const queries = [...new Set(
       this.sources.map((source) => source.media).filter(Boolean)
@@ -326,13 +321,13 @@ class HostedVideo {
 
     // Kept on the instance (not just wired and discarded) so destroy() can
     // later remove exactly these listeners — window.matchMedia is not
-    // guaranteed to return the same MediaQueryList object for the same
-    // query string on a later call.
+    // guaranteed to return the same MediaQueryList object for the same query
+    // string on a later call.
     this.mediaQueryLists = queries.map((query) => {
       const mq = window.matchMedia(query);
 
-      // An unparseable query serializes to "not all" and would silently
-      // never match — surface the typo instead.
+      // An unparseable query serializes to "not all" and would silently never
+      // match — surface the typo instead.
       if (mq.media === 'not all' && query !== 'not all') {
         this.reporter?.report(
           'video',
@@ -393,8 +388,8 @@ class HostedVideo {
 
 
   // The single place that reflects the play state: the is-playing class
-  // drives the icon swap, the label announces what pressing does next,
-  // and in click-to-play mode the native controls swap with the button.
+  // drives the icon swap, the label announces what pressing does next, and in
+  // click-to-play mode the native controls swap with the button.
   syncState = () => {
     const playing = !this.video.paused && !this.video.ended;
 
@@ -408,16 +403,16 @@ class HostedVideo {
 
     if (this.ambient) return;
 
-    // Click-to-play: while playing the native controls own the surface
-    // and the big play button disappears; on pause/end they swap back.
+    // Click-to-play: while playing the native controls own the surface and
+    // the big play button disappears; on pause/end they swap back.
     this.video.controls = playing;
 
     // Hiding the toggle while it holds the keyboard focus would drop the
-    // focus to <body>, stranding keyboard users at the top of the page.
-    // Hand it to the video first (focusable — its native controls just
-    // came back), mirroring the facade's handoff to its iframe. Guarded
-    // by activeElement so play events from elsewhere (e.g. a source swap
-    // resuming playback) never steal the user's focus.
+    // focus to <body>, stranding keyboard users at the top of the page. Hand
+    // it to the video first (focusable — its native controls just came back),
+    // mirroring the facade's handoff to its iframe. Guarded by activeElement
+    // so play events from elsewhere (e.g. a source swap resuming playback)
+    // never steal the user's focus.
     if (playing && document.activeElement === this.toggle) {
       this.video.focus();
     }
@@ -426,9 +421,9 @@ class HostedVideo {
 
     // Same handoff in reverse: pausing via the native controls leaves the
     // focus on the <video>, whose controls — and with them its keyboard
-    // operability — were just removed. Hand it to the play button that
-    // took the surface back over. The activeElement guard again keeps a
-    // pause from elsewhere (e.g. programmatic) from stealing the focus.
+    // operability — were just removed. Hand it to the play button that took
+    // the surface back over. The activeElement guard again keeps a pause from
+    // elsewhere (e.g. programmatic) from stealing the focus.
     if (!playing && document.activeElement === this.video) {
       this.toggle.focus();
     }
@@ -455,9 +450,9 @@ class HostedVideo {
 
 
 
-  // A runtime switch TO "reduce" pauses the ambient loop. Switching away
-  // does not auto-resume — staying still is the safe default; the toggle
-  // is right there.
+  // A runtime switch TO "reduce" pauses the ambient loop. Switching away does
+  // not auto-resume — staying still is the safe default; the toggle is right
+  // there.
   handleMotionChange = (event) => {
     if (!event.matches) return;
 
@@ -469,9 +464,9 @@ class HostedVideo {
   // Optional teardown for hosts that mount/unmount this subtree repeatedly
   // instead of doing a full page (re)load — see destroyModulesInScope() in
   // boot.js. The video/toggle listeners are bound to elements inside this
-  // subtree and would die naturally with it; the matchMedia change
-  // listeners (source-selection queries and reduced-motion) are not
-  // DOM-attached and outlive the subtree unless explicitly removed.
+  // subtree and would die naturally with it; the matchMedia change listeners
+  // (source-selection queries and reduced-motion) are not DOM-attached and
+  // outlive the subtree unless explicitly removed.
   destroy = () => {
     this.mediaQueryLists?.forEach((mq) => {
       mq.removeEventListener('change', this.handleMediaChange);
@@ -540,8 +535,8 @@ class YouTubeFacade {
       return;
     }
 
-    // The button replaces the no-JS link as the way in; naming the video
-    // in the label spares screen-reader users a click into the unknown.
+    // The button replaces the no-JS link as the way in; naming the video in
+    // the label spares screen-reader users a click into the unknown.
     this.toggle.setAttribute(
       'aria-label', `${this.labels.play}: ${this.title}`
     );
@@ -553,9 +548,9 @@ class YouTubeFacade {
 
 
 
-  // The click IS the consent: only now anything is requested from
-  // YouTube. autoplay=1 starts playback right away so the user does not
-  // have to press play twice.
+  // The click IS the consent: only now is anything requested from YouTube.
+  // autoplay=1 starts playback right away so the user does not have to press
+  // play twice.
   handleActivate = () => {
     const iframe = document.createElement('iframe');
 
@@ -577,8 +572,8 @@ class YouTubeFacade {
     this.root.classList.add(this.config.playingClass);
     this.root.appendChild(iframe);
 
-    // The activated button just vanished from the tab order; hand focus
-    // to the player so keyboard users continue where they acted.
+    // The activated button just vanished from the tab order; hand focus to
+    // the player so keyboard users continue where they acted.
     iframe.focus();
   };
 }

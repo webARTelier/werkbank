@@ -2,23 +2,23 @@
 // Toast — transient messages in a stack over the page
 // =============================================================
 //
-// One authored container (the stack) holding any number of messages, and the
-// messages come from two places that have to look identical: the markup, when
-// the server already knows about the message, and toast.js, when something
-// happened on the page. That is why every part of a message is addressed by a
-// "data-toast-*" attribute rather than by an "m-toast__*" class — the script
-// would otherwise be writing style classes it does not own, which is the same
-// reason dropdownNav styles its injected toggles through
-// [data-dropdownnav-toggle]. The stack itself keeps its class: it is the
-// override surface below and the only thing a project positions.
+// One authored container (the stack) holding any number of messages, which
+// come from two places that have to look identical: the markup, when the
+// server already knows about the message, and toast.js, when something
+// happened on the page. Hence every part of a message is addressed by a
+// "data-toast-*" attribute rather than an "m-toast__*" class — the script
+// would otherwise write style classes it does not own, the same reason
+// dropdownNav styles its injected toggles through [data-dropdownnav-toggle].
+// The stack keeps its class: it is the override surface below and the only
+// thing a project positions.
 //
 // Contract with the JS
 //   - "data-toast-item" marks one message, "data-toast-body" its content and
 //     "data-toast-dismiss" the way out (injected per message, with a
 //     "data-toast-label" text node naming it next to the aria-hidden glyph).
-//   - "data-toast-variant" is the kind of message: info | success | warning |
-//     error. It picks the accent colour AND the icon below, and the icons are
-//     four different shapes rather than four colours of one shape, so a
+//   - "data-toast-variant" is the kind: info | success | warning | error. It
+//     picks the accent colour AND the icon below, and the icons are four
+//     different shapes rather than four colours of one shape, so a
 //     forced-colors context loses the hue and keeps the meaning.
 //   - "data-toast-state=leaving" is the one state the script writes: the
 //     message is on its way out. It does NOT time the removal against a
@@ -27,8 +27,8 @@
 //     whatever this file declares is what the reader gets, including nothing
 //     at all under prefers-reduced-motion.
 //   - "data-toast-live" marks the two announcement regions the script injects
-//     AFTER the stack (not inside it — see the rule further down, which is the
-//     one rule in this file that is not decoration).
+//     AFTER the stack (not inside it — see the rule further down, the one
+//     rule in this file that is not decoration).
 //   - No inline styles, and nothing is written into the content of a message
 //     the author put on the page.
 //
@@ -40,9 +40,9 @@
 //
 // Entrance and exit are pure CSS progressive enhancement: @starting-style
 // gives a freshly inserted message somewhere to come from, and the leaving
-// state somewhere to go. Engines without @starting-style simply show the
-// message. Placement is four custom properties (see the token block) plus
-// three modifiers for the corners a project is most likely to want.
+// state somewhere to go. Engines without it simply show the message.
+// Placement is four custom properties (see the token block) plus three
+// modifiers for the corners a project is most likely to want.
 
 @use "focus" as *;
 @use "mediaqueries" as *;
@@ -53,21 +53,20 @@
 // The stack: fixed to one corner of the viewport, messages laid out in a
 // column, newest last.
 //
-// The custom properties are the component's override surface. They live on
-// the component root rather than in :root, so they stay scoped to the
-// component and a single instance can be retuned in place
-// (`style="--toast-max-inline-size: …"` on the stack still wins over the
-// defaults below).
+// The custom properties are the override surface: declared on the component
+// root, not in :root, so they stay scoped and a single instance can be
+// retuned in place (`style="--toast-max-inline-size: …"` on the stack still
+// wins).
 .m-toast {
 
-  // Animation maps to the shared animation tokens (see
-  // _shared/scss/_foundations.scss). Entering and leaving are timed
-  // separately: --an-ease is an ease-OUT (fast start, slow settle), which is
-  // what an entrance wants — reused for the exit it front-loads the fade so
-  // hard that the message is visually gone in the first quarter of the
-  // duration and the exit reads as a snap. So the exit gets an accelerating
-  // curve over a shorter duration, the usual asymmetry for something that
-  // appears over the page (dialog and lightbox carry the same pair).
+  // Animation (shared tokens, _shared/scss/_foundations.scss). Entering and
+  // leaving are timed separately: --an-ease is an ease-OUT (fast start, slow
+  // settle), what an entrance wants — reused for the exit it front-loads the
+  // fade so hard that the message is visually gone in the first quarter of
+  // the duration and the exit reads as a snap. So the exit gets an
+  // accelerating curve over a shorter duration, the usual asymmetry for
+  // something that appears over the page (dialog and lightbox carry the same
+  // pair).
   --toast-duration: var(--an-duration);
   --toast-easing: var(--an-ease);
   --toast-duration-exit: calc(var(--toast-duration) * 0.6);
@@ -82,7 +81,7 @@
   --toast-shift: var(--toast-shift-distance);
 
   // Placement. Two insets and an alignment, because a project's answer to
-  // "where do notifications appear" is a design decision and not a mode: the
+  // "where do notifications appear" is a design decision, not a mode: the
   // three modifiers below are nothing but preset triples of these.
   --toast-viewport-inset: var(--space-m);
   --toast-inset-block: auto var(--toast-viewport-inset);
@@ -90,8 +89,7 @@
   --toast-align: stretch;
 
   // Sizing. The stack is capped so a message stays a readable measure, and
-  // capped again against the viewport so a narrow one is not overflowed by
-  // it.
+  // capped again against the viewport so a narrow one is not overflowed.
   --toast-max-inline-size: 24rem;
   --toast-radius: var(--borderRadius);
   --toast-accent-width: 3px;
@@ -106,8 +104,7 @@
   --toast-dismiss-icon-size: 1rem;
   --toast-z-index: var(--zi-overlay);
 
-  // Spacing maps to the shared spacing scale (see
-  // _shared/scss/_foundations.scss).
+  // Spacing (shared scale, _shared/scss/_foundations.scss)
   --toast-gap: var(--space-2xs); // between the messages of the stack
   --toast-padding: var(--space-xs);
   --toast-item-gap: var(--space-2xs); // icon | text | dismiss
@@ -116,12 +113,11 @@
   --toast-font-size: 0.9rem;
   --toast-line-height: 1.5;
 
-  // Colors map to the shared semantic tokens (see
-  // _shared/scss/_colors_semantic.scss). The message text is the ordinary
-  // text colour in every variant on purpose: the accent then only ever has
-  // to carry a border and an icon, i.e. the 3:1 of WCAG 1.4.11, and never
-  // the 4.5:1 of body text — which is what lets all four variants use a
-  // colour that is recognisably theirs.
+  // Colors (shared semantic tokens, _shared/scss/_colors_semantic.scss). The
+  // message text is the ordinary text colour in every variant on purpose: the
+  // accent then only ever has to carry a border and an icon, i.e. the 3:1 of
+  // WCAG 1.4.11, and never the 4.5:1 of body text — which is what lets all
+  // four variants use a colour that is recognisably theirs.
   --toast-text-color: var(--color-text);
   --toast-bg-color: var(--color-bg-elevated);
   --toast-border-color: var(--color-border);
@@ -135,18 +131,18 @@
   // tokens come in.
   --toast-accent-color: var(--color-accent-secondary);
 
-  // The four icons, as masks rather than as background images: a mask takes
-  // its colour from this element, so one shape follows the variant's accent
-  // and — crucially — can be repainted in a system colour when the accent is
-  // forced away (see the forced-colors block at the bottom).
+  // The four icons, as masks rather than background images: a mask takes its
+  // colour from this element, so one shape follows the variant's accent and —
+  // crucially — can be repainted in a system colour when the accent is forced
+  // away (see the forced-colors block at the bottom).
   //
   // They live in CSS rather than being injected by the script, unlike
   // lightbox's control glyphs: a message the author wrote into the markup is
   // on screen before the module arrives, and it should not be the one message
   // without its icon. Drawn from the same 24x24 grid as
-  // src/_shared/media/img/icons/, and deliberately four different SHAPES —
-  // a colour alone would not be a distinction (WCAG 1.4.1), and it is the
-  // first thing a forced-colors context takes away.
+  // src/_shared/media/img/icons/, and deliberately four different SHAPES — a
+  // colour alone would not be a distinction (WCAG 1.4.1), and it is the first
+  // thing a forced-colors context takes away.
   --toast-icon-info: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 11v5.5M12 7.6h.01'/%3E%3C/svg%3E");
   --toast-icon-success: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='m8 12.4 2.6 2.6L16 9.6'/%3E%3C/svg%3E");
   --toast-icon-warning: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4 2.8 20h18.4z'/%3E%3Cpath d='M12 9.5v4.6M12 17.1h.01'/%3E%3C/svg%3E");
@@ -161,9 +157,9 @@
   inset-inline: var(--toast-inset-inline);
   z-index: var(--toast-z-index);
 
-  // Capped against the viewport as well as against the measure: the start
-  // inset is "auto", so the box is shrink-to-fit and this maximum is the only
-  // thing keeping a long message off the opposite edge.
+  // Capped against the viewport as well as the measure: the start inset is
+  // "auto", so the box is shrink-to-fit and this maximum is the only thing
+  // keeping a long message off the opposite edge.
   max-inline-size: min(
     var(--toast-max-inline-size),
     calc(100% - 2 * var(--toast-viewport-inset))
@@ -183,7 +179,7 @@
   list-style: none;
 
   // The stack covers a strip of the page whether or not it holds anything, so
-  // it must not take the presses meant for what is underneath it: the gaps
+  // it must not take the presses meant for what is underneath: the gaps
   // between the messages, and the whole box while it is empty. The messages
   // themselves take theirs back.
   pointer-events: none;
@@ -193,8 +189,8 @@
   // ----- placement presets -----
   //
   // Each is the same three or four properties from the token block, set
-  // together — a corner is a combination, not a mode, so there is nothing
-  // here a project could not have written itself.
+  // together — a corner is a combination, not a mode, so there is nothing here
+  // a project could not have written itself.
 
   // Top instead of bottom: the anchor flips, and the direction a message
   // travels flips with it, so it still comes out of the edge it is pinned to.
@@ -212,8 +208,8 @@
 
 
   // Centred: both insets are zero, which makes the box as wide as the
-  // viewport, and the margin-inline: auto above then centres it inside the
-  // maximum measure.
+  // viewport, and the margin-inline: auto above centres it inside the maximum
+  // measure.
   &--inlineCenter {
     --toast-inset-inline: 0 0;
   }
@@ -229,8 +225,7 @@
     border: var(--toast-border-width) solid var(--toast-border-color);
 
     // The variant's colour as a rule down the leading edge — the part of the
-    // message that stays recognisable when it is read out of the corner of an
-    // eye.
+    // message that stays recognisable out of the corner of an eye.
     border-inline-start: var(--toast-accent-width) solid var(--toast-accent-color);
     border-radius: var(--toast-radius);
     padding: var(--toast-padding);
@@ -264,9 +259,8 @@
 
 
     // The variant's icon. A pseudo-element, so a message needs no extra node
-    // and the icon adds nothing to the accessibility tree — what the icon
-    // shows is in the announcement as a word ("Error: …"), which is the one
-    // place it belongs.
+    // and the icon adds nothing to the accessibility tree — what it shows is
+    // in the announcement as a word ("Error: …"), the one place it belongs.
     &::before {
       content: '';
 
@@ -292,10 +286,9 @@
     // ----- the kinds of message -----
     //
     // Per-variant overrides of two properties from the token block. Both are
-    // set together on purpose: the shape is what carries the meaning where
-    // the colour cannot (greyscale, a forced-colors theme, a reader who does
-    // not distinguish red from green), so neither may appear without the
-    // other.
+    // set together on purpose: the shape carries the meaning where the colour
+    // cannot (greyscale, a forced-colors theme, a reader who does not
+    // distinguish red from green), so neither may appear without the other.
     &[data-toast-variant='success'] {
       --toast-accent-color: var(--color-success);
       --toast-icon: var(--toast-icon-success);
@@ -312,9 +305,9 @@
     }
   }
 
-  // Where a freshly inserted message comes from: the very first rendered
-  // frame after it is in the document. Engines without @starting-style ignore
-  // this block and simply show it.
+  // Where a freshly inserted message comes from: the very first rendered frame
+  // after it is in the document. Engines without @starting-style ignore this
+  // block and simply show it.
   @starting-style {
 
     & [data-toast-item] {
@@ -341,9 +334,9 @@
 
 
 
-  // The content of a message. Nothing about the box, because it holds
-  // whatever the author or the template put there — a sentence, a heading and
-  // a line, an "Undo" control.
+  // The content of a message. Nothing about the box, because it holds whatever
+  // the author or the template put there — a sentence, a heading and a line,
+  // an "Undo" control.
   & [data-toast-body] {
     grid-column: 2;
     margin: 0;
@@ -365,8 +358,7 @@
       cursor: pointer;
 
       // Positioned so the visually hidden label below is placed against this
-      // control rather than against whatever the page happens to have
-      // positioned above it.
+      // control rather than whatever the page has positioned above it.
       position: relative;
 
       grid-column: 3;
@@ -421,11 +413,11 @@
 
 
 // The two announcement regions the script injects next to the stack. Hidden
-// visually and only visually: this is the one place in the component where
-// that distinction is load-bearing, because "display: none" and
-// "visibility: hidden" take an element out of the accessibility tree — and a
-// live region that is not in that tree announces nothing at all. The mixin's
-// recipe keeps a rendered 1px box for exactly this reason (see
+// visually and only visually: the one place in the component where that
+// distinction is load-bearing, because "display: none" and "visibility:
+// hidden" take an element out of the accessibility tree — and a live region
+// that is not in that tree announces nothing at all. The mixin's recipe keeps
+// a rendered 1px box for exactly this reason (see
 // _shared/scss/_visuallyHidden.scss). Everything else in this file is a
 // suggestion; this rule is not.
 [data-toast-live] {
@@ -435,13 +427,13 @@
 
 
 // -------------------------------------------------------------
-// Respect reduced motion: messages appear and disappear without
-// travelling. !important (rather than zeroing the duration
+// Respect reduced motion: messages appear and disappear
+// without travelling. !important (rather than zeroed duration
 // tokens) so it also beats the transition declared on the
 // leaving state above.
 //
-// The script does not need telling: it asks the element which
-// animations are running before it removes it, so a message whose
+// The script needs no telling: it asks the element which
+// animations are running before removing it, so a message whose
 // exit takes no time is simply gone at once.
 // -------------------------------------------------------------
 @include reduced-motion {
@@ -456,13 +448,12 @@
 
 // -------------------------------------------------------------
 // A forced-colors context (the Windows contrast themes): every
-// colour above is replaced by one from the system palette, which
-// takes the four accents down to one. The shapes of the icons
-// are what keep the kinds of message apart there, and they only
-// do so if they are still visible — a mask painted with
-// "background-color" would be forced to Canvas, i.e. to the
-// colour it is sitting on. System colours inside this query are
-// the one kind an author may still choose.
+// colour above is replaced by one from the system palette,
+// which takes the four accents down to one. The icon shapes are
+// what keep the kinds of message apart there, and only if they
+// stay visible — a mask painted with "background-color" would be
+// forced to Canvas, the colour it sits on. System colours inside
+// this query are the one kind an author may still choose.
 // -------------------------------------------------------------
 @include forced-colors {
 
@@ -474,9 +465,9 @@
 
 
 // -------------------------------------------------------------
-// Print: drop the stack. It is fixed to the viewport, so on paper
-// it is a box printed over the content — on the first sheet in
-// Chromium, on every sheet in engines that repeat fixed
+// Print: drop the stack. It is fixed to the viewport, so on
+// paper it is a box printed over the content — on the first
+// sheet in Chromium, on every sheet in engines that repeat fixed
 // elements — and a message about something that just happened on
 // screen means nothing on a page that outlives it.
 // -------------------------------------------------------------

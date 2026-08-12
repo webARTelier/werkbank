@@ -3,60 +3,57 @@
 // =============================================================
 //
 // Contract with the JS
-//   - backToTop.js boots on the control itself — an in-page anchor link —
-//     and toggles ONE attribute on it:
+//   - backToTop.js boots on the control itself — an in-page anchor link — and
+//     toggles ONE attribute on it:
 //       data-backtotop-hidden -> the page is scrolled less than the
 //                                threshold, so the control must not show
-//     Presence IS the state. It is a namespaced data attribute rather
-//     than a generic "is-hidden" class on purpose: projects often ship
-//     such a class as a display: none utility, which would win over the
-//     transition below and make the control pop instead of fade.
-//   - A second attribute comes with the first state write and is NOT a
-//     state:
+//     Presence IS the state. A namespaced data attribute rather than a
+//     generic "is-hidden" class on purpose: projects often ship such a class
+//     as a display: none utility, which would win over the transition below
+//     and make the control pop instead of fade.
+//   - A second attribute comes with the first state write and is NOT a state:
 //       data-backtotop-ready -> the lazily loaded module has taken over
 //     It exists because the absence of data-backtotop-hidden means both
 //     "visible" and "not initialised yet", and the pre-enhancement block
 //     below has to tell those two apart.
-//   - The script sets no inline styles and runs no animations, so
-//     everything visual — including the appear/disappear transition and
-//     its prefers-reduced-motion escape — lives here.
+//   - The script sets no inline styles and runs no animations, so everything
+//     visual — including the appear/disappear transition and its
+//     prefers-reduced-motion escape — lives here.
 //   - NO attribute means visible. That is the progressive-enhancement
 //     baseline: without JavaScript the control is a plain, always visible
 //     jump link, never a dead control. The moment BEFORE the lazy module
-//     takes over is not that baseline though — see the pre-enhancement
-//     block below, and the readme for how to trade it back.
-//   - `visibility: hidden` (not opacity alone) does the hiding, so the
-//     hidden control leaves the tab order and the accessibility tree —
-//     there is no invisible tab stop at the top of the page. visibility
-//     is transitionable and stays `visible` for the whole duration when
-//     either end of the transition is, so the fade is never cut short.
-//   - `:focus-visible` is excluded from the hidden state, so a control
-//     that still holds keyboard focus is never hidden away under the
-//     user. That happens after activating an `href="#top"` BY KEYBOARD
-//     (the document top is no element that could take the focus, so it
-//     stays on the control) and whenever the page is scrolled up by
-//     other means while the control has focus. Tabbing away then fades
-//     it out. After a MOUSE click the exception does not apply —
-//     `:focus-visible` never became true — so the control is hidden
-//     while it still holds DOM focus, and the browser drops that focus.
-//     Accepted on purpose: nothing visible loses its focus ring, and
-//     the recommended resolving-fragment href avoids the case entirely
-//     by moving focus off the link itself.
-//   - The control is fixed, so it overlaps a focusable element the
-//     browser parked flush against the bottom viewport edge. That partial
-//     coverage is WCAG 2.4.12 (AAA); the page removes it with a
-//     `scroll-padding-block-end` — see the readme. Entire coverage
-//     (2.4.11, AA) is a layout question no padding can reach.
-//   - The script prepends a zero-size, aria-hidden sentinel to <body> as
-//     its scroll trigger; the last rule in this file takes that node out
-//     of the flow. Unlike the rest of this stylesheet, that rule is not
-//     decoration — it is part of the component.
+//     takes over is not that baseline though — see the pre-enhancement block
+//     below, and the readme for how to trade it back.
+//   - `visibility: hidden` (not opacity alone) does the hiding, so the hidden
+//     control leaves the tab order and the accessibility tree — no invisible
+//     tab stop at the top of the page. visibility is transitionable and stays
+//     `visible` for the whole duration when either end of the transition is,
+//     so the fade is never cut short.
+//   - `:focus-visible` is excluded from the hidden state, so a control still
+//     holding keyboard focus is never hidden away under the user. That
+//     happens after activating an `href="#top"` BY KEYBOARD (the document top
+//     is no element that could take the focus, so it stays on the control)
+//     and whenever the page is scrolled up by other means while the control
+//     has focus; tabbing away then fades it out. After a MOUSE click the
+//     exception does not apply — `:focus-visible` never became true — so the
+//     control is hidden while it still holds DOM focus and the browser drops
+//     that focus. Accepted on purpose: nothing visible loses its focus ring,
+//     and the recommended resolving-fragment href avoids the case entirely by
+//     moving focus off the link itself.
+//   - The control is fixed, so it overlaps a focusable element the browser
+//     parked flush against the bottom viewport edge. That partial coverage is
+//     WCAG 2.4.12 (AAA); the page removes it with a
+//     `scroll-padding-block-end` — see the readme. Entire coverage (2.4.11,
+//     AA) is a layout question no padding can reach.
+//   - The script prepends a zero-size, aria-hidden sentinel to <body> as its
+//     scroll trigger; the last rule in this file takes that node out of the
+//     flow. Unlike the rest of this stylesheet, that rule is not decoration —
+//     it is part of the component.
 //
-// The "m-backToTop*" classes (BEM "m-" prefix) are styling only.
-// backToTop.js does NOT hook onto them; it targets the control via
-// data-js-behavior="backToTop" and writes the data attribute above. Restyle
-// or replace all of it freely — only keep the hidden state hiding, and
-// keep it hiding with `visibility`.
+// The "m-backToTop*" classes are styling only. backToTop.js does NOT hook
+// onto them; it targets the control via data-js-behavior="backToTop" and
+// writes the data attribute above. Restyle or replace all of it freely — only
+// keep the hidden state hiding, and keep it hiding with `visibility`.
 
 @use "focus" as *;
 @use "mediaqueries" as *;
@@ -65,14 +62,12 @@
 
 
 
-// The default look: a pill in the bottom inline-end corner of the
-// viewport, icon plus label.
+// The default look: a pill in the bottom inline-end corner of the viewport,
+// icon plus label.
 //
-// The custom properties are the component's override surface. They live on
-// the component root rather than in :root, so they stay scoped to the
-// component and a single instance can be retuned in place
-// (`style="--backToTop-inset: …"` on the control still wins over the
-// defaults below).
+// The override surface: declared on the component root, not in :root, so it
+// stays scoped and a single instance can be retuned in place
+// (`style="--backToTop-inset: …"` on the control still wins).
 .m-backToTop {
 
   // The control sits on the page's own dark surface -> the light ring.
@@ -80,9 +75,8 @@
 
   & {
 
-    // Distance from both viewport edges the control is anchored to.
-    // Maps to the shared spacing scale (see
-    // _shared/scss/_foundations.scss).
+    // Spacing (shared scale, _shared/scss/_foundations.scss). The inset is
+    // the distance from both viewport edges the control is anchored to.
     --backToTop-inset: var(--space-m);
     --backToTop-padding: var(--space-2xs) var(--space-s);
     --backToTop-gap: var(--space-2xs);
@@ -91,35 +85,30 @@
     // --backToTop-radius: var(--borderRadius).
     --backToTop-radius: 999px;
 
-    // Icon size, relative to the label's font size so both scale
-    // together.
+    // Icon size, in em so it follows the label's font size.
     --backToTop-icon-size: 1.125em;
 
-    // Colours map to the shared semantic tokens (see
-    // _shared/scss/_colors_semantic.scss).
+    // Colours (shared semantic tokens, _shared/scss/_colors_semantic.scss).
     --backToTop-text-color: var(--color-text);
     --backToTop-bg-color: var(--color-bg-elevated);
     --backToTop-bg-color-hover: var(--color-bg-surface-strong);
-    // Unlike the components that sit on a known surface, this one floats
-    // over whatever the page happens to scroll past, so its outline is
-    // the only thing separating it from that content — the control-boundary
-    // case of WCAG 1.4.11, which is what --color-border-control is for (see
-    // _shared/scss/_colors_semantic.scss; the quiet --color-border reaches
-    // only 1.32:1 here). Re-measured when the tokens were introduced, in
-    // Chromium and WebKit and by hand: 3.11:1 against the page background
-    // and 3.10:1 against this control's own fill (hover: 5.31:1 / 4.79:1).
-    // The earlier note here claimed 4.23:1 / 6.53:1 for the two page-
-    // background figures, which no calculation reproduces.
+    // Unlike components on a known surface, this one floats over whatever the
+    // page scrolls past, so its outline is the only thing separating it from
+    // that content — the control-boundary case of WCAG 1.4.11, which is what
+    // --color-border-control is for (the quiet --color-border reaches only
+    // 1.32:1 here). Measured in Chromium and WebKit and by hand: 3.11:1
+    // against the page background and 3.10:1 against this control's own fill
+    // (hover: 5.31:1 / 4.79:1).
     --backToTop-border-color: var(--color-border-control);
     --backToTop-border-color-hover: var(--color-border-control-strong);
     --backToTop-shadow: 0 12px 24px -12px var(--color-shadow);
 
-    // Transition of the two states. Maps to the shared motion tokens.
+    // Transition of the two states (shared motion tokens).
     --backToTop-duration: var(--an-duration);
     --backToTop-ease: var(--an-ease);
 
-    // How far the control travels while it appears — a short slide up
-    // out of the corner it is anchored to.
+    // How far the control travels while it appears — a short slide up out of
+    // the corner it is anchored to.
     --backToTop-enter-shift: var(--space-2xs);
 
     position: fixed;
@@ -167,33 +156,32 @@
 
 
   // State written by the script while the page is scrolled less than the
-  // threshold — everything about "not on screen" keys off this attribute.
-  // The :focus-visible exception keeps a control that still holds
-  // keyboard focus on screen (see the contract above).
+  // threshold — everything about "not on screen" keys off it. The
+  // :focus-visible exception keeps a control that still holds keyboard focus
+  // on screen (see the contract above).
   &[data-backtotop-hidden]:not(:focus-visible) {
     opacity: 0;
     visibility: hidden;
     translate: 0 var(--backToTop-enter-shift);
   }
 
-  // The pre-enhancement state: the same "not on screen" the rule above
-  // describes, for the gap between the first paint and the module taking
-  // over (see _shared/scss/_progressiveEnhancement.scss). Without it every
-  // page load starts with the control on screen and takes it away again a
-  // round trip later, because "no data-backtotop-hidden" means both
-  // "visible" and "nobody has looked yet" — which is what the ready
-  // attribute is here to tell apart.
+  // The pre-enhancement state: the same "not on screen" as above, for the gap
+  // between the first paint and the module taking over (see
+  // _shared/scss/_progressiveEnhancement.scss). Without it every page load
+  // starts with the control on screen and takes it away again a round trip
+  // later, because "no data-backtotop-hidden" means both "visible" and
+  // "nobody has looked yet" — which is what the ready attribute tells apart.
   //
   // Safe to ship on by default, and this is the component that makes the
   // criterion concrete: if the chunk never arrives, all that is lost is a
   // shortcut to a place the reader can still scroll to. Nothing becomes
-  // unreachable, so there is nothing to weigh against the flash. (The
-  // reverse trade — a control that survives a broken script at the price of
-  // a flash on every load — is one rule away; see the readme.)
+  // unreachable, so nothing weighs against the flash. (The reverse trade — a
+  // control that survives a broken script at the price of a flash on every
+  // load — is one rule away; see the readme.)
   //
-  // Declaring the shift too, rather than opacity/visibility alone, is what
-  // makes the first appearance the ordinary one: a page restored mid-scroll
-  // then slides the control in exactly like a page scrolled by hand.
+  // Declaring the shift too, rather than opacity/visibility alone, makes the
+  // first appearance the ordinary one: a page restored mid-scroll slides the
+  // control in exactly like a page scrolled by hand.
   @include pre-enhancement("data-backtotop-ready") {
     opacity: 0;
     visibility: hidden;
@@ -216,9 +204,8 @@
 
 
 
-  // Icon-only variant. The padding becomes symmetric, which turns the pill
-  // into a circle around the glyph; the label is hidden visually but keeps
-  // naming the control.
+  // Icon-only variant: symmetric padding turns the pill into a circle around
+  // the glyph.
   &--iconOnly {
     --backToTop-padding: var(--space-xs);
   }
@@ -226,8 +213,8 @@
 
 
   // Visually only: the label stays in the accessibility tree, so the control
-  // keeps its accessible name. The narrow-viewport rule further down does the
-  // same thing for a different reason.
+  // keeps its accessible name. The narrow-viewport rule below does the same
+  // for a different reason.
   &--iconOnly &__label {
     @include visually-hidden;
   }
@@ -237,17 +224,15 @@
 
 // Narrow viewports: the same collapse, for a different reason.
 //
-// The control is fixed and cannot be dismissed, so whatever width it
-// takes is width the reader never gets back — which makes its size a
-// reflow question (WCAG 1.4.10), not a cosmetic one. The labelled pill is
-// roughly 139px wide in English and 235px with a longer translation
-// ("Zurück zum Seitenanfang"); in the 320px viewport that a 400% zoom
-// produces on a 1280px screen, that is 43% to 73% of every line it
-// covers, permanently. The glyph alone carries the meaning here and the
-// accessible name survives the collapse, so nothing is actually lost.
+// The control is fixed and cannot be dismissed, so whatever width it takes is
+// width the reader never gets back — a reflow question (WCAG 1.4.10), not a
+// cosmetic one. The labelled pill is roughly 139px wide in English and 235px
+// with a longer translation ("Zurück zum Seitenanfang"); in the 320px
+// viewport a 400% zoom produces on a 1280px screen, that is 43% to 73% of
+// every line it covers, permanently. The glyph alone carries the meaning and
+// the accessible name survives the collapse, so nothing is lost.
 //
-// Re-show the label below this breakpoint if yours is short enough to
-// afford the room.
+// Re-show the label below this breakpoint if yours can afford the room.
 @include vp-only('tiny') {
 
   .m-backToTop {
@@ -263,11 +248,11 @@
 
 
 
-// Print: drop the control entirely. It is the one thing in this
-// collection that is permanently on screen and position: fixed, which on
-// paper means a pill printed over the content — on the first sheet in
-// Chromium, on every sheet in engines that repeat fixed elements. A jump
-// link is meaningless on paper either way.
+// Print: drop the control entirely. It is the one thing in this collection
+// that is permanently on screen and position: fixed, which on paper means a
+// pill printed over the content — on the first sheet in Chromium, on every
+// sheet in engines that repeat fixed elements. A jump link is meaningless on
+// paper either way.
 @include print-only {
 
   .m-backToTop {
@@ -277,12 +262,11 @@
 
 
 
-// The sentinel the script prepends to <body>: its position in the page is
-// the scroll trigger the observer watches. Taken out of the flow so it
-// cannot occupy a flex/grid slot of a body that lays its children out,
-// and pinned to the top of the page so a centring body alignment cannot
-// move it away from scroll position 0. Everything else in this file is a
-// suggestion — this rule is not.
+// The sentinel the script prepends to <body>: its position in the page is the
+// scroll trigger the observer watches. Out of the flow so it cannot occupy a
+// flex/grid slot of a body that lays its children out, and pinned to the top
+// so a centring body alignment cannot move it away from scroll position 0.
+// Everything else in this file is a suggestion — this rule is not.
 [data-backtotop-sentinel] {
   position: absolute;
   inset-block-start: 0;

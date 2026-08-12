@@ -2,45 +2,36 @@
 // Accordion — accessible, animated, works without JavaScript
 // =============================================================
 //
-// Animation strategy:
-// 1. Modern Chromium browsers: native animation via ::details-content
-//    + interpolate-size: allow-keywords.
-// 2. All other browsers (Firefox, Safari, older Chromium): fallback
-//    via a CSS grid trick (grid-template-rows: 0fr -> 1fr), driven by
-//    the small companion script (see accordion.js).
+// Animation: native via ::details-content + interpolate-size where that
+// exists (Chromium), otherwise a CSS grid fallback (grid-template-rows:
+// 0fr -> 1fr) driven by accordion.js. Open/close itself works in every
+// browser without JS — the CSS only degrades the visuals, never the
+// function.
 //
-// Important: the base behaviour (open/close) works in every browser
-// even without JS and without animation — the CSS below only degrades
-// the visuals, never the function.
+// The "m-accordion*" classes are styling only. accordion.js hooks onto data
+// attributes instead ("data-accordion-item", "data-accordion-panel") and,
+// when the fallback runs, sets "data-accordion-ready" on the container and
+// wraps each panel in a "data-accordion-wrapper" element.
 //
-// The "m-accordion*" classes (BEM "m-" prefix) are used for styling only.
-// accordion.js does NOT hook onto them; it targets separate data attributes
-// in the markup ("data-accordion-item", "data-accordion-panel"). When the JS
-// fallback runs it also sets "data-accordion-ready" on the container and
-// wraps each panel in an element carrying "data-accordion-wrapper".
-//
-// No pre-enhancement block here (see docs/preEnhancement.md): a <details>
-// renders closed with or without this script, so there is no flash to cover
-// — the ready attribute exists to pick the animation, not to hide anything.
+// No pre-enhancement block (see docs/preEnhancement.md): a <details> renders
+// closed with or without this script, so there is no flash to cover — the
+// ready attribute picks the animation, it hides nothing.
 
 @use "focus" as *;
 @use "mediaqueries" as *;
 
 
 
-// The custom properties are the component's override surface. They live on
-// the component root rather than in :root, so they stay scoped to the
-// component and a single instance can be retuned in place.
+// The override surface: declared on the component root, not in :root, so it
+// stays scoped and a single instance can be retuned in place.
 .m-accordion {
 
-  // Animation maps to the shared animation tokens
-  // (see _shared/scss/_foundations.scss).
+  // Animation (shared tokens, _shared/scss/_foundations.scss)
   --accordion-duration: var(--an-duration);
   --accordion-easing: var(--an-ease);
   --accordion-radius: var(--borderRadius);
 
-  // Spacing maps to the shared spacing scale
-  // (see _shared/scss/_foundations.scss).
+  // Spacing (shared scale, _shared/scss/_foundations.scss)
   --accordion-gap: var(--space-2xs); // gap between items
   --accordion-trigger-gap: var(--space-xs); // gap label <-> arrow
   --accordion-padding-inline: var(--space-s);
@@ -49,8 +40,7 @@
   // Sizing
   --accordion-arrow-size: 0.6rem; // side length of the chevron square
 
-  // Colors map to the shared semantic tokens
-  // (see _shared/scss/_colors_semantic.scss).
+  // Colors (shared semantic tokens, _shared/scss/_colors_semantic.scss)
   --accordion-border-color: var(--color-border);
   --accordion-bg-color: var(--color-bg-surface);
   --accordion-bg-color-hover: var(--color-bg-elevated);
@@ -73,13 +63,11 @@
 
     background-color: var(--accordion-bg-color);
 
-    // Visible focus ring instead of the removed default outline. The ring is
-    // placed on the item (not the trigger) so it surrounds the whole item and
-    // follows its rounded corners. An outline on the trigger would be clipped
-    // by this element's "overflow: hidden"; an element's own outline is not.
-    // Trigger sits on a dark surface -> the light (bright) tone. focus-ring-outline
-    // (not focus-ring) because the ring lives on the item, keyed off the child's
-    // :focus-visible via :has(); the 2px offset lifts it clear of the item edge.
+    // The ring sits on the item, not the trigger: it then follows the item's
+    // rounded corners, and the trigger's own outline would be clipped by the
+    // "overflow: hidden" above (an element's own outline is not). Hence
+    // focus-ring-outline keyed off the child's :focus-visible via :has().
+    // Dark surface -> the light tone; 2px lifts it clear of the item edge.
     &:has(> .m-accordion__trigger:focus-visible) {
       @include focus-ring-outline(light, 2px);
     }
@@ -102,8 +90,8 @@
     list-style: none;
     user-select: none;
 
-    // Remove the default disclosure triangle (older WebKit/Safari).
-    // The marker is a pseudo-element of <summary>, so it belongs here.
+    // Default disclosure triangle (older WebKit/Safari) — a pseudo-element
+    // of <summary>, so it belongs here.
     &::-webkit-details-marker {
       display: none;
     }
@@ -128,9 +116,9 @@
       background-color: var(--accordion-bg-color-hover);
     }
 
-    // The focus ring is drawn on the parent ".m-accordion__item" (see there).
-    // Suppress the native UA outline on the <summary> itself — otherwise its
-    // bottom edge shows as a stray line at the trigger/panel boundary when open.
+    // The ring is drawn on the parent ".m-accordion__item" (see there). The
+    // native UA outline has to go: its bottom edge would show as a stray
+    // line at the trigger/panel boundary while open.
     &:focus-visible {
       outline: none;
     }
@@ -138,8 +126,8 @@
 
 
 
-  // The heading inside the <summary> carries the accessible section
-  // title (so screen-reader users can navigate the panels by heading).
+  // The heading inside the <summary>, so screen-reader users can navigate
+  // the panels by heading.
   &__title {
     margin: 0;
     font: inherit;
@@ -154,9 +142,9 @@
 
 
   // During the JS-driven close 'open' stays set until the transition ends,
-  // so the arrow would only flip back once the panel is fully closed.
-  // 'data-closing' rotates it back right away, in sync with the collapse.
-  // (Higher specificity than the [open] rule above, so it wins.)
+  // so the arrow would flip back only after the panel is shut.
+  // 'data-closing' rotates it back in sync with the collapse — and outranks
+  // the [open] rule above.
   &__item[open][data-closing]>&__trigger::after {
     transform: rotate(-45deg);
   }
@@ -180,8 +168,6 @@
 
 // -------------------------------------------------------------
 // Fallback animation via CSS grid (for JS-driven browsers).
-// The JS sets the "data-accordion-ready" attribute on the container and
-// wraps each panel in an element carrying "data-accordion-wrapper".
 // -------------------------------------------------------------
 [data-accordion-ready] .m-accordion__item {
 
@@ -191,11 +177,9 @@
     grid-template-rows: 0fr;
     transition: grid-template-rows var(--accordion-duration) var(--accordion-easing);
 
-    // The clip is the grid item. It carries min-height:0 + overflow:hidden
-    // and stays padding-free so the track can collapse to a true 0.
-    // (Padding on the grid item itself would leave a residual gap, because
-    // a border box cannot shrink below its own padding.) The panel's
-    // padding lives inside the clip and is simply clipped away.
+    // The clip is the grid item, and stays padding-free so the track can
+    // collapse to a true 0: a border box cannot shrink below its own
+    // padding. The panel's padding lives inside and is clipped away.
     >[data-accordion-clip] {
       min-height: 0;
       overflow: hidden;
@@ -205,13 +189,11 @@
 
 
   // Fully closed (the JS has removed 'open', no 'data-closing'): take the
-  // clipped content out of the tab order and the accessibility tree.
-  // Our "display: grid" wrapper overrides the native "closed <details> hides
-  // its content" behaviour, so without this the collapsed (0-height) panel's
-  // links/buttons would stay keyboard-focusable and reachable by AT. The row
-  // is already 0fr at this point, so there is no visible jump. During
-  // opening/closing 'open' is set (see rules below), so the content is
-  // visible and animates normally.
+  // clipped content out of the tab order and the accessibility tree. The
+  // "display: grid" wrapper overrides the native "a closed <details> hides
+  // its content", so without this the collapsed panel's links/buttons stay
+  // focusable and reachable by AT. The row is already 0fr, so nothing jumps;
+  // while opening/closing 'open' is set and the content animates normally.
   &:not([open])>[data-accordion-wrapper]>[data-accordion-clip] {
     visibility: hidden;
   }
@@ -225,8 +207,8 @@
 
 
   // Closing state set by accordion.js: forces the row back to 0fr while
-  // 'open' is still present, so the collapse (1fr -> 0fr) can animate.
-  // Higher specificity than the [open] rule above, so it always wins.
+  // 'open' is still present, so the collapse can animate. Outranks the
+  // [open] rule above.
   &[open][data-closing]>[data-accordion-wrapper] {
     grid-template-rows: 0fr;
   }
@@ -235,10 +217,8 @@
 
 
 // -------------------------------------------------------------
-// Native animation for browsers that support ::details-content
-// (currently Chromium-only). Only active when the JS did NOT take
-// over (i.e. no "data-accordion-ready" attribute on the container) and
-// the browser supports the required properties.
+// Native animation via ::details-content (currently Chromium-only). Active
+// only where the JS did not take over, i.e. no "data-accordion-ready".
 // -------------------------------------------------------------
 @supports (interpolate-size: allow-keywords) {
   .m-accordion {

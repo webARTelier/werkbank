@@ -1,55 +1,52 @@
 /**
  * formValidation.js
  * --------------------------------------------------------------------------
- * Progressive-enhancement controller that turns the browser's built-in form
- * validation into accessible, inline error messages. It validates on submit,
- * gates the submit when something is wrong, and — once the user has tried
- * to submit — keeps each field's message in sync live as they fix it.
+ * Turns the browser's built-in form validation into accessible, inline error
+ * messages: it validates on submit, gates the submit when something is wrong,
+ * and — once the user has tried to submit — keeps each field's message in
+ * sync live as they fix it.
  *
  * Strategy (like the other components: derive state from the native source)
  * -------------------------------------------------------------------------
  * The single source of truth is the platform's Constraint Validation API.
  * Every message and state class is derived from `field.validity` (a live
- * ValidityState) and `field.checkValidity()` — never from a parallel model
- * we maintain ourselves. Just as the dialog leans on the native <dialog>,
- * the accordion on <details> and the countdown recomputes from its target
- * date, this component leans on the constraints the author already declared
- * in the markup (`required`, `type="email"`, `pattern`, `minlength`,
- * `min`/`max`, `step`, …). We add no validation rules of our own; we only
- * present the platform's verdict.
+ * ValidityState) and `field.checkValidity()` — never from a parallel model of
+ * our own. As dialog leans on the native <dialog>, accordion on <details> and
+ * countdown recomputes from its target date, this component leans on the
+ * constraints the author already declared in the markup (`required`,
+ * `type="email"`, `pattern`, `minlength`, `min`/`max`, `step`, …). No
+ * validation rules of our own; only the platform's verdict, presented.
  *
  * What the platform already does (so this script does NOT reimplement it)
  * ----------------------------------------------------------------------
- * The browser knows, at any moment, whether each control satisfies its
- * constraints (`willValidate`, `validity`, `validationMessage`) and blocks
- * a native submit of an invalid form on its own. Without JavaScript that is
+ * The browser knows at any moment whether each control satisfies its
+ * constraints (`willValidate`, `validity`, `validationMessage`) and blocks a
+ * native submit of an invalid form on its own. Without JavaScript that is
  * exactly what happens: the form validates and the browser shows its default
  * bubbles — so the form is never left unguarded. This script is a pure
- * enhancement layered on top.
+ * enhancement on top.
  *
  * What this script adds
  * ---------------------
- * 1. Inline messages instead of native bubbles: we set `novalidate` on the
- *    form (only now, from JS — so the no-JS path keeps native validation)
- *    to suppress the browser's transient bubbles, and render a persistent
- *    message per field instead. The bubble disappears on the next click; an
+ * 1. Inline messages instead of native bubbles: `novalidate` goes on the form
+ *    (only now, from JS — so the no-JS path keeps native validation) to
+ *    suppress the browser's transient bubbles, and a persistent message per
+ *    field is rendered instead. The bubble disappears on the next click; an
  *    inline message stays readable while the user fixes the field.
  * 2. Localized, overridable text: the native `validationMessage` follows the
- *    browser UI language, not the page. We ship de/en defaults chosen from
- *    <html lang> and let the author override any message per field via
- *    data attributes (see resolveMessage / the `checks` list), falling back
- *    to the native message for anything we do not cover. On top of that, ALL
- *    default messages are maintainable by a CMS: a
- *    <script type="application/json" data-fv-messages> block, resolved
- *    inside the form first, then among its immediate siblings, then
- *    page-wide (so several independently-authored forms — e.g. separate CMS
- *    content elements — can each carry their own block without one
- *    overriding another's; a single page-wide block still works for a page
- *    with only one form)
- *    (same {locale: {id: template}} shape as defaultMessages below) is merged
- *    over the built-in defaults — see readCmsMessages. Templates may
- *    interpolate live field limits via {minLength}, {maxLength},
- *    {valueLength}, {min}, {max}.
+ *    browser UI language, not the page. de/en defaults are chosen from <html
+ *    lang>, any message can be overridden per field via data attributes (see
+ *    resolveMessage / the `checks` list), and anything not covered falls back
+ *    to the native message. On top of that, ALL default messages are
+ *    maintainable by a CMS: a <script type="application/json"
+ *    data-fv-messages> block — same {locale: {id: template}} shape as
+ *    defaultMessages below — is merged over the built-in defaults (see
+ *    readCmsMessages). It is resolved inside the form first, then among its
+ *    immediate siblings, then page-wide, so several independently-authored
+ *    forms (separate CMS content elements) can each carry their own block
+ *    without overriding another's, while a single page-wide block still works
+ *    for a page with one form. Templates may interpolate live field limits
+ *    via {minLength}, {maxLength}, {valueLength}, {min}, {max}.
  * 3. Accessible wiring: an invalid field gets `aria-invalid="true"` and an
  *    `aria-describedby` link to its inline message, tying the message to the
  *    control (WCAG 3.3.1). The message itself is a quiet element (NOT a live
@@ -57,35 +54,34 @@
  *    point 4 — so a failed submit does not fire a burst of competing alerts,
  *    and live typing does not re-announce on every keystroke. All of it is
  *    removed again the moment the field becomes valid.
- * 4. Error summary + focus management: on a failed submit we inject (or update)
- *    a focusable, labelled summary at the top of the form that lists every
- *    invalid field as a link jumping to it, and move focus there. Focusing the
+ * 4. Error summary + focus management: a failed submit injects (or updates) a
+ *    focusable, labelled summary at the top of the form listing every invalid
+ *    field as a link jumping to it, and moves focus there. Focusing the
  *    summary announces the problem count and lets a keyboard or screen-reader
  *    user step through every error from one place (WCAG 2.4.3 / 3.3.1 /
- *    4.1.3), instead of only landing on the first field. The summary stays in
- *    sync as fields are fixed and disappears once the form is valid.
- * 5. Live correction feedback: after the first submit attempt, each field is
+ *    4.1.3) instead of only landing on the first field. It stays in sync as
+ *    fields are fixed and disappears once the form is valid.
+ * 5. Live correction feedback: after the first submit attempt each field is
  *    re-validated as it changes, so a message clears the instant the value
  *    becomes valid instead of only on the next submit. Before that first
- *    attempt we stay quiet, so a user is never nagged about a field they
- *    have not reached yet.
+ *    attempt everything stays quiet, so a user is never nagged about a field
+ *    they have not reached yet.
  * 6. One cross-field rule: `data-fv-equals="#otherField"` (e.g. an email or
  *    password confirmation). The platform has no native constraint for "must
- *    match that field", so this is the single rule we add ourselves — but we
- *    feed it THROUGH the native API via setCustomValidity(), so everything
- *    downstream (validity, messages, aria, focus) keeps working off the
- *    platform verdict. When the referenced field changes, every field
- *    pointing at it is re-validated too, so a fixed pair clears on either
- *    side.
+ *    match that field", so this is the single rule added here — but fed
+ *    THROUGH the native API via setCustomValidity(), so everything downstream
+ *    (validity, messages, aria, focus) keeps working off the platform
+ *    verdict. When the referenced field changes, every field pointing at it
+ *    is re-validated too, so a fixed pair clears on either side.
  *
  * Styling contract
  * ----------------
  * This component ships no styles of its own (behaviour-only; see the stub
  * `formValidation.scss` and the CLAUDE.md focus-ring convention). It only
  * toggles class hooks the consuming project styles: `is-submitted` on the
- * form, and `is-invalid` on each field's item container, plus the `fv-error`
- * message element. Restyle freely — the JS never reads these classes back,
- * it only owns writing them.
+ * form, `is-invalid` on each field's item container, plus the `fv-error`
+ * message element. Restyle freely — the JS only writes these classes, never
+ * reads them.
  * --------------------------------------------------------------------------
  */
 
@@ -97,52 +93,50 @@ import { addDescribedBy, removeDescribedBy } from './describedBy.js';
 
 const defaults = {
 
-  // The field-group container that holds one control (or one radio/checkbox
-  // group) together with its message. It receives the invalid-state class
-  // and is where the message element is appended. Marked with a behavioural
-  // attribute (not a style class) so the script stays decoupled from the CSS.
-  // When a field has no such ancestor we fall back to its parent element.
+  // The field-group container holding one control (or one radio/checkbox
+  // group) together with its message. It receives the invalid-state class and
+  // is where the message element is appended. A behavioural attribute, not a
+  // style class, so the script stays decoupled from the CSS. A field without
+  // such an ancestor falls back to its parent element.
   itemAttr: 'data-fv-item',
 
-  // Generic per-field message override: one message shown for whichever
-  // constraint the field currently fails. A per-constraint override (see
-  // `checks`) is more specific and wins over this.
+  // Generic per-field message override: one message for whichever constraint
+  // the field currently fails. A per-constraint override (see `checks`) is
+  // more specific and wins over it.
   messageAttr: 'data-fv-message',
 
-  // Cross-field rule: the attribute value is a selector (scoped to the form)
-  // for the field this one must match, e.g. data-fv-equals="#email". Message
+  // Cross-field rule: the value is a selector (scoped to the form) for the
+  // field this one must match, e.g. data-fv-equals="#email". Message
   // override: data-fv-equals-message. See syncEqualsValidity.
   equalsAttr: 'data-fv-equals',
 
-  // State hooks (styling only; the JS owns writing them, never reads them
-  // back).
+  // State hooks (styling only; the JS writes them, never reads them back).
   formSubmittedClass: 'is-submitted', // on the <form>, after the first submit
   itemInvalidClass: 'is-invalid',     // on an invalid field's item container
   errorClass: 'fv-error',             // on the injected message element
 
   // The error summary injected at the top of the form on a failed submit: a
   // focusable, labelled region listing every invalid field as a link that
-  // moves focus to it. Focus is moved here on submit, so this is the single
-  // place errors are announced — the per-field messages stay quiet (see the
-  // file header). Class hooks are styling-only; the JS owns writing them.
+  // moves focus to it. Focus goes here on submit, so this is the single place
+  // errors are announced — the per-field messages stay quiet (see the file
+  // header). Class hooks are styling-only; the JS owns writing them.
   summaryClass: 'fv-summary',
   summaryTitleClass: 'fv-summary__title',
   summaryListClass: 'fv-summary__list',
   summaryAttr: 'data-fv-summary',
 
-  // A page-level JSON block with this marker attribute overrides/extends the
-  // built-in defaultMessages — the single place a CMS maintains all default messages
-  // (shape: {locale: {messageId: template}}). Locales are derived from the
-  // merged object, so a CMS can add languages beyond de/en without
-  // touching JS.
+  // A JSON block with this marker attribute overrides/extends the built-in
+  // defaultMessages — the single place a CMS maintains them (shape: {locale:
+  // {messageId: template}}). Locales are derived from the merged object, so a
+  // CMS can add languages beyond de/en without touching JS.
   messagesSelector: 'script[type="application/json"][data-fv-messages]',
 
   // Used when <html lang> matches none of the offered locales. Any single
   // message not covered falls back to the browser's native validationMessage.
   fallbackLocale: 'en',
 
-  // Ordered ValidityState flags to test. The first flag that is true decides
-  // the message. `attr` is the friendly per-field override attribute for that
+  // Ordered ValidityState flags to test. The first true flag decides the
+  // message. `attr` is the friendly per-field override attribute for that
   // constraint (read as data-fv-<attr>, e.g. data-fv-required="…").
   checks: [
     { key: 'valueMissing', attr: 'fvRequired' },
@@ -155,9 +149,9 @@ const defaults = {
     { key: 'stepMismatch', attr: 'fvStep' },
 
     // No per-constraint override attribute: badInput only fires where the
-    // control itself refuses the value (a type="number" holding letters),
-    // which is a state the user cannot usually reach and a message no project
-    // has had to reword. data-fv-message still covers it.
+    // control itself refuses the value (a type="number" holding letters) — a
+    // state the user cannot usually reach and a message no project has had to
+    // reword. data-fv-message still covers it.
     { key: 'badInput' },
   ],
 };
@@ -166,13 +160,12 @@ const defaults = {
 
 // Localized default messages, keyed by locale then by a message id. The ids
 // are the ValidityState flags (plus `equals` for the cross-field rule), with
-// a few control-type variants for the ones whose wording should differ (a
-// checkbox is "tick this", a select is "choose an entry"). Values are plain
-// template strings — NOT functions — so the whole map stays JSON-shaped and
-// a CMS can override it 1:1 via the data-fv-messages block (see
-// readCmsMessages). {placeholders} are interpolated from the live element
-// by formatMessage. Anything not covered here degrades to the browser's own
-// validationMessage.
+// a few control-type variants where the wording should differ (a checkbox is
+// "tick this", a select is "choose an entry"). Values are plain template
+// strings — NOT functions — so the whole map stays JSON-shaped and a CMS can
+// override it 1:1 via the data-fv-messages block (see readCmsMessages).
+// {placeholders} are interpolated from the live element by formatMessage.
+// Anything not covered here degrades to the browser's own validationMessage.
 const defaultMessages = {
 
   de: {
@@ -245,15 +238,15 @@ function formatMessage(template, field) {
 
 
 // Reads the CMS message block (see defaults.messagesSelector) and merges it
-// over the built-in defaults, per locale and per message id — so the CMS
-// only has to maintain the messages (or locales) it actually changes. A page
-// with several independently-authored forms (e.g. multiple CMS content
-// elements) can each carry their own block next to their own form — resolved
-// first inside the form, then among its immediate siblings — so their
-// overrides do not bleed into each other; a single page-wide block (outside
-// every form) still works as a shared fallback for a page with only one.
-// Non-string values are ignored defensively; a malformed block is reported
-// and skipped so the built-in messages keep working.
+// over the built-in defaults, per locale and per message id — so a CMS only
+// maintains the messages (or locales) it actually changes.
+// Independently-authored forms on one page (multiple CMS content elements)
+// can each carry their own block next to their own form — resolved first
+// inside the form, then among its immediate siblings — so their overrides do
+// not bleed into each other; a single page-wide block (outside every form)
+// still works as a shared fallback. Non-string values are ignored
+// defensively; a malformed block is reported and skipped so the built-in
+// messages keep working.
 function readCmsMessages(form, selector, reporter) {
   const el =
     form.querySelector(selector) ||
@@ -297,7 +290,7 @@ function safeIdPart(value) {
 
 
 // Input/button types that submit or reset a form. They report willValidate
-// but are never "invalid", so we exclude them from the fields we validate —
+// but are never "invalid", so they are excluded from the validated fields —
 // see getFields.
 const buttonTypes = ['submit', 'reset', 'button', 'image'];
 
@@ -323,15 +316,16 @@ class FormValidation {
     const locale = resolveLocale(Object.keys(allMessages), config.fallbackLocale);
     this.messages = allMessages[locale] || allMessages[config.fallbackLocale];
 
-    // Whether the user has attempted a submit yet. Before that we validate
-    // nothing on the fly, so no field is flagged before it has been reached.
+    // Whether the user has attempted a submit yet. Before that nothing is
+    // validated on the fly, so no field is flagged before it has been
+    // reached.
     this.submitted = false;
 
     // The injected summary element while it exists (null otherwise).
     this.summary = null;
 
-    // Per-form id scope + fallback counter for controls that have no name/id,
-    // so message-element ids stay unique within and across forms.
+    // Per-form id scope + fallback counter for controls without name/id, so
+    // message-element ids stay unique within and across forms.
     this.scopeId = form.id ? safeIdPart(form.id) : `fvForm${++instanceCount}`;
     this.autoId = 0;
 
@@ -342,35 +336,34 @@ class FormValidation {
 
   setup = () => {
 
-    // Take over the messaging from JS: suppress the native bubbles so we can
-    // show persistent inline messages instead. Set only now, so a no-JS page
-    // keeps the browser's own validation (progressive enhancement — see file
-    // header).
+    // Take the messaging over: the native bubbles are suppressed so
+    // persistent inline messages can take their place. Set only now, so a
+    // no-JS page keeps the browser's own validation (see the file header).
     this.form.setAttribute('novalidate', '');
 
     this.form.addEventListener('submit', this.handleSubmit);
 
     // Live correction feedback after the first submit attempt. Delegated to
     // the form so dynamically added fields are covered too; "input" catches
-    // typing, "change" catches selects/checkboxes/radios that fire only on
+    // typing, "change" the selects/checkboxes/radios that fire only on
     // commit.
     this.form.addEventListener('input', this.handleFieldChange);
     this.form.addEventListener('change', this.handleFieldChange);
 
-    // A native reset returns every field to a valid resting value, so drop
-    // all error UI and go quiet again until the next submit attempt.
+    // A native reset returns every field to a valid resting value, so all
+    // error UI goes and the form is quiet again until the next submit
+    // attempt.
     this.form.addEventListener('reset', this.handleReset);
   };
 
 
 
   // All controls the platform considers candidates for validation.
-  // `willValidate` is the native filter: it is already false for disabled,
-  // hidden, <output>, etc. Submit/reset/button controls DO report
-  // willValidate (and are always valid), so we drop them explicitly — a
-  // button is not a field to validate, and treating it as one would let its
-  // (unwrapped) container stand in for a real field. Queried fresh each time
-  // to include late-added fields.
+  // `willValidate` is the native filter: already false for disabled, hidden,
+  // <output>, etc. Submit/reset/button controls DO report willValidate (and
+  // are always valid), so they are dropped explicitly — a button is not a
+  // field, and treating it as one would let its (unwrapped) container stand
+  // in for a real one. Queried fresh each time to include late-added fields.
   getFields = () =>
     [...this.form.elements].filter(
       (el) => el.willValidate && !buttonTypes.includes(el.type)
@@ -395,8 +388,8 @@ class FormValidation {
 
 
   // Validates every field, updates its UI and returns the invalid controls in
-  // DOM order — deduplicated so a radio/checkbox group (whose members share one
-  // message) contributes a single entry. That order feeds both the focus
+  // DOM order — deduplicated so a radio/checkbox group (whose members share
+  // one message) contributes a single entry. That order feeds both the focus
   // target and the summary, so both follow the visual field order.
   validateAll = () => {
     const invalid = [];
@@ -413,8 +406,8 @@ class FormValidation {
 
 
 
-  // Only act once the user has tried to submit; then keep the changed field's
-  // message in sync so a fixed field clears immediately.
+  // Only acts once the user has tried to submit; then it keeps the changed
+  // field's message in sync, so a fixed field clears immediately.
   handleFieldChange = (event) => {
     if (!this.submitted) return;
     const field = event.target;
@@ -427,7 +420,7 @@ class FormValidation {
 
 
 
-  // When a field changes, any field whose data-fv-equals points at it must be
+  // When a field changes, every field whose data-fv-equals points at it is
   // re-checked too — editing "Email" has to clear (or raise) the error on
   // "Repeat email", not just the other way around.
   revalidateEqualsDependents = (source) => {
@@ -443,9 +436,9 @@ class FormValidation {
     for (const field of this.getFields()) {
       this.clearFieldError(field, this.itemOf(field));
       // A pending equals violation lives in the field's custom validity;
-      // drop it so the resting form is natively valid again (values reset
-      // right after this event, and we recompute from scratch on the next
-      // submit anyway).
+      // dropping it makes the resting form natively valid again (values reset
+      // right after this event, and the next submit recomputes from scratch
+      // anyway).
       if (field.hasAttribute(this.config.equalsAttr)) field.setCustomValidity('');
     }
     this.removeSummary();
@@ -465,8 +458,8 @@ class FormValidation {
   // Runs the native check and reflects the verdict into the UI. Returns
   // validity so callers can track the first failure.
   validateField = (field) => {
-    
-    // Feed the one non-native rule into the native API first, so the
+
+    // The one non-native rule goes into the native API first, so the
     // checkValidity() below already includes it.
     this.syncEqualsValidity(field);
 
@@ -483,17 +476,16 @@ class FormValidation {
 
 
 
-  // The container that owns this field's invalid state and message. Prefer
-  // the explicit item wrapper (which also groups radios/checkboxes under one
-  // message); fall back to the field's parent so an unmarked form still
-  // works.
+  // The container that owns this field's invalid state and message: the
+  // explicit item wrapper (which also groups radios/checkboxes under one
+  // message), or the field's parent, so an unmarked form still works.
   itemOf = (field) => field.closest(`[${this.config.itemAttr}]`) || field.parentElement;
 
 
 
   // --- data-fv-equals: the one rule the platform has no constraint for -----
 
-  // Resolves the field this one must match. Scoped to the form; an invalid or
+  // The field this one must match, scoped to the form. An invalid or
   // unresolvable selector yields null (reported once per validation, so a
   // typo does not silently disable the rule).
   equalsTargetOf = (field) => {
@@ -512,8 +504,8 @@ class FormValidation {
   // Translates the match/mismatch into the native API via setCustomValidity,
   // so checkValidity(), validity.customError and validationMessage all
   // reflect it and the rest of the component needs no special casing. NOTE:
-  // this owns the field's custom validity — do not combine data-fv-equals
-  // with your own setCustomValidity on the same field.
+  // this owns the field's custom validity — never combine data-fv-equals with
+  // your own setCustomValidity on the same field.
   syncEqualsValidity = (field) => {
     if (!field.hasAttribute(this.config.equalsAttr)) return;
 
@@ -559,10 +551,10 @@ class FormValidation {
     field.removeAttribute('aria-invalid');
     if (item) item.classList.remove(this.config.itemInvalidClass);
 
-    // Look up THIS field's own message by its stable id, never a generic
-    // container query: an unwrapped field's item can be a broad ancestor
-    // (even the <form>), and a container query would then delete another
-    // field's message that happens to sit inside it.
+    // THIS field's own message, looked up by its stable id and never by a
+    // generic container query: an unwrapped field's item can be a broad
+    // ancestor (even the <form>), and a container query would delete another
+    // field's message sitting inside it.
     const errorEl = document.getElementById(this.errorIdFor(field));
     if (errorEl) {
       removeDescribedBy(field, errorEl.id);
@@ -574,12 +566,12 @@ class FormValidation {
 
   // One message element per field (radios/checkboxes sharing a name share
   // one), reused across re-validations and found again by its stable id.
-  // Marked with data-fv-error for styling/selection. It is intentionally NOT a
+  // Marked with data-fv-error for styling/selection, and deliberately NOT a
   // live region: the field is tied to it via aria-describedby (read when the
   // field takes focus), while the one-shot announcement of "what is wrong"
-  // happens through the focused error summary — see the file header. This
-  // keeps a failed submit from firing a burst of competing alerts and keeps
-  // live typing from re-announcing on every keystroke.
+  // goes through the focused error summary — see the file header. That keeps
+  // a failed submit from firing a burst of competing alerts, and live typing
+  // from re-announcing per keystroke.
   getOrCreateErrorEl = (field, item) => {
     const id = this.errorIdFor(field);
     let errorEl = document.getElementById(id);
@@ -608,10 +600,9 @@ class FormValidation {
 
 
 
-  // Resolves the message for a field's current failure, most specific first:
-  // author's setCustomValidity() > per-constraint override (data-fv-<attr>)
-  // > generic override (data-fv-message) > localized default > native
-  // message.
+  // The message for a field's current failure, most specific first: author's
+  // setCustomValidity() > per-constraint override (data-fv-<attr>) > generic
+  // override (data-fv-message) > localized default > native message.
   resolveMessage = (field) => {
     const validity = field.validity;
 
@@ -656,7 +647,7 @@ class FormValidation {
     }
 
     // For a pattern, an author-supplied `title` is the format instruction the
-    // native message would show too, so prefer it (WCAG 3.3.2).
+    // native message would show too, so it wins (WCAG 3.3.2).
     if (key === 'patternMismatch') {
       return field.title ? field.title : formatMessage(m.patternMismatch, field);
     }
@@ -666,8 +657,8 @@ class FormValidation {
 
 
 
-  // Moves focus to an element — the summary on a failed submit, or a field when
-  // a summary link is used — then scrolls it into view (respecting
+  // Moves focus to an element — the summary on a failed submit, or a field
+  // when a summary link is used — then scrolls it into view (respecting
   // reduced-motion). Focusing, not just scrolling, lands keyboard/AT users on
   // it (WCAG 2.4.3).
   focusField = (element) => {
@@ -684,7 +675,7 @@ class FormValidation {
 
   // Builds (or updates) the summary from the current invalid fields. Never
   // steals focus itself — handleSubmit moves focus here once; live refreshes
-  // only rewrite its contents so the user is not yanked around while typing.
+  // only rewrite its contents, so the user is not yanked around while typing.
   renderSummary = (fields) => {
     const summary = this.getOrCreateSummary();
 
@@ -699,8 +690,9 @@ class FormValidation {
       const link = document.createElement('a');
       link.href = field.id ? `#${field.id}` : '#';
       link.textContent = this.summaryEntryText(field);
-      // Focus the control directly (works for id-less and visually-hidden
-      // radio/checkbox controls too) instead of relying on the hash jump.
+      // Focus the control directly (id-less and visually-hidden
+      // radio/checkbox controls included) instead of relying on the hash
+      // jump.
       link.addEventListener('click', (event) => {
         event.preventDefault();
         this.focusField(field);
@@ -712,9 +704,9 @@ class FormValidation {
 
 
 
-  // Live update after the first submit: rebuild the summary from a fresh scan
-  // (without re-rendering each field) so a fixed field drops out and the
-  // summary vanishes once nothing is wrong.
+  // Live update after the first submit: the summary is rebuilt from a fresh
+  // scan (without re-rendering each field), so a fixed field drops out and
+  // the summary vanishes once nothing is wrong.
   refreshSummary = () => {
     const invalid = this.collectInvalid();
     if (!invalid.length) {
@@ -726,10 +718,10 @@ class FormValidation {
 
 
 
-  // The current invalid fields, deduplicated per message id (like validateAll)
-  // but WITHOUT touching any field UI — it only reads validity, so it is safe
-  // to call on every keystroke. Equals fields are re-synced first so their
-  // custom validity is current.
+  // The current invalid fields, deduplicated per message id (like
+  // validateAll) but WITHOUT touching any field UI — it only reads validity,
+  // so it is safe on every keystroke. Equals fields are re-synced first, so
+  // their custom validity is current.
   collectInvalid = () => {
     const invalid = [];
     const seen = new Set();
@@ -747,10 +739,10 @@ class FormValidation {
 
 
   // The focusable, labelled summary region, created once and reused. role +
-  // aria-labelledby (to the count-bearing title) make focusing it announce the
-  // problem; tabindex="-1" makes it programmatically focusable without joining
-  // the tab order. It is deliberately NOT a live region — focus is moved here,
-  // so a live region would double the announcement.
+  // aria-labelledby (to the count-bearing title) make focusing it announce
+  // the problem; tabindex="-1" makes it programmatically focusable without
+  // joining the tab order. Deliberately NOT a live region — focus is moved
+  // here, so a live region would double the announcement.
   getOrCreateSummary = () => {
     if (this.summary && this.summary.isConnected) return this.summary;
 
@@ -785,8 +777,8 @@ class FormValidation {
 
 
 
-  // "Bitte korrigieren Sie 3 Eingaben:" — singular/plural chosen by count, with
-  // {count} interpolated. CMS-overridable via the summaryTitle* message ids.
+  // "Bitte korrigieren Sie 3 Eingaben:" — singular/plural by count, {count}
+  // interpolated. CMS-overridable via the summaryTitle* message ids.
   summaryTitle = (count) => {
     const template =
       count === 1 ? this.messages.summaryTitleSingular : this.messages.summaryTitlePlural;
@@ -807,9 +799,9 @@ class FormValidation {
 
 
   // Best available accessible name for a field, for the summary line:
-  // aria-label / aria-labelledby, else the associated or wrapping <label>, else
-  // the group's <legend> (preferred for radios, whose own labels name only one
-  // option), else the name/id as a last resort.
+  // aria-label / aria-labelledby, else the associated or wrapping <label>,
+  // else the group's <legend> (preferred for radios, whose own labels name
+  // only one option), else the name/id as a last resort.
   labelTextFor = (field) => {
     const aria = field.getAttribute('aria-label');
     if (aria && aria.trim()) return aria.trim();
@@ -823,8 +815,8 @@ class FormValidation {
       if (text.trim()) return this.collapse(text);
     }
 
-    // A radio's own <label> names a single option; the group question lives in
-    // the fieldset's <legend>, which is the useful summary label.
+    // A radio's own <label> names a single option; the group question lives
+    // in the fieldset's <legend>, which is the useful summary label.
     if (field.type === 'radio') {
       const legend = field.closest('fieldset')?.querySelector('legend');
       if (legend) return this.collapse(legend.textContent);
@@ -850,7 +842,7 @@ class FormValidation {
 
 
 
-  // Converts a data attribute name ("data-fv-message") to its dataset key
+  // A data attribute name ("data-fv-message") as its dataset key
   // ("fvMessage"), so the configured attribute name stays the single source.
   datasetKey = (attr) =>
     attr
@@ -859,12 +851,11 @@ class FormValidation {
 
 
 
-  // Optional teardown for hosts that mount/unmount this subtree repeatedly
-  // instead of doing a full page (re)load — see destroyModulesInScope() in
-  // boot.js. All of this component's listeners are bound to the form itself,
-  // so they would die naturally once the host removes the form from the DOM;
-  // this exists for the case where the host keeps the same <form> node and
-  // wants it back in its pre-init state (e.g. before re-initializing it).
+  // Optional teardown for hosts that mount/unmount this subtree repeatedly —
+  // see destroyModulesInScope() in boot.js. Every listener here is bound to
+  // the form and dies with it; this is for the host that keeps the same
+  // <form> node and wants it back in its pre-init state (e.g. before
+  // re-initializing it).
   destroy = () => {
     this.form.removeEventListener('submit', this.handleSubmit);
     this.form.removeEventListener('input', this.handleFieldChange);

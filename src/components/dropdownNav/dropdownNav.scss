@@ -7,43 +7,42 @@
 //
 // 1. The base layer styles the markup as what it is without JavaScript: a
 //    nested list of links, every submenu visible, indented one level per
-//    depth. That is also the layout used below the navigation breakpoint,
-//    where the enhanced nav behaves like a stacked accordion.
-// 2. The enhanced layer is scoped to "data-dropdownnav-ready", which dropdownNav.js
-//    sets on the nav only after it has successfully inserted the disclosure
-//    buttons. Panels can therefore never be collapsed without a control to
-//    open them again.
+//    depth. That is also the layout below the navigation breakpoint, where
+//    the enhanced nav behaves like a stacked accordion.
+// 2. The enhanced layer is scoped to "data-dropdownnav-ready", which
+//    dropdownNav.js sets on the nav only after successfully inserting the
+//    disclosure buttons. Panels can therefore never be collapsed without a
+//    control to open them again.
 //
 // Contract with the JS
 //   - dropdownNav.js sets "data-dropdownnav-ready" on the nav element.
 //   - Per item it injects a <button data-dropdownnav-toggle="split|label">
 //     between the label and the panel and keeps its aria-expanded in sync.
-//     That ARIA state is the *only* open/closed hook — the script writes no
-//     state class and no inline styles.
+//     That ARIA state is the *only* open/closed hook — no state class, no
+//     inline styles.
 //   - The closed panel is selected with the adjacent-sibling combinator
 //     ("toggle + panel") rather than :has(), so a browser without :has()
 //     cannot end up showing every submenu at once. The script enforces the
 //     required source order and reports markup that breaks it.
 //   - visibility: hidden (not just opacity) does the hiding, so a collapsed
 //     panel's links leave the tab order and the accessibility tree. It also
-//     keeps the panel in the layout, which is what lets the script decide the
-//     flip direction (see below) before anything is ever opened.
-//   - The script sets "data-dropdownnav-flip" to "start" or "end" on a panel
-//     that would leave the viewport; the value names the edge the panel is
-//     anchored to, so it grows the other way. It only decides the
+//     keeps the panel in the layout, which lets the script decide the flip
+//     direction (see below) before anything is ever opened.
+//   - "data-dropdownnav-flip" is set to "start" or "end" on a panel that
+//     would leave the viewport; the value names the edge the panel is
+//     anchored to, so it grows the other way. The script decides only the
 //     *direction*; the geometry stays here, so there are no inline styles.
-//   - The script sets "data-dropdownnav-parent" on every panel that itself
-//     contains a panel. Only the panels without it get a maximum height and
-//     a scrollbar — a scroll container would clip the nested flyout that
-//     has to escape it (see the scrolling block below).
+//   - "data-dropdownnav-parent" is set on every panel that itself contains a
+//     panel. Only the panels without it get a maximum height and a scrollbar
+//     — a scroll container would clip the nested flyout that has to escape it
+//     (see the scrolling block below).
 //
-// The "m-dropdownNav*" classes (BEM "m-" prefix) are used for styling only.
-// dropdownNav.js does NOT hook onto them; it targets the nav via
-// data-js-behavior="dropdownNav" and the data-dropdownnav-* attributes.
-// Restyle freely without touching the behaviour. Note that the rules keyed
-// on the injected data-dropdownnav-* elements read their --dropdownNav-*
-// values from the nav, so keep "m-dropdownNav" on it (or declare the
-// properties on your own root class) — see the token block below.
+// The "m-dropdownNav*" classes are styling only. dropdownNav.js does NOT hook
+// onto them; it targets the nav via data-js-behavior="dropdownNav" and the
+// data-dropdownnav-* attributes. Restyle freely — but note that the rules
+// keyed on the injected data-dropdownnav-* elements read their
+// --dropdownNav-* values from the nav, so keep "m-dropdownNav" on it (or
+// declare the properties on your own root class) — see the token block below.
 
 @use "focus" as *;
 @use "mediaqueries" as *;
@@ -54,21 +53,18 @@
 // Base layer: the plain nested list (no JS, and the collapsed
 // viewport of the enhanced nav).
 //
-// The custom properties are the component's override surface. They live
-// on the component root rather than in :root, so they stay scoped to the
-// component and a single instance can be retuned in place.
+// The override surface: declared on the component root, not in :root,
+// so it stays scoped and a single instance can be retuned in place.
 // -------------------------------------------------------------
 .m-dropdownNav {
 
-  // Animation maps to the shared animation tokens
-  // (see _shared/scss/_foundations.scss). Half the shared duration: a
-  // submenu is a small reveal, not a scene change.
+  // Animation (shared tokens, _shared/scss/_foundations.scss). Half the
+  // shared duration: a submenu is a small reveal, not a scene change.
   --dropdownNav-duration: calc(var(--an-duration) / 2);
   --dropdownNav-easing: var(--an-ease);
   --dropdownNav-radius: var(--borderRadius);
 
-  // Spacing maps to the shared spacing scale
-  // (see _shared/scss/_foundations.scss).
+  // Spacing (shared scale, _shared/scss/_foundations.scss)
   --dropdownNav-gap: var(--space-3xs); // gap between items
   --dropdownNav-padding-block: var(--space-2xs);
   --dropdownNav-padding-inline: var(--space-xs);
@@ -84,17 +80,16 @@
   --dropdownNav-panel-column-min: 12rem;
   --dropdownNav-chevron-size: 0.5rem; // side length of the chevron square
 
-  // How much vertical room the flyout leaves for whatever sits above it.
-  // CSS cannot know where in the viewport the nav ends up, so this is the
-  // one number a project retunes: make it roughly "distance from the top
-  // of the viewport to the bottom of the nav, plus some breathing room".
+  // How much vertical room the flyout leaves for whatever sits above it. CSS
+  // cannot know where in the viewport the nav ends up, so this is the one
+  // number a project retunes: roughly "distance from the top of the viewport
+  // to the bottom of the nav, plus breathing room".
   --dropdownNav-panel-viewport-offset: 8rem;
 
   // The distance a flyout travels while opening (subtle slide).
   --dropdownNav-enter-shift: var(--space-3xs);
 
-  // Colors map to the shared semantic tokens
-  // (see _shared/scss/_colors_semantic.scss).
+  // Colors (shared semantic tokens, _shared/scss/_colors_semantic.scss)
   --dropdownNav-text-color: var(--color-text);
   --dropdownNav-text-color-muted: var(--color-text-muted);
   --dropdownNav-current-color: var(--color-accent-secondary);
@@ -125,7 +120,7 @@
 
 
 
-  // Containing block for this item's own flyout. Wrapping so the panel can
+  // Containing block for this item's own flyout. Wrapping, so the panel can
   // sit on its own line below the label row while the label and its split
   // toggle share one row.
   &__item {
@@ -164,7 +159,7 @@
 
   &__link {
 
-    // Navigation sits on a dark surface -> the light (bright) ring.
+    // Navigation sits on a dark surface -> the light tone.
     @include focus-ring(light);
 
     & {
@@ -188,8 +183,8 @@
 
 
 
-  // An item that is only a grouping label carries no link. Without JS it is
-  // exactly that: a label. With JS the script wraps it in the toggle button.
+  // An item that is only a grouping label carries no link: without JS exactly
+  // that, with JS wrapped in the toggle button.
   &__label {
     font-weight: 600;
   }
@@ -221,8 +216,8 @@
 
 
 
-  // The submenu. In the base layer it is an indented block in the flow —
-  // the sitemap rendering every visitor gets without JavaScript.
+  // The submenu. In the base layer an indented block in the flow — the
+  // sitemap rendering every visitor gets without JavaScript.
   &__panel {
     flex-basis: 100%;
 
@@ -248,8 +243,8 @@
 
 
 
-  // The chevron. Purely decorative: the button's accessible name comes
-  // from the wrapped label or from the visually hidden text below.
+  // The chevron. Purely decorative: the button's accessible name comes from
+  // the wrapped label or the visually hidden text below.
   &::after {
     flex-shrink: 0;
 
@@ -279,8 +274,8 @@
 
 
 
-// A "label" toggle carries the item's own label, so it behaves like the
-// label it replaced: full row, chevron pushed to the far edge.
+// A "label" toggle carries the item's own label, so it behaves like the label
+// it replaced: full row, chevron pushed to the far edge.
 [data-dropdownnav-toggle='label'] {
   flex-grow: 1;
   justify-content: space-between;
@@ -288,8 +283,8 @@
 
 
 
-// A "split" toggle sits next to a link that keeps its own destination, so
-// it is chevron-sized and square.
+// A "split" toggle sits next to a link that keeps its own destination, so it
+// is chevron-sized and square.
 [data-dropdownnav-toggle='split'] {
   flex-shrink: 0;
   padding: var(--dropdownNav-padding-block);
@@ -324,18 +319,16 @@
 // stacked one by data-dropdownnav-stacked (see the two blocks below).
 //
 // The ready attribute is the component's own ("data-dropdownnav-ready",
-// see docs/preEnhancement.md), which is the whole reason these blocks can
-// key on it alone. They used to carry a "[data-js-behavior*='dropdownNav']"
-// qualifier as well, because the flag was a generic "data-js-enhanced" that
-// other components set too — so a dropdownNav nested inside one of them
-// picked up the bar layout below without ever having been enhanced itself.
-// A per-component name cannot be claimed by anyone else, and the qualifier
-// went with it.
+// see docs/preEnhancement.md), which is why these blocks can key on it
+// alone. A per-component name cannot be claimed by anyone else — the
+// earlier generic flag needed a "[data-js-behavior*='dropdownNav']"
+// qualifier, because a dropdownNav nested inside another component
+// picked up the bar layout below without having been enhanced itself.
 // -------------------------------------------------------------
 [data-dropdownnav-ready] {
 
-  // Closed submenu in the stacked layout: simply out of the flow, so the
-  // items below move up.
+  // Closed submenu in the stacked layout: out of the flow, so the items below
+  // move up.
   [data-dropdownnav-toggle][aria-expanded='false'] + [data-dropdownnav-panel] {
 
     @include vp-nav-collapsed {
@@ -351,12 +344,12 @@
 // nav keeps the collapsed rendering at every viewport width.
 //
 // The bar layout is a function of the room the *nav* has, and the
-// viewport is only a stand-in for that. It stops being one as soon as
-// the nav sits in a narrow box on a wide page — an offCanvasNav drawer
-// is the case this exists for — where the viewport says "bar" and the
-// 22rem it actually has says otherwise. The attribute is style-only in
-// spirit, but dropdownNav.js reads it too: hover opening and the
-// collision flip only exist in the flyout layout.
+// viewport is only a stand-in — one that stops working as soon as the
+// nav sits in a narrow box on a wide page (an offCanvasNav drawer is
+// the case this exists for), where the viewport says "bar" and the
+// 22rem it actually has says otherwise. Style-only in spirit, but
+// dropdownNav.js reads it too: hover opening and the collision flip
+// only exist in the flyout layout.
 // -------------------------------------------------------------
 [data-dropdownnav-ready][data-dropdownnav-stacked] {
 
@@ -369,25 +362,24 @@
 
 // -------------------------------------------------------------
 // Flyout layer: from the navigation breakpoint up the nav becomes a
-// horizontal bar and the submenus become floating panels — unless it
-// is pinned to the stacked layout (see above).
+// horizontal bar and the submenus floating panels — unless it is
+// pinned to the stacked layout (see above).
 // -------------------------------------------------------------
 [data-dropdownnav-ready]:not([data-dropdownnav-stacked]) {
 
   @include vp-nav-expanded {
 
-    // Closed submenu: faded out and, crucially, visibility: hidden —
-    // which also removes its links from the tab order and the
-    // accessibility tree.
+    // Closed submenu: faded out and, crucially, visibility: hidden — which
+    // also removes its links from the tab order and the accessibility tree.
     [data-dropdownnav-toggle][aria-expanded='false'] + [data-dropdownnav-panel] {
       visibility: hidden;
       opacity: 0;
 
       translate: 0 calc(var(--dropdownNav-enter-shift) * -1);
 
-      // The visibility switch is delayed by the full duration so the
-      // fade-out can play before the panel disappears; opening reverses
-      // it instantly because the open state below carries no delay.
+      // The visibility switch is delayed by the full duration so the fade-out
+      // can play before the panel disappears; opening reverses it instantly
+      // because the open state below carries no delay.
       transition:
         opacity var(--dropdownNav-duration) var(--dropdownNav-easing),
         translate var(--dropdownNav-duration) var(--dropdownNav-easing),
@@ -422,25 +414,25 @@
         translate var(--dropdownNav-duration) var(--dropdownNav-easing);
     }
 
-    // Third level and deeper: out to the side of its parent panel, pulled
-    // up by the parent's padding so both line up at the top and pushed out
-    // by it so the two panels sit edge to edge instead of overlapping.
+    // Third level and deeper: out to the side of its parent panel, pulled up
+    // by the parent's padding so both line up at the top and pushed out by it
+    // so the two panels sit edge to edge instead of overlapping.
     [data-dropdownnav-panel] [data-dropdownnav-panel] {
       inset-block-start: calc(var(--dropdownNav-panel-padding) * -1);
       inset-inline-start: calc(100% + var(--dropdownNav-panel-padding));
     }
 
-    // Authored hint for an item near the inline-end edge of the viewport:
-    // the panel grows towards the start instead of overflowing the page.
-    // Still useful without JavaScript and before the module has loaded;
-    // everything else is handled by the flip below.
+    // Authored hint for an item near the inline-end edge of the viewport: the
+    // panel grows towards the start instead of overflowing the page. Still
+    // useful without JavaScript and before the module has loaded; everything
+    // else is the flip below.
     [data-dropdownnav-align='end'] > [data-dropdownnav-panel] {
       inset-inline: auto 0;
     }
 
-    // Mega menu: the item stops being the containing block, so its panel
-    // is positioned against the nav and spans its full width. Nothing in
-    // the JS knows about this — it is purely a layout variant.
+    // Mega menu: the item stops being the containing block, so its panel is
+    // positioned against the nav and spans its full width. Nothing in the JS
+    // knows about it — purely a layout variant.
     .m-dropdownNav__item[data-dropdownnav-mega] {
       position: static;
     }
@@ -448,31 +440,29 @@
     [data-dropdownnav-mega] > [data-dropdownnav-panel] {
       inset-inline: 0;
 
-      // It spans the nav by definition, so the flyout clamp does not
-      // apply to it.
+      // It spans the nav by definition, so the flyout clamp does not apply.
       max-inline-size: none;
     }
 
     // -----------------------------------------------------------
-    // Vertical overflow. The flip below only ever solves the
-    // horizontal case; a long submenu on a short viewport runs off
-    // the bottom instead, where an absolutely positioned panel
-    // cannot be scrolled to (under a sticky header, not at all).
+    // Vertical overflow. The flip below only solves the horizontal
+    // case; a long submenu on a short viewport runs off the bottom
+    // instead, where an absolutely positioned panel cannot be
+    // scrolled to (under a sticky header, not at all).
     //
-    // Only the leaf panels get this. A panel that owns another
-    // flyout is marked with "data-dropdownnav-parent" by the script,
-    // and it has to keep its natural height: a scroll container
-    // clips what leaves it, and a child panel leaving its parent is
-    // the whole idea of the third level. Those levels stay short by
-    // design — the deep ones are where the long link lists live.
+    // Only the leaf panels get this. A panel owning another flyout
+    // is marked "data-dropdownnav-parent" by the script and has to
+    // keep its natural height: a scroll container clips what leaves
+    // it, and a child panel leaving its parent is the whole idea of
+    // the third level. Those levels stay short by design — the deep
+    // ones are where the long link lists live.
     // -----------------------------------------------------------
     [data-dropdownnav-panel]:not([data-dropdownnav-parent]) {
       max-block-size:
         calc(100dvh - var(--dropdownNav-panel-viewport-offset));
       overflow-y: auto;
 
-      // Reaching the end of the panel must not start scrolling the
-      // page behind it.
+      // Reaching the panel's end must not start scrolling the page behind it.
       overscroll-behavior: contain;
     }
 
@@ -481,15 +471,14 @@
     // is still closed (visibility: hidden keeps it in the layout)
     // and records which viewport edge it crosses, so the direction
     // is settled before the first open — no jump while opening, and
-    // a closed flyout can no longer inflate the page's scroll width
-    // either.
+    // no closed flyout inflating the page's scroll width.
     //
     // The attribute's value is the edge the panel is anchored to, so
     // it grows away from the edge it was overflowing. Both values
     // exist because the default anchoring differs per item: a plain
     // item grows towards the inline-end and overflows there, while
     // one carrying data-dropdownnav-align='end' already grows
-    // towards the start and can only ever overflow at that edge.
+    // towards the start and can only overflow at that edge.
     //
     // Last in the block on purpose: same specificity as the authored
     // [data-dropdownnav-align='end'] rule, so source order decides
@@ -505,10 +494,10 @@
 
     // Third level and deeper is anchored beside its own item rather
     // than to the item's inline-start edge, so both flipped variants
-    // mirror that rule instead. A panel inside a mega panel is
-    // anchored the same way and is covered here too (the mega panel
-    // itself is never flipped — it spans the nav, so there is no
-    // other side to move it to; the script skips it).
+    // mirror that rule. A panel inside a mega panel is anchored the
+    // same way and covered here too (the mega panel itself is never
+    // flipped — it spans the nav, so there is no other side to move
+    // it to; the script skips it).
     [data-dropdownnav-panel]
       [data-dropdownnav-panel][data-dropdownnav-flip='end'] {
       inset-inline: auto calc(100% + var(--dropdownNav-panel-padding));
@@ -526,8 +515,8 @@
 // -------------------------------------------------------------
 // Respect reduced motion. The delay has to go too, not just the
 // duration: it is what holds visibility: visible during the
-// fade-out, and left alone it would keep a closed panel around
-// for half a second with nothing animating.
+// fade-out, and left alone would keep a closed panel around for
+// half a second with nothing animating.
 // -------------------------------------------------------------
 @include reduced-motion {
 

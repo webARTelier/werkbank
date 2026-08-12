@@ -10,32 +10,32 @@
  *
  * What works without this script
  * ------------------------------
- * The stack is authored markup, so a message the server already knows about
- * — the flash message after a redirect, "your order is on its way" — is
- * written into it and is on screen at the first paint, script or no script.
- * What the module adds to such a message is a way to dismiss it and a timer
- * that does so by itself; without the chunk it stays, which is a static
- * notice rather than a broken widget. Nothing is hidden behind a control
- * this script has to deliver first, so the component ships no
- * pre-enhancement state (see docs/preEnhancement.md).
+ * The stack is authored markup, so a message the server already knows about —
+ * the flash message after a redirect, "your order is on its way" — is written
+ * into it and is on screen at the first paint, script or no script. What the
+ * module adds to such a message is a way to dismiss it and a timer that does
+ * so by itself; without the chunk it stays, a static notice rather than a
+ * broken widget. Nothing is hidden behind a control this script has to
+ * deliver first, so the component ships no pre-enhancement state (see
+ * docs/preEnhancement.md).
  *
  * What the platform already does (so this script does NOT reimplement it)
  * ----------------------------------------------------------------------
  * Announcing is the platform's: an element with aria-live is watched by the
- * accessibility layer, and anything added to it is read out. The entrance
- * and exit are CSS alone (@starting-style for a node that has just been
- * inserted, a transition on the leaving state), and how long they take is
- * asked of the element rather than duplicated here — see removeItem.
+ * accessibility layer, and anything added to it is read out. The entrance and
+ * exit are CSS alone (@starting-style for a just-inserted node, a transition
+ * on the leaving state), and how long they take is asked of the element
+ * rather than duplicated here — see removeItem.
  *
  * What this script adds
  * ---------------------
  * 1. Two live regions, built at init and inserted after the stack. The
- *    announcement is deliberately NOT the toast itself, and that split is
- *    the architecture of this module (see buildAnnouncers): a live region
- *    reads out every control inside it, so a toast that is one would
- *    announce the name of its own dismiss button — and one region cannot be
- *    polite and assertive at once, while an error and a "Saved" are not the
- *    same kind of interruption.
+ *    announcement is deliberately NOT the toast itself, and that split is the
+ *    architecture of this module (see buildAnnouncers): a live region reads
+ *    out every control inside it, so a toast that is one would announce the
+ *    name of its own dismiss button — and one region cannot be polite and
+ *    assertive at once, while an error and a "Saved" are not the same kind of
+ *    interruption.
  * 2. A way out of every message: a dismiss control, injected per item, plus
  *    Escape while the focus is inside one. Injected rather than authored
  *    because a button that does nothing until this chunk arrives is not
@@ -44,19 +44,19 @@
  *    must not run: while the pointer is over the stack, while the focus is
  *    inside it, while the tab is in the background, and for a message holding
  *    a control of its own. The first three pause and resume with the time
- *    that was left rather than starting over; the last one never starts (see
+ *    that was left rather than starting over; the last never starts (see
  *    durationFor). A touch has none of the three to offer — a tap is over
  *    before it has begun — so a tap on a message stops its timer for good
  *    (see handlePointerDown).
  * 4. Messages at runtime, without the project importing anything: a
  *    "toast:show" event carrying the message, and a declarative
  *    data-toast-trigger on any control. Both end in the same show(), which
- *    builds an item carrying the same attributes an author would have
- *    written — so there is one code path, and the inspector shows the
- *    authored form of whatever is on screen.
+ *    builds an item carrying the same attributes an author would have written
+ *    — so there is one code path, and the inspector shows the authored form
+ *    of whatever is on screen.
  * 5. A ceiling on the stack (data-toast-max): past it the oldest message
- *    leaves, so a loop that reports twenty failures does not bury the page.
- *    The oldest that is not under the reader's focus, that is — and its
+ *    leaves, so a loop reporting twenty failures does not bury the page. The
+ *    oldest that is not under the reader's focus, that is — and its
  *    announcement outlives it, so what the cap takes off the screen it does
  *    not also take out of the reader's ear (see enforceMax and
  *    releaseAnnouncement). It never reaches a message the author wrote into
@@ -67,58 +67,54 @@
  * The kind of a message is in the announcement as a word ("Error: could not
  * save"), because in the stack it is a colour and an icon, and neither is
  * text. The icons come from the stylesheet, not from here, so they are on
- * screen for an authored message too, and their shapes differ per variant so
+ * screen for an authored message too, and their shapes differ per variant, so
  * a forced-colors context loses the hue and keeps the meaning.
  *
  * Auto-dismissal is a time limit (WCAG 2.2.1), and this module treats it as
- * one. It pauses whenever the reader is anywhere near the stack or the tab
- * is not in front of them; a tap holds it for good, because a touch cannot
- * hover and would otherwise have no pause at all; data-toast-duration="0"
- * switches it off for one message or for the whole stack; and a message that
- * holds a control — an "Undo" link, a "retry" button — is never given a timer
- * at all, whatever the attributes say, because a countdown running against a
- * reader who is trying to reach that control is the one thing a toast must
- * not do.
+ * one. It pauses whenever the reader is anywhere near the stack or the tab is
+ * not in front of them; a tap holds it for good, because a touch cannot hover
+ * and would otherwise have no pause at all; data-toast-duration="0" switches
+ * it off for one message or the whole stack; and a message holding a control
+ * — an "Undo" link, a "retry" button — is never given a timer at all,
+ * whatever the attributes say, because a countdown running against a reader
+ * trying to reach that control is the one thing a toast must not do.
  *
  * What no configuration of this module can undo is the cap: data-toast-max
- * removes a message for a reason that is about the stack rather than about
- * the reader, and a burst larger than the cap therefore reaches a screen
- * reader (every announcement is spoken) but not the screen. Sizing the cap
- * against how many messages a page can produce at once is the project's.
+ * removes a message for a reason about the stack rather than about the
+ * reader, so a burst larger than the cap reaches a screen reader (every
+ * announcement is spoken) but not the screen. Sizing the cap against how many
+ * messages a page can produce at once is the project's.
  *
- * The focus is never moved to a toast: a passive notification that steals
- * the caret interrupts far more than it reports. It is moved when a toast
- * that HAD the focus leaves — to the next message in the stack, or back to
- * wherever the reader came from — because a node removed from under the
- * focus drops it to <body>, and the next Tab would start over at the top of
- * the page.
+ * The focus is never moved to a toast: a passive notification that steals the
+ * caret interrupts far more than it reports. It is moved when a toast that
+ * HAD the focus leaves — to the next message in the stack, or back to
+ * wherever the reader came from — because a node removed from under the focus
+ * drops it to <body>, and the next Tab would start over at the top of the
+ * page.
  *
- * Reaching a toast in the first place is the part no component can solve
- * from the inside: wherever the stack sits in the document, the tab order
- * puts it either behind the whole page or before it. Hence the recommended
- * root (a named <section>, i.e. a region landmark, which AT can jump to from
- * anywhere), the rule that a message holding a control never expires — and
- * the rule for the project, which is that a toast must never be the only way
- * to reach an action.
+ * Reaching a toast in the first place is the part no component can solve from
+ * the inside: wherever the stack sits in the document, the tab order puts it
+ * either behind the whole page or before it. Hence the recommended root (a
+ * named <section>, i.e. a region landmark AT can jump to from anywhere), the
+ * rule that a message holding a control never expires — and the rule for the
+ * project, that a toast must never be the only way to reach an action.
  *
  * Configuration
  * -------------
  * On the stack root (data-js-behavior="toast"), all optional:
- * - data-toast-duration     ms a message stays; 0 keeps it until it is
- *                           dismissed (default 6000)
- * - data-toast-max          how many messages may be on screen at once
- *                           (default 3)
- * - data-toast-politeness   "polite" | "assertive" for everything but an
- *                           error, which is assertive either way (default
- *                           "polite")
+ * - data-toast-duration     ms a message stays; 0 keeps it until dismissed
+ *                           (default 6000)
+ * - data-toast-max          how many messages may be on screen at once (default 3)
+ * - data-toast-politeness   "polite" | "assertive" for everything but an error, which
+ *                           is assertive either way (default "polite")
  *
  * The strings this module generates — the dismiss control's name and the word
  * the announcement is prefixed with per variant — are not attributes: they
- * belong to markup this module writes, so there is nothing to write them into.
- * They follow <html lang> instead (de/en, see the labels map). A page in
- * neither language gets the English ones, and those carry a lang of their own
- * where they land, so a screen reader does not pronounce them in the page's
- * language (WCAG 3.1.2).
+ * belong to markup this module writes, so there is nothing to write them
+ * into. They follow <html lang> instead (de/en, see the labels map). A page
+ * in neither language gets the English ones, and those carry a lang of their
+ * own where they land, so a screen reader does not pronounce them in the
+ * page's language (WCAG 3.1.2).
  *
  * On one message (authored, or written by this module):
  * - data-toast-item         required; marks the message
@@ -128,19 +124,19 @@
  * - data-toast-politeness   as above, for this message only
  *
  * On a control that shows a message (anywhere on the page):
- * - data-toast-trigger      required; the value names the stack by id, and
- *                           an empty value means the page's only stack
+ * - data-toast-trigger      required; the value names the stack by id, an empty value
+ *                           means the page's only stack
  * - data-toast-message      the text to show
- * - data-toast-template     id of a <template> whose content becomes the
- *                           message, for one that needs more than text
+ * - data-toast-template     id of a <template> whose content becomes the message, for
+ *                           one that needs more than text
  * - data-toast-variant / -duration / -politeness  as above
  * ----------------------------------------------------------------------------
  */
 
 
 
-// A message holding a focusable element is a message the reader has to be able
-// to reach, which is what takes its timer away (see durationFor).
+// A message holding a focusable element is one the reader has to be able to
+// reach, which is what takes its timer away (see durationFor).
 import { focusableSelector } from './focusableSelector.js';
 import { resolveLocale } from './resolveLocale.js';
 
@@ -148,11 +144,11 @@ import { resolveLocale } from './resolveLocale.js';
 
 const defaults = {
 
-  // One message of the stack. This is both the behavioural hook and the
-  // stylesheet's, because a message is authored OR generated and the two have
-  // to look the same: a class would mean this module writing "m-toast__item"
-  // onto its own nodes, i.e. styling through a name it does not own (the same
-  // reason dropdownNav styles its injected toggles through
+  // One message of the stack. Both the behavioural hook and the stylesheet's,
+  // because a message is authored OR generated and the two have to look the
+  // same: a class would mean this module writing "m-toast__item" onto its own
+  // nodes, i.e. styling through a name it does not own (the reason
+  // dropdownNav styles its injected toggles through
   // [data-dropdownnav-toggle]).
   itemAttr: 'data-toast-item',
 
@@ -160,7 +156,7 @@ const defaults = {
   // is in there", because it is the middle column of the item's layout.
   bodyAttr: 'data-toast-body',
 
-  // The injected dismiss control, and the text node that names it next to the
+  // The injected dismiss control, and the text node naming it next to the
   // aria-hidden glyph.
   dismissAttr: 'data-toast-dismiss',
   labelAttr: 'data-toast-label',
@@ -170,12 +166,12 @@ const defaults = {
   liveAttr: 'data-toast-live',
 
   // The one state this module writes: the message is on its way out. The
-  // stylesheet fades and slides it, and the node goes when that has finished.
+  // stylesheet fades and slides it, and the node goes once that has finished.
   stateAttr: 'data-toast-state',
   leavingState: 'leaving',
 
-  // Per-message options, read off the item — and, except for the variant,
-  // off the root as the default for the whole stack.
+  // Per-message options, read off the item — and, except for the variant, off
+  // the root as the default for the whole stack.
   variantAttr: 'data-toast-variant',
   durationAttr: 'data-toast-duration',
   politenessAttr: 'data-toast-politeness',
@@ -183,8 +179,8 @@ const defaults = {
   // Stack-wide options on the root.
   maxAttr: 'data-toast-max',
 
-  // A control that shows a message, and what it shows. The value of the
-  // trigger attribute names the stack by id; empty means the page's only one
+  // A control that shows a message, and what it shows. The trigger
+  // attribute's value names the stack by id; empty means the page's only one
   // (see owns).
   triggerAttr: 'data-toast-trigger',
   messageAttr: 'data-toast-message',
@@ -206,8 +202,8 @@ const defaults = {
 
   // The shortest time an announcement stays in its live region, however
   // briefly the message it belongs to was on screen. Not an author-facing
-  // option: it is a property of how the accessibility layer picks up an
-  // addition, not of the message (see releaseAnnouncement).
+  // option: a property of how the accessibility layer picks up an addition,
+  // not of the message (see releaseAnnouncement).
   announcementDwell: 1000,
 };
 
@@ -220,11 +216,11 @@ const politenessLevels = ['polite', 'assertive'];
 
 // Localized text, keyed by locale then by a message id — the same shape
 // countdown, inputCharCount, video and formValidation use, so one <html lang>
-// settles every component on the page. These are the strings of the chrome this
-// module generates, which is why they cannot come from the markup: the dismiss
-// control it injects, and the word that says what kind of message a screen
-// reader is hearing (in the stack that is a colour and an icon, and neither of
-// those is text).
+// settles every component on the page. These are the strings of the chrome
+// this module generates, which is why they cannot come from the markup: the
+// dismiss control it injects, and the word that says what kind of message a
+// screen reader is hearing (in the stack that is a colour and an icon, and
+// neither of those is text).
 //
 // `info` is empty on purpose: "Info: your session ends in 5 minutes" adds a
 // word and no information, while the other three change what the sentence
@@ -252,8 +248,8 @@ const labels = {
 
 // The close glyph, inlined from src/_shared/media/img/icons/close.svg (the
 // canonical source). Embedded rather than <img>-referenced so
-// stroke="currentColor" follows the control's own colour and its hover state,
-// and aria-hidden because the text node next to it is what names the control.
+// stroke="currentColor" follows the control's own colour and hover state, and
+// aria-hidden because the text node next to it names the control.
 // width/height are carried over although the stylesheet sizes the glyph: an
 // inline <svg> without them is 300x150, which is what the control would be if
 // this component's CSS never arrived.
@@ -266,9 +262,9 @@ const closeIcon =
 
 
 // Every initialised stack on the page. Module scope, the way dialog keeps its
-// shared open counter there: a request that names no stack has to know
-// whether there is exactly one to mean (see owns), and no instance can see
-// that on its own.
+// shared open counter there: a request naming no stack has to know whether
+// there is exactly one to mean (see owns), and no instance can see that on
+// its own.
 const regions = new Set();
 
 
@@ -285,9 +281,9 @@ class Toast {
 
     // The language to mark this module's own strings with — but only when it
     // is not the page's already: <html lang="fr"> gets the English labels,
-    // and English text inside a French page has to say so (WCAG 3.1.2),
-    // while lang="de" on every injected label of a German page is noise. The
-    // test is resolveLocale's own matching read backwards, so lang="de-CH"
+    // and English text inside a French page has to say so (WCAG 3.1.2), while
+    // lang="de" on every injected label of a German page is noise. The test
+    // is resolveLocale's own matching read backwards, so lang="de-CH"
     // resolving to "de" counts as the page's language and adds nothing.
     const pageLocale = (document.documentElement.lang || '').toLowerCase();
     this.labelsLang =
@@ -295,22 +291,21 @@ class Toast {
         ? null
         : locale;
 
-    // The item tag follows the root rather than being fixed: an <li> outside a
-    // list is invalid markup, and the container is the author's choice.
+    // The item tag follows the root rather than being fixed: an <li> outside
+    // a list is invalid markup, and the container is the author's choice.
     //
-    // The recommended root is a named <section>, which is a region landmark —
-    // the one navigation mode that reaches the stack from anywhere, and a
-    // stack holding an "Undo" is a stack the reader may have to reach (the
-    // tab order cannot help much: wherever the stack sits in the document,
-    // it is either behind the whole page or before it). A list root works
-    // and gives the reader a count instead; it is the lesser trade, because
-    // content outside every landmark is content a screen-reader user has no
-    // way to jump to.
+    // The recommended root is a named <section>, i.e. a region landmark — the
+    // one navigation mode that reaches the stack from anywhere, and a stack
+    // holding an "Undo" is one the reader may have to reach (the tab order
+    // cannot help much: wherever the stack sits in the document, it is either
+    // behind the whole page or before it). A list root works and gives the
+    // reader a count instead; the lesser trade, because content outside every
+    // landmark is content a screen-reader user cannot jump to.
     this.itemTag = root.tagName === 'OL' || root.tagName === 'UL' ? 'li' : 'div';
 
     // Per-message bookkeeping: the pending timer and the announcement node
-    // that belongs to the message. Keyed by the item and deleted with it, so
-    // the map holds exactly the messages that are on screen.
+    // belonging to the message. Keyed by the item and deleted with it, so the
+    // map holds exactly the messages that are on screen.
     this.tracked = new Map();
 
     this.paused = false;
@@ -321,7 +316,7 @@ class Toast {
     // moveFocusOut).
     this.focusReturn = null;
 
-    // A "toast:show" that bubbles from the stack reaches both listeners below,
+    // A "toast:show" bubbling from the stack reaches both listeners below,
     // and one event must not become two messages.
     this.handledEvents = new WeakSet();
 
@@ -348,7 +343,7 @@ class Toast {
     this.root.addEventListener('focusout', this.handleFocusOut);
     this.root.addEventListener(params.showEvent, this.handleShowEvent);
 
-    // On the document, because that is the point of both: code that fires a
+    // On the document, because that is the point of both: code firing a
     // message does not have the stack to hand, and a trigger may sit anywhere
     // on the page — including in markup that arrives later, which a delegated
     // listener picks up without re-initialising anything (the way dialog
@@ -365,22 +360,21 @@ class Toast {
   // ---- the announcement (see file header, gap 1) --------------------------
 
   // Two visually hidden live regions, one per politeness, built once and kept
-  // for the life of the stack. Three decisions in here, and each answers a
-  // way the obvious version fails:
+  // for the life of the stack. Three decisions in here, each answering a way
+  // the obvious version fails:
   //
-  // - The stack itself is NOT a live region. Everything inside a live region
-  //   is read out when it appears, including the names of the controls in it,
-  //   so a dismissable message would announce itself as "Saved, Dismiss,
-  //   button" — and an "Undo" toast would be worse. Announcing a copy of the
-  //   text instead leaves the stack as plain content: reachable, operable,
-  //   and read once.
-  // - There are two of them, because aria-live is a property of the region
-  //   and not of the message. "Could not save your changes" should interrupt;
-  //   "Saved" should wait its turn. One region could only ever be one of the
-  //   two.
-  // - They are built at init, not with the first message. A live region that
-  //   is inserted and filled in one go is announced by nobody: an engine
-  //   reports that as "a new region appeared", i.e. as nothing.
+  // - The stack itself is NOT a live region. Everything inside one is read
+  //   out when it appears, including the names of the controls in it, so a
+  //   dismissable message would announce itself as "Saved, Dismiss, button" —
+  //   and an "Undo" toast would be worse. Announcing a copy of the text
+  //   instead leaves the stack as plain content: reachable, operable, and
+  //   read once.
+  // - There are two, because aria-live is a property of the region and not of
+  //   the message. "Could not save your changes" should interrupt; "Saved"
+  //   should wait its turn. One region could only ever be one of the two.
+  // - They are built at init, not with the first message. A live region
+  //   inserted and filled in one go is announced by nobody: an engine reports
+  //   that as "a new region appeared", i.e. as nothing.
   //
   // They go next to the stack rather than on <body>, so they inherit the lang
   // of whatever the stack sits in and a German message on an English page is
@@ -413,14 +407,14 @@ class Toast {
   // announced — the second "Could not save" would be silent. The node is
   // removed with the message it belongs to.
   //
-  // Called before the dismiss control is injected, which is what keeps the
-  // control's name out of the sentence.
+  // Called before the dismiss control is injected, which keeps the control's
+  // name out of the sentence.
   announce = (item) => {
     const message = this.messageTextOf(item);
     if (!message) return null;
 
     // The sentence is the kind of message and then what it says: the variant
-    // is a colour and an icon in the stack, and neither of those is text.
+    // is a colour and an icon in the stack, and neither is text.
     const kind = this.labels[this.variantOf(item)];
 
     const line = document.createElement('p');
@@ -448,15 +442,15 @@ class Toast {
   // What the message says, as one line: the announcement is speech, so the
   // markup's line breaks and indentation are not part of it.
   //
-  // The whole text of the message, which includes the name of a control a
-  // template brought with it ("Draft deleted. Undo"). That is deliberate, and
-  // it is not the case the split above guards against: the dismiss control is
-  // chrome this module injects, and announcing it would name a way out the
-  // reader already has, while an "Undo" is the reason the message exists at
-  // all — a reader who hears only "Draft deleted." has nothing to send them
-  // to the stack to look for it. What a copy cannot carry is that the words
-  // ARE a control, which is why such a message never expires (see
-  // durationFor) and why the stack wants to be a landmark.
+  // The whole text of the message, including the name of a control a template
+  // brought with it ("Draft deleted. Undo"). Deliberate, and not the case the
+  // split above guards against: the dismiss control is chrome this module
+  // injects, and announcing it would name a way out the reader already has,
+  // while an "Undo" is the reason the message exists at all — a reader who
+  // hears only "Draft deleted." has nothing to send them to the stack to look
+  // for it. What a copy cannot carry is that the words ARE a control, which
+  // is why such a message never expires (see durationFor) and why the stack
+  // wants to be a landmark.
   messageTextOf = (item) =>
     (item.textContent ?? '').replace(/\s+/g, ' ').trim();
 
@@ -490,10 +484,10 @@ class Toast {
   // page — so all they get is the way out and the timer.
   //
   // The maximum is deliberately NOT applied here: culling markup the page
-  // shipped, for a reason that is about the stack rather than about the
-  // message, would be this module deciding what the page says. They count
-  // against the maximum from the first runtime message on, so a stack authored
-  // over its own cap comes back down to it as soon as one arrives.
+  // shipped, for a reason about the stack rather than about the message,
+  // would be this module deciding what the page says. They count against the
+  // maximum from the first runtime message on, so a stack authored over its
+  // own cap comes back down to it as soon as one arrives.
   adoptAuthoredItems = () => {
     const items = this.root.querySelectorAll(`[${this.params.itemAttr}]`);
     for (const item of items) this.enhanceItem(item);
@@ -561,7 +555,7 @@ class Toast {
   // template rather than a string of HTML, because a message is data — it
   // comes from a form, a server, a filename — and parsing data as markup is
   // how a notification becomes an injection. It is also the answer to a
-  // message that needs a control in it: the project writes that control, with
+  // message needing a control in it: the project writes that control, with
   // its own listener, and this module only clones it.
   createBody = (options) => {
     const params = this.params;
@@ -572,7 +566,7 @@ class Toast {
       const template = document.getElementById(templateId);
       if (template instanceof HTMLTemplateElement) {
 
-        // A <div>, not a <p>: a template may well hold block content, which a
+        // A <div>, not a <p>: a template may hold block content, which a
         // paragraph cannot contain.
         const body = document.createElement('div');
         body.setAttribute(params.bodyAttr, '');
@@ -614,9 +608,9 @@ class Toast {
   // Everything a message needs once it is in the stack, whichever way it got
   // there: the way out, and the timer that takes it away by itself.
   //
-  // `generated` records which of the two ways it was, and is only ever read by
-  // destroy(): a message this module wrote is the module's to take away again,
-  // an authored one is the page's.
+  // `generated` records which of the two ways it was, and is only ever read
+  // by destroy(): a message this module wrote is the module's to take away
+  // again, an authored one is the page's.
   enhanceItem = (item, announcement = null, generated = false) => {
     const params = this.params;
 
@@ -708,11 +702,11 @@ class Toast {
   readDuration = (raw, el) => {
     if (raw === null) return this.params.duration;
 
-    // Number() rather than parseInt(): "6s" is not a number of
-    // milliseconds, and parseInt would read it as 6 and quietly make the
-    // message flash past instead of saying that the value is wrong. The
-    // empty-string guard is because Number('') is 0, which would then look
-    // like a deliberate "stays until dismissed".
+    // Number() rather than parseInt(): "6s" is not a number of milliseconds,
+    // and parseInt would read it as 6 and quietly make the message flash past
+    // instead of saying the value is wrong. The empty-string guard is because
+    // Number('') is 0, which would then look like a deliberate "stays until
+    // dismissed".
     const value = raw.trim();
     const parsed = value === '' ? NaN : Number(value);
     if (Number.isFinite(parsed) && parsed >= 0) return parsed;
@@ -741,10 +735,10 @@ class Toast {
 
 
 
-  // Freezes a countdown with the time that was left on it. Not restarted from
-  // the full duration on resume: a reader who moved the pointer across the
-  // stack should not be handed the whole duration again, and one who read
-  // half of the message should not lose the other half.
+  // Freezes a countdown with the time left on it. Not restarted from the full
+  // duration on resume: a reader who moved the pointer across the stack
+  // should not be handed the whole duration again, and one who read half the
+  // message should not lose the other half.
   holdTimer = (item) => {
     const entry = this.tracked.get(item);
     if (!entry?.timeoutId) return;
@@ -762,8 +756,8 @@ class Toast {
   // the stack, the focus is inside it, or the tab is not in front of the
   // reader. The first two are what makes the time limit adjustable in
   // practice — a reader who wants longer hovers or tabs to the message — and
-  // the focus one is also what keeps a timer from pulling a control out from
-  // under the reader who is about to press it.
+  // the focus one also keeps a timer from pulling a control out from under
+  // the reader about to press it.
   syncPaused = () => {
     const paused = this.hovered || this.focused || document.hidden;
     if (paused === this.paused) return;
@@ -776,10 +770,10 @@ class Toast {
 
 
 
-  // The pause a touch cannot reach. pointerenter/pointerleave are what hold
-  // the timer for a mouse, and for a tap they both fire before the finger is
-  // off the glass — so on a phone the six seconds run unbroken, and the only
-  // other pause a touch reader has (the focus being inside the stack) means
+  // The pause a touch cannot reach. pointerenter/pointerleave hold the timer
+  // for a mouse, and for a tap they both fire before the finger is off the
+  // glass — so on a phone the six seconds run unbroken, and the only other
+  // pause a touch reader has (the focus being inside the stack) means
   // pressing the dismiss control, which ends the message rather than holding
   // it. So for a touch or a pen, engaging with a message stops its timer for
   // the rest of its life: the reader has taken it over, and the ways out are
@@ -806,7 +800,7 @@ class Toast {
 
 
   // Takes the timer off one message for good. Expressed as a duration of zero
-  // rather than as a flag of its own, because that is what zero already means
+  // rather than a flag of its own, because that is what zero already means
   // everywhere else in here — so every path that might otherwise restart the
   // timer (startTimer, and syncPaused when the pause ends) needs no telling.
   pinMessage = (item) => {
@@ -834,11 +828,11 @@ class Toast {
 
 
 
-  // The way back, remembered on the way in: a focusout tells us nothing,
-  // because by then the element the reader came from is no longer the one
-  // losing the focus. relatedTarget is null for a focus that came from
-  // nowhere (a fresh page, a click on the background), which is a perfectly
-  // good "nothing to go back to".
+  // The way back, remembered on the way in: a focusout says nothing, because
+  // by then the element the reader came from is no longer the one losing the
+  // focus. relatedTarget is null for a focus that came from nowhere (a fresh
+  // page, a click on the background), which is a perfectly good "nothing to
+  // go back to".
   handleFocusIn = (event) => {
     if (!this.root.contains(event.relatedTarget)) {
       this.focusReturn = event.relatedTarget;
@@ -870,7 +864,7 @@ class Toast {
 
     // While the message is still in the document: a node removed from under
     // the focus drops it to <body>, and the reader's next Tab would start
-    // over at the top of the page.
+    // over at the top.
     if (item.contains(document.activeElement)) this.moveFocusOut(item);
 
     this.releaseAnnouncement(entry);
@@ -883,11 +877,11 @@ class Toast {
   // housekeeping — nothing re-reads a region with aria-atomic="false", so it
   // is only there to keep the region from growing for the life of the page —
   // but a node added and taken away again before the accessibility layer has
-  // picked it up is never spoken at all. That is not a hypothetical: it is
-  // what happens to a message dismissed the moment it appears, and to every
-  // message the maximum culls while a burst is still arriving. So the node
-  // stays for a minimum dwell counted from when it was added, and only the
-  // wait is deferred — the message itself leaves on time.
+  // picked it up is never spoken at all. Not hypothetical: it is what happens
+  // to a message dismissed the moment it appears, and to every message the
+  // maximum culls while a burst is still arriving. So the node stays for a
+  // minimum dwell counted from when it was added, and only the wait is
+  // deferred — the message itself leaves on time.
   releaseAnnouncement = (entry) => {
     const node = entry.announcement;
     if (!node) return;
@@ -911,9 +905,9 @@ class Toast {
 
   // Where the focus goes when the message holding it leaves: the next message
   // in the stack if there is one — the reader is working through them — and
-  // otherwise back where they came from. If neither exists the focus falls to
-  // <body>, which is the case this method exists to avoid and the reason the
-  // stack belongs early in the document (see the readme).
+  // otherwise back where they came from. With neither, the focus falls to
+  // <body>, the case this method exists to avoid and the reason the stack
+  // belongs early in the document (see the readme).
   moveFocusOut = (item) => {
     const items = this.visibleItems();
     const index = items.indexOf(item);
@@ -978,9 +972,8 @@ class Toast {
   // reason that has nothing to do with the reader, so it yields to them
   // twice: a message holding the focus is skipped, and the announcement of
   // whatever is culled survives it (see releaseAnnouncement). Skipping can
-  // leave the stack a message over its maximum — that is the lesser harm
-  // against moving the focus out from under someone who is operating the
-  // message it is in.
+  // leave the stack a message over its maximum — the lesser harm against
+  // moving the focus out from under someone operating that message.
   enforceMax = () => {
     const max = this.readMax();
     if (max <= 0) return;
@@ -1017,9 +1010,9 @@ class Toast {
 
 
 
-  // The messages that are on screen and staying: one already on its way out
-  // is still in the document while it fades, but it is not something the
-  // maximum should count or the focus should be moved to.
+  // The messages on screen and staying: one already on its way out is still
+  // in the document while it fades, but not something the maximum should
+  // count or the focus move to.
   visibleItems = () => {
     const params = this.params;
     const selector =
@@ -1082,12 +1075,12 @@ class Toast {
 
 
 
-  // A control that shows a message declaratively — the case that needs no
+  // A control that shows a message declaratively — the case needing no
   // project script at all. The press is never taken: the control is doing
   // something else (submitting, copying, deleting) and the message is the
   // feedback, not the action. Modified and non-primary presses are left alone
-  // for the same reason a link's are — they mean "new tab", "download",
-  // "copy the address", and none of those is the action the message reports.
+  // for the reason a link's are — they mean "new tab", "download", "copy the
+  // address", and none of those is the action the message reports.
   handleTriggerClick = (event) => {
     if (event.defaultPrevented || event.button !== 0) return;
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -1110,7 +1103,7 @@ class Toast {
 
 
 
-  // Whose message is this? Two ways to say it, and each answers a different
+  // Whose message is this? Two ways to say it, each answering a different
   // situation:
   //
   // - A value names the stack by id, the way dialog's triggers name their
@@ -1118,12 +1111,12 @@ class Toast {
   //   being a stack inside a modal <dialog>, because a fixed element outside
   //   it cannot be painted over the top layer.
   // - No value means the stack the request came from, if it came from inside
-  //   one, and otherwise the page's only stack — which is the normal case and
+  //   one, and otherwise the page's only stack — the normal case, and it
   //   needs no id at all.
   //
   // With several stacks and nothing to tell them apart the request is
   // ambiguous, and it is dropped rather than guessed at: a message shown in
-  // the wrong place is a message the reader never sees.
+  // the wrong place is never seen.
   owns = (target, source) => {
     const id = typeof target === 'string' ? target.trim() : '';
     if (id) return this.root.id !== '' && this.root.id === id;
@@ -1131,13 +1124,13 @@ class Toast {
     if (source instanceof Node && this.root.contains(source)) return true;
     if (regions.size === 1) return true;
 
-    // A request that came from inside ANOTHER stack is not ambiguous — it is
-    // simply not this one's. It has to be dropped here all the same, but
-    // silently: the stack it came from is showing it, and saying "nothing was
-    // shown" about a message that is on screen sends the reader of the console
-    // after a fault that does not exist. This is the ordinary shape of the
-    // two-stack case — an event dispatched on the stack inside a dialog
-    // reaches the page's stack too, through the document listener.
+    // A request from inside ANOTHER stack is not ambiguous — it is simply not
+    // this one's. It has to be dropped here all the same, but silently: the
+    // stack it came from is showing it, and saying "nothing was shown" about
+    // a message that is on screen sends the reader of the console after a
+    // fault that does not exist. This is the ordinary shape of the two-stack
+    // case — an event dispatched on the stack inside a dialog reaches the
+    // page's stack too, through the document listener.
     if (source instanceof Node) {
       for (const region of regions) {
         if (region !== this && region.root.contains(source)) return false;
@@ -1151,9 +1144,9 @@ class Toast {
 
 
 
-  // Reported by one stack only — the first one initialised — because every
-  // stack on the page runs this and the finding is about the request, not
-  // about any of them.
+  // Reported by one stack only — the first initialised — because every stack
+  // on the page runs this and the finding is about the request, not about any
+  // of them.
   reportAmbiguous = (source) => {
     if (regions.values().next().value !== this) return;
 
@@ -1195,8 +1188,8 @@ class Toast {
 
 
 
-  // Returns null rather than a default, so the caller can fall through to the
-  // next source (the message's own value, then the variant, then the stack's).
+  // null rather than a default, so the caller can fall through to the next
+  // source (the message's own value, then the variant, then the stack's).
   readPoliteness = (raw, el) => {
     if (raw === null || raw === undefined) return null;
 
@@ -1215,18 +1208,18 @@ class Toast {
 
 
 
-  // Optional teardown for hosts that mount/unmount this subtree repeatedly
-  // instead of doing a full page (re)load — see destroyModulesInScope() in
-  // boot.js. Three kinds of state outlive the stack's own subtree here: the
-  // two delegated document listeners, the pending timers of both kinds (one
-  // that fires afterwards would reach into a detached tree) and the two live
-  // regions, which sit next to the root rather than inside it.
+  // Optional teardown for hosts that mount/unmount this subtree repeatedly —
+  // see destroyModulesInScope() in boot.js. Three kinds of state outlive the
+  // stack's own subtree: the two delegated document listeners, the pending
+  // timers of both kinds (one firing afterwards would reach into a detached
+  // tree) and the two live regions, which sit next to the root rather than
+  // inside it.
   //
   // And one thing that does not outlive it but must go all the same: the
-  // subtree itself may well stay in the document — destroyModulesInScope()
-  // walks the live DOM, and a host may tear a module down in order to
-  // re-initialise it — so everything this module wrote into the stack has to
-  // come back off, the injected controls and the generated messages alike.
+  // subtree itself may stay in the document — destroyModulesInScope() walks
+  // the live DOM, and a host may tear a module down in order to re-initialise
+  // it — so everything this module wrote into the stack has to come back off,
+  // the injected controls and the generated messages alike.
   destroy = () => {
     regions.delete(this);
 
@@ -1251,7 +1244,7 @@ class Toast {
       // out of it at all — the dismiss control is removed below, the timer
       // has just been cleared and Escape is no longer listened for, so
       // leaving it would leave an undismissable notice over the page. An
-      // authored one stays and is handed back as it was written (see below).
+      // authored one stays and is handed back as written (see below).
       if (entry.generated) item.remove();
     }
 
@@ -1264,9 +1257,9 @@ class Toast {
     this.announcers.polite.remove();
     this.announcers.assertive.remove();
 
-    // The authored messages are handed back as they were written: without the
-    // module the dismiss control does nothing, so it must not be left behind
-    // on the page.
+    // The authored messages are handed back as written: without the module
+    // the dismiss control does nothing, so it must not be left behind on the
+    // page.
     const controls = this.root.querySelectorAll(`[${this.params.dismissAttr}]`);
     for (const control of controls) control.remove();
   };
@@ -1274,8 +1267,7 @@ class Toast {
 
 
 
-// loader-compatible entry point
-// (boot.js -> mod.init(el, services))
+// loader-compatible entry point (boot.js -> mod.init(el, services))
 export function init(el, services = {}) {
   const reporter = services.reporter;
 
