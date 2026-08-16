@@ -229,6 +229,7 @@ of them, and the wrong one for most.
 | `accordion` | none | not needed | `<details>` renders closed either way; its ready attribute only picks the animation |
 | `dataTable` | none | not needed | the table is complete and readable in its scrolling box either way, and the sort controls do not exist until the script builds them out of the header labels — its ready attribute switches the stacked layout *on* (see below) |
 | `autoGrowTextarea` | none | not needed | where the engine has `field-sizing` the growing is CSS from the first paint, so there is no gap at all; where it has not, the field is a plain textarea at its `rows` height with a scrollbar until the module has measured — additive, nothing hidden. Its ready attribute gates the resize handle *off* instead of lifting a pre-state (see below) |
+| `fileUpload` | none | not needed | the label, the field and its hints are all there, the control takes a drop on itself without help, and in the upload lane the field keeps its `name` until the module runs, so the form still posts; its ready attribute switches the drop *zone* on instead of lifting a pre-state (see below) |
 | `dialog`, `popover` | none | not needed | closed at rest, and the behaviour is native |
 | `lightbox` | none | not needed | the gallery is a list of links to the images either way; the viewer is closed at rest and does not exist in the markup at all — the script injects it |
 | `toast` | none | not needed | the stack is empty at rest, and a message authored into it is a static notice that simply keeps standing; the one control the component owns is injected, so it cannot exist before it works |
@@ -269,7 +270,27 @@ sets the flag where it delivers and withholds it where it does not — its one
 bail-out (the module on something that is not a `<textarea>`) returns before
 the attribute is written.
 
-It is also the one component whose flag outlives a teardown, and the exception
+`fileUpload` is the same inversion again, and it adds the sharpest reason for
+it: what its flag switches on is a **drop zone**, and a box that invites a drop
+nothing is listening for does not merely look wrong — the browser takes the
+dropped file and opens it, which abandons a half-filled form. So the dashed
+edge and the "you can also drop them here" line are keyed positively, and the
+component sets the attribute *last*, after the listeners are attached and after
+the lane it runs in has said it can act on a drop (without an endpoint that
+needs a constructible `DataTransfer`; with one it never does, because the files
+go straight to an `XMLHttpRequest`). Its bail-out therefore withholds the flag
+by simply returning first.
+
+Note what this rules out: the `pre-enhancement()` mixin could not express it.
+The mixin wraps its rules in `scripting: enabled`, which is right when the
+stylesheet can deliver the enhanced state alone — but scripting being enabled
+is not the same as the chunk having arrived, so keyed that way the one reader
+the mixin deliberately exempts (scripting off) would be the one reader shown a
+zone that can never work. The edge is transparent rather than absent until the
+flag arrives, so the box does not move by a pixel when it does.
+
+`autoGrowTextarea` is also the one component whose flag outlives a teardown,
+and the exception
 is worth stating rather than reading as an oversight: in the `field-sizing`
 lane `init()` returns before it has registered anything, so it returns no
 cleanup function and nothing takes the attribute off again. That is harmless

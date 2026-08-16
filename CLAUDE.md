@@ -38,12 +38,28 @@ component here is reusable and most can appear several times).
   `marquee`, `offCanvasNav`, `siteSearch`, `tabs`, `toast`, `video`.
 - **Component (`c-`) — it is *attached*.** It wraps, annotates or reinforces
   a host that is complete and usable without it: a full text (`readMore`), a
-  plain table (`dataTable`), a native field (`dateInputFormat`), a field that
+  plain table (`dataTable`), a native field (`dateInputFormat`), a file field
+  that will not say what is attached to it (`fileUpload`), a field that
   should follow its own value (`autoGrowTextarea`), a scrolling box
   (`adaptiveScrollFade`), a control that needs explaining (`tooltip`,
   `popover`). It always presupposes something else, and it is the shared
   vocabulary of the design system — styled once, reused in unrelated
   features. A component never depends on one specific module.
+
+  `fileUpload` is the instructive one, and it used to be two things: the
+  progress-bar variant shipped as a module of its own (`m-uploadQueue`) on
+  the grounds that nothing hosted it. Folded back in on 2026-08-14 as a lane
+  of the same component — one attribute, `data-fileupload-url`, picks whether
+  the form or the module carries the bytes — it settles what the question is
+  and is not about. In that lane the component takes the transfer off the
+  form, manages a queue, needs an endpoint and a server-side sweep, and
+  writes hidden inputs into the form: **none of that is the question**. The
+  question is whether a host is complete without it, and the native file
+  field is, in both lanes — it keeps the picker, the keyboard, `accept`,
+  `multiple` and its `name` until the module is actually running. So the
+  prefix stays `c-`. **How much machinery a thing carries is not a fourth
+  axis** (see below): it says how hard the component is to write, not what it
+  is attached to.
 - **Function (no prefix of its own) — it *enhances*.** It brings no
   vocabulary at all: it writes state classes/attributes onto markup that is
   already there, and the look belongs to the consuming project.
@@ -55,6 +71,13 @@ Two supporting signals where the question feels balanced: a module usually
 manages a **collection or a region** (n panels, n images, n messages) while a
 component treats **one** host; and a component is what an unrelated feature
 would reuse verbatim.
+
+Read the collection signal as "whose collection". **n rows about one host's
+value is still one host**: `fileUpload` renders a row per file and, with an
+endpoint, runs a queue of transfers — and every one of them arrived through
+the single field it is attached to, so it stays a component. A module's
+collection is its own (the lightbox's images, toast's messages); it did not
+come out of anything the module is wrapped around.
 
 **`dialog` is a component**, and it is the one case the question does not
 decide — nothing hosts it, and it hosts arbitrary content itself. Three
@@ -101,6 +124,12 @@ Never read one of these off another:
 3. **Bundling** — core stylesheet vs. its own on-demand file (every component
    here is on-demand).
 
+And **how much machinery ships is not a fourth axis.** A network layer, a
+queue, an endpoint, hidden inputs written into a form — `fileUpload`'s upload
+lane has all four and is still a `c-`, because the field it wraps is complete
+without it. Machinery says how hard the thing was to write; the prefix says
+what it is attached to.
+
 ### "module" in the JS sense is a different word
 
 The loader and the snippets keep calling every chunk a *module*
@@ -138,8 +167,18 @@ of dependency — not by preference. Keep this split consistent:
   signal to hoist it here** instead of copying it. Examples: `debounce`,
   `rafThrottle`, `getCssCustomProperty`, `formatTemplate`, `decodeFragment`,
   `parseNonNegative`, `uniqueId`, `focusableSelector`,
-  `navExpandedMediaQuery`, `otherModalOpen` (see
-  `docs/componentStandards.md` §10 for what each one does).
+  `navExpandedMediaQuery`, `otherModalOpen`, `parseByteSize`,
+  `formatByteSize`, `matchesAccept`, `fileKey` (see
+  `docs/componentStandards.md` §10 for what each one does). The last four were
+  born in `fileUpload` and hoisted the day `uploadQueue` needed them, which is
+  exactly the signal described above. That second consumer is gone again since
+  the queue became a lane of `fileUpload` itself (2026-08-14), so all four have
+  one consumer once more and Rollup inlines them into its chunk. They stay
+  here regardless, for two reasons: a flat-sibling import resolves from
+  `_shared/js/` and nowhere else, so this is the only place such a utility can
+  live at all; and **hoisting is not undone when a consumer disappears** —
+  moving a general helper back into one component would only have to be
+  reverted the next time something needs it.
 
 Do **not** route pure utilities through `services`: `boot.js` loads eagerly on
 every page, so anything it imports for the `services` object lands in the

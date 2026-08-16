@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>fileUpload – Demo</title>
+  <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
+  <link rel="stylesheet" href="../../../dist/css/fileUpload.min.css" />
+  <script type="module" src="../../../dist/js/boot.min.js"></script>
+
+  <!-- for development only -->
+  <script type="module" src="../../../src/_shared/js/dev_pageInfo.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_a11yInspector.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_qrCode.js"></script>
+  <!-- end for development only -->
+
+  <!--
+      THE UPLOAD EXAMPLES NEED A SERVER, not just a static one
+      ----------------------------------------------------------------------
+      The first four examples work off any static file server. The ones with
+      data-fileupload-url cannot: without an endpoint that accepts a POSTed
+      file there is no transfer, and without a transfer there is no progress
+      to show. Start the one that ships with the project and open the page
+      from it:
+
+          npm run build
+          npm run demo:upload
+          http://127.0.0.1:8123/src/components/fileUpload/demo.html
+
+      dev/uploadServer.js serves the project statically AND answers
+      POST /dev/upload. It counts the bytes and throws them away — nothing
+      is stored — and it reads them slowly on purpose, so the bars move at a
+      realistic pace instead of jumping to 100 %.
+
+      Opened from a plain static server the uploads will fail with a 405 on
+      every file. That is not a bug in the component, and the retry path
+      below is exactly what you will see.
+  -->
+
+  <!--
+      DEMO-ONLY STYLES
+      ----------------------------------------------------------------------
+      Almost nothing, because fileUpload.min.css ships the whole look: the
+      zone, the field's button, the rows, the bar, the states, the controls
+      and the status line. What is left below is the page's own scaffolding —
+      the spacing between the examples, the form's submit row and the payload
+      readout — plus one instance retuned through the component's knobs in
+      the last example, which is the point of that example rather than a demo
+      need.
+  -->
+
+  <style>
+    .demo {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2xl);
+    }
+
+    .demo__example {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-s);
+    }
+
+    .demo__example h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      color: var(--color-text);
+    }
+
+    .demo__lane {
+      margin: 0;
+      border-block-start: 1px solid var(--color-border);
+      padding-block-start: var(--space-l);
+
+      font-size: 1.3rem;
+      color: var(--color-text);
+    }
+
+    .demo__form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-s);
+    }
+
+    /* The one thing this page cannot do without a server, said where it
+       cannot be scrolled past: every upload row below says "failed" on a
+       static server, and that looks exactly like a broken component. */
+    .demo__needsServer {
+      margin: 0;
+      border: 1px solid var(--color-error);
+      border-radius: var(--borderRadius);
+      padding: var(--space-2xs) var(--space-s);
+
+      color: var(--color-text);
+    }
+
+    .demo__needsServer code {
+      white-space: nowrap;
+    }
+
+    .actions {
+      display: flex;
+      gap: var(--space-2xs);
+    }
+
+    .actions button {
+      cursor: pointer;
+
+      /* A transparent fill leaves the border doing the identifying, which is
+         the 3:1 case of WCAG 1.4.11 — hence --color-border-control. */
+      border: 1px solid var(--color-border-control);
+      border-radius: var(--borderRadius);
+      padding: var(--space-3xs) var(--space-s);
+
+      font: inherit;
+      font-weight: 600;
+
+      color: var(--color-text);
+      background-color: transparent;
+    }
+
+    .actions button:focus-visible {
+      outline: 2px solid var(--color-focus-ring-light);
+      outline-offset: var(--outlineOffset);
+    }
+
+    /* What the form would send, printed live — the whole point of the upload
+       lane is what ends up in here, so the demo shows it. */
+    .demo__payload {
+      margin: 0;
+      border: 1px dashed var(--color-border);
+      border-radius: var(--borderRadius);
+      padding: var(--space-2xs) var(--space-s);
+
+      font-family: ui-monospace, monospace;
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+
+      overflow-x: auto;
+    }
+
+    /* The one instance that is retuned rather than styled: a solid, quiet
+       edge and a tighter box. Both are the component's own knobs, set on its
+       root — see the last example. */
+    .upload--compact {
+      --fileUpload-zone-style: solid;
+      --fileUpload-zone-color: var(--color-border-control);
+      --fileUpload-padding: var(--space-2xs);
+      --fileUpload-radius: 4px;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <main class="shell">
+
+    <section class="hero">
+      <a class="back" href="../../../index.html">← Overview</a>
+      <h1>fileUpload</h1>
+      <p>A native file field in a box that says what is attached to it — droppable as a whole, with one row per file and a way to take a single one back out. Give it an endpoint and every row gets a progress bar.</p>
+    </section>
+
+    <section class="stage" aria-label="Live demo">
+
+      <!--
+          A file input that names its own value. The control already opens a
+          picker, already takes a drop on itself and already validates a
+          required field; what it cannot do is say WHICH files are attached,
+          or let go of one of them.
+
+          Wiring
+            - class="c-fileUpload" and data-js-behavior="fileUpload" go on the
+              WRAPPER, not on the input: the box is the drop target. The
+              module finds the field itself (the first input[type="file"]
+              inside), so there is no attribute to wire.
+            - accept, multiple and required stay the platform's and keep
+              working: accept also decides what a DROP may add, multiple
+              decides whether a drop appends or replaces, required is still
+              enforced by the form with the browser's own message.
+            - The two size limits are the exception, because the platform has
+              no attribute for them: data-fileupload-maxsize and
+              data-fileupload-maxtotal on the field, enforced through
+              setCustomValidity() so the form still does the refusing (see the
+              limits example).
+            - data-fileupload-url on the root is what moves the transfer off
+              the form: with it the module uploads each file as it arrives and
+              every row gets a <progress>. The optional upload settings sit on
+              the root too (part, name, key, delete-url, token, token-header,
+              concurrency); the size limits stay on the FIELD in both lanes.
+            - The list of files, the running total and the status line are
+              injected at the end of the box — they describe files that do not
+              exist when the page is written.
+            - The look is the component's, not this page's: the token block at
+              the top of fileUpload.scss is the whole override surface (see the
+              last example).
+
+          Progressive enhancement
+            - Before the chunk arrives, and with scripting off, this is a
+              label, a file input and its hints — with its name and required
+              intact, so the form submits the files the ordinary way. That is
+              the fallback in both lanes, and it is why the field is never
+              hidden and why the upload lane only takes the field's name once
+              it is really running.
+            - So the dashed zone and the "drop them here" line only appear
+              once the module is listening (data-fileupload-ready). A box that
+              invited a drop it could not receive would hand the file to the
+              browser, which opens it and takes the reader off the form. Turn
+              JavaScript off and the box is a plain field group again.
+            - The edge is transparent rather than absent until then, so
+              nothing moves when the module takes over.
+
+          Accessibility
+            - Dragging is never the only way in: the control's own button is
+              the single-pointer alternative (WCAG 2.5.7).
+            - Every control is named after its file, and pressing one moves
+              the focus to the row that takes its place — or to the field once
+              the last row is gone.
+            - Every bar is named by its row's file name, so "photo.jpg, 42 %"
+              is what is announced. The percentages themselves are never
+              announced: a bar is a value, not an event.
+            - Whatever is wrong with a row is a word in it, never only a
+              colour.
+            - One visible status line with role="status": what was removed,
+              what was not accepted, what is over the limit, what was uploaded
+              or failed, how many files are attached now. The same node for the
+              eye and for a screen reader, so the two sentences cannot drift
+              apart.
+        -->
+
+      <div class="demo">
+
+        <section class="demo__example">
+          <h2>Several files: PDFs and images</h2>
+
+          <p class="stage__intro">
+            <strong>Drop a few files into the box</strong>, or use the button.
+            Each one gets a row with its name and its size — the whole of what
+            the native control does not show, which reports
+            <em>“3 files”</em> and names none of them. Press the cross on a row
+            and that one file leaves the selection: the field's
+            <code>files</code> is rewritten through a
+            <code>DataTransfer</code>, which is the platform's own way of doing
+            it, and a <code>change</code> event goes out exactly as it does
+            after the picker.
+          </p>
+
+          <p class="stage__intro">
+            Nothing is uploaded here. There is no
+            <code>data-fileupload-url</code> on this box, so the files travel
+            with the form the way they always did — and that is why there is no
+            progress bar in this half of the page: a submitted form tells the
+            page nothing while it uploads.
+          </p>
+
+          <div class="c-fileUpload" data-js-behavior="fileUpload">
+            <label class="c-fileUpload__label" for="fu-attachments">Attachments</label>
+            <input
+              class="c-fileUpload__field"
+              type="file"
+              id="fu-attachments"
+              name="attachments"
+              accept="application/pdf,image/*"
+              aria-describedby="fu-attachments-hint"
+              multiple
+            />
+            <p class="c-fileUpload__hint" id="fu-attachments-hint">PDF or image files, as many as you like.</p>
+            <p class="c-fileUpload__dropHint">You can also drop them anywhere in this box.</p>
+          </div>
+        </section>
+
+        <section class="demo__example">
+          <h2>One file, and a type that is turned away</h2>
+
+          <p class="stage__intro">
+            No <code>multiple</code>, so a drop <strong>replaces</strong> what
+            is there with the first file it carries. And
+            <code>accept=".pdf"</code>: drop something else — a screenshot, a
+            zip — and it is <strong>reported rather than swallowed</strong>.
+            The field's own attribute decides that, not a rule this component
+            invented: a file the picker would never have offered has no
+            business arriving through the back door. It stays a filter and not
+            a verdict, though — what is inside a file is the server's business.
+          </p>
+
+          <div class="c-fileUpload" data-js-behavior="fileUpload">
+            <label class="c-fileUpload__label" for="fu-cv">Your CV</label>
+            <input
+              class="c-fileUpload__field"
+              type="file"
+              id="fu-cv"
+              name="cv"
+              accept=".pdf"
+              aria-describedby="fu-cv-hint"
+            />
+            <p class="c-fileUpload__hint" id="fu-cv-hint">One PDF.</p>
+            <p class="c-fileUpload__dropHint">Or drop the file in this box.</p>
+          </div>
+        </section>
+
+        <section class="demo__example">
+          <h2>Inside a form: required, and reset</h2>
+
+          <p class="stage__intro">
+            <strong>Press Send with an empty field</strong> and the browser
+            says so itself — <code>required</code> is the platform's, and this
+            lane adds no validation of its own. Then attach something and
+            press <strong>Reset</strong>: a reset empties the field
+            <em>without firing a change event</em>, the one value change the
+            module cannot hear, so it listens for <code>reset</code> on the
+            form and rebuilds the list on the next frame.
+          </p>
+
+          <form class="demo__form" action="javascript:;">
+            <div class="c-fileUpload" data-js-behavior="fileUpload">
+              <label class="c-fileUpload__label" for="fu-required">Proof of address</label>
+              <input
+                class="c-fileUpload__field"
+                type="file"
+                id="fu-required"
+                name="proof"
+                accept="application/pdf,image/*"
+                required
+              />
+              <p class="c-fileUpload__dropHint">Or drop the file in this box.</p>
+            </div>
+
+            <div class="actions">
+              <button type="submit">Send</button>
+              <button type="reset">Reset</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="demo__example">
+          <h2>A limit the platform does not have</h2>
+
+          <p class="stage__intro">
+            <code>data-fileupload-maxsize="2MB"</code> per file and
+            <code>data-fileupload-maxtotal="5MB"</code> for the selection, both
+            on the field, next to <code>accept</code> — because that is where
+            every other constraint on this value already lives. There is no
+            native <code>maxsize</code>, so this is the one rule the component
+            adds; it adds it <strong>through the platform</strong>, with
+            <code>setCustomValidity()</code>, which is the same channel
+            <code>formValidation</code> uses for its own non-native rule.
+          </p>
+
+          <p class="stage__intro">
+            <strong>Attach something over 2 MB.</strong> The file
+            <em>stays</em> — taking away what you just chose would leave you
+            with no explanation and, in a single-file field, with “no file
+            chosen” — but its row is marked, the status line names the limit,
+            and <strong>Send is refused by the browser itself</strong> with that
+            same sentence on the field. Remove the row, or attach something
+            smaller, and the form goes through. The running total underneath
+            states the budget while there is still room in it. Watch what the
+            upload lane does with the same limit further down: there the file is
+            refused at the door instead, because a row there means a transfer.
+          </p>
+
+          <form class="demo__form" action="javascript:;">
+            <div class="c-fileUpload" data-js-behavior="fileUpload">
+              <label class="c-fileUpload__label" for="fu-limited">Photos</label>
+              <input
+                class="c-fileUpload__field"
+                type="file"
+                id="fu-limited"
+                name="photos"
+                accept="image/*"
+                data-fileupload-maxsize="2MB"
+                data-fileupload-maxtotal="5MB"
+                aria-describedby="fu-limited-hint"
+                multiple
+              />
+              <p class="c-fileUpload__hint" id="fu-limited-hint">Images, up to 2 MB each and 5 MB in total.</p>
+              <p class="c-fileUpload__dropHint">You can also drop them in this box.</p>
+            </div>
+
+            <div class="actions">
+              <button type="submit">Send</button>
+              <button type="reset">Reset</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="demo__example">
+          <h2 class="demo__lane">With an endpoint: a progress bar per file</h2>
+
+          <p class="stage__intro">
+            Everything below carries one extra attribute —
+            <code>data-fileupload-url</code> — and nothing else changes: same
+            box, same markup, same stylesheet. What changes is who carries the
+            bytes. The module uploads each file the moment it is chosen, so it
+            can report how far it has got; the form ends up carrying only the
+            handles the endpoint returned.
+          </p>
+
+          <p class="demo__needsServer">
+            <strong>These examples need a server that accepts a POST</strong>,
+            which no static file server does — including VS Code's Live Server.
+            Open this page from the one that ships with the project:
+            <code>npm run demo:upload</code>, then
+            <code>http://127.0.0.1:8123/src/components/fileUpload/demo.html</code>.
+            Otherwise every row below turns red and says <em>failed</em> — the
+            file <em>was</em> picked, queued and sent, and the server answered
+            <code>405 Method Not Allowed</code>. The component reports the
+            status it got; look in the console.
+          </p>
+        </section>
+
+        <section class="demo__example">
+          <h2>Several files, three at a time</h2>
+
+          <p class="stage__intro">
+            <strong>Drop a few files into the box</strong>, or use the button.
+            Each one starts moving immediately and gets a bar of its own; at
+            most three transfer at once, because twenty parallel uploads on one
+            line finish later than three at a time and report nonsense on the
+            way. The cross cancels a transfer while it runs —
+            <code>xhr.abort()</code>, so the socket really closes — and removes
+            the file once it is up.
+          </p>
+
+          <p class="stage__intro">
+            Watch the tail end of each bar: when the last byte has left the
+            browser the bar goes <strong>indeterminate</strong> and the row says
+            <em>processing</em>. That is the truth about upload progress that
+            most bars gloss over — 100 % means "sent", not "stored", and this
+            demo endpoint waits 600 ms before answering so the difference is
+            visible.
+          </p>
+
+          <form class="demo__form" action="javascript:;" data-payload-form>
+            <div
+              class="c-fileUpload"
+              data-js-behavior="fileUpload"
+              data-fileupload-url="/dev/upload"
+              data-fileupload-delete-url="/dev/upload"
+            >
+              <label class="c-fileUpload__label" for="fu-queued">Attachments</label>
+              <input
+                class="c-fileUpload__field"
+                type="file"
+                id="fu-queued"
+                name="attachmentIds"
+                accept="image/*,application/pdf"
+                data-fileupload-maxsize="10MB"
+                aria-describedby="fu-queued-hint"
+                multiple
+              />
+              <p class="c-fileUpload__hint" id="fu-queued-hint">Images or PDFs, up to 10 MB each.</p>
+              <p class="c-fileUpload__dropHint">You can also drop them anywhere in this box.</p>
+            </div>
+
+            <div class="actions">
+              <button type="submit">Send</button>
+              <button type="reset">Reset</button>
+            </div>
+          </form>
+
+          <!-- Outside the form on purpose: the demo script watches the form
+               for changes, and an output node inside it would be a mutation
+               of the thing being observed — which is an endless loop, not a
+               readout. -->
+          <p class="demo__payload" data-payload>What the form would send: nothing yet.</p>
+        </section>
+
+        <section class="demo__example">
+          <h2>What the form actually carries</h2>
+
+          <p class="stage__intro">
+            The line above is printed from that form itself on every change.
+            Attach something and watch it: no file ever appears in it. The bytes
+            went out one by one while you were still filling the form in, and
+            what is left to submit is
+            <code>attachmentIds=demo-1</code> — the handle this demo endpoint
+            returned. <strong>Send is therefore instant</strong>, which is the
+            whole reason to upload early.
+          </p>
+
+          <p class="stage__intro">
+            <strong>Press Send while something is still uploading</strong> and
+            the browser refuses, with a message on the field. There is no submit
+            handler in this component: the field's own validity says why — the
+            same channel the size limits use in the default lane, so
+            <code>formValidation</code> would render it with no extra wiring.
+          </p>
+        </section>
+
+        <section class="demo__example">
+          <h2>When it fails: retry, and the file that is still here</h2>
+
+          <p class="stage__intro">
+            This box posts to <code>/dev/upload?fail=1</code>, which answers
+            <code>500</code> with a JSON error. The row turns red, says
+            <em>failed</em>, quotes the server's own sentence in the status line
+            — and offers <strong>Retry</strong>, because the row still holds the
+            <code>File</code>. Nobody has to find that file on their disk a
+            second time. The form stays blocked until every failed row is
+            retried or removed.
+          </p>
+
+          <form class="demo__form" action="javascript:;">
+            <div
+              class="c-fileUpload"
+              data-js-behavior="fileUpload"
+              data-fileupload-url="/dev/upload?fail=1"
+            >
+              <label class="c-fileUpload__label" for="fu-failing">Proof of address</label>
+              <input
+                class="c-fileUpload__field"
+                type="file"
+                id="fu-failing"
+                name="proofId"
+                accept="image/*,application/pdf"
+                aria-describedby="fu-failing-hint"
+                required
+              />
+              <p class="c-fileUpload__hint" id="fu-failing-hint">One file — this endpoint refuses it on purpose.</p>
+              <p class="c-fileUpload__dropHint">Or drop it in this box.</p>
+            </div>
+
+            <div class="actions">
+              <button type="submit">Send</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="demo__example">
+          <h2>One file at a time, and one slow line</h2>
+
+          <p class="stage__intro">
+            No <code>multiple</code>, so a second pick <strong>replaces</strong>
+            the first — including the file already on the server, which is
+            deleted through <code>data-fileupload-delete-url</code>. And
+            <code>?slow=300</code>, which makes this endpoint read each chunk
+            with a 300 ms pause: a genuinely slow line, so the bar creeps rather
+            than flashes. Cancel it halfway and watch the request end in the
+            server's console.
+          </p>
+
+          <div
+            class="c-fileUpload"
+            data-js-behavior="fileUpload"
+            data-fileupload-url="/dev/upload?slow=300"
+            data-fileupload-delete-url="/dev/upload"
+            data-fileupload-concurrency="1"
+          >
+            <label class="c-fileUpload__label" for="fu-avatar">Profile picture</label>
+            <input
+              class="c-fileUpload__field"
+              type="file"
+              id="fu-avatar"
+              name="avatarId"
+              accept="image/*"
+              data-fileupload-maxsize="4MB"
+              aria-describedby="fu-avatar-hint"
+            />
+            <p class="c-fileUpload__hint" id="fu-avatar-hint">One image, up to 4 MB.</p>
+            <p class="c-fileUpload__dropHint">Or drop it in this box.</p>
+          </div>
+        </section>
+
+        <section class="demo__example">
+          <h2>The same component, retuned</h2>
+
+          <p class="stage__intro">
+            One instance with four of its knobs set from outside —
+            <code>--fileUpload-zone-style: solid</code>, a quieter edge,
+            <code>--fileUpload-padding</code> and
+            <code>--fileUpload-radius</code>. Nothing about the markup or the
+            behaviour changes: <strong>the token block at the top of
+            fileUpload.scss is the whole override surface</strong>, and it is
+            declared on the component's own root, which is where an override
+            has to sit to win.
+          </p>
+
+          <div class="c-fileUpload upload--compact" data-js-behavior="fileUpload">
+            <label class="c-fileUpload__label" for="fu-compact">Receipts</label>
+            <input
+              class="c-fileUpload__field"
+              type="file"
+              id="fu-compact"
+              name="receipts"
+              accept="image/*,application/pdf"
+              multiple
+            />
+            <p class="c-fileUpload__dropHint">Drop them here.</p>
+          </div>
+        </section>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!--
+      DEMO-ONLY SCRIPT
+      ------------------------------------------------------------------------
+      Prints what the queued form would submit, so the claim "the form carries
+      handles, not files" can be checked rather than believed. FormData over
+      the form is the same thing the browser would send.
+  -->
+  <script type="module">
+    const form = document.querySelector('[data-payload-form]');
+    const out = document.querySelector('[data-payload]');
+
+    const print = () => {
+      const entries = [...new FormData(form)]
+        .filter(([, value]) => typeof value === 'string')
+        .map(([name, value]) => `${name}=${value}`);
+
+      const text = entries.length
+        ? `What the form would send: ${entries.join(' & ')}`
+        : 'What the form would send: nothing yet.';
+
+      // Only on a real change: the observer below would otherwise see this
+      // write as the next mutation to report.
+      if (out.textContent !== text) out.textContent = text;
+    };
+
+    // The component adds and removes hidden inputs rather than changing a
+    // field, so a change event is not enough on its own — the list is watched.
+    new MutationObserver(print).observe(form, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['value'],
+    });
+
+    print();
+  </script>
+
+</body>
+</html>

@@ -12,6 +12,7 @@ export const registry = {
   describedBy: () => import('./modules/describedBy.min.js'),
   dialog: () => import('./modules/dialog.min.js'),
   dropdownNav: () => import('./modules/dropdownNav.min.js'),
+  fileUpload: () => import('./modules/fileUpload.min.js'),
   flexNeighborMarker: () => import('./modules/flexNeighborMarker.min.js'),
   focusableSelector: () => import('./modules/focusableSelector.min.js'),
   formatTemplate: () => import('./modules/formatTemplate.min.js'),

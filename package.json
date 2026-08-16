@@ -6,7 +6,8 @@
   "scripts": {
     "build": "gulp build",
     "dev": "gulp dev",
-    "clean": "gulp clean"
+    "clean": "gulp clean",
+    "demo:upload": "node dev/uploadServer.js"
   },
   "browserslist": [
     "> 0.5%",

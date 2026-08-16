@@ -1,0 +1,361 @@
+<!--
+  fileUpload — copy-paste snippet
+  ============================================================================
+  Copy the block(s) below into your own project.
+
+  1) In <head> (or before </body>): load the shared styles, this component's
+     stylesheet and the boot script. boot.min.js lazily loads the fileUpload
+     module as soon as it finds data-js-behavior="fileUpload" in the DOM — you
+     do not import fileUpload.js yourself. Adjust the paths to where you serve
+     /dist.
+
+       <link rel="stylesheet" href="/dist/css/shared.min.css" />
+       <link rel="stylesheet" href="/dist/css/fileUpload.min.css" />
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+  2) Put class="c-fileUpload" and data-js-behavior="fileUpload" on the element
+     WRAPPING a native <input type="file">, not on the input itself: the box is
+     the drop target, and the input is what it is built around. The module
+     finds the field on its own (the first input[type="file"] inside) — there
+     is no attribute to wire.
+
+  3) Decide who carries the bytes. One attribute settles it, and the default
+     needs no server work at all:
+
+       nothing                    the FORM posts the files on submit, exactly
+                                  as it always did. No endpoint, no handles,
+                                  no cleanup — and no progress bar, because a
+                                  submitted form reports nothing back to the
+                                  page while it uploads.
+       data-fileupload-url="…"    the MODULE uploads each file the moment it
+                                  is chosen, and every row gets a real
+                                  <progress> plus cancel and retry. The form
+                                  then carries the handles your endpoint
+                                  returned, so pressing Send is instant.
+                                  Costs three routes' worth of server work —
+                                  see "The upload lane" at the bottom.
+
+     Start without it. Add it when the files are large enough that somebody
+     has to be told how far they have got, because that is the one thing a
+     form post cannot report.
+
+  Wiring
+    - <label for="…"> plus the input, exactly as you would write them without
+      this component — INCLUDING the name and any "required". Without the
+      module the form posts the files the ordinary way, and that is the
+      fallback in both lanes.
+    - What may be attached is the field's own business and stays there:
+        accept="…"   which types the picker offers — and, here, which types a
+                     DROP may add (a dropped file the picker would never have
+                     offered is reported instead of accepted)
+        multiple     several files; a drop APPENDS to what is already there.
+                     Without it a drop REPLACES the selection with the first
+                     file it carries
+        required     an empty field fails the form's own validation, with the
+                     browser's own message
+    - Two size limits, also on the field, because the platform has no
+      attribute for them and every other constraint on this value lives there:
+        data-fileupload-maxsize="5MB"    the largest a single file may be
+        data-fileupload-maxtotal="20MB"  the largest the selection may be
+      Both take a unit ("5MB", "1,5 gb", "500 kb") or a bare number of bytes,
+      decimal (1 kB = 1000 bytes). Absent, malformed or zero means no limit.
+      The two lanes differ in what they do about a violation, and each does
+      the only sensible thing for what a row means to it:
+        without an endpoint  the file STAYS in the selection, its row is
+                             marked "too large", and the FIELD is made invalid
+                             via setCustomValidity() — so the form refuses to
+                             send with that sentence on the control, and
+                             formValidation renders it without a line of extra
+                             wiring
+        with an endpoint     the file is refused at the door and never
+                             uploaded: a row means a transfer, and there is no
+                             point spending two minutes sending something the
+                             server will throw away
+      Do not combine either limit with data-fv-equals on the same field:
+      formValidation owns a field's custom validity when that attribute is
+      present.
+    - The module injects three nodes at the end of the box: the list of files
+      (one row per file, with its size, whatever is wrong with it or how far it
+      has got, and the controls that state allows), the running total where a
+      total limit is set, and one visible status line (role="status", polite).
+      Do not author any of them — they describe files that do not exist yet
+      when the page is written.
+    - class="c-fileUpload__dropHint" is the sentence inviting a drop. Author
+      it; the stylesheet keeps it hidden until the module is actually listening
+      (see Notes below).
+
+  Options
+    On the ROOT, and every one of them only in the upload lane — they say how
+    to upload, which is why they are meaningless without the first:
+
+      data-fileupload-url            where to POST each file. Its presence is
+                                     what turns the bars on.
+      data-fileupload-part           the multipart part name (default "file")
+      data-fileupload-name           the hidden inputs' name — defaults to the
+                                     file field's own name, which is usually
+                                     what you want (see "Two shapes" below)
+      data-fileupload-key            the JSON key holding the handle
+                                     (default "id")
+      data-fileupload-delete-url     DELETE <url>?<key>=<handle> when a row
+                                     goes — under the key above, so "id"
+                                     unless you changed it
+      data-fileupload-token          a CSRF token, sent as a header
+      data-fileupload-token-header   that header's name
+                                     (default "X-CSRF-Token")
+      data-fileupload-concurrency    transfers at a time (default 3)
+
+    On the FIELD, in both lanes: data-fileupload-maxsize and
+    data-fileupload-maxtotal (see Wiring). Everything the platform can already
+    say stays the platform's — what may be chosen (accept), how many
+    (multiple), whether the form may be sent without a file (required).
+
+    Everything else is CSS — the knobs sit on the component root in
+    fileUpload.scss:
+
+      --fileUpload-zone-style     dashed / solid / none for the zone's edge
+      --fileUpload-zone-color     that edge's colour (a control boundary:
+                                  --color-border-control, 3:1, WCAG 1.4.11)
+      --fileUpload-bar-*          the bar's size, radius, track and fill
+      --fileUpload-done-color     the tone on "uploaded" (--color-success)
+      --fileUpload-error-color    a row over the limit, a failed transfer, and
+                                  the total when it is exceeded (--color-error,
+                                  the tone formValidation gives an invalid
+                                  field)
+      --fileUpload-padding        the box's inner spacing
+      --fileUpload-gap            between label, field, hints, list, status
+      --fileUpload-list-gap       between the rows
+      --fileUpload-item-*         a row's padding, gap, colours
+      --fileUpload-remove-size    the cross on the remove control
+      --fileUpload-hint-size      the hints and the status line
+      …and the rest of the token block at the top of fileUpload.scss.
+
+    They are declared on the component's own root, and a declaration on the
+    element beats an inherited value whatever an ancestor's specificity is —
+    so set them inline (style="--fileUpload-zone-style: solid") or in a rule
+    that hits the root itself (.myUpload). A rule of yours carries the same
+    weight as the component's, so load your stylesheet after
+    fileUpload.min.css.
+
+    The wording (the status line, the states, the controls' names) is built in
+    for de/en and picked from <html lang>; another language falls back to en.
+
+  Notes / progressive enhancement
+    - Without the module — and before its chunk arrives — this is a label, a
+      file input and its hints, with its name and required intact: the picker
+      works, the keyboard works, the form submits. A file input is ALSO a drop
+      target by itself, so dropping onto the control is possible the whole
+      time; what the module adds is the size of that target.
+    - Which is why the dashed zone and the drop invitation only appear once the
+      module is listening (data-fileupload-ready on the root). A box that
+      invited a drop it could not receive would hand the file to the browser,
+      which opens it — and takes the reader off a half-filled form. The edge is
+      transparent rather than absent until then, so nothing moves when it
+      arrives.
+    - A dropped FOLDER is turned away with its own sentence and never becomes
+      a row. A file input cannot produce one without webkitdirectory, so a box
+      that read one out would be doing what the control it is attached to
+      cannot — and left alone it would arrive looking like an empty file.
+      Drop the files inside the folder instead.
+    - A DISABLED field takes nothing, so the box stops offering: the drop
+      invitation goes and the dashed edge falls back to transparent for as
+      long as the attribute is there. Enable the field again and both come
+      back — nothing has to be re-initialised.
+    - A dropped file outside any zone still lands on the browser, which opens
+      it. That is a page-level decision, not a component's, so this component
+      does not touch the document — if you want to rule it out, do it once for
+      the page:
+        ['dragover', 'drop'].forEach((type) =>
+          document.addEventListener(type, (e) => e.preventDefault()));
+      (Note that this disables dropping onto file inputs elsewhere on the page
+      unless you exempt them.)
+    - In the FORM lane, removing a file rewrites the field's selection through
+      a DataTransfer and dispatches a bubbling "change" event, so your own
+      listeners — and formValidation on a required field — hear it exactly as
+      they hear the picker. In an engine that cannot construct a DataTransfer,
+      the list is still shown (names and sizes) but carries no remove controls
+      and no drop zone is claimed: a control that cannot do what it says is
+      worse than no control.
+    - In the UPLOAD lane, pressing Send while anything is still uploading or
+      has failed is refused by the browser itself: the module writes the reason
+      onto the field with setCustomValidity(). There is no submit handler in
+      this component, so nothing of yours has to be worked around. There is
+      also deliberately no timeout on a transfer (a large file on a slow line
+      is slow, not broken) and no "are you sure you want to leave" dialog — a
+      reader who closes the tab mid-form leaves files nothing will ever refer
+      to, which is a sweep on your side and not something a component may take
+      the page hostage over.
+    - The native control keeps its own "no file chosen" text next to the
+      button. It is the user agent's, not stylable, and it stays: it is the
+      one part of this box that reads correctly before any script has run.
+      It is also the part that gives way when there is no room — the button
+      and that text share one line in a shadow tree, so at 200 % text in a
+      narrow box the name is clipped (capping the field is what keeps the
+      PAGE from scrolling sideways instead). The list is where the names are
+      stated in full and wrap, which is why it is worth having even for one
+      file. Give the box enough width and neither happens.
+
+  Accessibility
+    - Dragging is never the only way in — the input's own button is the
+      single-pointer alternative WCAG 2.5.7 asks for.
+    - Whatever is wrong with a row is a word in it ("too large", "failed") next
+      to the size; the red edge is the emphasis on that word, never the signal
+      itself.
+    - Each control is named after its file, so "Remove report.pdf" and "Retry
+      photo.jpg" are what a screen reader announces, not "Remove" three times.
+    - Removing a row moves the focus to the row that takes its place, or to the
+      field when the last row goes.
+    - Each bar is named by its own row's file name, and the percentages are
+      never announced: a bar is a live-updating value, not an event.
+    - The status line is one visible node with role="status": what is read
+      aloud and what is printed are the same sentence.
+
+  The upload lane: three routes' worth of server work
+    Only needed where data-fileupload-url is set.
+
+    1. POST <url> receives one file per request, as multipart/form-data, in the
+       part named by data-fileupload-part ("file"). Answer 2xx with JSON
+       holding a handle under data-fileupload-key ("id"):
+           { "id": "9f3c…" }
+       Anything else — a non-2xx, a body that is not JSON, a 200 without that
+       key — counts as a failure and the row offers Retry. An optional
+       "error" string in the body is shown to the reader as it stands, so put
+       something readable there ("this file is not a PDF").
+    2. On submit you receive handles, not files. Resolve them to the stored
+       files, and CHECK THAT THE CURRENT USER MAY USE THEM — a handle is a
+       reference, and a reference that is not checked is an access-control hole.
+       Validate type and size again here: everything the browser did was a
+       convenience, and none of it is a verdict.
+    3. Sweep. Files arrive before a form is submitted, so some of them will
+       never be claimed — a reader who changed their mind, closed the tab, lost
+       the connection. Delete unclaimed uploads by age (an hour, a day). The
+       optional DELETE route helps for the case where a reader takes a file back
+       out, but it can never be relied on: a closed tab sends nothing.
+
+  Two shapes, and why the field loses its name (upload lane only)
+    While the module uploads it TAKES the name off the file field and puts it on
+    the hidden inputs instead, so the same bytes cannot travel twice. That means
+    your endpoint sees one of two shapes under the same name:
+
+      without JS   attachments = the files themselves (multipart)
+      with JS      attachments = handles your upload endpoint returned
+
+    Both have to be handled server-side. That is the real price of a progress
+    bar, and it is why the default lane exists: it never has this problem.
+
+    "required" moves the same way and for the same reason — the field is emptied
+    after every pick, so the attribute would otherwise block the form forever.
+    It keeps meaning "at least one file", answered against the queue.
+-->
+
+
+
+<!-- The default: several files, PDFs and images, carried by the form -->
+<div class="c-fileUpload" data-js-behavior="fileUpload">
+  <label class="c-fileUpload__label" for="fu-attachments">Attachments</label>
+  <input
+    class="c-fileUpload__field"
+    type="file"
+    id="fu-attachments"
+    name="attachments"
+    accept="application/pdf,image/*"
+    aria-describedby="fu-attachments-hint"
+    multiple
+  />
+  <p class="c-fileUpload__hint" id="fu-attachments-hint">PDF or image files.</p>
+  <p class="c-fileUpload__dropHint">You can also drop them anywhere in this box.</p>
+</div>
+
+
+<!-- One file only: a drop replaces what is there -->
+<div class="c-fileUpload" data-js-behavior="fileUpload">
+  <label class="c-fileUpload__label" for="fu-cv">Your CV</label>
+  <input
+    class="c-fileUpload__field"
+    type="file"
+    id="fu-cv"
+    name="cv"
+    accept=".pdf,.doc,.docx"
+    required
+  />
+  <p class="c-fileUpload__dropHint">Or drop the file in this box.</p>
+</div>
+
+
+<!-- With size limits: 2 MB per file, 5 MB for the selection. Say the limit in
+     the hint as well — the attribute blocks the send, the sentence prevents it.
+     Both are enforced through the field's own validity, so the form does the
+     refusing. -->
+<div class="c-fileUpload" data-js-behavior="fileUpload">
+  <label class="c-fileUpload__label" for="fu-photos">Photos</label>
+  <input
+    class="c-fileUpload__field"
+    type="file"
+    id="fu-photos"
+    name="photos"
+    accept="image/*"
+    data-fileupload-maxsize="2MB"
+    data-fileupload-maxtotal="5MB"
+    aria-describedby="fu-photos-hint"
+    multiple
+  />
+  <p class="c-fileUpload__hint" id="fu-photos-hint">Images, up to 2 MB each and 5 MB in total.</p>
+  <p class="c-fileUpload__dropHint">You can also drop them in this box.</p>
+</div>
+
+
+<!-- With a progress bar: the one attribute that moves the transfer off the
+     form. Three at a time, and a DELETE route so a file the reader takes back
+     out is not left on the server for nobody. The field keeps its name and its
+     required — the module takes both over while it runs, and hands them back if
+     it is ever torn down, so the form still posts the files without JS. -->
+<form action="/apply" method="post">
+  <div
+    class="c-fileUpload"
+    data-js-behavior="fileUpload"
+    data-fileupload-url="/api/uploads"
+    data-fileupload-delete-url="/api/uploads"
+  >
+    <label class="c-fileUpload__label" for="fu-large">Attachments</label>
+    <input
+      class="c-fileUpload__field"
+      type="file"
+      id="fu-large"
+      name="attachments"
+      accept="application/pdf,image/*"
+      data-fileupload-maxsize="10MB"
+      data-fileupload-maxtotal="50MB"
+      aria-describedby="fu-large-hint"
+      multiple
+    />
+    <p class="c-fileUpload__hint" id="fu-large-hint">PDFs or images, up to 10 MB each and 50 MB in total.</p>
+    <p class="c-fileUpload__dropHint">You can also drop them anywhere in this box.</p>
+  </div>
+
+  <button type="submit">Send</button>
+</form>
+
+
+<!-- One file, one transfer at a time, and a CSRF token. A second pick replaces
+     the first — including the file already on the server, which is deleted. -->
+<div
+  class="c-fileUpload"
+  data-js-behavior="fileUpload"
+  data-fileupload-url="/api/uploads"
+  data-fileupload-delete-url="/api/uploads"
+  data-fileupload-token="…the token your framework renders…"
+  data-fileupload-concurrency="1"
+>
+  <label class="c-fileUpload__label" for="fu-avatar">Profile picture</label>
+  <input
+    class="c-fileUpload__field"
+    type="file"
+    id="fu-avatar"
+    name="avatar"
+    accept="image/*"
+    data-fileupload-maxsize="4MB"
+    aria-describedby="fu-avatar-hint"
+    required
+  />
+  <p class="c-fileUpload__hint" id="fu-avatar-hint">One image, up to 4 MB.</p>
+  <p class="c-fileUpload__dropHint">Or drop it in this box.</p>
+</div>

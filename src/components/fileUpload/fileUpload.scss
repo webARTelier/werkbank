@@ -1,0 +1,691 @@
+// =============================================================
+// fileUpload — a file field that says what is attached to it
+// =============================================================
+//
+// The component is a box around a native file input: the label, the control
+// itself, its hints, the list of files, the running total and one status line.
+// The box is the drop target, which is the whole reason it exists as an
+// element — a control's own few hundred pixels are a poor thing to aim a
+// dragged file at.
+//
+// One box, two lanes. Without "data-fileupload-url" on the root the FORM
+// carries the files and a row names one of them; with it the module uploads
+// each file as it is chosen and a row also carries a <progress>, its state in
+// words and a Retry control. The look is deliberately the same either way — a
+// project that adds an endpoint later should not have to restyle a form — so
+// everything below is one block, and the three parts only the second lane
+// builds simply never appear in the first.
+//
+// Contract with the JS (fileUpload.js)
+//   - "data-fileupload-ready" on the root says the box really can receive a
+//     drop. It is what turns the plain field group into a dashed zone and
+//     shows the drop invitation, and it is the one attribute here that must
+//     not be anticipated: a box that invites a drop before the module is
+//     listening hands the file to the browser, which opens it and takes the
+//     reader off the form they were filling in. So the zone is keyed
+//     POSITIVELY on the attribute rather than through
+//     pre-enhancement() — see the note below.
+//   - "data-fileupload-dragging" on the root says a drag carrying files is
+//     over the box. Presence IS the state, so writing it is idempotent, which
+//     matters for an event that fires continuously.
+//   - A DISABLED field is the one case where the ready attribute is not the
+//     whole answer: the module keeps listening but refuses every drop, so the
+//     zone is taken back here by rule (see below) rather than by the module
+//     writing a third attribute nobody could keep in step with the field.
+//   - "data-fileupload-state" on a ROW holds exactly one state — "oversize" in
+//     the form lane, one of queued / uploading / processing / done / failed in
+//     the upload lane. One attribute with a value rather than a flag per
+//     state, because a row is in one state and an attribute that holds one
+//     value cannot be left in two; sharing it across the lanes is what lets
+//     one rule colour both an oversized file and a failed transfer.
+//   - "data-fileupload-exceeded" on the total line says the selection as a
+//     whole is over the total limit. Only the form lane ever writes it: the
+//     upload lane refuses a file that would not fit instead of taking it in.
+//   - The list, its rows, the bar, the state text, the controls, the running
+//     total and the status line are injected by the module and carry this
+//     file's own class names, so they are styled as the block's own elements
+//     below. The module finds them by its data attributes and never reads a
+//     class.
+//   - The module writes [hidden] on four things: the list while it is empty,
+//     the total line without a total limit, the bar once a row is resting, and
+//     the retry control except on a failed row. Three of them get their display
+//     restored below, because an author declaration beats the user agent's own
+//     [hidden] rule whatever the specificity; the total line needs no such rule
+//     because it declares no display of its own.
+//   - Nothing else is written: no inline styles, no ARIA beyond the controls'
+//     names, the bars' labelling and the status region's role.
+//
+// Why no pre-enhancement() block
+//   The mixin states the ENHANCED resting position for the gap before init(),
+//   under "scripting: enabled" — right for a component whose enhanced state
+//   is deliverable by the stylesheet alone. Here it is the opposite: the drop
+//   zone is a promise only the module can keep, and scripting being enabled
+//   is not the same as the chunk arriving. Keyed the mixin's way, a reader
+//   with scripting off — the one case the mixin deliberately exempts — would
+//   be the one reader shown a zone that can never work. So the zone is off by
+//   default and switched on by the ready attribute, which is the same
+//   reasoning autoGrowTextarea uses for its resize handle, only for a rule
+//   that adds rather than removes. Nothing is hidden by the default state:
+//   the label, the field, its hints and the list are all there, the control
+//   takes a drop on itself without any help, and in the upload lane the field
+//   keeps its name until the module takes over, so the form still posts.
+
+@use "focus" as *;
+@use "mediaqueries" as *;
+@use "visuallyHidden" as *;
+
+
+
+// The override surface: declared on the component root, not in :root, so it
+// stays scoped and a single instance can be retuned in place
+// (`style="--fileUpload-zone-style: solid"` on the root still wins).
+.c-fileUpload {
+
+  // Animation (shared tokens, _shared/scss/_foundations.scss)
+  --fileUpload-duration: var(--an-duration);
+  --fileUpload-easing: var(--an-ease);
+
+  // Sizing
+  --fileUpload-radius: var(--borderRadius);
+  --fileUpload-border-width: 1px;
+
+  // Dashed while the box is a drop target, because a dashed edge reads as
+  // "something may be put in here" where a solid one reads as a container.
+  // The drag state swaps it for solid: the target has been found.
+  --fileUpload-zone-style: dashed;
+
+  // The bar (upload lane). Short and thick rather than long and thin: it sits
+  // inside a row next to a name and a size, so it has a lane, not a stage.
+  --fileUpload-bar-inline-size: 6rem;
+  --fileUpload-bar-block-size: 0.4rem;
+  --fileUpload-bar-radius: 999px;
+
+  // Side length of the remove control's cross. In em, so it follows the type
+  // it sits next to.
+  --fileUpload-remove-size: 0.7em;
+
+  // Spacing (shared scale, _shared/scss/_foundations.scss)
+  --fileUpload-padding: var(--space-s);
+  --fileUpload-gap: var(--space-2xs); // between the parts of the box
+  --fileUpload-list-gap: var(--space-3xs); // between the rows
+  --fileUpload-item-padding: var(--space-3xs) var(--space-2xs);
+  --fileUpload-item-gap: var(--space-2xs); // name <-> size <-> bar <-> control
+
+  // Type scale
+  --fileUpload-hint-size: 0.85rem;
+  --fileUpload-size-size: 0.85rem; // the "1.2 MB" next to a name
+  --fileUpload-state-size: 0.85rem; // "too large", "42 %", "processing …"
+
+  // Colors (shared semantic tokens, _shared/scss/_colors_semantic.scss)
+  //
+  // The zone's border is --color-border-control and not the quiet
+  // --color-border: this box is something the reader may drop a file on, and
+  // where a border is what says a thing is operable, WCAG 1.4.11 asks for
+  // 3:1. The rows inside are containers and keep the quiet tone.
+  --fileUpload-zone-color: var(--color-border-control);
+  --fileUpload-zone-color-dragging: var(--color-accent-secondary);
+  --fileUpload-button-color: var(--color-border-control);
+  --fileUpload-button-color-hover: var(--color-border-control-strong);
+  --fileUpload-bg: transparent;
+  --fileUpload-bg-dragging: var(--color-bg-overlay);
+
+  --fileUpload-label-color: var(--color-text);
+  --fileUpload-hint-color: var(--color-text-muted);
+  --fileUpload-item-color: var(--color-text);
+  --fileUpload-item-bg: var(--color-bg-surface);
+  --fileUpload-item-border-color: var(--color-border);
+  --fileUpload-remove-color: var(--color-text-muted);
+  --fileUpload-remove-color-hover: var(--color-text);
+  --fileUpload-notice-color: var(--color-text-secondary);
+
+  // The bar's own two tones (upload lane).
+  --fileUpload-bar-track: var(--color-border);
+  --fileUpload-bar-fill: var(--color-accent-secondary);
+
+  // A finished upload, and the two states that mean "this will not submit": a
+  // file over its limit, a selection over the total, a transfer that failed.
+  // Both are the project's semantic tokens, so a finished row here and a valid
+  // field elsewhere agree on what "fine" looks like, and one project does not
+  // have two colours for "this will not submit" — the error tone is the one
+  // formValidation gives an invalid field, which is exactly what the field is
+  // while such a row is in the list (the module says so through
+  // setCustomValidity).
+  --fileUpload-done-color: var(--color-success);
+  --fileUpload-error-color: var(--color-error);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--fileUpload-gap);
+
+  // The edge is here from the first paint and only its COLOUR waits for the
+  // module: a border that appeared with the ready attribute would move the
+  // whole box by a pixel on every side a round trip in. Transparent reserves
+  // the space and says nothing.
+  border: var(--fileUpload-border-width) var(--fileUpload-zone-style)
+    transparent;
+  border-radius: var(--fileUpload-radius);
+  padding: var(--fileUpload-padding);
+
+  background-color: var(--fileUpload-bg);
+
+  transition:
+    border-color var(--fileUpload-duration) var(--fileUpload-easing),
+    background-color var(--fileUpload-duration) var(--fileUpload-easing);
+
+
+
+  // The box becomes a zone the moment the module can receive a drop and act on
+  // it (see the header) — the edge it invites the drop with, and, further down,
+  // the invitation itself.
+  &[data-fileupload-ready] {
+    border-color: var(--fileUpload-zone-color);
+  }
+
+
+
+  // A drag carrying files is over the box. Two changes, not one: the colour
+  // alone would be the only signal for a reader who cannot tell these two
+  // tones apart, so the edge closes up as well.
+  &[data-fileupload-dragging] {
+    --fileUpload-zone-style: solid;
+    --fileUpload-zone-color: var(--fileUpload-zone-color-dragging);
+
+    background-color: var(--fileUpload-bg-dragging);
+  }
+
+
+
+  &__label {
+    font-weight: 600;
+    color: var(--fileUpload-label-color);
+  }
+
+
+
+  // The native control, left in place and left native: it is the keyboard
+  // path to the picker and the single-pointer alternative to dragging, so
+  // nothing here hides it or dresses it up as something else. Only its own
+  // button is given the project's tones.
+  //
+  // "max-inline-size: 100%" is the one constraint put on it, and it picks
+  // the lesser of two failures rather than being a nicety. The control lays
+  // its button and its own file-name text out on ONE line, in a shadow tree
+  // nothing here can reach: at 200 % text in a 320px box that line wants
+  // 639px and has 286px. Uncapped it takes the 639px and scrolls the whole
+  // PAGE sideways, which is the one thing WCAG 1.4.10 rules out; capped it
+  // is clipped instead, and the file name is what goes. Capped wins because
+  // the name is then still stated in full: the list below wraps it over as
+  // many lines as it takes, which is this component's whole reason for
+  // being and is exactly the case a bare <input type="file"> has nothing to
+  // offer for. Do not go looking for a third way — overflow-x, overflow,
+  // text-overflow, field-sizing, an outer scroller and dropping the cap
+  // altogether were each tried in Chromium and WebKit, and the control
+  // renders identically under all six.
+  &__field {
+
+    // The control sits on the page's own dark surface -> the light tone.
+    @include focus-ring(light);
+
+    & {
+      align-self: start;
+      max-inline-size: 100%;
+
+      font: inherit;
+      color: var(--fileUpload-item-color);
+    }
+
+    &::file-selector-button {
+      cursor: pointer;
+
+      margin-inline-end: var(--fileUpload-item-gap);
+      border: var(--fileUpload-border-width) solid
+        var(--fileUpload-button-color);
+      border-radius: var(--fileUpload-radius);
+      padding: var(--space-3xs) var(--space-s);
+
+      font: inherit;
+      font-weight: 600;
+
+      color: var(--fileUpload-item-color);
+      background-color: transparent;
+
+      transition:
+        border-color var(--fileUpload-duration) var(--fileUpload-easing);
+    }
+
+    &:hover::file-selector-button {
+      border-color: var(--fileUpload-button-color-hover);
+    }
+  }
+
+
+
+  // The author's own hint (what the field takes, how large a file may be —
+  // whatever the project has to say) and the module's invitation to drop.
+  &__hint,
+  &__dropHint {
+    margin: 0;
+
+    font-size: var(--fileUpload-hint-size);
+    color: var(--fileUpload-hint-color);
+  }
+
+
+
+  // The invitation exists only while the box can keep it, which is the rule
+  // this file cares most about (see the header). Off by default, on with the
+  // ready attribute — and not narrowed to a mouse on top of that: a tablet
+  // drags files out of its own file manager, so a pointer test would take the
+  // sentence away from readers who can act on it.
+  &__dropHint {
+    display: none;
+  }
+
+  &[data-fileupload-ready] &__dropHint {
+    display: block;
+  }
+
+  // A disabled field takes nothing, and the module refuses a drop on one
+  // (canAccept) — so the box has to stop inviting one, or it makes exactly the
+  // promise the ready attribute exists to keep. The invitation goes and the
+  // edge falls back to the transparent one it wears before the module arrives.
+  //
+  // A rule and not something init() decides once: a field is enabled and
+  // disabled again while the page is open, and the module reads "disabled" per
+  // event for the same reason. The ready attribute stays — the module IS
+  // listening, and it will take a drop again the moment the field can.
+  &:has(&__field:disabled) {
+    --fileUpload-zone-color: transparent;
+  }
+
+  &:has(&__field:disabled) &__dropHint {
+    display: none;
+  }
+
+
+
+  // The list of what is attached. This is the component's reason for being:
+  // the native control says "3 files" and names none of them.
+  &__list {
+    margin: 0;
+    padding: 0;
+
+    display: flex;
+    flex-direction: column;
+    gap: var(--fileUpload-list-gap);
+
+    list-style: none;
+  }
+
+  // The module writes [hidden] while nothing is attached, and the display
+  // above is an author declaration that beats the user agent's own [hidden]
+  // rule whatever the specificity — so it is restored explicitly, the way
+  // readMore restores it for its toggle.
+  &__list[hidden] {
+    display: none;
+  }
+
+
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: var(--fileUpload-item-gap);
+
+    border: var(--fileUpload-border-width) solid
+      var(--fileUpload-item-border-color);
+    border-radius: var(--fileUpload-radius);
+    padding: var(--fileUpload-item-padding);
+
+    color: var(--fileUpload-item-color);
+    background-color: var(--fileUpload-item-bg);
+
+    transition:
+      border-color var(--fileUpload-duration) var(--fileUpload-easing);
+  }
+
+  // Only the two states that need acting on colour a row, and only its edge:
+  // the row's own background stays, so the name and the size are read at the
+  // contrast they were designed for rather than through a tinted panel. A
+  // finished upload is what every row is meant to end up as, so a green edge
+  // per row would have a settled list shouting eight times about nothing —
+  // "uploaded" in the state cell is the whole of what it has to say. And
+  // "uploading" needs neither: a moving bar is already the loudest thing in
+  // the row.
+  &__item[data-fileupload-state="oversize"],
+  &__item[data-fileupload-state="failed"] {
+    border-color: var(--fileUpload-error-color);
+  }
+
+
+
+  // A file name is arbitrary length and arbitrary content, so the row is
+  // built to survive one: the name takes the free space and breaks anywhere
+  // rather than pushing the size, the bar and the controls out of the box.
+  &__name {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+
+    overflow-wrap: anywhere;
+  }
+
+
+
+  &__size {
+    flex-shrink: 0;
+
+    font-size: var(--fileUpload-size-size);
+    font-variant-numeric: tabular-nums;
+    color: var(--fileUpload-hint-color);
+  }
+
+
+
+  // The platform's progress bar (upload lane), restyled rather than replaced:
+  // appearance: none takes the engine's own rendering off, and the two
+  // pseudo-elements below are the only way to reach the track and the fill
+  // (there is no standard selector for either, which is why both vendor forms
+  // are here).
+  //
+  // A <progress> with no value is INDETERMINATE — the state between "the last
+  // byte left" and "the server answered". The engine animates that on its own,
+  // and this file deliberately does not try to: whatever it draws there is
+  // recognisable to the reader as their browser's own "working" pattern.
+  &__progress {
+    flex-shrink: 0;
+    appearance: none;
+
+    border: 0;
+    border-radius: var(--fileUpload-bar-radius);
+    inline-size: var(--fileUpload-bar-inline-size);
+    block-size: var(--fileUpload-bar-block-size);
+
+    // Firefox paints the track here, WebKit and Blink through ::-webkit-
+    // progress-bar below.
+    color: var(--fileUpload-bar-fill);
+    background-color: var(--fileUpload-bar-track);
+  }
+
+  &__progress[hidden] {
+    display: none;
+  }
+
+  &__progress::-webkit-progress-bar {
+    border-radius: var(--fileUpload-bar-radius);
+    background-color: var(--fileUpload-bar-track);
+  }
+
+  &__progress::-webkit-progress-value {
+    border-radius: var(--fileUpload-bar-radius);
+    background-color: var(--fileUpload-bar-fill);
+
+    transition: inline-size var(--fileUpload-duration) linear;
+  }
+
+  &__progress::-moz-progress-bar {
+    border-radius: var(--fileUpload-bar-radius);
+    background-color: var(--fileUpload-bar-fill);
+  }
+
+
+
+  // Whatever is wrong with a row, or how far it has got, as a WORD: "too
+  // large" in the form lane, "42 %" / "processing …" / "uploaded" / "failed"
+  // in the upload one. It is the signal, and the colour is the emphasis on it —
+  // never the other way round (WCAG 1.4.1), which is what makes this element
+  // exist at all instead of the size simply turning red.
+  //
+  // Fixed width would be nicer for the percentages and wrong for the words, so
+  // the numbers get tabular figures instead and the cell keeps its own size.
+  &__state {
+    flex-shrink: 0;
+
+    font-size: var(--fileUpload-state-size);
+    font-variant-numeric: tabular-nums;
+    color: var(--fileUpload-hint-color);
+  }
+
+  &__item[data-fileupload-state="done"] &__state {
+    color: var(--fileUpload-done-color);
+  }
+
+  &__item[data-fileupload-state="oversize"] &__state,
+  &__item[data-fileupload-state="failed"] &__state {
+    color: var(--fileUpload-error-color);
+  }
+
+
+
+  // Retry (upload lane). A word and not an icon: "try this one again" has no
+  // glyph everybody reads the same way, and the row already has one icon
+  // control.
+  &__retry {
+
+    @include focus-ring(light);
+
+    & {
+      cursor: pointer;
+      flex-shrink: 0;
+
+      margin: 0;
+      border: var(--fileUpload-border-width) solid
+        var(--fileUpload-error-color);
+      border-radius: var(--fileUpload-radius);
+      padding: 0 var(--space-2xs);
+
+      font: inherit;
+      font-size: var(--fileUpload-state-size);
+
+      color: var(--fileUpload-item-color);
+      background-color: transparent;
+    }
+  }
+
+  &__retry[hidden] {
+    display: none;
+  }
+
+  // The word the control shows. aria-hidden, because the visually-hidden name
+  // beside it is what the button is called; nowrap, because a translation of
+  // one word may be two and the row is no place for it to break.
+  &__retryWord {
+    white-space: nowrap;
+  }
+
+
+
+  // The control that takes a row out — taking one file out of the selection in
+  // the form lane, and in the upload lane cancelling the transfer while one is
+  // running or removing the file once it is up. One control, because it is one
+  // act from the reader's side; the accessible name says which of them it is
+  // right now (the module rewrites it with the state).
+  //
+  // What the eye sees is the cross below, which is drawn from two
+  // pseudo-elements and therefore says nothing to assistive tech; the name is
+  // the visually-hidden text node inside.
+  //
+  // "font: inherit" is what makes the em in --fileUpload-remove-size mean the
+  // row's type rather than the user agent's 13.33px button default, which no
+  // page setting ever moves: without it the cross stayed 17px while everything
+  // around it doubled at 200 % text (WCAG 1.4.4), and it was the target that
+  // grew relatively SMALLER the more a reader enlarged the page. The retry
+  // control beside it declared the same line all along.
+  &__remove {
+
+    @include focus-ring(light);
+
+    & {
+      cursor: pointer;
+      position: relative;
+
+      flex-shrink: 0;
+
+      margin: 0;
+      border: 0;
+      padding: var(--space-3xs);
+
+      inline-size: calc(var(--fileUpload-remove-size) + 2 * var(--space-3xs));
+      block-size: calc(var(--fileUpload-remove-size) + 2 * var(--space-3xs));
+
+      font: inherit;
+
+      color: var(--fileUpload-remove-color);
+      background-color: transparent;
+
+      transition: color var(--fileUpload-duration) var(--fileUpload-easing);
+    }
+
+    &::before,
+    &::after {
+      content: '';
+
+      position: absolute;
+      inset-block-start: 50%;
+      inset-inline-start: 50%;
+
+      inline-size: var(--fileUpload-remove-size);
+      block-size: 2px;
+
+      background-color: currentColor;
+    }
+
+    &::before {
+      translate: -50% -50%;
+      rotate: 45deg;
+    }
+
+    &::after {
+      translate: -50% -50%;
+      rotate: -45deg;
+    }
+
+    &:hover {
+      color: var(--fileUpload-remove-color-hover);
+    }
+  }
+
+
+
+  &__controlLabel {
+    @include visually-hidden;
+  }
+
+
+
+  // The running total against a total limit ("12,4 MB of 20 MB"). Quiet while
+  // there is room, the error tone once there is not — and no display of its
+  // own, so the module's [hidden] needs no restoring rule (the list needs one
+  // only because it is a flex container).
+  &__total {
+    margin: 0;
+
+    font-size: var(--fileUpload-hint-size);
+    font-variant-numeric: tabular-nums;
+    color: var(--fileUpload-hint-color);
+  }
+
+  &__total[data-fileupload-exceeded] {
+    color: var(--fileUpload-error-color);
+  }
+
+
+
+  // The status line: what was removed, what was not accepted, what is over the
+  // limit, what was uploaded or failed, how many files are attached now. One
+  // node for both channels — it is visible text AND the live region
+  // (role="status"), so what is read aloud and what is printed cannot drift
+  // apart.
+  //
+  // Deliberately NOT collapsed with ":empty { display: none }", tempting as it
+  // is: a live region has to be in the accessibility tree BEFORE its text
+  // arrives, or assistive tech has nothing registered to announce a change on
+  // — and "display: none" takes it out of that tree. It costs nothing anyway,
+  // because an empty block box generates no line box and is 0 tall; only the
+  // column's gap above it is left, and that is the price of a region that
+  // actually speaks.
+  &__notice {
+    margin: 0;
+
+    font-size: var(--fileUpload-hint-size);
+    color: var(--fileUpload-notice-color);
+  }
+}
+
+
+
+// -------------------------------------------------------------
+// A forced-colors context (the Windows contrast themes): the
+// palette is replaced, so the drag state's background and every
+// tone above stop distinguishing anything. "Highlight" is a system
+// colour keyword and one of the few things an author may still
+// choose there — and the two states that colour a row take a shape
+// instead, which needs no colour at all and which each of them
+// already has a word for.
+// -------------------------------------------------------------
+@include forced-colors {
+
+  .c-fileUpload[data-fileupload-dragging] {
+    --fileUpload-zone-color: Highlight;
+  }
+
+  .c-fileUpload__item[data-fileupload-state="oversize"],
+  .c-fileUpload__item[data-fileupload-state="failed"] {
+    border-style: dashed;
+  }
+
+  // The bar keeps its own rendering here rather than a flat pair of greys:
+  // forced-color-adjust: auto is the default, so the engine paints the track
+  // and the fill in system colours that are guaranteed to differ.
+  .c-fileUpload__progress {
+    appearance: auto;
+  }
+}
+
+
+
+// -------------------------------------------------------------
+// Respect reduced motion: the box arrives at the drag state
+// instantly — it is feedback on a gesture in progress, so it is the
+// one transition here that must never lag behind the pointer — and
+// the bar stops interpolating: it jumps to each reported value
+// instead of sliding to it. The bar itself does not disappear: it
+// is not decoration, it is the number.
+// -------------------------------------------------------------
+@include reduced-motion {
+
+  .c-fileUpload,
+  .c-fileUpload__item,
+  .c-fileUpload__field::file-selector-button,
+  .c-fileUpload__remove,
+  .c-fileUpload__progress::-webkit-progress-value {
+    transition-duration: 0.01ms;
+  }
+}
+
+
+
+// -------------------------------------------------------------
+// Print: the list of attached files is worth having on paper, the
+// controls are not — nobody drops a file on a sheet of paper,
+// presses a cross on one or cancels an upload there. The bars go
+// with them: on paper every one of them is a lie about a moment
+// that has passed. The zone's dashed edge goes too. What is left is
+// a heading, a list of names with their sizes and states, and the
+// status line.
+// -------------------------------------------------------------
+@include print-only {
+
+  .c-fileUpload {
+    --fileUpload-zone-style: none;
+
+    padding: 0;
+  }
+
+  .c-fileUpload__field,
+  .c-fileUpload__dropHint,
+  .c-fileUpload__progress,
+  .c-fileUpload__retry,
+  .c-fileUpload__remove {
+    display: none;
+  }
+}

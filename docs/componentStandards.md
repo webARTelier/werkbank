@@ -411,9 +411,16 @@ paragraphs, and several live examples exercising each mode of the component.
   `debounce`, `getCssCustomProperty`, `resolveLocale`, `formatTemplate`
   (interpolate `{placeholder}` tokens in a localized template),
   `decodeFragment` (a URL fragment to the id it addresses),
-  `parseNonNegative` (a px option, with a fallback), `uniqueId` (an id that is
-  free in the document), `focusableSelector` (elements the keyboard already
-  reaches), `describedBy` (add/remove one id in a field's `aria-describedby`),
+  `parseNonNegative` (a px option, with a fallback), `parseByteSize` (a size
+  option — `"5MB"`, `"1,5 gb"`, a bare number of bytes — to bytes, decimal
+  steps, with a fallback), `formatByteSize` (bytes to a size in the page's
+  language via `Intl`, the same scale `parseByteSize` reads),
+  `matchesAccept` (would a field's `accept` have offered this file?),
+  `fileKey` (name + size + timestamp, the closest thing to a `File`'s
+  identity — for deciding whether to ADD a file, never whether two are the
+  same thing), `uniqueId` (an id that is free in the document),
+  `focusableSelector` (elements the keyboard already reaches), `describedBy`
+  (add/remove one id in a field's `aria-describedby`),
   `navExpandedMediaQuery` (the `--bp-navigation` query), `otherModalOpen` (is
   another modal `<dialog>` still up). Plus `createReporter` (via DI in
   `boot.js`).
