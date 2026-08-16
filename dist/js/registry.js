@@ -26,6 +26,7 @@ export const registry = {
   offCanvasNav: () => import('./modules/offCanvasNav.min.js'),
   otherModalOpen: () => import('./modules/otherModalOpen.min.js'),
   parseNonNegative: () => import('./modules/parseNonNegative.min.js'),
+  passwordToggle: () => import('./modules/passwordToggle.min.js'),
   popover: () => import('./modules/popover.min.js'),
   rafThrottle: () => import('./modules/rafThrottle.min.js'),
   readMore: () => import('./modules/readMore.min.js'),

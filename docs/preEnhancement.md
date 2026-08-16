@@ -230,6 +230,7 @@ of them, and the wrong one for most.
 | `dataTable` | none | not needed | the table is complete and readable in its scrolling box either way, and the sort controls do not exist until the script builds them out of the header labels — its ready attribute switches the stacked layout *on* (see below) |
 | `autoGrowTextarea` | none | not needed | where the engine has `field-sizing` the growing is CSS from the first paint, so there is no gap at all; where it has not, the field is a plain textarea at its `rows` height with a scrollbar until the module has measured — additive, nothing hidden. Its ready attribute gates the resize handle *off* instead of lifting a pre-state (see below) |
 | `fileUpload` | none | not needed | the label, the field and its hints are all there, the control takes a drop on itself without help, and in the upload lane the field keeps its `name` until the module runs, so the form still posts; its ready attribute switches the drop *zone* on instead of lifting a pre-state (see below) |
+| `passwordToggle` | none | not needed | the field, its label, its `autocomplete` and the password manager are all there and untouched, and the one control the component owns is injected, so it cannot exist before it works; its ready attribute switches the gutter *on* and Edge's native reveal *off* (see below) |
 | `dialog`, `popover` | none | not needed | closed at rest, and the behaviour is native |
 | `lightbox` | none | not needed | the gallery is a list of links to the images either way; the viewer is closed at rest and does not exist in the markup at all — the script injects it |
 | `toast` | none | not needed | the stack is empty at rest, and a message authored into it is a static notice that simply keeps standing; the one control the component owns is injected, so it cannot exist before it works |
@@ -280,6 +281,17 @@ the lane it runs in has said it can act on a drop (without an endpoint that
 needs a constructible `DataTransfer`; with one it never does, because the files
 go straight to an `XMLHttpRequest`). Its bail-out therefore withholds the flag
 by simply returning first.
+
+`passwordToggle` is the fourth of these, and it is the one where the flag
+guards something the *platform* provided. Two rules read it, both positively.
+The first is the gutter — the `padding-inline-end` its button stands in, which
+without the button is an empty notch in a field. The second is
+`input::-ms-reveal`, the reveal control Edge on Windows draws into a password
+field itself: where this component is running, leaving it would put a second
+eye in the same field, and where the chunk never arrived, removing it would
+leave the reader with *less* reveal than the platform gave them. So the flag
+means "there is a control here now", `init()` sets it last, and its two
+bail-outs (a root with no password field at all) return before it is written.
 
 Note what this rules out: the `pre-enhancement()` mixin could not express it.
 The mixin wraps its rules in `scripting: enabled`, which is right when the

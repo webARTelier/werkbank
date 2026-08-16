@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>passwordToggle – Demo</title>
+  <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
+  <link rel="stylesheet" href="../../../dist/css/passwordToggle.min.css" />
+  <script type="module" src="../../../dist/js/boot.min.js"></script>
+
+  <!-- for development only -->
+  <script type="module" src="../../../src/_shared/js/dev_pageInfo.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_a11yInspector.js"></script>
+  <script type="module" src="../../../src/_shared/js/dev_qrCode.js"></script>
+  <!-- end for development only -->
+
+  <!--
+      DEMO-ONLY STYLES
+      ----------------------------------------------------------------------
+      passwordToggle.min.css ships the row, the button and the two glyphs.
+      Everything below is what a project brings: the field's border,
+      padding, colours, typography and its own focus ring — because a
+      component that puts a control inside a field does not get to decide
+      what the field looks like.
+
+      The one thing worth watching is .field__control: it sets a padding
+      shorthand, and this stylesheet is loaded AFTER the component's. The
+      gutter still wins, because the component's rule is written
+      specifically enough to (see "Two placements" in the readme) — which
+      is exactly the point, since a value running underneath the button
+      would be worse than no button.
+  -->
+
+  <style>
+    .demo {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2xl);
+    }
+
+    .demo__example {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-s);
+    }
+
+    .demo__example h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      color: var(--color-text);
+    }
+
+    /* The project's field design. */
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3xs);
+      max-width: 34ch;
+    }
+
+    .field__label {
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    .field__control {
+      /* --color-border-control, not --color-border: this field's fill sits
+         1.12:1 from the page, so the border is the only thing saying there
+         is something to type in — the 3:1 case of WCAG 1.4.11. See
+         _shared/scss/_colors_semantic.scss. */
+      border: 1px solid var(--color-border-control);
+      border-radius: var(--borderRadius);
+      padding: var(--space-2xs) var(--space-xs);
+
+      font: inherit;
+      line-height: 1.5;
+
+      color: var(--color-text);
+      background-color: var(--color-bg-surface);
+    }
+
+    .field__control:hover {
+      border-color: var(--color-border-control-strong);
+    }
+
+    .field__control:focus-visible {
+      outline: 2px solid var(--color-focus-ring-light);
+      outline-offset: var(--outlineOffset);
+    }
+
+    .field__hint {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+    }
+
+    /* A retuned instance: a smaller control in a quieter tone, and a round
+       one. Four knobs, no rule reaching into the component. */
+    .field--compact .c-passwordToggle {
+      --passwordToggle-button-size: 1.75rem;
+      --passwordToggle-icon-size: 1rem;
+      --passwordToggle-radius: 999px;
+      --passwordToggle-color: var(--color-accent-secondary);
+    }
+
+    .actions {
+      display: flex;
+      gap: var(--space-2xs);
+      align-items: center;
+    }
+
+    .actions button {
+      cursor: pointer;
+
+      /* Same reason as the field: a transparent fill leaves the border
+         doing the identifying (WCAG 1.4.11). */
+      border: 1px solid var(--color-border-control);
+      border-radius: var(--borderRadius);
+      padding: var(--space-3xs) var(--space-s);
+
+      font: inherit;
+      font-weight: 600;
+
+      color: var(--color-text);
+      background-color: transparent;
+    }
+
+    .actions button:focus-visible {
+      outline: 2px solid var(--color-focus-ring-light);
+      outline-offset: var(--outlineOffset);
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <main class="shell">
+
+    <section class="hero">
+      <a class="back" href="../../../index.html">← Overview</a>
+      <h1>passwordToggle</h1>
+      <p>A show/hide control for the one field on a form whose value nobody can proof-read.</p>
+    </section>
+
+    <section class="stage" aria-label="Live demo">
+
+      <!--
+          A password field the reader can look at. The platform has no
+          switch for this except the type attribute, and only script can
+          flip it — which is where the rule of least power runs out and
+          this component begins.
+
+          Wiring
+            - class="c-passwordToggle" and data-js-behavior="passwordToggle"
+              go on a wrapper around the field;
+              class="c-passwordToggle__field" goes on the field. The button
+              is INJECTED — you never write one, because unenhanced it
+              would be a control that does nothing.
+            - The label stays outside the wrapper: the wrapper is a flex
+              row, and a label inside it would be a second item in it.
+            - Nothing about the field changes but its type: same node, same
+              name, same value, same autocomplete token, so the form posts
+              what it always posted and the password manager keeps the
+              field it knows.
+            - The look of the field — border, padding, colours, focus ring
+              — is the project's; see DEMO-ONLY STYLES in the head. The one
+              declaration the component takes is the field's
+              padding-inline-end, and only in the default placement, where
+              the button is standing in it.
+
+          Progressive enhancement
+            - There is no pre-enhancement state and nothing can flash:
+              before the module arrives the wrapper is an empty row around
+              an ordinary password field, and if the chunk never arrives
+              that is what stays. Turn JavaScript off and try it.
+            - Two rules wait for data-passwordtoggle-ready, and both hand
+              something over to a control that has to exist: the gutter in
+              the field, and the removal of Edge's own ::-ms-reveal. Taking
+              the platform's reveal away for a button that never came would
+              leave the reader with less than they started with.
+
+          Accessibility
+            - A toggle button with a constant name and its state in
+              aria-pressed: whether the password is legible right now is
+              the fact that matters, so the state is announced rather than
+              the next action (video's play/pause control does the
+              opposite, and says why).
+            - The glyph is a CSS mask drawn from aria-pressed, so there is
+              nothing to announce twice and the two cannot drift apart. Two
+              shapes, not two colours — the state survives greyscale, print
+              and a forced-colors theme.
+            - Focus stays on the button, and the caret keeps its place in
+              the field.
+        -->
+
+      <p class="stage__intro">
+        Every field below starts masked. <strong>Press the eye</strong> to read
+        the value back, press it again to hide it. Nothing else about the field
+        changes while you do — put the caret in the middle of the value, toggle,
+        and it is still where you left it.
+      </p>
+
+      <div class="demo">
+
+        <section class="demo__example">
+          <h2>The default: over the field's edge</h2>
+
+          <p class="stage__intro">
+            The placement readers expect. It costs one declaration — the field
+            gets a <code>padding-inline-end</code> wide enough for the button,
+            written specifically enough to win against the
+            <code>padding</code> shorthand this demo sets on the same field,
+            whatever the order of the stylesheets. <strong>Type a long
+            value</strong> and watch it stop at the gutter instead of running
+            under the eye.
+          </p>
+
+          <div class="field">
+            <label class="field__label" for="pt-current">Password</label>
+            <div class="c-passwordToggle" data-js-behavior="passwordToggle">
+              <input
+                class="field__control c-passwordToggle__field"
+                id="pt-current"
+                name="password"
+                type="password"
+                autocomplete="current-password"
+                value="correct-horse-battery-staple"
+              >
+            </div>
+          </div>
+        </section>
+
+        <section class="demo__example">
+          <h2>Next to the field</h2>
+
+          <p class="stage__intro">
+            <code>class="c-passwordToggle--beside"</code> puts the button after
+            the field in the same row and <strong>touches nothing of the
+            field's box at all</strong> — no gutter, no padding of yours given
+            up. It is the way out where the field's padding is not negotiable,
+            and the honest placement for a field too short to spare a gutter.
+          </p>
+
+          <div class="field">
+            <label class="field__label" for="pt-pin">PIN</label>
+            <div class="c-passwordToggle c-passwordToggle--beside" data-js-behavior="passwordToggle">
+              <input
+                class="field__control c-passwordToggle__field"
+                id="pt-pin"
+                name="pin"
+                type="password"
+                inputmode="numeric"
+                autocomplete="off"
+                value="482913"
+              >
+            </div>
+          </div>
+        </section>
+
+        <section class="demo__example">
+          <h2>Inside a form: submitting masks it again</h2>
+
+          <p class="stage__intro">
+            The reveal is a moment, not a setting. <strong>Reveal the value,
+            then press Sign in</strong>: the field is masked before the form
+            goes anywhere, so a page coming back from the back/forward cache —
+            or re-rendered after a failed validation — never comes back with
+            the password on screen. (This form submits to nothing; only the
+            event matters.)
+          </p>
+
+          <form class="field" action="javascript:;">
+            <label class="field__label" for="pt-login">Password</label>
+            <div class="c-passwordToggle" data-js-behavior="passwordToggle">
+              <input
+                class="field__control c-passwordToggle__field"
+                id="pt-login"
+                name="password"
+                type="password"
+                autocomplete="current-password"
+                value="hunter2-and-then-some"
+              >
+            </div>
+            <div class="actions">
+              <button type="submit">Sign in</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="demo__example">
+          <h2>Retuned, and in its own words</h2>
+
+          <p class="stage__intro">
+            A smaller, round control in the secondary accent — four custom
+            properties set on the wrapper, no rule reaching into the component
+            — and <code>data-passwordtoggle-label</code> for the button's
+            accessible name. The name stays <em>constant</em> while the state
+            is announced through <code>aria-pressed</code>, so it is phrased as
+            one label rather than as two.
+          </p>
+
+          <div class="field field--compact">
+            <label class="field__label" for="pt-new">Choose a password</label>
+            <div
+              class="c-passwordToggle"
+              data-passwordtoggle-label="Reveal the password"
+              data-js-behavior="passwordToggle"
+            >
+              <input
+                class="field__control c-passwordToggle__field"
+                id="pt-new"
+                name="newPassword"
+                type="password"
+                minlength="12"
+                autocomplete="new-password"
+                aria-describedby="pt-new-hint"
+              >
+            </div>
+            <p class="field__hint" id="pt-new-hint">At least 12 characters.</p>
+          </div>
+        </section>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</body>
+</html>

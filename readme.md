@@ -91,6 +91,7 @@ reads it. The full decision rule is in [`CLAUDE.md`](CLAUDE.md).
 | `dateInputFormat`    | function (`c-dateField`)      | Auto-formats a text field into a grouped date mask (`DD.MM.YYYY`).  |
 | `dialog`             | component                     | Modal dialogs on the native `<dialog>` element.                     |
 | `dropdownNav`        | module                        | Multi-level dropdown / mega-menu nav on the ARIA disclosure pattern.|
+| `fileUpload`         | component                     | A file field that names what is attached, with an upload lane.      |
 | `flexNeighborMarker` | function (`o-flexNeighbor`)   | Marks flex items that have a neighbour on the same row.             |
 | `formValidation`     | function                      | Inline validation messages on the Constraint Validation API.        |
 | `inlineSVG`          | function                      | Replaces `<img>` SVG references with inline SVG.                    |
@@ -98,6 +99,7 @@ reads it. The full decision rule is in [`CLAUDE.md`](CLAUDE.md).
 | `lightbox`           | module                        | Image/gallery viewer on the native `<dialog>`, from image links.    |
 | `marquee`            | module                        | Infinitely scrolling content strip (news ticker).                   |
 | `offCanvasNav`       | module                        | Burger menu / off-canvas drawer on the native `<dialog>`.           |
+| `passwordToggle`     | component                     | Show/hide for a password field, by switching its `type`.            |
 | `popover`            | component                     | Anchor-positioned popover on the native Popover API.                |
 | `readMore`           | component                     | Long text cut to a preview, with the control that opens it.         |
 | `scaleSVG`           | function                      | Scales SVGs from their `viewBox`.                                   |
