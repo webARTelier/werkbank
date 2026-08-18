@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>dev_dashboard – Demo</title>
+  <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
+
+  <!--
+      STANDALONE DEMO
+      ----------------------------------------------------------------------
+      This page deliberately hangs on nothing from the build: no
+      shared.min.css, no boot.min.js, no component. Every style sits in the
+      document itself — a tool has to be shown working on a page it knows
+      nothing about, and borrowing the project's tokens would hide leakage
+      in either direction (see docs/toolStandards.md).
+
+      What it brings instead is one case per thing the dashboard can find:
+      the four page-info tokens (declared below, as a consuming project
+      declares them), a set of deliberate accessibility mistakes, an element
+      that is wider than the document, and images marked for the srcset
+      measurement.
+
+      THE MARKUP BELOW IS WRONG ON PURPOSE. Do not copy from it.
+  -->
+
+  <style>
+    :root {
+      --bg: #0f1116;
+      --surface: #171a21;
+      --line: #262b38;
+      --text: #e6e8ee;
+      --muted: #9aa4b8;
+      --accent: #93c5fd;
+      --bad: #fca5a5;
+      --good: #86efac;
+    }
+
+    /*
+        THE PAGE-INFO TOKENS
+        --------------------------------------------------------------------
+        The dashboard reads these four off <body> and shows them in its bar.
+        They are the project's, not the tool's: this demo declares them the
+        way shared.min.css does. A page that declares none of them gets an
+        amber "?" per token instead — that is the whole of the complaint.
+    */
+
+    :root {
+      --viewportName: tiny;
+      --navstate: mobile;
+      --density: normal;
+      --input: touch;
+    }
+
+    @media (width >= 480px) {
+      :root { --viewportName: small; }
+    }
+
+    @media (width >= 768px) {
+      :root { --viewportName: medium; }
+    }
+
+    @media (width >= 1024px) {
+      :root { --viewportName: large; }
+    }
+
+    @media (width >= 1250px) {
+      :root { --viewportName: xxl; --navstate: desktop; }
+    }
+
+    @media (resolution >= 2x) {
+      :root { --density: high; }
+    }
+
+    @media (hover: hover), (pointer: fine) {
+      :root { --input: mouse; }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .shell {
+      max-width: 60rem;
+      margin: 0 auto;
+      padding: 2.5rem 1.25rem 4rem;
+    }
+
+    h1 {
+      margin: 0 0 0.25em;
+      font-size: 1.7rem;
+    }
+
+    h2 {
+      margin: 0 0 0.25em;
+      font-size: 1.15rem;
+    }
+
+    h3 {
+      margin: 1.5rem 0 0.25em;
+      font-size: 0.95rem;
+      color: var(--accent);
+    }
+
+    p {
+      margin: 0 0 1rem;
+      max-width: 74ch;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    code {
+      padding: 0.1em 0.4em;
+      border-radius: 4px;
+      background: #232838;
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 0.9em;
+    }
+
+    .lead {
+      color: var(--muted);
+    }
+
+    .back {
+      display: inline-block;
+      margin-bottom: 1rem;
+      color: var(--muted);
+      text-decoration: none;
+    }
+
+    .back:hover {
+      color: var(--text);
+    }
+
+    section {
+      margin-top: 2.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--line);
+    }
+
+    .case {
+      margin: 1rem 0;
+      padding: 1rem;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--surface);
+    }
+
+    .case__tag {
+      margin: 0.5rem 0 0;
+      color: var(--muted);
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 0.8rem;
+    }
+
+    .bad {
+      color: var(--bad);
+    }
+
+    .good {
+      color: var(--good);
+    }
+
+    button {
+      padding: 0.5em 1em;
+      border: 1px solid #333a4a;
+      border-radius: 8px;
+      background: #232838;
+      color: var(--text);
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .icon-round {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      border-radius: 999px;
+      background: #232838;
+    }
+
+    /* The permanent overflow case: 108vw is wider than the document. */
+    .too-wide {
+      width: 108vw;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      background: #3b1d1d;
+      color: var(--bad);
+    }
+
+    /* srcset cases: the container owns the box, the image fills it. */
+    .hero,
+    .column,
+    .tile,
+    .avatar {
+      overflow: hidden;
+      border-radius: 10px;
+      background: #0b0d11;
+    }
+
+    .hero {
+      aspect-ratio: 16 / 6;
+    }
+
+    .column {
+      max-width: 760px;
+      aspect-ratio: 16 / 9;
+    }
+
+    .tiles {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .tile {
+      aspect-ratio: 4 / 3;
+    }
+
+    .avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 999px;
+    }
+
+    .hero img,
+    .column img,
+    .tile img,
+    .avatar img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="shell">
+
+    <a class="back" href="../../../tools.html">← Dev Tools</a>
+
+    <h1>dev_dashboard</h1>
+    <p class="lead">
+      One bar at the bottom edge, one icon per tool. The page information is
+      read out permanently, the accessibility inspector and the overflow
+      check carry a green or red mark with a count, and every tool that needs
+      room opens its panel over this page. This demo gives each of them
+      something to find.
+    </p>
+
+    <section>
+      <h2>Page information</h2>
+      <p>
+        The four values on the left of the bar are custom properties:
+        <code>--viewportName</code>, <code>--navstate</code>,
+        <code>--density</code> and <code>--input</code>. The project declares
+        them on <code>:root</code>; the dashboard reads them off
+        <code>&lt;body&gt;</code>, where they inherit. This page declares them
+        itself, in the stylesheet in its head — resize the window and the
+        first two change.
+        A page that declares none of them shows an amber
+        <code>?</code> per missing token, with the property name in its
+        tooltip.
+      </p>
+    </section>
+
+    <section>
+      <h2>Accessibility findings</h2>
+      <p>
+        Everything in this section is wrong on purpose, one case per check.
+        The badge on the ♿ icon counts them; the panel lists them; a click on
+        a row scrolls to the element and flashes it. Nothing is drawn into
+        the page until <b>mark in page</b> is pressed.
+      </p>
+
+      <h3>Image without alt</h3>
+      <div class="case">
+        <img src="../../_shared/media/img/content/videoPosterDemo.svg" width="160" height="90" />
+        <p class="case__tag bad">&lt;img&gt; with no alt attribute</p>
+      </div>
+
+      <h3>Control without an accessible name</h3>
+      <div class="case">
+        <button type="button"></button>
+        <a href="#nowhere"><span class="icon-round"></span></a>
+        <p class="case__tag bad">an empty button and a link with no text</p>
+      </div>
+
+      <h3>Field without a label</h3>
+      <div class="case">
+        <input type="text" placeholder="a placeholder is not a label" />
+        <p class="case__tag bad">no &lt;label&gt;, no aria-label</p>
+      </div>
+
+      <h3>Layout table</h3>
+      <div class="case">
+        <table>
+          <tr><td>left</td><td>right</td></tr>
+        </table>
+        <p class="case__tag bad">a table without th and without caption</p>
+      </div>
+
+      <h3>SVG and icon without semantics</h3>
+      <div class="case">
+        <svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="9" fill="#93c5fd" /></svg>
+        <i class="icon icon-star"></i>
+        <p class="case__tag bad">no aria-hidden, no role, no title</p>
+      </div>
+
+      <h3>Empty heading and a positive tabindex</h3>
+      <div class="case">
+        <h4></h4>
+        <button type="button" tabindex="3">tabindex="3"</button>
+        <p class="case__tag bad">an empty heading, a tabindex above zero</p>
+      </div>
+
+      <h3>What is deliberately <em>not</em> flagged</h3>
+      <div class="case">
+        <img src="../../_shared/media/img/content/videoPosterDemo.svg" alt="" width="160" height="90" />
+        <a href="#nowhere"><img src="../../_shared/media/img/content/videoPosterDemo.svg" alt="a named thumbnail" width="80" height="45" /></a>
+        <p class="case__tag good">
+          a decorative alt="" and an image-only link named by its alt text
+        </p>
+      </div>
+    </section>
+
+    <section>
+      <h2>Horizontal overflow</h2>
+      <p>
+        The box below is <code>108vw</code> wide, so it pushes a horizontal
+        scrollbar. That is the permanent case, and the reason the ↔ icon is
+        red when this page loads. The list is measured again on every window
+        resize, and the button adds a second offender for a manual
+        <b>scan again</b>.
+      </p>
+
+      <div class="too-wide">108vw — wider than the document on purpose</div>
+
+      <p>
+        <button type="button" id="addOverflow">Add another too-wide element</button>
+      </p>
+    </section>
+
+    <section>
+      <h2>QR code</h2>
+      <p>
+        The QR icon encodes this page's URL in the page itself — no request
+        goes anywhere, which is what lets the dashboard keep the tool rule of
+        never talking to a third party. Note the code is only useful on
+        another device if the page is served on an address that device can
+        reach: <code>localhost</code> means the machine doing the scanning.
+      </p>
+    </section>
+
+    <section>
+      <h2>srcset measurement</h2>
+      <p>
+        The images below are marked with <code>data-dev-srcset</code>, each
+        one a different layout behaviour. The 🖼 icon opens the panel, and
+        <b>measure</b> sweeps the viewport range in a probe frame of its own.
+        <b>This needs a local server</b> — over <code>file://</code> the frame
+        cannot be read, and the panel says so.
+      </p>
+
+      <h3>1 · full bleed</h3>
+      <div class="hero">
+        <img src="../../_shared/media/img/content/videoPosterDemo.svg" alt="" width="1600" height="600"
+             data-dev-srcset="1 · hero, full bleed" />
+      </div>
+
+      <h3>2 · text column, max. 760px</h3>
+      <div class="column">
+        <img src="../../_shared/media/img/content/videoPosterDemo.svg" alt="" width="760" height="428"
+             data-dev-srcset="2 · text column, max. 760px" />
+      </div>
+
+      <h3>3 · gallery tiles</h3>
+      <div class="tiles">
+        <div class="tile">
+          <img src="../../_shared/media/img/content/videoPosterDemo.svg" alt="" width="400" height="300"
+               data-dev-srcset="3 · gallery tile" />
+        </div>
+        <div class="tile">
+          <img src="../../_shared/media/img/content/videoPosterDemo.svg" alt="" width="400" height="300" />
+        </div>
+        <div class="tile">
+          <img src="../../_shared/media/img/content/videoPosterDemo.svg" alt="" width="400" height="300" />
+        </div>
+      </div>
+      <p class="case__tag">
+        Only the first tile is marked: four tiles of equal width are one
+        measurement, not four.
+      </p>
+
+      <h3>4 · fixed 120px avatar</h3>
+      <div class="avatar">
+        <img src="../../_shared/media/img/content/videoPosterDemo.svg" alt="" width="120" height="120"
+             data-dev-srcset="4 · avatar, fixed 120px" />
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    document.getElementById('addOverflow').addEventListener('click', function () {
+      const box = document.createElement('div');
+      box.className = 'too-wide';
+      box.textContent = 'a second offender — press "scan again" in the overflow panel';
+      this.parentNode.after(box);
+      this.disabled = true;
+    });
+  </script>
+
+  <script src="dev_dashboard.js"></script>
+
+</body>
+
+</html>

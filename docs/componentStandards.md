@@ -398,7 +398,8 @@ Sections, in this order:
 ## 9. `demo.html`
 
 Standalone page loading the **built** assets from `../../../dist/` plus the
-`dev_*` helper scripts from `src/_shared/js/`. Structure:
+dev dashboard from `src/tools/dev_dashboard/`, one `<script>` line inside the
+`<!-- for development only -->` markers. Structure:
 `<main class="shell"> → <section class="hero"> (back link + h1 + blurb) →
 <section class="stage" aria-label="Live demo">`. Inside the stage, a comment
 block explaining wiring / progressive enhancement / accessibility, `stage__intro`
@@ -424,8 +425,12 @@ paragraphs, and several live examples exercising each mode of the component.
   `navExpandedMediaQuery` (the `--bp-navigation` query), `otherModalOpen` (is
   another modal `<dialog>` still up). Plus `createReporter` (via DI in
   `boot.js`).
-- **Dev-only** helpers loaded by demos: `dev_pageInfo`, `dev_a11yInspector`,
-  `dev_qrCode`.
+- **Dev dashboard** (`src/tools/dev_dashboard/`, loaded by every demo as one
+  classic `<script>`): the bar along the bottom edge with the page
+  information, the a11y inspector, the horizontal-overflow check, the QR code
+  and the srcset measurement. It replaced the `dev_pageInfo` / `dev_qrCode`
+  aids that used to sit in `_shared/js/`; see
+  [`toolStandards.md`](toolStandards.md) for what a tool is and is not.
 - **SCSS tokens** (`_shared/scss/`): `_foundations` (space/animation/radius),
   `_colors_primitives` + `_colors_semantic`, `_focus` (mixin only),
   `_visuallyHidden` (mixin only — `visually-hidden`, for the text node that

@@ -215,16 +215,47 @@ Note for behaviour-only components (`tabs`, `formValidation`,
 `inputCharCount`, …): they ship a stub stylesheet by design and leave all
 visuals — including the focus style — to the consuming project.
 
+## Dev tools
+
+Next to the components sits a second, separate area: **development tools** in
+[`src/tools/`](src/tools/), indexed by [`tools.html`](tools.html). A tool is
+not a component — it is *pointed at* a page rather than authored into one:
+
+- **One file, one `<script>` line.** A tool is a single classic script with no
+  imports and no build step. Its whole UI, CSS included, comes along inside a
+  shadow root, so it drops into any page — a template you can only hang a
+  script tag into, a console paste, a bookmarklet.
+- **It never ships.** Tools have no output in `dist/`, no stylesheet in the
+  build and no markup to author; they answer a question about the page you are
+  building and are then taken off it again.
+- **Nothing is fetched at runtime** — the QR code is encoded in the page
+  itself — and what is written into the page carries a `data-dev-` name, so a
+  grep finds any leftover. Apart from the strip of flow space the bar holds
+  for itself, nothing is changed unless you ask for it.
+
+Shipped: **`dev_dashboard`**, a bar along the bottom edge with one icon per
+tool. It reads out the viewport and the project's four device tokens, marks
+the a11y inspector and the horizontal-overflow check green or red with a
+count, encodes the current URL as a QR code, and measures which `sizes` and
+`srcset` widths the marked images actually need by sweeping a probe frame
+across the viewport range. It has a
+[readme](src/tools/dev_dashboard/readme.md);
+[`docs/toolStandards.md`](docs/toolStandards.md) has the rules.
+
 ## Demos
 
-Run `npm run build` once, then open `index.html` (the gallery) or any
-component's `demo.html` in the browser.
+Run `npm run build` once, then open `index.html` (the component gallery),
+`tools.html` (the tool index), or any `demo.html` in the browser. A tool demo
+needs a **local server** rather than `file://`.
 
 ## Further reading
 
 - [`docs/componentStandards.md`](docs/componentStandards.md) — the authoring
   checklist every component follows (file set, `init` contract, JS/SCSS
   style, accessibility, demo/readme structure).
+- [`docs/toolStandards.md`](docs/toolStandards.md) — the much shorter
+  checklist the `dev_*` tools follow: one file, one shadow root, the
+  `window.__devTools` handle, and why a demo aid is a different species.
 - [`docs/preEnhancement.md`](docs/preEnhancement.md) — how the flash between
   the first paint and `init()` is handled: the `data-<name>-ready` attribute,
   the `pre-enhancement()` mixin, and the rule that decides which components

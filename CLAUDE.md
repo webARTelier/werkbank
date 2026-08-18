@@ -20,7 +20,7 @@ Folder and file names are written in **camelCase**.
 - The main component's file name matches the folder name
   - Example: `stickyObserver/stickyObserver.js`
 - **Prefixes are preserved**, only the part after them becomes camelCase:
-  - `dev_` prefix (developer tools): `dev_pageInfo.js`, `dev_qrCode.js`
+  - `dev_` prefix (developer tools): `dev_dashboard.js`
   - `_shared/` (leading underscore = shared/internal folder)
 
 ## Module, component, function: what the BEM prefix says
@@ -138,6 +138,65 @@ The loader and the snippets keep calling every chunk a *module*
 imported ES module, not the `m-` role, which is exactly why the markup hook
 is called `data-js-behavior`. Where the CSS role is meant, say
 module / component / function; where the chunk is meant, "module" is right.
+
+## Tools: a second area, pointed at a page
+
+`src/tools/dev_dashboard/` holds the **development tools**, indexed by
+`tools.html`. They are not components and the component checklist does not
+apply — see `docs/toolStandards.md`, which is deliberately a fraction of the
+length. Established 2026-08-18 with `dev_srcset` and `dev_a11yInspector`, and
+folded into **one dashboard** on the same day: a bar along the bottom edge of
+the page, one icon per tool, a panel where a tool needs room. It carries the
+page information, the a11y inspector, the horizontal-overflow check, a QR
+code of the current URL and the srcset measurement. **A new tool is a section
+in that file, not a folder of its own.**
+
+The dividing line: a component is **authored into** a page (markup, a class
+vocabulary, `data-js-behavior`, `init(el, services)`, a stylesheet in the
+build, an entry in `build/config.js`); a tool is **pointed at** one. It
+brings no vocabulary and nothing to author beyond one `<script>` line, it is
+never part of what a visitor is served, and it never appears in `dist/`. So
+the `m-`/`c-`/`o-` question never arises for a tool: there is no cascade to
+place a class into, because every class it has lives in its own shadow root.
+
+What that buys, and what it costs:
+
+- **Three files, for the whole area**: `dev_dashboard.js`, `demo.html`,
+  `readme.md`. No `.scss`, no snippet file, **no entry in
+  `build/config.js`** — `gulp build` does not know tools exist, and the
+  `src` file *is* the artefact.
+- **One classic script, zero imports.** Not an ES module and nothing out of
+  `_shared/js`: it has to survive a copy into a foreign project, a console
+  paste and a bookmarklet, and a classic script also runs from `file://`.
+  Duplicating a helper inside it is therefore **correct** — tools sit
+  outside the DI-vs-direct-import rule above, because self-sufficiency is
+  the point. Load time is not an argument here either: one local file during
+  development weighs nothing against wiring up four.
+- **One handle, `window.__devTools.dashboard`**, with `open()` / `close()` /
+  `destroy()` plus one object per tool (`…dashboard.a11y.scan()`); a second
+  load re-opens instead of stacking a second copy.
+- **The JS carries no comments** — the readme is the documentation. Four
+  tools in one file would otherwise read as four documented tools, with
+  comments drifting from the readme the moment either changes.
+- **The page under test is changed as little as possible, and never
+  invisibly.** The srcset sweep still measures a copy in a probe frame.
+  What is written into the page is one spacer holding the bar's height, one
+  style element, and the marker attributes a tool sets while you ask for
+  them — all named `data-dev-dashboard-…`, so `grep data-dev-` finds every
+  leftover, and all taken back by `destroy()`.
+- **Accessibility at a developer's bar, and stated as such**: real buttons,
+  Esc, `aria-pressed`/`aria-expanded`, a focus ring — but no ARIA patterns,
+  no live regions, no reduced-motion audit. Holding a tool to the product
+  bar would only stop tools from being written.
+
+**The two demo aids are gone into it.** `_shared/js/dev_pageInfo.js` and
+`dev_qrCode.js` used to be a different species — one depended on this
+project's tokens, the other on `api.qrserver.com` — and the component demos
+loaded them as modules. Both objections were answered rather than kept:
+the dashboard reads `--viewportName` / `--navstate` / `--density` /
+`--input` off `<body>` and shows an amber `?` per token a page does not
+declare, and the QR code is now **encoded in the page**, so no request goes
+anywhere. Every component demo loads the one dashboard line instead.
 
 ## Structure / Build
 
