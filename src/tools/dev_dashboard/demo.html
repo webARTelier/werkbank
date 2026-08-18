@@ -563,28 +563,28 @@
 
         <div class="grid">
           <p class="f">
-            <label for="anrede">Anrede</label>
+            <label for="anrede">Salutation</label>
             <select id="anrede" name="anrede" autocomplete="honorific-prefix">
-              <option value="">bitte wählen</option>
-              <option value="frau">Frau</option>
-              <option value="herr">Herr</option>
-              <option value="divers">Divers</option>
+              <option value="">please choose</option>
+              <option value="frau">Ms.</option>
+              <option value="herr">Mr.</option>
+              <option value="divers">Diverse</option>
             </select>
           </p>
           <p class="f">
-            <label for="vorname">Vorname</label>
+            <label for="vorname">First name</label>
             <input id="vorname" name="vorname" type="text" autocomplete="given-name" required />
           </p>
           <p class="f">
-            <label for="nachname">Nachname</label>
+            <label for="nachname">Last name</label>
             <input id="nachname" name="nachname" type="text" autocomplete="family-name" required />
           </p>
           <p class="f">
-            <label for="email">E-Mail</label>
+            <label for="email">Email</label>
             <input id="email" name="email" type="email" autocomplete="email" required />
           </p>
           <p class="f">
-            <label for="telefon">Telefon</label>
+            <label for="telefon">Phone</label>
             <input id="telefon" name="telefon" type="tel" autocomplete="tel" />
           </p>
           <p class="f">
@@ -592,40 +592,40 @@
             <input id="website" name="website" type="url" />
           </p>
           <p class="f">
-            <label for="strasse">Straße</label>
+            <label for="strasse">Street</label>
             <input id="strasse" name="strasse" type="text" autocomplete="street-address" />
           </p>
           <p class="f">
-            <label for="hausnummer">Hausnummer</label>
+            <label for="hausnummer">House number</label>
             <input id="hausnummer" name="hausnummer" type="text" />
           </p>
           <p class="f">
-            <label for="plz">PLZ</label>
+            <label for="plz">Postal code</label>
             <input id="plz" name="plz" type="text" autocomplete="postal-code"
                    pattern="[0-9]{5}" maxlength="5" />
             <small class="hint-inline">pattern: 5 digits</small>
           </p>
           <p class="f">
-            <label for="ort">Ort</label>
+            <label for="ort">City</label>
             <input id="ort" name="ort" type="text" autocomplete="address-level2" />
           </p>
           <p class="f">
-            <label for="land">Land</label>
+            <label for="land">Country</label>
             <select id="land" name="land" autocomplete="country-name">
-              <option value="">bitte wählen</option>
-              <option value="de">Deutschland</option>
-              <option value="at">Österreich</option>
-              <option value="ch">Schweiz</option>
+              <option value="">please choose</option>
+              <option value="de">Germany</option>
+              <option value="at">Austria</option>
+              <option value="ch">Switzerland</option>
             </select>
           </p>
           <p class="f">
-            <label for="geburtsdatum">Geburtsdatum</label>
+            <label for="geburtsdatum">Date of birth</label>
             <input id="geburtsdatum" name="geburtsdatum" type="date"
                    autocomplete="bday" min="1900-01-01" />
             <small class="hint-inline">min: 1900-01-01</small>
           </p>
           <p class="f">
-            <label for="firma">Firma</label>
+            <label for="firma">Company</label>
             <input id="firma" name="firma" type="text" autocomplete="organization" />
           </p>
           <p class="f">
@@ -633,49 +633,49 @@
             <input id="position" name="position" type="text" />
           </p>
           <p class="f">
-            <label for="codewort">Codewort</label>
+            <label for="codewort">Code word</label>
             <input id="codewort" name="codewort" type="text" data-dev-form="nickname" />
             <small class="hint-inline">data-dev-form="nickname"</small>
           </p>
           <p class="f">
-            <label for="losung">Losung</label>
+            <label for="losung">Watchword</label>
             <input id="losung" name="losung" type="text" data-dev-form="Mellon" />
             <small class="hint-inline">data-dev-form="Mellon"</small>
           </p>
           <p class="f">
-            <label for="referenz">Referenz</label>
+            <label for="referenz">Reference</label>
             <input id="referenz" name="referenz" type="text" value="TA-3019" readonly />
             <small class="hint-inline">readonly</small>
           </p>
           <p class="f">
-            <label for="intern">Intern</label>
+            <label for="intern">Internal</label>
             <input id="intern" name="intern" type="text" data-dev-form="skip" />
             <small class="hint-inline">data-dev-form="skip"</small>
           </p>
 
           <p class="f f--wide">
-            <label for="betreff">Betreff</label>
+            <label for="betreff">Subject</label>
             <input id="betreff" name="betreff" type="text" />
           </p>
           <p class="f f--wide">
-            <label for="nachricht">Nachricht</label>
+            <label for="nachricht">Message</label>
             <textarea id="nachricht" name="nachricht" maxlength="160"></textarea>
             <small class="hint-inline">maxlength: 160</small>
           </p>
           <p class="f f--wide">
-            <label for="anhang">Anhang</label>
+            <label for="anhang">Attachment</label>
             <input id="anhang" name="anhang" type="file"
                    accept="image/png,image/jpeg" multiple />
             <small class="hint-inline">accept: image/png, image/jpeg · multiple</small>
           </p>
 
           <fieldset class="f--wide">
-            <legend>Kontaktweg</legend>
+            <legend>Contact method</legend>
             <label class="choice">
-              <input type="radio" name="kontaktweg" value="mail" /> E-Mail
+              <input type="radio" name="kontaktweg" value="mail" /> Email
             </label>
             <label class="choice">
-              <input type="radio" name="kontaktweg" value="phone" /> Telefon
+              <input type="radio" name="kontaktweg" value="phone" /> Phone
             </label>
             <label class="choice">
               <input type="radio" name="kontaktweg" value="palantir" /> Palantír
@@ -683,15 +683,15 @@
           </fieldset>
 
           <fieldset class="f--wide">
-            <legend>Interessen <span class="hint-inline">a group — one box is enough</span></legend>
+            <legend>Interests <span class="hint-inline">a group — one box is enough</span></legend>
             <label class="choice">
-              <input type="checkbox" name="interessen" value="ringe" /> Ringe der Macht
+              <input type="checkbox" name="interessen" value="ringe" /> Rings of Power
             </label>
             <label class="choice">
-              <input type="checkbox" name="interessen" value="pfeifenkraut" /> Pfeifenkraut
+              <input type="checkbox" name="interessen" value="pfeifenkraut" /> Pipe-weed
             </label>
             <label class="choice">
-              <input type="checkbox" name="interessen" value="feuerwerk" /> Feuerwerk
+              <input type="checkbox" name="interessen" value="feuerwerk" /> Fireworks
             </label>
           </fieldset>
 
@@ -699,7 +699,7 @@
             <legend>What the field itself decides</legend>
             <div class="grid">
               <p class="f">
-                <label for="gaeste">Gäste</label>
+                <label for="gaeste">Guests</label>
             <input id="gaeste" name="gaeste" type="number" min="5" max="10" />
                 <small class="hint-inline">number, 5–10</small>
               </p>
@@ -709,22 +709,22 @@
                 <small class="hint-inline">number, no step given</small>
               </p>
               <p class="f">
-                <label for="wichtigkeit">Wichtigkeit</label>
+                <label for="wichtigkeit">Importance</label>
             <input id="wichtigkeit" name="wichtigkeit" type="range" min="0" max="10" />
                 <small class="hint-inline">range 0–10</small>
               </p>
               <p class="f">
-                <label for="farbe">Lieblingsfarbe</label>
+                <label for="farbe">Favourite colour</label>
             <input id="farbe" name="farbe" type="color" />
                 <small class="hint-inline">color</small>
               </p>
               <p class="f">
-                <label for="anreise">Anreise</label>
+                <label for="anreise">Arrival</label>
             <input id="anreise" name="anreise" type="text" placeholder="TT.MM.JJJJ" />
                 <small class="hint-inline">text, placeholder as the mask</small>
               </p>
               <p class="f">
-                <label for="gutschein">Gutscheincode</label>
+                <label for="gutschein">Voucher code</label>
             <input id="gutschein" name="gutschein" type="text" maxlength="6" />
                 <small class="hint-inline">maxlength 6</small>
               </p>
@@ -734,14 +734,14 @@
           <p class="f f--wide">
             <label class="choice">
               <input type="checkbox" name="datenschutz" required />
-              Ich akzeptiere die Datenschutzerklärung
+              I accept the privacy policy
             </label>
           </p>
         </div>
 
         <p class="actions">
-          <button type="submit">Absenden</button>
-          <button type="reset">Zurücksetzen</button>
+          <button type="submit">Submit</button>
+          <button type="reset">Reset</button>
         </p>
       </form>
 
@@ -752,17 +752,17 @@
         </p>
         <div class="grid">
           <p class="f">
-            <label for="nlMail">E-Mail</label>
+            <label for="nlMail">Email</label>
             <input id="nlMail" name="email" type="email" required />
           </p>
           <p class="f">
             <label class="choice">
-              <input type="checkbox" name="agb" required /> Ich stimme zu
+              <input type="checkbox" name="agb" required /> I agree
             </label>
           </p>
         </div>
         <p class="actions">
-          <button type="submit">Eintragen</button>
+          <button type="submit">Subscribe</button>
         </p>
       </form>
 
@@ -776,11 +776,11 @@
       </p>
       <div class="case grid">
         <p class="f">
-          <label for="looseSearch">Suche</label>
+          <label for="looseSearch">Search</label>
           <input id="looseSearch" name="suche" type="search" />
         </p>
         <p class="f f--wide">
-          <label for="looseNote">Notiz</label>
+          <label for="looseNote">Note</label>
           <textarea id="looseNote" name="notiz"></textarea>
         </p>
       </div>

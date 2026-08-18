@@ -235,6 +235,16 @@
     .bar.collapsed .bar-destroy { display: none; }
     .bar.collapsed .chevron { transform: rotate(180deg); }
 
+    @media (max-width: 640px) {
+      .bar { flex-wrap: wrap; justify-content: center; row-gap: 7px; padding: 6px 8px; }
+      .bar.collapsed { justify-content: flex-end; }
+      .bar .spacer { display: none; }
+      .bar .tools,
+      .bar .chevron,
+      .bar .bar-destroy { order: 1; }
+      .bar .readout { order: 2; flex: 1 0 100%; justify-content: center; }
+    }
+
     .readout { display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
       color: #cbd2e1; white-space: nowrap; }
     .readout .size { color: #93c5fd; font-variant-numeric: tabular-nums; }
@@ -2267,8 +2277,8 @@
     pin: '3019',
     gender: 'male',
     language: 'Westron',
-    email: 'mithrandir@aman.com',
-    website: 'https://you-shall-not-pass.aman.com',
+    email: 'mithrandir@aman.ea',
+    website: 'https://you-shall-not-pass.aman.ea',
     phone: '+49 1954 1955',
     company: 'The Fellowship of the Ring',
     department: 'Order of the Istari',

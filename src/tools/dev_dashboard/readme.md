@@ -149,10 +149,10 @@ Why Gandalf: **the entry has to be recognisable as a test entry at a glance** �
 in the field, in a database row, in the mail that lands in somebody's inbox
 three weeks later. `Max Mustermann` reads like a customer; `Gandalf the Grey`
 does not. Nothing that could reach a real person is used either: the mail
-domain is RFC 2606's reserved `example.com`, the card is the universal
-`4111 1111 1111 1111` test number, and the IBAN is a bank code nobody holds
-with **computed check digits**, so a validator accepts it and no account
-exists behind it.
+domain is `aman.ea`, a TLD the root zone does not assign, so nothing can be
+registered under it; the card is the universal `4111 1111 1111 1111` test
+number, and the IBAN is a bank code nobody holds with **computed check
+digits**, so a validator accepts it and no account exists behind it.
 
 ### What lands where
 
@@ -160,9 +160,9 @@ exists behind it.
 | ----- | ----- |
 | name | **Gandalf** · **the Grey**, with **Olórin** as the middle name |
 | nickname, username | Mithrandir, `mithrandir` |
-| e-mail | `mithrandir@example.com` |
+| e-mail | `mithrandir@aman.ea` |
 | phone | `+49 1954 1955` — the years the three volumes appeared |
-| website | `https://you-shall-not-pass.example.com` |
+| website | `https://you-shall-not-pass.aman.ea` |
 | address | Mithlond Quay 3 · 03019 Grey Havens · Lindon · Middle-earth |
 | birthday | `1000-09-22` — the Istari land in Middle-earth in T.A. 1000, and the 22nd of September is the birthday in the Shire |
 | company, position | The Fellowship of the Ring · Servant of the Secret Fire |
@@ -299,6 +299,11 @@ alone and why, and what the browser still rejects. See *Fill a form* above.
   `data-dev-dashboard-spacer` is appended to `<body>` so nothing in the flow
   ends up underneath the bar. Elements the page positions `fixed` at the
   bottom edge are not moved by that — fold the bar away to look at those.
+- **Below 640px the bar is two rows**, both centred: the icons on top, the
+  page information underneath, each on one line. Side by side they would both
+  be squeezed and the read-out would break mid-token. The reserved height
+  follows — it is measured off the bar, not assumed. Folded away it is the
+  same thin strip as everywhere, with the chevron at the right edge.
 - **What it writes into the page**, all of it reversible and all of it found
   by `grep data-dev-`: that spacer, one `<style data-dev-dashboard-style>`,
   and — only while you ask for it — `data-dev-dashboard-flag` /
