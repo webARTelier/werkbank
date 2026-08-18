@@ -1,0 +1,513 @@
+// =============================================================
+// slider — a scroll-snap strip that Swiper takes over
+// =============================================================
+//
+// Two renderings of one piece of markup, and the whole file is organised
+// around which of them a rule belongs to.
+//
+//   Without the script (and forever, if the chunk never arrives) the track is
+//   a horizontal, scroll-snapping strip of slides. That is CSS on its own —
+//   no vendor class is in the authored markup, so nothing in the vendor
+//   stylesheet below matches anything yet — and it is a working carousel:
+//   every slide is in the document, in reading order, reachable by dragging,
+//   by a trackpad, by a scrollbar. Nothing is hidden and no control is
+//   promised.
+//
+//   With the script the box belongs to Swiper. slider.js writes the vendor
+//   classes, sets "data-slider-ready" and only then builds the instance, so
+//   the two renderings never overlap: the scroll container and the CSS gap
+//   are gone before Swiper measures anything.
+//
+// Contract with the JS (slider.js)
+//   - "data-slider-ready" on the root says the box has been handed over. Read
+//     POSITIVELY, and unlike every other component here the rules it gates are
+//     NOT wrapped in "scripting: enabled": what its absence leaves standing is
+//     not a transitional state to be hidden from a reader with scripting off,
+//     it is that reader's design. This is why the pre-enhancement() mixin is
+//     not used — see the note in docs/preEnhancement.md.
+//   - "swiper" / "swiper-wrapper" / "swiper-slide" are written by the module
+//     onto the root, the track and the slides. They are the vendor
+//     stylesheet's hooks and nothing this file writes selects by them: every
+//     rule below is either unconditional or keyed on the ready attribute, so
+//     the component's own vocabulary never depends on a vendor class name.
+//   - The controls are injected and carry "m-slider__controls",
+//     "m-slider__button(--prev|--next)", "m-slider__rotation",
+//     "m-slider__pagination", "m-slider__bullet" and "m-slider__label". The
+//     module holds those nodes; it never selects by the classes.
+//   - "aria-current" on the current bullet is Swiper's, and it is what the
+//     active bullet is drawn from — so what the eye reads and what a screen
+//     reader reads cannot drift apart (the trick passwordToggle plays with
+//     aria-pressed).
+//   - "is-paused" on the rotation control is the one state class, written in
+//     the same method that changes the control's name.
+//   - No inline styles come from this module. The ones on the track and the
+//     slides are Swiper's own transforms and widths, which is exactly what the
+//     vendor is for, and its destroy(…, true) takes them off again.
+//
+// Media inside a slide is NOT this component's business (see the media-sizing
+// section in CLAUDE.md): the slide holds whatever an editor put in it, and the
+// container that gives an image its size and aspect-ratio is the project's.
+// A slider whose slides differ in height is as tall as its tallest slide,
+// because the track is a flex row — the preset can ask for autoHeight instead.
+//
+// What is deliberately NOT here: the vendor's navigation and pagination
+// stylesheets. Swiper draws those controls with an icon font and a theme
+// colour of its own; this component injects real buttons and styles them from
+// the shared tokens instead, which is also why the two glyph masks below are
+// drawn on the same 24x24 grid as src/_shared/media/img/icons/.
+
+@use "focus" as *;
+@use "mediaqueries" as *;
+@use "visuallyHidden" as *;
+
+// Swiper's core stylesheet, loaded straight out of the installed package
+// (node_modules is a Sass load path — see build/scss.js) and inlined here, so
+// the component still ships as ONE file and the version that ships is the
+// version package.json pins. Nothing is fetched at runtime.
+//
+// It brings two declarations this collection does not use: a
+// "--swiper-theme-color" token in :root and a ":host" rule for the web-
+// component build. Both are dead here, and editing a vendor file to drop them
+// would be work to redo on every version bump. It is loaded FIRST on purpose:
+// everything below it wins a tie on source order.
+@use "swiper/swiper";
+@use "swiper/modules/effect-fade";
+@use "swiper/modules/a11y";
+
+
+
+// The override surface: declared on the component root, not in :root, so it
+// stays scoped and a single instance can be retuned in place
+// (style="--slider-gap: 0" still wins).
+.m-slider {
+
+  // Sizing
+  //
+  // 2.75rem is 44px — the touch target WCAG 2.5.5 asks for, which these
+  // controls can afford because they sit in a bar of their own rather than
+  // inside something else. The bullet is small on purpose and is NOT a target
+  // of that size on its own; --slider-bullet-target is the invisible hit area
+  // padded around it, which is what the pointer and the finger actually get.
+  --slider-button-size: 2.75rem;
+  --slider-icon-size: 1.25rem;
+  --slider-bullet-size: 0.625rem;
+  --slider-bullet-target: 1.5rem;
+  --slider-radius: var(--borderRadius);
+  --slider-border-width: 1px;
+
+  // How wide one slide is, and the only knob that reaches a slide. It applies
+  // before the handover and, afterwards, in exactly the one case Swiper leaves
+  // the width alone: a preset asking for slidesPerView: "auto" (verified —
+  // every numeric slidesPerView writes an inline width per slide, which beats
+  // any rule). So "auto" plus this knob is how a showcase-style slider states
+  // its slide width, in CSS, once, for both renderings.
+  --slider-slide-size: 100%;
+
+  // Spacing (shared scale, _shared/scss/_foundations.scss)
+  //
+  // --slider-gap is the one that is read from both sides: this file uses it as
+  // the strip's `gap` before the script arrives, and slider.js reads it and
+  // hands it to Swiper as `spaceBetween` afterwards, so the distance between
+  // two slides is stated once. A preset that sets `spaceBetween` itself takes
+  // over and the reading stops.
+  --slider-gap: var(--space-s);
+  --slider-controls-gap: var(--space-2xs); // control to control
+  --slider-controls-spacing: var(--space-s); // track to the controls bar
+  --slider-overlay-inset: var(--space-s); // --overlay: bar to the track's edge
+  --slider-controls-justify: center;
+
+  // Colors (shared semantic tokens, _shared/scss/_colors_semantic.scss).
+  // --color-border-control, not --color-border: a transparent button leaves
+  // its border as the only thing saying there is something to press, which is
+  // the 3:1 case of WCAG 1.4.11.
+  --slider-color: var(--color-text-muted);
+  --slider-color-hover: var(--color-text);
+  --slider-bg-color: transparent;
+  --slider-bg-color-hover: var(--color-bg-overlay);
+  --slider-border-color: var(--color-border-control);
+  --slider-border-color-hover: var(--color-border-control-strong);
+  --slider-bullet-color: var(--color-border-control);
+  --slider-bullet-color-current: var(--color-accent-secondary);
+  // --overlay only: the plate the controls sit on. Behind them is whatever the
+  // current slide shows, so the surface has to come from the component rather
+  // than be hoped for — 75% of the page colour is dark enough to hold light
+  // glyphs over a bright photograph and still lets the image through.
+  --slider-overlay-bg-color: color-mix(
+    in srgb, var(--color-bg) 75%, transparent
+  );
+
+  // Animation (shared tokens). --slider-duration is the controls' own hover
+  // transition; how long a SLIDE takes is Swiper's `speed`, which is a preset
+  // option and not a thing CSS can state here.
+  --slider-duration: calc(var(--an-duration) / 2);
+  --slider-easing: var(--an-ease);
+
+  // The four glyphs, as masks rather than background images: a mask takes its
+  // colour from the element, so one shape follows the button's own colour and
+  // can be repainted in a system colour when that colour is forced away (see
+  // the forced-colors block at the bottom).
+  --slider-icon-prev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m15 18-6-6 6-6'/%3E%3C/svg%3E");
+  --slider-icon-next: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E");
+  --slider-icon-stop: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23000'%3E%3Crect x='6' y='5' width='4' height='14' rx='1'/%3E%3Crect x='14' y='5' width='4' height='14' rx='1'/%3E%3C/svg%3E");
+  --slider-icon-start: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23000'%3E%3Cpath d='M8 5.14v13.72a1 1 0 0 0 1.5.87l11-6.86a1 1 0 0 0 0-1.74l-11-6.86A1 1 0 0 0 8 5.14Z'/%3E%3C/svg%3E");
+
+  // Which glyph a button draws. Named once here so the rules further down pick
+  // a shape by setting one property instead of repeating a mask-image.
+  --slider-icon: none;
+
+  // The anchor for the --overlay variant's controls bar, and the same
+  // declaration ".swiper" makes — stated here so the box does not depend on a
+  // vendor class arriving.
+  position: relative;
+
+  // This one declaration undoes a vendor one rather than decorating anything,
+  // and it has to: ".swiper" centres itself with auto inline margins, and an
+  // auto margin in the CROSS axis of a flex container does more than centre —
+  // it stops the item from being stretched. A slider inside a column flex
+  // layout would then shrink to its content, and its content is a row of
+  // slides that are each 100% of it: a circle the engine resolves at its
+  // maximum layout unit (33554432px, measured in Chromium and WebKit — the
+  // whole page goes with it). A module in normal flow is as wide as it is
+  // allowed to be; centring it inside a max-width stays the project's call.
+  margin-inline: 0;
+
+
+
+  // The strip. Everything about it that both renderings share: no list
+  // markers, no list padding, and a flex row — which is also what
+  // ".swiper-wrapper" makes it, so the row survives the handover unchanged.
+  &__track {
+    margin: 0;
+    padding: 0;
+
+    display: flex;
+
+    list-style: none;
+  }
+
+
+
+  // A slide's width, in both renderings — see --slider-slide-size above for
+  // why one declaration can serve both. Nothing else about a slide is stated
+  // here: what is inside it, and the container that gives a picture its box,
+  // are the project's.
+  &__slide {
+    inline-size: var(--slider-slide-size);
+  }
+
+
+
+  // ----- before the handover: a carousel made of CSS -----
+  //
+  // Not wrapped in "scripting: enabled" (see the header): this is the
+  // rendering for every reader the chunk does not reach, not a state to be
+  // kept from a reader with scripting off. Everything in these two rules is a
+  // scroll container, and all of it has to be gone before Swiper measures the
+  // box — which is why it hangs off the flag rather than being overridden
+  // later.
+  &:not([data-slider-ready]) &__track {
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+
+    gap: var(--slider-gap);
+
+    scroll-snap-type: inline mandatory;
+  }
+
+
+
+  // A slide refuses to shrink below its width, so the snap points are one
+  // slide apart. `flex-basis: auto` is what hands the sizing to
+  // --slider-slide-size above rather than restating it — and a flex-basis with
+  // a length in it would be worse than a repetition: afterwards Swiper writes
+  // an inline WIDTH per slide, which a flex-basis stated here would beat,
+  // breaking every preset that shows more than one slide at a time.
+  &:not([data-slider-ready]) &__slide {
+    flex: 0 0 auto;
+
+    scroll-snap-align: start;
+  }
+
+
+
+  // ----- the controls -----
+  //
+  // One bar after the track: stop/start, previous, the bullets, next. In the
+  // flow rather than over the slides, so nothing is clipped by the
+  // "overflow: hidden" the vendor stylesheet puts on the root and nothing
+  // covers the content — the --overlay variant is the other choice, further
+  // down.
+  &__controls {
+    margin-block-start: var(--slider-controls-spacing);
+
+    display: flex;
+    gap: var(--slider-controls-gap);
+    align-items: center;
+    justify-content: var(--slider-controls-justify);
+  }
+
+
+
+  &__button {
+
+    // A control on a dark surface, so the bright tone; a project on a light
+    // one passes "dark" (see the focus-ring convention in CLAUDE.md).
+    @include focus-ring(light);
+
+    & {
+      cursor: pointer;
+
+      border: var(--slider-border-width) solid var(--slider-border-color);
+      border-radius: var(--slider-radius);
+      padding: 0;
+      inline-size: var(--slider-button-size);
+      block-size: var(--slider-button-size);
+
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: center;
+
+      line-height: 1;
+
+      color: var(--slider-color);
+      background-color: var(--slider-bg-color);
+
+      transition:
+        color var(--slider-duration) var(--slider-easing),
+        border-color var(--slider-duration) var(--slider-easing),
+        background-color var(--slider-duration) var(--slider-easing);
+    }
+
+    // The glyph. A pseudo-element, so a button needs no second node and there
+    // is nothing here for a screen reader to announce or skip — the name is
+    // the text node the module writes.
+    &::before {
+      content: '';
+
+      inline-size: var(--slider-icon-size);
+      block-size: var(--slider-icon-size);
+
+      background-color: currentColor;
+
+      mask-image: var(--slider-icon);
+      mask-size: 100% 100%;
+      mask-repeat: no-repeat;
+    }
+
+    &:hover {
+      color: var(--slider-color-hover);
+      border-color: var(--slider-border-color-hover);
+      background-color: var(--slider-bg-color-hover);
+    }
+  }
+
+
+
+  // Which button draws which shape. Four one-line rules rather than four
+  // mask-image declarations, so the glyph set stays retunable from the token
+  // block above.
+  &__button--prev {
+    --slider-icon: var(--slider-icon-prev);
+  }
+
+
+
+  &__button--next {
+    --slider-icon: var(--slider-icon-next);
+  }
+
+
+
+  // The rotation control at rest is rotating, so it offers "stop".
+  &__rotation {
+    --slider-icon: var(--slider-icon-stop);
+  }
+
+
+
+  // Stopped: the shape becomes "start". A different SHAPE, not a different
+  // colour, so the state survives greyscale, a printout and a forced-colors
+  // theme (WCAG 1.4.1) — and the control's NAME changes with it in the same
+  // method, which is what carries the state for a screen reader.
+  &__rotation.is-paused {
+    --slider-icon: var(--slider-icon-start);
+  }
+
+
+
+  // The name of a control: a real text node next to a glyph that is a
+  // pseudo-element, so it is out of the layout but never out of the
+  // accessibility tree.
+  &__label {
+    @include visually-hidden;
+  }
+
+
+
+  // The bullets are as wide as they need to be, and the bar centres the group:
+  // a pagination that grew to fill the row would push the two arrows further
+  // apart with every slide an editor adds.
+  &__pagination {
+    display: flex;
+    flex: 0 1 auto;
+    gap: var(--slider-controls-gap);
+    align-items: center;
+    justify-content: center;
+  }
+
+
+
+  // One bullet per slide, and a real <button> (the module renders it — a
+  // <button> Swiper wrote itself would carry no type attribute and would
+  // submit a surrounding form). The visible dot is the ::before; the button
+  // itself is the hit area around it, which is why the two sizes are separate
+  // tokens.
+  &__bullet {
+
+    @include focus-ring(light);
+
+    & {
+      cursor: pointer;
+
+      border: 0;
+      border-radius: 50%;
+      padding: 0;
+      inline-size: var(--slider-bullet-target);
+      block-size: var(--slider-bullet-target);
+
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: center;
+
+      color: var(--slider-bullet-color);
+      background-color: transparent;
+
+      transition: color var(--slider-duration) var(--slider-easing);
+    }
+
+    &::before {
+      content: '';
+
+      border-radius: 50%;
+      inline-size: var(--slider-bullet-size);
+      block-size: var(--slider-bullet-size);
+
+      background-color: currentColor;
+
+      transition: scale var(--slider-duration) var(--slider-easing);
+    }
+
+    &:hover {
+      color: var(--slider-color-hover);
+    }
+  }
+
+
+
+  // The current slide's bullet, drawn from the ARIA state Swiper writes and
+  // from nothing else — so there is no second hook to keep in step. Size as
+  // well as colour, because colour alone is not a distinction (WCAG 1.4.1).
+  &__bullet[aria-current='true'] {
+    color: var(--slider-bullet-color-current);
+
+    &::before {
+      scale: 1.4;
+    }
+  }
+
+
+
+  // ----- variant: the controls over the slides -----
+  //
+  // The bar is lifted out of the flow and laid over the track's block-end
+  // edge. It stays INSIDE the root's box on purpose: the vendor stylesheet
+  // clips the root, so a bar hanging over the edge would simply be cut off.
+  // For a hero whose slides are images this is the placement that does not
+  // cost a strip of page height; for anything with text underneath, the bar in
+  // the flow is the safer one.
+  &--overlay &__controls {
+    position: absolute;
+    inset-block-end: var(--slider-overlay-inset);
+    inset-inline: var(--slider-overlay-inset);
+    z-index: var(--zi-aboveContent);
+
+    margin-block-start: 0;
+  }
+
+
+
+  // The controls need a surface of their own here: what is behind them is
+  // whatever the current slide happens to show, and a border at 3:1 against an
+  // unknown photograph is not a border at 3:1 (WCAG 1.4.11). The tone is the
+  // shared shadow token, which is a translucent near-black — dark enough to
+  // hold the light glyphs over a bright image.
+  &--overlay &__button {
+    border-color: transparent;
+    background-color: var(--slider-overlay-bg-color);
+
+    backdrop-filter: blur(4px);
+  }
+
+
+
+  &--overlay &__bullet {
+    background-color: var(--slider-overlay-bg-color);
+
+    backdrop-filter: blur(4px);
+  }
+}
+
+
+
+// -------------------------------------------------------------
+// Respect reduced motion. This is one of three halves, and the
+// only one a stylesheet can carry: the controls stop
+// transitioning here, while the slide change is made instant
+// (Swiper's `speed`) and the rotation is never started — both in
+// slider.js, because Swiper animates the track with an inline
+// transition-duration and no rule can outrank that, and because
+// no stylesheet can stop a timer.
+// -------------------------------------------------------------
+@include reduced-motion {
+
+  .m-slider__button,
+  .m-slider__bullet,
+  .m-slider__bullet::before {
+    transition: none;
+  }
+}
+
+
+
+// -------------------------------------------------------------
+// A forced-colors context (the Windows contrast themes): the
+// glyphs and the bullets are masks and fills painted with
+// "currentColor", and colour is exactly what is taken away here
+// — left alone they would be forced to the surface colour and
+// the controls would be empty circles. ButtonText is what the
+// system paints a control's own content in, so the shapes
+// survive; the current bullet keeps a distinction that is not a
+// colour, because Highlight is the system's own "this one".
+// System colours inside this query are the one kind an author
+// may still choose.
+// -------------------------------------------------------------
+@include forced-colors {
+
+  .m-slider__button::before,
+  .m-slider__bullet::before {
+    background-color: ButtonText;
+  }
+
+  .m-slider__bullet[aria-current='true']::before {
+    background-color: Highlight;
+  }
+
+  // The blurred plate the --overlay variant paints behind its controls is
+  // gone in a forced-colors theme (backdrop-filter and the colour both), so
+  // the border has to come back or the buttons lose their edges.
+  .m-slider--overlay .m-slider__button {
+    border-color: ButtonBorder;
+  }
+}

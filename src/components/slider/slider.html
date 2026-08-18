@@ -1,0 +1,264 @@
+<!--
+  slider — copy-paste snippet
+  ============================================================================
+  Copy the block(s) below into your own project.
+
+  1) In <head> (or before </body>): load the shared styles, this component's
+     stylesheet and the boot script. boot.min.js lazily loads the slider
+     module as soon as it finds data-js-behavior="slider" in the DOM — you do
+     not import slider.js yourself. Adjust the paths to where you serve /dist.
+
+       <link rel="stylesheet" href="/dist/css/shared.min.css" />
+       <link rel="stylesheet" href="/dist/css/slider.min.css" />
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+     Swiper is INSIDE those two files. Its script is bundled into
+     dist/js/modules/slider.min.js and its core stylesheet is inlined into
+     slider.min.css, so there is no CDN tag to add, no second <script> and no
+     third-party request at runtime — the version that ships is the version
+     package.json pins.
+
+  2) Write the markup: a root carrying class="m-slider",
+     data-js-behavior="slider" and the TYPE of slider you want, and inside it
+     one element marked data-slider-track holding the slides.
+
+  Wiring
+    - data-slider-track marks the track. EVERY element child of it is a slide
+      — there is no per-slide attribute to remember, so adding a slide in a
+      CMS is adding a list item.
+    - The controls (previous/next, the bullets, and a stop/start control where
+      the type rotates) are INJECTED. You never write one, because unenhanced
+      it would be a control that does nothing.
+    - class="m-slider__track" / class="m-slider__slide" are the styling
+      classes and are separate from the data hooks on purpose: restyling the
+      component cannot break the script and vice versa.
+    - A <ul>/<li> is the recommended track, and not only out of habit: it is
+      what tells a reader without this script how many slides there are. The
+      module keeps the list intact (see Accessibility below).
+    - Media inside a slide takes its box from a container YOU style — the
+      component never sizes an image (see the media-sizing section in
+      CLAUDE.md). Give that container the size and the aspect-ratio, and the
+      image `display: block; inline-size: 100%; block-size: 100%;
+      object-fit: cover`:
+
+        .mySlide__media { inline-size: 100%; aspect-ratio: 16 / 9; }
+
+    - A slider is as tall as its tallest slide, because the track is a flex
+      row. Where that is wrong, the preset can ask Swiper for
+      autoHeight: true.
+
+  The slider TYPES (this is the part your project owns)
+    data-slider-type names one entry of the `presets` object at the top of
+    slider.js. Four ship as examples, and rewriting that object is the
+    expected way to use this component: which kinds of slider a site has is a
+    design decision, and it belongs in one place where an editor's dropdown
+    can mirror it.
+
+      (none) / "default"  one slide at a time, previous/next + bullets
+      "hero"              one slide, cross-faded, rotating every 6 s
+      "gallery"           1 slide per view, 2 from the `small` breakpoint,
+                          3 from `large`
+      "showcase"          slides at their own width, the next one peeking in
+                          at the trailing edge — set --slider-slide-size
+
+    An entry is a plain Swiper options object
+    (https://swiperjs.com/swiper-api#parameters) with three conveniences:
+      navigation: true    inject a previous/next pair and wire it
+      pagination: true    inject one bullet per slide and wire it
+      breakpoints         may be keyed by this project's breakpoint NAMES
+                          ("small", "medium", "large", "xxl") instead of pixel
+                          values, so a preset cannot drift away from
+                          _shared/scss/_breakpoints.scss
+
+    A missing data-slider-type takes the "default" entry; an unknown one is
+    reported and then also takes it, because an editor's typo must not cost
+    the slider.
+
+  Options
+    - data-slider-type="…"   which entry of `presets` to use. Default:
+                             "default".
+    - data-slider-label="…"  the slider's accessible name, e.g. "Reference
+                             projects". Strongly recommended — the module
+                             reports a missing one and falls back to a generic
+                             name, because a named region is what lets a
+                             screen reader user find and skip the thing.
+    - class="m-slider--overlay"  lays the controls bar over the slides'
+                             block-end edge instead of below them. For a hero
+                             whose slides are images; where there is text
+                             under the controls, leave them in the flow.
+
+  Styling (all of it CSS, all of it on the ROOT)
+    - --slider-gap                   between two slides (--space-s). Read from
+                                     BOTH sides: this stylesheet uses it as
+                                     the pre-enhancement strip's `gap`, and
+                                     the module hands the same value to Swiper
+                                     as `spaceBetween`, re-reading it when the
+                                     viewport changes. So a responsive gap is
+                                     one declaration, and a preset that states
+                                     `spaceBetween` itself takes over
+    - --slider-slide-size            how wide one slide is (100%). The only
+                                     knob that reaches a slide, and the answer
+                                     the "showcase" type's
+                                     slidesPerView: "auto" is asking for. It
+                                     applies in BOTH renderings; a numeric
+                                     slidesPerView writes an inline width per
+                                     slide instead, which is what makes it a
+                                     no-op there
+    - --slider-button-size           the previous/next/rotation hit area
+                                     (2.75rem = 44px, WCAG 2.5.5)
+    - --slider-icon-size             the glyph inside it (1.25rem)
+    - --slider-bullet-size           the visible dot (0.625rem)
+    - --slider-bullet-target         the invisible hit area around it (1.5rem)
+    - --slider-radius                the buttons' corner (--borderRadius)
+    - --slider-controls-gap          control to control (--space-2xs)
+    - --slider-controls-spacing      track to the controls bar (--space-s)
+    - --slider-controls-justify      how the bar is aligned (center)
+    - --slider-overlay-inset         --overlay only: bar to the track's edge
+    - --slider-color / -color-hover  the controls' resting and hover tones
+    - --slider-bg-color / -bg-color-hover / -border-color /
+      -border-color-hover           the buttons' surfaces and edges
+    - --slider-bullet-color / -bullet-color-current   the dots
+    - --slider-overlay-bg-color      --overlay only: the plate behind the
+                                     controls
+    - --slider-icon-prev / -next / -stop / -start    the four glyphs, as mask
+                                     URLs. Replace them to use your own icon
+                                     set; keep the two rotation states two
+                                     distinct SHAPES, because that is what
+                                     carries the state in greyscale, in print
+                                     and in a forced-colors theme
+    - --slider-duration / -easing    the controls' hover transition. How long a
+                                     SLIDE takes is Swiper's `speed`, which is
+                                     a preset option, not CSS
+
+    Not on an ancestor: the component declares every one of them on its own
+    root, and a declaration on the element beats an inherited value whatever
+    the ancestor's specificity is. So set them inline
+    (style="--slider-gap: 0") or in a rule that hits the root itself.
+
+  Notes / progressive enhancement
+    - Before the module arrives — and forever if the chunk never does — the
+      track is a horizontal, scroll-snapping strip of slides. That is CSS on
+      its own: every slide is in the document, in reading order, and reachable
+      by dragging, by a trackpad and by a scrollbar. Nothing is hidden and no
+      control is promised. Turn JavaScript off and try it.
+    - Which is why this component's ready attribute is read POSITIVELY, and
+      why it is the one in this collection that is NOT wrapped in
+      "@media (scripting: enabled)": the strip is not a transitional state to
+      be kept from a reader with scripting off, it is that reader's design.
+      data-slider-ready hands the box over to Swiper, and the module sets it
+      before the instance is built, so the scrolling and the CSS gap are gone
+      before Swiper measures anything.
+    - Fewer than two slides: nothing happens at all. No controls, no
+      instance, no ready attribute — the markup is already what it should look
+      like, and a slider an editor filled with one thing is not an error.
+    - Keyboard control is ON by default and scoped to focus: the arrow keys
+      step the slider while focus is inside it and belong to the page again
+      when it leaves. PageUp/PageDown are never taken. A type that does not
+      want the keys sets keyboard: { enabled: false } in its preset.
+    - A rotating type stops when the pointer rests on it, stops when focus
+      enters it, and starts stopped for a reader who asked for reduced motion
+      — for whom the slide change is also instant. A rotation the reader
+      stopped with the control never comes back on its own.
+
+  Accessibility
+    - The widget follows the ARIA APG carousel pattern: role="group" plus
+      aria-roledescription and an accessible name on the root, a label per
+      slide ("3 of 7"), aria-live on the track while nothing rotates,
+      aria-current on the current bullet, and a slide scrolled into view when
+      something inside it takes focus.
+    - The slides stay a LIST. The module deliberately does not overwrite each
+      <li> with role="group": the list is what tells a reader without the
+      script how many slides there are, and the carousel wording arrives as
+      aria-roledescription="slide" instead, which adds the word without taking
+      the role away.
+    - Every control is a real <button type="button"> named by a real text
+      node, hidden visually and only visually, so it still names the control
+      if this stylesheet never loads. The glyphs are CSS masks on
+      pseudo-elements — nothing for a screen reader to announce or skip.
+    - No control ever leaves the tab order: every preset rewinds instead of
+      stopping at its ends, which keeps the library from setting `disabled`
+      and tabindex="-1" on a navigation button at the last slide (a control
+      that becomes disabled under the focus drops it to <body>, and the next
+      Tab starts over at the top of the page).
+    - The stop/start control's NAME changes rather than carrying
+      aria-pressed: for a transport control the useful announcement is what
+      pressing does next. Its glyph follows from a state class written in the
+      same method, so the two cannot drift.
+-->
+
+
+
+<!-- The default type: one slide at a time -->
+<div
+  class="m-slider"
+  data-slider-label="Reference projects"
+  data-js-behavior="slider"
+>
+  <ul class="m-slider__track" role="list" data-slider-track>
+    <li class="m-slider__slide">
+      <figure class="mySlide">
+        <div class="mySlide__media">
+          <img src="/media/one.jpg" alt="A description of the first image">
+        </div>
+        <figcaption class="mySlide__caption">The first slide</figcaption>
+      </figure>
+    </li>
+    <li class="m-slider__slide">
+      <figure class="mySlide">
+        <div class="mySlide__media">
+          <img src="/media/two.jpg" alt="A description of the second image">
+        </div>
+        <figcaption class="mySlide__caption">The second slide</figcaption>
+      </figure>
+    </li>
+    <li class="m-slider__slide">
+      <figure class="mySlide">
+        <div class="mySlide__media">
+          <img src="/media/three.jpg" alt="A description of the third image">
+        </div>
+        <figcaption class="mySlide__caption">The third slide</figcaption>
+      </figure>
+    </li>
+  </ul>
+</div>
+
+
+<!-- A hero: cross-faded, rotating, controls over the image -->
+<div
+  class="m-slider m-slider--overlay"
+  data-slider-type="hero"
+  data-slider-label="Highlights"
+  data-js-behavior="slider"
+>
+  <ul class="m-slider__track" role="list" data-slider-track>
+    <li class="m-slider__slide">
+      <div class="myHero">
+        <img src="/media/hero-1.jpg" alt="">
+        <p class="myHero__text">Something worth saying</p>
+      </div>
+    </li>
+    <li class="m-slider__slide">
+      <div class="myHero">
+        <img src="/media/hero-2.jpg" alt="">
+        <p class="myHero__text">And something else</p>
+      </div>
+    </li>
+  </ul>
+</div>
+
+
+<!-- A row of teasers: one per view, two from `small`, three from `large` -->
+<div
+  class="m-slider"
+  data-slider-type="gallery"
+  data-slider-label="Latest articles"
+  data-js-behavior="slider"
+>
+  <ul class="m-slider__track" role="list" data-slider-track>
+    <li class="m-slider__slide"><a class="myTeaser" href="/one">One</a></li>
+    <li class="m-slider__slide"><a class="myTeaser" href="/two">Two</a></li>
+    <li class="m-slider__slide"><a class="myTeaser" href="/three">Three</a></li>
+    <li class="m-slider__slide"><a class="myTeaser" href="/four">Four</a></li>
+    <li class="m-slider__slide"><a class="myTeaser" href="/five">Five</a></li>
+  </ul>
+</div>

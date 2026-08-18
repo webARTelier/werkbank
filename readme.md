@@ -2,8 +2,10 @@
 
 A collection of small, self-contained, framework-free UI components built on
 modern web platform features. Each component is plain JavaScript (ES modules)
-plus SCSS, wired to the page through a tiny loader — no framework, no runtime
-dependencies.
+plus SCSS, wired to the page through a tiny loader — no framework, and one
+single third-party library in the whole collection (`slider` uses
+[Swiper](https://swiperjs.com), bundled and self-hosted; nothing is ever
+fetched from a CDN at runtime).
 
 The collection is both a **component library to copy from** and a **workbench**:
 every component ships with a live demo, a copy-paste snippet and its own
@@ -105,6 +107,7 @@ reads it. The full decision rule is in [`CLAUDE.md`](CLAUDE.md).
 | `scaleSVG`           | function                      | Scales SVGs from their `viewBox`.                                   |
 | `scrollSpy`          | function                      | IntersectionObserver-driven TOC highlight via `aria-current`.       |
 | `siteSearch`         | module                        | Site search form expanding out of a toggle, on `<search>`.          |
+| `slider`             | module                        | Preset slider types an editor picks by name; Swiper inside, scroll-snap without it. |
 | `stickyObserver`     | function (`c-stickyBar`)      | Sentinel-driven "is stuck" class toggle for `position: sticky`.     |
 | `tabs`               | module                        | ARIA tabs enhancement of an anchor-link table of contents.          |
 | `toast`              | module                        | Transient messages in a stack, announced via a live region.         |
@@ -141,6 +144,13 @@ The Gulp + Rollup + Lightning CSS build produces:
 
 `_shared/js/registry.js` is auto-generated from the module file names at
 build time — never edit it by hand.
+
+**Third-party code** is installed from npm, bundled into the component that
+uses it and never fetched at runtime. Today that is one library: Swiper, in
+`slider`. Its script lands inside `dist/js/modules/slider.min.js` and its core
+stylesheet inside `dist/css/slider.min.css`, so a page that has no slider
+downloads none of it and a page that has one still adds no CDN tag. The rules
+for adopting the next one are in [`CLAUDE.md`](CLAUDE.md) ("Vendor code").
 
 ## Using a component in your own project
 
@@ -206,7 +216,9 @@ Components are deliberately self-contained, so you can also copy them into a
 project that has its own asset pipeline. Each `readme.md` lists the files
 under **"Files needed to copy"** — typically the `.js`, the `.scss` and any
 pure utility from `src/_shared/js/` the component imports (e.g.
-`rafThrottle.js`). The JS exports a single `init(el, services)` and never
+`rafThrottle.js`). `slider` is the one that also needs an npm install
+(`swiper`), because a vendor library is a dependency and not a file to paste.
+The JS exports a single `init(el, services)` and never
 self-initializes, so it slots into any loader; `services.reporter` is
 optional and only used for warnings — without it the module degrades
 silently.

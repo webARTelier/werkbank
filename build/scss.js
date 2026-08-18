@@ -65,7 +65,16 @@ function postProcess(css, entry, { dev, inputSourceMap }) {
 async function compileEntry(entry, { dev }) {
   const result = await sass.compileAsync(entry, {
     style: dev ? "expanded" : "compressed",
-    loadPaths: [path.dirname(entry), path.join(config.root, "src", "_shared", "scss")],
+    // node_modules is the third load path so a component can pull a vendor
+    // stylesheet straight out of its installed package (`@use "swiper/swiper"`)
+    // instead of a copy kept in src/. Sass loads a plain .css file verbatim,
+    // so the vendor CSS is inlined into that component's own output file and
+    // the version that ships is the version package.json pins.
+    loadPaths: [
+      path.dirname(entry),
+      path.join(config.root, "src", "_shared", "scss"),
+      path.join(config.root, "node_modules"),
+    ],
     sourceMap: dev,
     sourceMapIncludeSources: dev,
     logger: makeLogger(),

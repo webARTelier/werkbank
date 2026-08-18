@@ -34,6 +34,7 @@ export const registry = {
   scaleSVG: () => import('./modules/scaleSVG.min.js'),
   scrollSpy: () => import('./modules/scrollSpy.min.js'),
   siteSearch: () => import('./modules/siteSearch.min.js'),
+  slider: () => import('./modules/slider.min.js'),
   stickyObserver: () => import('./modules/stickyObserver.min.js'),
   tabs: () => import('./modules/tabs.min.js'),
   toast: () => import('./modules/toast.min.js'),

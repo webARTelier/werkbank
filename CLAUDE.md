@@ -35,7 +35,8 @@ component here is reusable and most can appear several times).
   no reason to exist without it, and it occupies a region of the page. It may
   contain other modules and components; it is the purpose, not the means.
   `accordion`, `backToTop`, `countdown`, `dropdownNav`, `lightbox`,
-  `marquee`, `offCanvasNav`, `siteSearch`, `tabs`, `toast`, `video`.
+  `marquee`, `offCanvasNav`, `siteSearch`, `slider`, `tabs`, `toast`,
+  `video`.
 - **Component (`c-`) — it is *attached*.** It wraps, annotates or reinforces
   a host that is complete and usable without it: a full text (`readMore`), a
   plain table (`dataTable`), a native field (`dateInputFormat`), a file field
@@ -129,7 +130,10 @@ And **how much machinery ships is not a fourth axis.** A network layer, a
 queue, an endpoint, hidden inputs written into a form — `fileUpload`'s upload
 lane has all four and is still a `c-`, because the field it wraps is complete
 without it. Machinery says how hard the thing was to write; the prefix says
-what it is attached to.
+what it is attached to. Neither is **who wrote the machinery**: `slider` is a
+module because it is *placed* and manages its own collection of slides, and
+the fact that a vendor library does the sliding inside it changes nothing about
+that (see the vendor section below).
 
 ### "module" in the JS sense is a different word
 
@@ -207,6 +211,60 @@ anywhere. Every component demo loads the one dashboard line instead.
   folder structure. Renaming the component folders therefore does not break these imports.
 - Module IDs in `data-js-behavior="…"` in the markup correspond to the registry keys
   (= the camelCase module names).
+- `node_modules` is the third Sass load path (after the entry's own folder and
+  `_shared/scss`), so a component can `@use` a vendor stylesheet straight out
+  of its installed package. Added 2026-08-17 for `slider`; see below.
+
+## Vendor code: installed, bundled, never fetched
+
+Almost everything here is written from scratch on top of the platform, and that
+is the default. **`slider` is the one component with a vendor dependency**
+(Swiper, MIT), and the rules it establishes are the rules for the next one:
+
+- **Installed, not copied.** The library is an npm `dependencies` entry — not a
+  file checked into `src/`, and not a CDN tag. So the version is pinned in one
+  place, `npm audit` sees it, and a bump is a lockfile change rather than a
+  hand-merge of somebody else's minified file.
+- **Bundled into the component's own lazy chunk.** `import Swiper from 'swiper'`
+  is a bare specifier, which Rollup's node-resolve turns into code inside
+  `dist/js/modules/slider.min.js`. A page that has no slider downloads none of
+  it, exactly like every other component. Name the individual modules
+  (`swiper/modules`) rather than importing the bundle, so the chunk carries the
+  features the presets actually use.
+- **Its CSS is inlined into the component's own stylesheet.** `@use
+  "swiper/swiper";` at the top of `slider.scss` — Sass loads a plain `.css`
+  file verbatim, and `node_modules` is a load path. The component still ships as
+  **one** file, so nothing about the snippet or the demo is special. Load the
+  vendor CSS **first**, so the component's own rules win a tie on source order.
+  Take only the parts you use: `slider` takes the core, `effect-fade` and
+  `a11y`, and styles its own controls instead of taking the vendor's navigation
+  and pagination stylesheets with their icon font and theme colour.
+- **No third-party request at runtime, ever.** No CDN, no `<script>` the author
+  has to add, no `@import url(…)`. That is not a performance preference: an
+  external request is a dependency on somebody else's uptime, cache policy and
+  privacy posture, and it breaks under a strict CSP.
+- **The vendor's class names stay the vendor's.** The component writes them
+  onto its own nodes (`swiper`, `swiper-wrapper`, `swiper-slide`) from the JS,
+  which is also what keeps the vendor stylesheet from taking hold of markup its
+  script is not driving yet. **No rule in the component's own stylesheet
+  selects by a vendor class**, and no vendor class appears in authored markup.
+  Where the vendor writes a state, prefer the ARIA it writes over the class it
+  writes (`aria-current` on a pagination bullet), for the same reason
+  `passwordToggle` draws its glyph from `aria-pressed`.
+- **The `v-` prefix in the code-style guide is for a third party's own
+  *vocabulary*** — markup and classes a project has to live with. It does not
+  apply here: `m-slider` is this collection's block, and Swiper contributes
+  behaviour and internal hooks, not a block.
+- **A vendor declaration that fights the house layout is neutralised in one
+  place, with the measurement in the comment.** `slider.scss` has exactly one
+  (`margin-inline: 0`, undoing `.swiper`'s auto margins, which stop the root
+  being stretched in a flex column). Undoing more than a handful is the signal
+  that the library is the wrong fit, not that the file needs more overrides.
+- **Progressive enhancement is not suspended for a vendor.** The component must
+  still be usable before and without the chunk, out of its own CSS: `slider`'s
+  no-script rendering is a `scroll-snap` strip, and the ready attribute is what
+  hands the box over. A library that cannot be adopted that way — one that
+  needs its classes in the authored markup — should not be adopted.
 
 ## Dependencies: DI vs. direct import
 

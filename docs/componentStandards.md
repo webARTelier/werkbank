@@ -353,6 +353,11 @@ Boot (`_shared/js/boot.js`) lazily imports the module when it sees
   container styles are part of the wiring. `video` is the reference file; the
   named exceptions (`contain` for a surface that must show the whole frame,
   iframes, SVG) are in the media-sizing section of `CLAUDE.md`.
+- **A vendor stylesheet is `@use`d out of `node_modules`, first**, so the
+  component still ships as one file and its own rules win a tie on source
+  order — `@use "swiper/swiper";` in `slider.scss` is the only case so far.
+  Take only the parts you use, and never select by a vendor class in your own
+  rules. Full rules in the vendor section of `CLAUDE.md`.
 - **Behaviour-only components ship a stub stylesheet** and leave visuals
   (including focus) to the consuming project (`formValidation`,
   `inputCharCount`, `inlineSVG`, `scaleSVG`). A component may also ship *only*

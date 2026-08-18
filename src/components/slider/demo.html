@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>slider – Demo</title>
+  <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
+  <link rel="stylesheet" href="../../../dist/css/slider.min.css" />
+  <script type="module" src="../../../dist/js/boot.min.js"></script>
+
+  <!-- for development only -->
+  <script src="../../tools/dev_dashboard/dev_dashboard.js"></script>
+  <!-- end for development only -->
+
+  <!--
+      DEMO-ONLY STYLES
+      ----------------------------------------------------------------------
+      slider.min.css ships the strip, the handover to Swiper and the
+      controls. Everything below is what a project brings: what a slide
+      LOOKS like.
+
+      Two of these are part of the wiring rather than decoration, and the
+      readme says so:
+
+        .card__media    the container that owns the box. It has the size
+                        and the aspect-ratio, the image fills it and is
+                        cropped to it — the component never sizes an
+                        image (see the media-sizing section in CLAUDE.md).
+                        It is also what reserves the layout space before
+                        the image arrives.
+
+        --slider-slide-size    a width, on the root. The "showcase" preset
+                        asks Swiper for slidesPerView: "auto", which means
+                        "ask the slide" — and that knob is where the slide
+                        answers from, in both renderings.
+  -->
+
+  <style>
+    .demo {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2xl);
+    }
+
+    .demo__example {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-s);
+    }
+
+    .demo__example h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      color: var(--color-text);
+    }
+
+    /* The project's slide design: a card with a picture and a caption. */
+    .card {
+      margin: 0;
+
+      border: 1px solid var(--color-border);
+      border-radius: var(--borderRadius);
+      overflow: hidden;
+
+      display: flex;
+      flex-direction: column;
+
+      background-color: var(--color-bg-surface);
+    }
+
+    /* The container owns the box; the image only fills it. */
+    .card__media {
+      inline-size: 100%;
+      aspect-ratio: 16 / 9;
+    }
+
+    .card__image {
+      display: block;
+      inline-size: 100%;
+      block-size: 100%;
+
+      object-fit: cover;
+    }
+
+    .card__body {
+      padding: var(--space-s);
+
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3xs);
+    }
+
+    .card__title {
+      margin: 0;
+
+      font-size: 1rem;
+      font-weight: 600;
+
+      color: var(--color-text);
+    }
+
+    .card__text {
+      margin: 0;
+
+      font-size: 0.9rem;
+
+      color: var(--color-text-muted);
+    }
+
+    .card__link {
+      align-self: flex-start;
+
+      font-size: 0.9rem;
+      font-weight: 600;
+
+      color: var(--color-accent-secondary);
+    }
+
+    .card__link:focus-visible {
+      outline: 2px solid var(--color-focus-ring-light);
+      outline-offset: var(--outlineOffset);
+    }
+
+    /* The hero: a full-bleed picture with a line of text over it. */
+    .hero-slide {
+      position: relative;
+
+      border-radius: var(--borderRadius);
+      inline-size: 100%;
+      aspect-ratio: 21 / 9;
+      overflow: hidden;
+    }
+
+    .hero-slide__image {
+      display: block;
+      inline-size: 100%;
+      block-size: 100%;
+
+      object-fit: cover;
+    }
+
+    .hero-slide__text {
+      position: absolute;
+      inset-block-start: 0;
+      inset-inline-start: 0;
+
+      margin: 0;
+      padding: var(--space-s) var(--space-m);
+
+      font-size: clamp(1.1rem, 3vw, 1.6rem);
+      font-weight: 700;
+
+      color: var(--color-text-light);
+      background-color: color-mix(in srgb, var(--color-bg) 70%, transparent);
+    }
+
+    /* One retuned instance: the slide width the "showcase" preset asks the
+       slide for, a tighter gap, and a round, accent-coloured set of controls.
+       Six knobs on the root, no rule reaching inside. */
+    .demo--retuned .m-slider {
+      --slider-slide-size: min(70%, 26rem);
+      --slider-gap: var(--space-3xs);
+      --slider-radius: 999px;
+      --slider-color: var(--color-accent-secondary);
+      --slider-bullet-color-current: var(--color-accent);
+      --slider-controls-justify: flex-end;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <main class="shell">
+
+    <section class="hero">
+      <a class="back" href="../../../index.html">← Overview</a>
+      <h1>slider</h1>
+      <p>A slider an editor places by naming its type — Swiper underneath, a scroll-snap strip without it.</p>
+    </section>
+
+    <section class="stage" aria-label="Live demo">
+
+      <!--
+          A slider whose configuration is a single attribute. The types
+          live in one `presets` object at the top of slider.js, which is
+          the part a consuming project rewrites: which kinds of slider a
+          site has is a design decision, and it belongs somewhere a CMS
+          dropdown can mirror it.
+
+          Wiring
+            - class="m-slider" and data-js-behavior="slider" go on the
+              root, together with data-slider-type (which preset) and
+              data-slider-label (the accessible name).
+            - data-slider-track marks the track. EVERY element child of it
+              is a slide — no per-slide attribute to remember, so adding a
+              slide in a CMS is adding a list item.
+            - The controls are INJECTED: previous/next, one bullet per
+              slide, and a stop/start control where the type rotates. You
+              never write one, because unenhanced it would be a control
+              that does nothing.
+            - What a slide LOOKS like is the project's. So is the container
+              that gives an image its size and aspect-ratio — see
+              DEMO-ONLY STYLES in the head.
+
+          Progressive enhancement
+            - Turn JavaScript off and reload. The track is a horizontal,
+              scroll-snapping strip: every slide is in the document, in
+              reading order, reachable by dragging, by a trackpad and by a
+              scrollbar. Nothing is hidden, and no control is promised
+              that does not exist.
+            - That is why the ready attribute here is read POSITIVELY and
+              is the one in this collection NOT wrapped in
+              "@media (scripting: enabled)": the strip is not a
+              transitional state to hide from a reader with scripting off,
+              it is that reader's design. data-slider-ready hands the box
+              over to Swiper, and the module sets it before the instance
+              is built — so the scrolling and the CSS gap are gone before
+              Swiper measures anything.
+
+          Accessibility
+            - ARIA APG carousel: role="group" plus aria-roledescription
+              and a name on the root, a label per slide, aria-live on the
+              track while nothing rotates, aria-current on the current
+              bullet.
+            - The slides stay a LIST — the module does not overwrite each
+              <li> with role="group", because the list is what tells a
+              reader without the script how many slides there are.
+            - Tab into a slider and use ← / →: the keys step THIS slider
+              and belong to the page again when focus leaves it.
+              PageUp/PageDown are never taken.
+            - Every control is a real button named by a real text node,
+              and no control ever leaves the tab order — every preset
+              rewinds instead of stopping at its ends.
+        -->
+
+      <p class="stage__intro">
+        Every slider below is the same markup with a different
+        <code>data-slider-type</code>. <strong>Drag them, press the arrows, use
+        the bullets</strong> — and <strong>Tab into one and press ← / →</strong>
+        to see the keyboard control, which is on by default and belongs to
+        whichever slider the focus is in.
+      </p>
+
+      <div class="demo">
+
+        <section class="demo__example">
+          <h2>The default type: one slide at a time</h2>
+
+          <p class="stage__intro">
+            No <code>data-slider-type</code> at all, which is what an editor
+            gets without choosing. Previous/next and one bullet per slide, all
+            three injected by the module.
+          </p>
+
+          <div
+            class="m-slider"
+            data-slider-label="Reference projects"
+            data-js-behavior="slider"
+          >
+            <ul class="m-slider__track" role="list" data-slider-track>
+              <li class="m-slider__slide">
+                <figure class="card">
+                  <div class="card__media">
+                    <img class="card__image" src="https://picsum.photos/id/1015/960/540" alt="A river running through a rocky canyon" width="960" height="540">
+                  </div>
+                  <figcaption class="card__body">
+                    <h3 class="card__title">A river in a canyon</h3>
+                    <p class="card__text">The first slide. Its box comes from the container, not from the component.</p>
+                  </figcaption>
+                </figure>
+              </li>
+              <li class="m-slider__slide">
+                <figure class="card">
+                  <div class="card__media">
+                    <img class="card__image" src="https://picsum.photos/id/1016/960/540" alt="A mountain range under a clear sky" width="960" height="540">
+                  </div>
+                  <figcaption class="card__body">
+                    <h3 class="card__title">A mountain range</h3>
+                    <p class="card__text">The second slide.</p>
+                  </figcaption>
+                </figure>
+              </li>
+              <li class="m-slider__slide">
+                <figure class="card">
+                  <div class="card__media">
+                    <img class="card__image" src="https://picsum.photos/id/1018/960/540" alt="A lake below a forested hillside" width="960" height="540">
+                  </div>
+                  <figcaption class="card__body">
+                    <h3 class="card__title">A lake below the trees</h3>
+                    <p class="card__text">The third and last slide — press “next” here and it rewinds to the first.</p>
+                  </figcaption>
+                </figure>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="demo__example">
+          <h2><code>hero</code>: cross-faded, rotating, controls over the image</h2>
+
+          <p class="stage__intro">
+            Rotates every six seconds and stops the moment you <strong>rest the
+            pointer on it</strong> or <strong>Tab into it</strong> — the two
+            cheap halves of WCAG 2.2.2. The third is the stop/start control at
+            the left of the bar, whose <em>name</em> changes rather than
+            carrying <code>aria-pressed</code>: for a transport control the
+            useful announcement is what pressing does next.
+            <code>class="m-slider--overlay"</code> lays the bar over the
+            image's bottom edge. If your system is set to <strong>reduce
+            motion</strong>, this one starts stopped and the slide change is
+            instant.
+          </p>
+
+          <div
+            class="m-slider m-slider--overlay"
+            data-slider-type="hero"
+            data-slider-label="Highlights"
+            data-js-behavior="slider"
+          >
+            <ul class="m-slider__track" role="list" data-slider-track>
+              <li class="m-slider__slide">
+                <div class="hero-slide">
+                  <img class="hero-slide__image" src="https://picsum.photos/id/1039/1260/540" alt="" width="1260" height="540">
+                  <p class="hero-slide__text">Something worth saying</p>
+                </div>
+              </li>
+              <li class="m-slider__slide">
+                <div class="hero-slide">
+                  <img class="hero-slide__image" src="https://picsum.photos/id/1043/1260/540" alt="" width="1260" height="540">
+                  <p class="hero-slide__text">And something else</p>
+                </div>
+              </li>
+              <li class="m-slider__slide">
+                <div class="hero-slide">
+                  <img class="hero-slide__image" src="https://picsum.photos/id/1044/1260/540" alt="" width="1260" height="540">
+                  <p class="hero-slide__text">Then back to the first</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="demo__example">
+          <h2><code>gallery</code>: one, two or three per view</h2>
+
+          <p class="stage__intro">
+            One slide per view on a phone, two from the <code>small</code>
+            breakpoint and three from <code>large</code> —
+            <strong>resize the window</strong>. The preset states those two
+            steps by NAME, not in pixels, so it reads its numbers from the same
+            <code>_breakpoints.scss</code> the stylesheets do. The distance
+            between slides is <code>--slider-gap</code>, one declaration that
+            feeds both the no-script strip and Swiper's
+            <code>spaceBetween</code>.
+          </p>
+
+          <div
+            class="m-slider"
+            data-slider-type="gallery"
+            data-slider-label="Latest articles"
+            data-js-behavior="slider"
+          >
+            <ul class="m-slider__track" role="list" data-slider-track>
+              <li class="m-slider__slide">
+                <div class="card">
+                  <div class="card__media">
+                    <img class="card__image" src="https://picsum.photos/id/1025/640/360" alt="A pug wrapped in a blanket" width="640" height="360">
+                  </div>
+                  <div class="card__body">
+                    <h3 class="card__title">First article</h3>
+                    <a class="card__link" href="javascript:;">Read on</a>
+                  </div>
+                </div>
+              </li>
+              <li class="m-slider__slide">
+                <div class="card">
+                  <div class="card__media">
+                    <img class="card__image" src="https://picsum.photos/id/1024/640/360" alt="A bear cub on a tree stump" width="640" height="360">
+                  </div>
+                  <div class="card__body">
+                    <h3 class="card__title">Second article</h3>
+                    <a class="card__link" href="javascript:;">Read on</a>
+                  </div>
+                </div>
+              </li>
+              <li class="m-slider__slide">
+                <div class="card">
+                  <div class="card__media">
+                    <img class="card__image" src="https://picsum.photos/id/1020/640/360" alt="A brown bear standing in a river" width="640" height="360">
+                  </div>
+                  <div class="card__body">
+                    <h3 class="card__title">Third article</h3>
+                    <a class="card__link" href="javascript:;">Read on</a>
+                  </div>
+                </div>
+              </li>
+              <li class="m-slider__slide">
+                <div class="card">
+                  <div class="card__media">
+                    <img class="card__image" src="https://picsum.photos/id/1003/640/360" alt="A red squirrel on a branch" width="640" height="360">
+                  </div>
+                  <div class="card__body">
+                    <h3 class="card__title">Fourth article</h3>
+                    <a class="card__link" href="javascript:;">Read on</a>
+                  </div>
+                </div>
+              </li>
+              <li class="m-slider__slide">
+                <div class="card">
+                  <div class="card__media">
+                    <img class="card__image" src="https://picsum.photos/id/1069/640/360" alt="A hot-air balloon over a field" width="640" height="360">
+                  </div>
+                  <div class="card__body">
+                    <h3 class="card__title">Fifth article</h3>
+                    <a class="card__link" href="javascript:;">Read on</a>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="demo__example demo--retuned">
+          <h2><code>showcase</code>, retuned</h2>
+
+          <p class="stage__intro">
+            <code>slidesPerView: "auto"</code> means “ask the slide”, and
+            <code>--slider-slide-size</code> is where the slide answers from —
+            so the next one peeks in at the trailing edge to say there is more,
+            <strong>with or without the script</strong>. The controls are round,
+            in the accent tone and pushed to the end of the row: six custom
+            properties on the root, no rule reaching into the component.
+          </p>
+
+          <div
+            class="m-slider"
+            data-slider-type="showcase"
+            data-slider-label="Selected work"
+            data-js-behavior="slider"
+          >
+            <ul class="m-slider__track" role="list" data-slider-track>
+              <li class="m-slider__slide">
+                <div class="card">
+                  <div class="card__media">
+                    <img class="card__image" src="https://picsum.photos/id/1040/640/360" alt="A castle on a wooded hill" width="640" height="360">
+                  </div>
+                  <div class="card__body">
+                    <h3 class="card__title">One</h3>
+                  </div>
+                </div>
+              </li>
+              <li class="m-slider__slide">
+                <div class="card">
+                  <div class="card__media">
+                    <img class="card__image" src="https://picsum.photos/id/1041/640/360" alt="A snow-covered pine forest" width="640" height="360">
+                  </div>
+                  <div class="card__body">
+                    <h3 class="card__title">Two</h3>
+                  </div>
+                </div>
+              </li>
+              <li class="m-slider__slide">
+                <div class="card">
+                  <div class="card__media">
+                    <img class="card__image" src="https://picsum.photos/id/1042/640/360" alt="A crowd in front of a stage" width="640" height="360">
+                  </div>
+                  <div class="card__body">
+                    <h3 class="card__title">Three</h3>
+                  </div>
+                </div>
+              </li>
+              <li class="m-slider__slide">
+                <div class="card">
+                  <div class="card__media">
+                    <img class="card__image" src="https://picsum.photos/id/1050/640/360" alt="A city street seen from above" width="640" height="360">
+                  </div>
+                  <div class="card__body">
+                    <h3 class="card__title">Four</h3>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="demo__example">
+          <h2>One slide, and an unknown type</h2>
+
+          <p class="stage__intro">
+            Two things that must not break. The first slider holds a single
+            slide: no controls, no instance, no ready attribute — the markup is
+            already exactly what it should look like, and an editor who filled
+            a slider with one thing has not made a mistake. The second names a
+            type that does not exist: the module reports it in the console and
+            falls back to the default preset, because an editor's typo must not
+            cost the slider.
+          </p>
+
+          <div
+            class="m-slider"
+            data-slider-label="A single picture"
+            data-js-behavior="slider"
+          >
+            <ul class="m-slider__track" role="list" data-slider-track>
+              <li class="m-slider__slide">
+                <figure class="card">
+                  <div class="card__media">
+                    <img class="card__image" src="https://picsum.photos/id/1057/960/540" alt="A pier reaching into a calm sea" width="960" height="540">
+                  </div>
+                  <figcaption class="card__body">
+                    <h3 class="card__title">On its own</h3>
+                    <p class="card__text">Nothing to slide, so nothing was built.</p>
+                  </figcaption>
+                </figure>
+              </li>
+            </ul>
+          </div>
+
+          <div
+            class="m-slider"
+            data-slider-type="kaleidoscope"
+            data-slider-label="A type that does not exist"
+            data-js-behavior="slider"
+          >
+            <ul class="m-slider__track" role="list" data-slider-track>
+              <li class="m-slider__slide">
+                <figure class="card">
+                  <div class="card__media">
+                    <img class="card__image" src="https://picsum.photos/id/1059/960/540" alt="A footpath between two hedges" width="960" height="540">
+                  </div>
+                  <figcaption class="card__body">
+                    <h3 class="card__title">Still a slider</h3>
+                    <p class="card__text">The console says which types there are.</p>
+                  </figcaption>
+                </figure>
+              </li>
+              <li class="m-slider__slide">
+                <figure class="card">
+                  <div class="card__media">
+                    <img class="card__image" src="https://picsum.photos/id/1060/960/540" alt="A row of colourful beach huts" width="960" height="540">
+                  </div>
+                  <figcaption class="card__body">
+                    <h3 class="card__title">And it works</h3>
+                    <p class="card__text">The default preset took over.</p>
+                  </figcaption>
+                </figure>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</body>
+</html>

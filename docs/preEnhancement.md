@@ -224,6 +224,7 @@ of them, and the wrong one for most.
 | `offCanvasNav` | full menu expanded on a narrow viewport, then a burger | **ships it** | burger is a link to the drawer, so `:target` reveals it; scoped to `[id]`, which is both the fragment's precondition and the module's only bail-out |
 | `backToTop` | control visible, then gone | **ships it** | purely additive — a failure costs a shortcut, nothing more |
 | `readMore` | the whole text, then a preview of it — screens of content moving up | **ships it** | the toggle is a link into the region, so `:target` hands the full text back — plus a `:has(:target)` for a fragment addressing an anchor *inside* the text; scoped to `[id]`, which is the fragment's precondition, and the module sets its attribute first so a bail-out lifts the cut |
+| `slider` | none | not needed | the track is a scroll-snapping strip of slides from the first paint, which is a working carousel in CSS alone — nothing hidden, no control promised. Its ready attribute hands the box *over* to the vendor instead of lifting a pre-state, and it is the one component here whose conditional rules are deliberately **not** wrapped in `scripting: enabled` (see below) |
 | `siteSearch` | search form visible, then folded shut | documented opt-in | the toggle is a `<button>`, dead without the script, and there is no fragment fallback |
 | `dropdownNav` | full nested list, then a bar with flyouts | documented opt-in | the disclosure buttons are injected by the script; nothing reopens a collapsed submenu without it |
 | `accordion` | none | not needed | `<details>` renders closed either way; its ready attribute only picks the animation |
@@ -300,6 +301,27 @@ is not the same as the chunk having arrived, so keyed that way the one reader
 the mixin deliberately exempts (scripting off) would be the one reader shown a
 zone that can never work. The edge is transparent rather than absent until the
 flag arrives, so the box does not move by a pixel when it does.
+
+`slider` is the fifth, and it is the case that shows the `scripting: enabled`
+half of the mixin can be wrong on its own terms. What its flag hands over is a
+**box**: without it the track is a scroll-snapping strip of slides — a carousel
+made of `scroll-snap-type` and `scroll-snap-align`, no vendor class in the
+authored markup — and with it the scroll container and the CSS `gap` are gone so
+Swiper can measure and drive the same nodes. Both renderings are complete, which
+is why the strip is not something to keep from a reader with scripting off: it
+is **that reader's design**, and wrapping it in `scripting: enabled` would take
+the working carousel away from the only person who cannot be given the other
+one. So the two conditions are written out without the query, and the component
+says why in its stylesheet header.
+
+The moment matters more here than anywhere else. `dataTable` and the three above
+set their flag *last*, once everything the enhanced state needs is in place;
+`slider` sets it in the *middle* of `setup()`, after the vendor classes and
+before `new Swiper(...)`, because the flag is what clears the box the library is
+about to measure. A scroll offset the reader left behind goes with it, since an
+element that stops scrolling is at 0 by definition. Its two bail-outs — no
+track, or fewer than two slides — return before it is written, and the strip
+stays.
 
 `autoGrowTextarea` is also the one component whose flag outlives a teardown,
 and the exception
