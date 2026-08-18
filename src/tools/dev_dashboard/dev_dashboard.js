@@ -16,6 +16,10 @@
   const STYLE_ATTR = 'data-dev-dashboard-style';
   const FLAG_ATTR = 'data-dev-dashboard-flag';
   const FOCUS_ATTR = 'data-dev-dashboard-focus';
+  const PICK_ATTR = 'data-dev-dashboard-pick';
+  const HOVER_ATTR = 'data-dev-dashboard-hover';
+  const PICKING_ATTR = 'data-dev-dashboard-picking';
+  const FILL_ATTR = 'data-dev-dashboard-fill';
   const FLASH_MS = 1600;
   const EXCERPT = 42;
 
@@ -72,6 +76,10 @@
     qr: '<svg class="filled" viewBox="0 0 20 20" aria-hidden="true"><path d="M2 2h6v6H2V2Zm2 2v2h2V4H4Zm8-2h6v6h-6V2Zm2 2v2h2V4h-2ZM2 12h6v6H2v-6Zm2 2v2h2v-2H4Zm9-4h2v2h-2v-2Zm3 0h2v3h-2v-3Zm-6 3h2v5h-2v-5Zm4 1h4v2h-4v-2Zm2 3h2v1h-2v-1Zm-3 0h2v1h-2v-1Z"/></svg>',
     srcset: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/>'
       + '<path d="m6 16.5 4-4 3 3 2.5-2.5L21 16"/><circle cx="9" cy="9.5" r="1.3"/></svg>',
+    form: '<svg viewBox="0 0 24 24" aria-hidden="true">'
+      + '<rect x="3" y="3" width="14" height="18" rx="2"/>'
+      + '<path d="M7 8h6M7 12h6M7 16h3"/>'
+      + '<path d="m14 17.5 2.5 2.5 5-5.5"/></svg>',
     chevron: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>',
     close: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>',
   };
@@ -102,6 +110,20 @@
       outline: 3px solid #93c5fd !important;
       outline-offset: 2px;
     }
+    [${PICK_ATTR}] {
+      outline: 2px solid #38bdf8 !important;
+      outline-offset: -2px !important;
+    }
+    [${HOVER_ATTR}] {
+      outline: 2px dashed #fbbf24 !important;
+      outline-offset: -2px !important;
+    }
+    [${FILL_ATTR}] {
+      outline: 2px solid #22c55e !important;
+      outline-offset: 1px !important;
+    }
+    [${PICKING_ATTR}],
+    [${PICKING_ATTR}] *:not([${HOST_ATTR}]) { cursor: crosshair !important; }
   `;
   document.head.appendChild(pageStyle);
 
@@ -155,6 +177,9 @@
     flashed = null;
     q(`[${FLAG_ATTR}]`).forEach((el) => el.removeAttribute(FLAG_ATTR));
     q(`[${FOCUS_ATTR}]`).forEach((el) => el.removeAttribute(FOCUS_ATTR));
+    q(`[${PICK_ATTR}]`).forEach((el) => el.removeAttribute(PICK_ATTR));
+    q(`[${HOVER_ATTR}]`).forEach((el) => el.removeAttribute(HOVER_ATTR));
+    q(`[${FILL_ATTR}]`).forEach((el) => el.removeAttribute(FILL_ATTR));
   }
 
   const host = document.createElement('div');
@@ -177,13 +202,16 @@
       font: inherit; font-weight: 600; cursor: pointer;
       transition: background .12s, border-color .12s, color .12s;
     }
-    button:hover { background: #2c3346; }
+    button:not(:disabled):hover { background: #2c3346; border-color: #3d465c; color: #fff; }
+    button:disabled { opacity: .45; cursor: not-allowed; }
     button:focus-visible { outline: 2px solid #93c5fd; outline-offset: 2px; }
     button.primary { background: #2563eb; border-color: #2563eb; color: #fff; }
-    button.primary:hover { background: #1d4ed8; }
+    button.primary:not(:disabled):hover { background: #1d4ed8; border-color: #1d4ed8; }
     button.ghost { background: transparent; border-color: transparent; color: #9aa4b8; padding: 5px 7px; }
-    button.ghost:hover { background: #262b38; color: #e6e8ee; }
+    button.ghost:not(:disabled):hover { background: #262b38; border-color: #333a4a; color: #e6e8ee; }
+    button.bar-destroy:not(:disabled):hover { background: #7f1d1d; border-color: #b91c1c; color: #fecaca; }
     button[aria-pressed="true"] { background: #b91c1c; border-color: #b91c1c; color: #fff; }
+    button[aria-pressed="true"]:not(:disabled):hover { background: #dc2626; border-color: #dc2626; }
 
     svg { display: block; inline-size: 17px; block-size: 17px;
       fill: none; stroke: currentColor; stroke-width: 1.7;
@@ -211,12 +239,15 @@
       color: #cbd2e1; white-space: nowrap; }
     .readout .size { color: #93c5fd; font-variant-numeric: tabular-nums; }
     .readout .sep { color: #3b4252; }
-    .readout .miss { color: #fbbf24; cursor: help; font-weight: 700; }
+    .readout .miss { color: #fbbf24; cursor: help; font-weight: 700;
+      transition: color .12s; }
+    .readout .miss:hover { color: #fde68a; }
     .spacer { flex: 1 1 auto; }
     .tools { display: flex; align-items: center; gap: 4px; }
 
     .tool { position: relative; padding: 5px 7px; }
     .tool[aria-expanded="true"] { background: #2563eb; border-color: #2563eb; color: #fff; }
+    .tool[aria-expanded="true"]:hover { background: #1d4ed8; border-color: #1d4ed8; }
     .dot {
       position: absolute; inset-block-end: -3px; inset-inline-end: -3px;
       min-inline-size: 10px; block-size: 10px; padding: 0 2px;
@@ -266,16 +297,30 @@
 
     .row { display: flex; align-items: center; gap: 10px; inline-size: 100%;
       padding: 5px 8px; border: 1px solid transparent; border-radius: 6px;
-      background: transparent; color: #cbd2e1; text-align: start; font-weight: 400; }
-    .row:hover { background: #1b1f28; border-color: #2a2e3a; }
+      background: transparent; color: #cbd2e1; text-align: start; font-weight: 400;
+      transition: background .12s, border-color .12s, color .12s; }
+    button.row:not(:disabled):hover,
+    .row.pick:hover { background: #1b1f28; border-color: #2a2e3a; color: #e6e8ee; }
+    .row.pick { padding: 2px 4px 2px 8px; }
     .row .tag { flex: 0 0 auto; color: #93c5fd; }
     .row .num { flex: 0 0 auto; color: #fca5a5; font-variant-numeric: tabular-nums; }
+    .row .idx { flex: 0 0 auto; min-inline-size: 2ch; color: #93c5fd; font-weight: 700;
+      font-variant-numeric: tabular-nums; }
+    .row .grow { display: flex; align-items: center; gap: 10px; flex: 1 1 auto;
+      overflow: hidden; padding: 4px; border: 0; border-radius: 5px;
+      background: transparent; color: inherit; text-align: start; font-weight: 400; }
+    .row .grow:not(:disabled):hover { background: #262b38; color: #e6e8ee; }
     .row .excerpt { overflow: hidden; color: #8f99ad; text-overflow: ellipsis; white-space: nowrap; }
-    .row .doc { color: #6f7a8d; }
+    .row .doc { flex: 0 0 auto; color: #6f7a8d; }
+    .row .filled { color: #bbf7d0; }
+    .row .warn { flex: 0 0 auto; color: #fbbf24; }
+    button.mini { padding: 3px 8px; font-size: 11px; }
 
     .result { margin-block-end: 12px; border: 1px solid #2a2e3a; border-radius: 9px; overflow: hidden; }
     .result-head { display: flex; align-items: center; gap: 8px; padding: 8px 12px;
       background: #1b1e27; border-block-end: 1px solid #2a2e3a; }
+    .result-head .idx { min-inline-size: 2ch; color: #cbd2e1; font-weight: 700;
+      font-variant-numeric: tabular-nums; }
     .result-head .name { color: #93c5fd; font-weight: 700; }
     .result-head .meta { color: #9aa4b8; font-size: 11px; }
     .result-body { padding: 10px 12px; }
@@ -299,7 +344,9 @@
     .unit-toggle { display: inline-flex; border: 1px solid #333a4a; border-radius: 7px; overflow: hidden; }
     .unit-toggle button { border: 0; border-radius: 0; padding: 5px 11px;
       background: #232838; color: #9aa4b8; }
+    .unit-toggle button:not(:disabled):hover { background: #2c3346; color: #e6e8ee; }
     .unit-toggle button.active { background: #2563eb; color: #fff; }
+    .unit-toggle button.active:not(:disabled):hover { background: #1d4ed8; color: #fff; }
     .range { display: flex; align-items: center; gap: 8px; margin-block-end: 12px; color: #9aa4b8; }
 
     .overlay {
@@ -320,6 +367,20 @@
     @keyframes slide { from { inset-inline-start: -28%; } to { inset-inline-start: 100%; } }
     .progress-row { display: flex; align-items: center; gap: 12px; color: #cbd2e1; }
     .progress-row b { color: #93c5fd; font-variant-numeric: tabular-nums; }
+
+    .pins { position: fixed; inset: 0; z-index: 2147483644; pointer-events: none; }
+    .pin { position: absolute; inset-block-start: 0; inset-inline-start: 0;
+      padding: 1px 7px; border-radius: 999px; background: #2563eb; color: #fff;
+      font: 700 10px/1.6 ui-monospace, Consolas, monospace;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, .45); }
+
+    .picker { position: fixed; inset-block-end: calc(var(--bar-h) + 12px);
+      inset-inline-start: 50%; transform: translateX(-50%); z-index: 2147483647;
+      display: flex; align-items: center; gap: 12px; max-inline-size: calc(100vw - 24px);
+      padding: 7px 10px; border: 1px solid #2a2e3a; border-radius: 10px;
+      background: #14161c; color: #cbd2e1;
+      box-shadow: 0 6px 26px rgba(0, 0, 0, .45); }
+    .picker b { color: #93c5fd; white-space: nowrap; }
 
     .toast { position: fixed; inset-block-end: calc(var(--bar-h) + 12px);
       inset-inline-start: 50%; transform: translateX(-50%); z-index: 2147483647;
@@ -359,6 +420,16 @@
           <button id="abortBtn" type="button">Abort (Esc)</button>
         </div>
       </div>
+    </div>
+
+    <div class="pins" id="pins" hidden aria-hidden="true"></div>
+
+    <div class="picker" id="picker" hidden role="group" aria-label="Image selection">
+      <span>Click an image to select it, click it again to drop it.
+        <b id="pickCount">0 selected</b></span>
+      <span class="spacer"></span>
+      <button id="pickClear" type="button">clear</button>
+      <button class="primary" id="pickDone" type="button">done (Esc)</button>
     </div>
 
     <div class="toast" id="toast">copied</div>
@@ -1239,7 +1310,8 @@
   TOOLS.push(qrTool);
 
   const SRCSET_CONFIG = {
-    selector: '[data-dev-srcset]',
+    markedSelector: '[data-dev-srcset]',
+    mediaSelector: 'img, video, canvas, svg',
     targetDPRs: [1, 2, 3],
     minViewport: 320,
     maxViewport: 1920,
@@ -1267,10 +1339,16 @@
     filenamePattern: 'image-{w}.jpg',
   };
 
+  const picks = [];
   const measurements = new Map();
   const sampled = new Set();
   const srcsetRange = { from: SRCSET_CONFIG.minViewport, to: SRCSET_CONFIG.maxViewport };
 
+  let picking = false;
+  let marksOn = false;
+  let hovered = null;
+  let pinFrame = 0;
+  let missing = [];
   let sweeping = false;
   let aborted = false;
   let srcsetHasResults = false;
@@ -1280,7 +1358,14 @@
   let probeFrame = null;
   let probeDoc = null;
   let srcsetControls = null;
+  let pickButton = null;
+  let clearButton = null;
+  let measureButton = null;
+  let srcsetBadge = null;
 
+  const pins = $('pins');
+  const picker = $('picker');
+  const pickCount = $('pickCount');
   const overlay = $('overlay');
   const stage = $('stage');
   const track = $('track');
@@ -1295,27 +1380,222 @@
     return Math.ceil(width / rule.step) * rule.step;
   }
 
-  function keyFor(el, index) {
-    const label = el.getAttribute('data-dev-srcset');
-    if (label && label.trim() !== '') return label.trim();
-    const src = (el.currentSrc || el.src || '').split('/').pop() || 'image';
-    return `${src} #${index}`;
+  function structuralPath(el, useIds) {
+    const parts = [];
+    let node = el;
+    while (node && node.nodeType === 1 && node !== document.documentElement) {
+      if (useIds && node.id
+        && document.querySelectorAll(`#${cssEscape(node.id)}`).length === 1) {
+        parts.unshift(`#${cssEscape(node.id)}`);
+        return parts.join(' > ');
+      }
+      const parent = node.parentElement;
+      const tag = node.tagName.toLowerCase();
+      if (!parent) {
+        parts.unshift(tag);
+        break;
+      }
+      const twins = Array.from(parent.children)
+        .filter((child) => child.tagName === node.tagName);
+      parts.unshift(twins.length > 1
+        ? `${tag}:nth-of-type(${twins.indexOf(node) + 1})`
+        : tag);
+      node = parent;
+    }
+    return parts.join(' > ');
   }
 
-  function srcsetElements() {
-    const doc = probeDoc || document;
-    return Array.from(doc.querySelectorAll(SRCSET_CONFIG.selector));
+  function pathsFor(el) {
+    const anchored = structuralPath(el, true);
+    const plain = structuralPath(el, false);
+    return anchored === plain ? [plain] : [anchored, plain];
+  }
+
+  function labelFor(el) {
+    const marked = (el.getAttribute('data-dev-srcset') || '').trim();
+    if (marked) return marked;
+    const file = (el.currentSrc || el.getAttribute('src') || '')
+      .split(/[?#]/)[0].split('/').pop();
+    if (file && file.includes('.')) return decodeURIComponent(file);
+    const alt = (el.getAttribute('alt') || '').trim();
+    if (alt) return alt.length > EXCERPT ? `${alt.slice(0, EXCERPT)}…` : alt;
+    if (file) return decodeURIComponent(file);
+    return describe(el).tag;
+  }
+
+  function pickTarget(node) {
+    if (!node || node.nodeType !== 1) return null;
+    if (node === document.documentElement || node === document.body) return null;
+    if (node.closest(`[${HOST_ATTR}], [${SPACER_ATTR}]`)) return null;
+    const media = node.closest(SRCSET_CONFIG.mediaSelector);
+    if (media) return media;
+    const inside = q(SRCSET_CONFIG.mediaSelector, node);
+    return inside.length === 1 ? inside[0] : node;
+  }
+
+  function makePick(el) {
+    return { el, paths: pathsFor(el), label: labelFor(el), probeEl: null };
+  }
+
+  function pinsWanted() {
+    return marksOn && picks.length > 0;
+  }
+
+  function syncPins() {
+    pinFrame = 0;
+    pins.hidden = !pinsWanted();
+    if (pins.hidden) return;
+    while (pins.children.length > picks.length) pins.lastElementChild.remove();
+    while (pins.children.length < picks.length) {
+      const pin = document.createElement('span');
+      pin.className = 'pin';
+      pins.appendChild(pin);
+    }
+    picks.forEach((pick, i) => {
+      const pin = pins.children[i];
+      const box = pick.el.getBoundingClientRect();
+      pin.hidden = !pick.el.isConnected
+        || (box.width === 0 && box.height === 0)
+        || box.bottom < 0 || box.top > window.innerHeight
+        || box.right < 0 || box.left > window.innerWidth;
+      if (pin.hidden) return;
+      pin.textContent = String(i + 1);
+      const x = Math.min(Math.max(0, Math.round(box.left)), window.innerWidth - 30);
+      const y = Math.max(0, Math.round(box.top) - 17);
+      pin.style.transform = `translate(${x}px, ${y}px)`;
+    });
+  }
+
+  function queuePins() {
+    if (pinFrame || !pinsWanted()) return;
+    pinFrame = requestAnimationFrame(syncPins);
+  }
+
+  function setPickMarks(on) {
+    marksOn = on;
+    q(`[${PICK_ATTR}]`).forEach((el) => el.removeAttribute(PICK_ATTR));
+    if (on) {
+      picks.forEach((pick, i) => {
+        if (pick.el.isConnected) pick.el.setAttribute(PICK_ATTR, String(i + 1));
+      });
+    }
+    syncPins();
+  }
+
+  function syncPicks() {
+    setPickMarks(marksOn);
+    pickCount.textContent = picks.length === 1 ? '1 selected' : `${picks.length} selected`;
+    $('pickClear').disabled = picks.length === 0;
+    if (clearButton) clearButton.disabled = picks.length === 0;
+    if (measureButton) measureButton.disabled = picks.length === 0;
+    if (pickButton) pickButton.setAttribute('aria-pressed', String(picking));
+    if (openTool === srcsetTool) refreshPanel();
+  }
+
+  function togglePick(el) {
+    const at = picks.findIndex((pick) => pick.el === el);
+    if (at > -1) {
+      measurements.delete(picks[at]);
+      picks.splice(at, 1);
+      srcsetHasResults = measurements.size > 0;
+    } else {
+      picks.push(makePick(el));
+    }
+    syncPicks();
+  }
+
+  function clearPicks() {
+    picks.length = 0;
+    measurements.clear();
+    srcsetHasResults = false;
+    syncPicks();
+  }
+
+  function adoptMarked() {
+    q(SRCSET_CONFIG.markedSelector)
+      .filter((el) => !picks.some((pick) => pick.el === el))
+      .forEach((el) => picks.push(makePick(el)));
+    if (picks.length) syncPicks();
+  }
+
+  function onPickOver(event) {
+    const target = pickTarget(event.target);
+    if (target === hovered) return;
+    hovered?.removeAttribute(HOVER_ATTR);
+    hovered = target;
+    hovered?.setAttribute(HOVER_ATTR, '');
+  }
+
+  function onPickDown(event) {
+    if (!pickTarget(event.target)) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }
+
+  function onPickClick(event) {
+    const target = pickTarget(event.target);
+    if (!target) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    togglePick(target);
+  }
+
+  function setPicking(on) {
+    if (picking === on) return;
+    picking = on;
+    const method = on ? 'addEventListener' : 'removeEventListener';
+    document[method]('pointerover', onPickOver, true);
+    document[method]('mousedown', onPickDown, true);
+    document[method]('click', onPickClick, true);
+    if (on) {
+      document.documentElement.setAttribute(PICKING_ATTR, '');
+      marksOn = true;
+    } else {
+      document.documentElement.removeAttribute(PICKING_ATTR);
+      hovered?.removeAttribute(HOVER_ATTR);
+      hovered = null;
+    }
+    picker.hidden = !on;
+    syncPicks();
+  }
+
+  function startPicking() {
+    setCollapsed(false);
+    closePanel();
+    setPicking(true);
+  }
+
+  function stopPicking() {
+    setPicking(false);
+    showTool(srcsetTool);
+  }
+
+  function resolveInProbe(pick) {
+    if (pick.probeEl && pick.probeEl.isConnected) return pick.probeEl;
+    pick.probeEl = null;
+    if (!probeDoc) return null;
+    for (const path of pick.paths) {
+      let found = null;
+      try { found = probeDoc.querySelector(path); } catch (err) { found = null; }
+      if (found && found.tagName === pick.el.tagName) {
+        pick.probeEl = found;
+        break;
+      }
+    }
+    return pick.probeEl;
   }
 
   function collectSample(viewport) {
     const dpr = window.devicePixelRatio || 1;
-    srcsetElements().forEach((el, i) => {
+    picks.forEach((pick) => {
+      const el = resolveInProbe(pick);
+      if (!el) return;
       const renderW = Math.round(el.getBoundingClientRect().width);
       if (renderW <= 0) return;
-      if (!measurements.has(el)) {
-        measurements.set(el, { key: keyFor(el, i), samples: [], byVw: new Map() });
+      if (!measurements.has(pick)) {
+        measurements.set(pick, { key: pick.label, samples: [], byVw: new Map() });
       }
-      const entry = measurements.get(el);
+      const entry = measurements.get(pick);
       const existing = entry.byVw.get(viewport);
       if (existing) {
         existing.renderW = Math.max(existing.renderW, renderW);
@@ -1611,13 +1891,21 @@
 
   async function startSweep() {
     if (sweeping) return;
+    if (!picks.length) {
+      startPicking();
+      return;
+    }
     sweeping = true;
     aborted = false;
     srcsetHasResults = false;
     srcsetError = null;
     measurements.clear();
     sampled.clear();
+    picks.forEach((pick) => { pick.probeEl = null; });
+    missing = [];
 
+    setPicking(false);
+    setPickMarks(false);
     closePanel();
     overlay.hidden = false;
     setBadge(srcsetTool, 'busy', '', 'srcset — measuring');
@@ -1637,6 +1925,8 @@
       if (probeDoc.fonts) await probeDoc.fonts.ready.catch(() => null);
 
       layoutStage(from);
+      await settle();
+      missing = picks.filter((pick) => !resolveInProbe(pick));
       await runSweep(from, to);
     } catch (err) {
       finishSweep(err, to);
@@ -1685,6 +1975,23 @@
 
     const badge = document.createElement('span');
     badge.className = 'badge';
+    srcsetBadge = badge;
+
+    const pick = document.createElement('button');
+    pick.type = 'button';
+    pick.textContent = 'pick images';
+    pick.title = 'Click images in the page to select them for the measurement';
+    pick.setAttribute('aria-pressed', 'false');
+    pick.addEventListener('click', () => (picking ? stopPicking() : startPicking()));
+    pickButton = pick;
+
+    const drop = document.createElement('button');
+    drop.type = 'button';
+    drop.textContent = 'clear';
+    drop.title = 'Drop the whole selection';
+    drop.disabled = picks.length === 0;
+    drop.addEventListener('click', clearPicks);
+    clearButton = drop;
 
     const label = document.createElement('span');
     label.className = 'hint';
@@ -1712,19 +2019,74 @@
     measure.type = 'button';
     measure.className = 'primary';
     measure.textContent = 'measure';
+    measure.disabled = picks.length === 0;
     measure.addEventListener('click', startSweep);
+    measureButton = measure;
 
-    srcsetControls = [badge, label, toggle, measure];
+    srcsetControls = [badge, pick, drop, label, toggle, measure];
     return srcsetControls;
   }
 
+  function renderSelection(body) {
+    const block = document.createElement('div');
+    block.className = 'group';
+    block.innerHTML = `
+      <div class="group-head">
+        <span class="kind">Selection</span>
+        <span class="count">${picks.length}×</span>
+      </div>`;
+
+    if (!picks.length) {
+      const note = document.createElement('div');
+      note.className = 'row';
+      note.innerHTML = '<span class="doc">Nothing selected. Press <b>pick images</b> and '
+        + 'click the images in the page — one per distinct layout behaviour.</span>';
+      block.appendChild(note);
+      body.appendChild(block);
+      return;
+    }
+
+    picks.forEach((pick, i) => {
+      const row = document.createElement('div');
+      row.className = 'row pick';
+
+      const show = document.createElement('button');
+      show.type = 'button';
+      show.className = 'grow';
+      show.title = pick.paths[0];
+      show.innerHTML = `<span class="idx">${i + 1}</span>`
+        + `<span class="tag">${escapeHtml(describe(pick.el).tag)}</span>`
+        + `<span class="excerpt">${escapeHtml(pick.label)}</span>`;
+      show.addEventListener('click', () => flash(pick.el));
+
+      const drop = document.createElement('button');
+      drop.type = 'button';
+      drop.className = 'ghost';
+      drop.title = 'Drop this image from the selection';
+      drop.setAttribute('aria-label', `Drop image ${i + 1} from the selection`);
+      drop.innerHTML = ICONS.close;
+      drop.addEventListener('click', () => togglePick(pick.el));
+
+      row.append(show, drop);
+      block.appendChild(row);
+    });
+
+    body.appendChild(block);
+  }
+
   function renderSrcset(body) {
-    const controls = srcsetControlNodes();
-    controls[0].textContent = lastRun
+    srcsetControlNodes();
+    srcsetBadge.textContent = lastRun
       ? `${lastRun.from}–${lastRun.to}px · ${lastRun.samples} samples${lastRun.aborted ? ' · aborted' : ''}`
       : 'not measured yet';
-    controls[0].className = 'badge';
-    controls[3].textContent = srcsetHasResults ? 'measure again' : 'measure';
+    srcsetBadge.className = 'badge';
+    measureButton.textContent = srcsetHasResults ? 'measure again' : 'measure';
+    measureButton.disabled = picks.length === 0;
+    clearButton.disabled = picks.length === 0;
+    pickButton.setAttribute('aria-pressed', String(picking));
+    setPickMarks(true);
+
+    renderSelection(body);
 
     const range = document.createElement('div');
     range.className = 'range';
@@ -1757,17 +2119,31 @@
       return;
     }
 
-    const results = Array.from(measurements.values()).map(analyze);
+    if (missing.length) {
+      const note = document.createElement('div');
+      note.className = 'error';
+      note.innerHTML = `<p><b>${missing.length} of the selected elements were not found in `
+        + 'the probe frame</b>, so they carry no measurement. The selection is remembered '
+        + 'as a CSS path, and the probe is a fresh load of the page: an element that only '
+        + 'appears after an interaction, or one a script moves, sits elsewhere there.</p>'
+        + `<p>${missing.map((pick) => `<code>${escapeHtml(pick.paths[0])}</code>`).join('<br>')}</p>`;
+      body.appendChild(note);
+    }
+
+    const results = picks
+      .map((pick, i) => ({ index: i + 1, entry: measurements.get(pick) }))
+      .filter((item) => item.entry)
+      .map((item) => ({ index: item.index, ...analyze(item.entry) }));
 
     if (!results.length) {
       const empty = document.createElement('div');
       empty.className = 'empty';
-      empty.innerHTML = lastRun
-        ? 'No marked images found. Put <code>data-dev-srcset</code> on the '
-          + '<code>&lt;img&gt;</code> elements you want measured.'
-        : 'Mark the images with <code>data-dev-srcset</code>, then press '
-          + '<b>measure</b>: the sweep runs on its own in a probe frame and reports '
-          + 'the <code>sizes</code> and <code>srcset</code> they need.';
+      empty.innerHTML = picks.length
+        ? 'Nothing measured yet. Press <b>measure</b>: the sweep runs on its own in a '
+          + 'probe frame and reports the <code>sizes</code> and <code>srcset</code> the '
+          + 'selected images need.'
+        : 'Press <b>pick images</b> and click the images you want measured — as many as '
+          + 'you like. <b>measure</b> then sweeps the viewport range in a probe frame.';
       body.appendChild(empty);
       return;
     }
@@ -1802,6 +2178,7 @@
       card.className = 'result';
       card.innerHTML = `
         <div class="result-head">
+          <span class="idx">${result.index}</span>
           <span class="name">${escapeHtml(result.key)}</span>
           <span class="meta">${result.samples.length} sample(s)</span>
         </div>
@@ -1848,9 +2225,12 @@
     badge: null,
     controls: () => srcsetControlNodes(),
     onOpen: (body) => renderSrcset(body),
+    onClose: () => setPickMarks(false),
   };
 
   $('abortBtn').addEventListener('click', abortSweep);
+  $('pickDone').addEventListener('click', stopPicking);
+  $('pickClear').addEventListener('click', clearPicks);
 
   window.addEventListener('resize', () => {
     if (sweeping && probeFrame) {
@@ -1858,10 +2238,890 @@
     }
   }, { passive: true });
 
+  window.addEventListener('scroll', queuePins, { passive: true, capture: true });
+
   TOOLS.push(srcsetTool);
+
+  function ibanCheckDigits(country, bban) {
+    const rearranged = `${bban}${country}00`;
+    const digits = rearranged.replace(/[A-Z]/g, (c) => c.charCodeAt(0) - 55);
+    let rest = 0;
+    for (const digit of digits) rest = (rest * 10 + Number(digit)) % 97;
+    return String(98 - rest).padStart(2, '0');
+  }
+
+  function iban(country, bban) {
+    const full = `${country}${ibanCheckDigits(country, bban)}${bban}`;
+    return full.replace(/(.{4})/g, '$1 ').trim();
+  }
+
+  const GANDALF = {
+    salutation: 'Mr',
+    firstName: 'Gandalf',
+    middleName: 'Olórin',
+    lastName: 'the Grey',
+    fullName: 'Gandalf the Grey',
+    nickname: 'Mithrandir',
+    username: 'mithrandir',
+    password: 'Mellon-Speak-Friend-3019!',
+    pin: '3019',
+    gender: 'male',
+    language: 'Westron',
+    email: 'mithrandir@aman.com',
+    website: 'https://you-shall-not-pass.aman.com',
+    phone: '+49 1954 1955',
+    company: 'The Fellowship of the Ring',
+    department: 'Order of the Istari',
+    jobTitle: 'Servant of the Secret Fire',
+    street: 'Mithlond Quay',
+    houseNumber: '3',
+    addressLine2: 'Last pier before the Straight Road',
+    postalCode: '03019',
+    city: 'Grey Havens',
+    region: 'Lindon',
+    country: 'Middle-earth',
+    birthDate: '1000-09-22',
+    date: '1000-09-22',
+    week: '1000-W38',
+    time: '11:11',
+    accountHolder: 'Gandalf the Grey',
+    bank: 'Michel Delving Savings',
+    iban: iban('DE', '301900003019195400'),
+    bic: 'SHIRDEFFXXX',
+    cardNumber: '4111 1111 1111 1111',
+    cardExpiry: '12/30',
+    cardCvc: '319',
+    taxId: 'DE301919543',
+    subject: 'Concerning a certain ring',
+    message: 'All we have to decide is what to do with the time that is given '
+      + 'us. This is a test entry placed by Gandalf the Grey, '
+      + 'Servant of the Secret Fire, wielder of the flame of Anor.',
+    search: 'the One Ring',
+    age: '2021',
+    quantity: '1',
+    amount: '19.54',
+    number: '3',
+    code: 'MELLON',
+    color: '#8b8b8b',
+    text: 'Gandalf the Grey',
+  };
+
+  const FILL_RULES = [
+    { kind: 'pin', re: /\bpin\b|\btan\b|\botp\b/ },
+    { kind: 'email', types: ['email'], auto: ['email'], re: /e-?mail/ },
+    { kind: 'password', types: ['password'], auto: ['new-password', 'current-password'] },
+    { kind: 'phone', types: ['tel'], auto: ['tel', 'tel-national', 'tel-local'], re: /phone|telefon|telephone|\btel\b|mobile|handy|fax/ },
+    { kind: 'website', types: ['url'], auto: ['url'], re: /website|webseite|homepage|\burl\b|\blink\b/ },
+    { kind: 'search', types: ['search'], re: /search|suche|\bquery\b/ },
+    { kind: 'cardNumber', auto: ['cc-number'], re: /card-?number|kartennummer|kreditkarte/ },
+    { kind: 'cardExpiry', auto: ['cc-exp', 'cc-exp-month', 'cc-exp-year'], re: /expir|ablauf|gültig|valid-?thru/ },
+    { kind: 'cardCvc', auto: ['cc-csc'], re: /\bcvc\b|\bcvv\b|\bcsc\b|prüfziffer|security-?code/ },
+    { kind: 'iban', re: /\biban\b|kontonummer|account-?number/ },
+    { kind: 'bic', re: /\bbic\b|\bswift\b|\bblz\b|bankleitzahl/ },
+    { kind: 'accountHolder', re: /kontoinhaber|account-?holder|karteninhaber|cardholder/ },
+    { kind: 'bank', re: /\bbank\b/ },
+    { kind: 'taxId', re: /\bvat\b|\bust\b|steuer|tax-?(id|number)/ },
+    { kind: 'salutation', auto: ['honorific-prefix'], re: /salutation|anrede|honorific/ },
+    { kind: 'gender', re: /gender|geschlecht|\bsex\b/ },
+    { kind: 'firstName', auto: ['given-name'], re: /first-?name|vorname|given-?name|forename|\bfname\b/ },
+    { kind: 'lastName', auto: ['family-name'], re: /last-?name|nachname|surname|family-?name|\blname\b/ },
+    { kind: 'middleName', auto: ['additional-name'], re: /middle-?name|zweiter-?vorname/ },
+    { kind: 'nickname', auto: ['nickname'], re: /nick-?name|spitzname|display-?name/ },
+    { kind: 'username', auto: ['username'], re: /user-?name|benutzer|\buser\b|\blogin\b|\bkennung\b/ },
+    { kind: 'company', auto: ['organization'], re: /company|firma|organi[sz]ation|unternehmen|employer|arbeitgeber/ },
+    { kind: 'department', re: /department|abteilung|\bteam\b/ },
+    { kind: 'jobTitle', auto: ['organization-title'], re: /job-?title|position|\bberuf\b|\brole\b|funktion/ },
+    { kind: 'addressLine2', auto: ['address-line2'], re: /address-?(line-?)?2|adresszusatz|\bzusatz\b|apartment|\bapt\b|\bsuite\b|\bc\/o\b/ },
+    { kind: 'houseNumber', re: /house-?(number|no)|hausnummer|\bhausnr\b|street-?number/ },
+    { kind: 'street', auto: ['street-address', 'address-line1'], re: /street|stra(ss|ß)e|address-?(line-?)?1?|anschrift|adresse/ },
+    { kind: 'postalCode', auto: ['postal-code'], re: /post(al)?-?code|\bzip\b|\bplz\b|postleitzahl/ },
+    { kind: 'city', auto: ['address-level2'], re: /\bcity\b|\btown\b|\bort\b|\bstadt\b|wohnort/ },
+    { kind: 'region', auto: ['address-level1'], re: /\bstate\b|region|province|bundesland|kanton|county/ },
+    { kind: 'country', auto: ['country', 'country-name'], re: /country|\bland\b|\bstaat\b/ },
+    { kind: 'birthDate', auto: ['bday'], re: /birth|geburt|\bdob\b|\bbday\b/ },
+    { kind: 'date', re: /\bdate\b|\bdatum\b|anreise|abreise|termin|deadline|\bfrist\b|(tt|dd|mm)[./-](mm|tt|dd)[./-](jjjj|yyyy)/ },
+    { kind: 'language', auto: ['language'], re: /language|sprache|locale/ },
+    { kind: 'subject', re: /subject|betreff|\btopic\b|\bthema\b|\breason\b|anliegen|\btitle\b|\btitel\b|überschrift|headline/ },
+    { kind: 'message', re: /message|nachricht|comment|kommentar|bemerkung|\bnote\b|feedback|\bbody\b|beschreibung|description/ },
+    { kind: 'age', re: /\bage\b|\balter\b/ },
+    { kind: 'quantity', re: /quantity|\bmenge\b|\banzahl\b|st(ü|ue)ck|\bnumber\b|\bzahl\b|\bguests?\b|g(ä|ae)ste|\bpersons?\b|personen|teilnehmer/ },
+    { kind: 'amount', re: /\bamount\b|\bbetrag\b|\bprice\b|\bpreis|\bsumme\b|\bbudget\b|\bkosten\b/ },
+    { kind: 'code', re: /\bcode\b|gutschein|coupon|voucher|\bpromo/ },
+  ];
+
+  const TYPE_KIND = {
+    date: 'birthDate',
+    'datetime-local': 'birthDate',
+    month: 'birthDate',
+    week: 'week',
+    time: 'time',
+    color: 'color',
+    number: 'number',
+    range: 'number',
+    file: 'file',
+  };
+
+  const SELECT_HINTS = {
+    salutation: ['mr', 'herr', 'mister', 'm'],
+    gender: ['male', 'männlich', 'mann', 'm', 'herr'],
+    country: ['middle-earth', 'mittelerde', 'germany', 'deutschland', 'de'],
+    region: ['lindon'],
+    language: ['english', 'englisch', 'en', 'deutsch', 'german', 'de'],
+    subject: ['other', 'sonstiges', 'allgemein', 'general'],
+  };
+
+  const CONSENT_RE = /agree|accept|consent|terms|privacy|datenschutz|akzept|einverstanden|zustimm|\bagb\b|bestätig/;
+  const PLACEHOLDER_RE = /^\s*(-+|…|\.{3}|bitte\s|please\s|choose|select|auswähl|wähl|keine|none)/i;
+  const SKIP_TYPES = ['hidden', 'submit', 'reset', 'button', 'image'];
+  const FILL_TAGS = ['INPUT', 'SELECT', 'TEXTAREA'];
+  const FORM_HOOK = 'data-dev-form';
+
+  const FILE_TEXT = 'The Red Book of Westmarch\n'
+    + '=========================\n\n'
+    + 'A test file placed by the dev dashboard.\n\n'
+    + '"All we have to decide is what to do with the time that is given us."\n'
+    + '                                            — Gandalf the Grey\n';
+
+  const FILE_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" '
+    + 'width="64" height="64" role="img" aria-label="Gandalf\'s rune">'
+    + '<rect width="64" height="64" fill="#8b8b8b"/>'
+    + '<path d="M18 18 46 46M46 18 18 46" fill="none" stroke="#e6e8ee" '
+    + 'stroke-width="6" stroke-linecap="round"/>'
+    + '<circle cx="32" cy="9" r="3.5" fill="#e6e8ee"/>'
+    + '<circle cx="32" cy="55" r="3.5" fill="#e6e8ee"/></svg>';
+
+  const FILE_NAMES = [
+    { text: 'the-red-book-of-westmarch.txt', image: 'gandalfs-rune' },
+    { text: 'a-short-cut-to-mushrooms.txt', image: 'the-doors-of-durin' },
+  ];
+
+  const formRecords = new Map();
+
+  let formList = [];
+  let formMarked = false;
+  let formControls = null;
+  let formFillAll = null;
+  let formResetAll = null;
+
+  const formTool = {
+    id: 'form',
+    label: 'form filler',
+    title: 'form filler',
+    icon: ICONS.form,
+    badge: null,
+    controls: () => formControlNodes(),
+    onOpen: (body) => renderForm(body),
+    onClose: () => setFillMarks(false),
+  };
+
+  function nativeSet(el, prop, value) {
+    let node = Object.getPrototypeOf(el);
+    let desc = null;
+    while (node && !desc) {
+      desc = Object.getOwnPropertyDescriptor(node, prop);
+      if (!desc) node = Object.getPrototypeOf(node);
+    }
+    if (desc && desc.set) desc.set.call(el, value);
+    else el[prop] = value;
+  }
+
+  function fire(el) {
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  function formKey(entry) {
+    return entry.el || 'loose';
+  }
+
+  function isControl(el) {
+    return FILL_TAGS.includes(el.tagName)
+      && !SKIP_TYPES.includes((el.type || '').toLowerCase())
+      && !el.closest(`[${HOST_ATTR}]`);
+  }
+
+  function skipReason(el) {
+    const own = (el.getAttribute(FORM_HOOK) || '').trim().toLowerCase();
+    if (own === 'skip') return `${FORM_HOOK}="skip"`;
+    if (el.closest(`[${FORM_HOOK}="skip"]`)) return `${FORM_HOOK}="skip" on an ancestor`;
+    if (el.disabled) return 'disabled';
+    if (el.readOnly) return 'readonly';
+    return '';
+  }
+
+  function scanForms() {
+    const forms = q('form')
+      .filter((el) => !el.closest(`[${HOST_ATTR}]`))
+      .map((el) => ({ el, fields: Array.from(el.elements).filter(isControl) }));
+    const loose = q('input, select, textarea')
+      .filter((el) => !el.form && isControl(el));
+    if (loose.length) forms.push({ el: null, fields: loose });
+    formList = forms.filter((entry) => entry.fields.length);
+    formList.forEach((entry, i) => { entry.index = i + 1; });
+    Array.from(formRecords.keys())
+      .filter((key) => key !== 'loose' && !key.isConnected)
+      .forEach((key) => formRecords.delete(key));
+    return formList;
+  }
+
+  function labelWords(el) {
+    const parts = [el.name, el.id, el.getAttribute('placeholder'),
+      el.getAttribute('aria-label'), el.getAttribute('data-name')];
+    if (el.labels) parts.push(...Array.from(el.labels).map((l) => l.textContent));
+    const by = (el.getAttribute('aria-labelledby') || '').split(/\s+/).filter(Boolean);
+    by.forEach((id) => parts.push(document.getElementById(id)?.textContent));
+    const legend = el.closest('fieldset')?.querySelector('legend');
+    if (legend) parts.push(legend.textContent);
+    return parts.filter(Boolean).join(' ').replace(/\s+/g, ' ').toLowerCase();
+  }
+
+  function groupKind(el) {
+    const parts = [el.name, el.id];
+    const legend = el.closest('fieldset')?.querySelector('legend');
+    if (legend) parts.push(legend.textContent);
+    const words = parts.filter(Boolean).join(' ').replace(/\s+/g, ' ').toLowerCase();
+    const hit = FILL_RULES.find((rule) => rule.re && rule.re.test(words));
+    return hit ? hit.kind : '';
+  }
+
+  function kindOf(el) {
+    const forced = (el.getAttribute(FORM_HOOK) || '').trim();
+    if (forced && forced.toLowerCase() !== 'skip') return forced;
+    const type = (el.type || '').toLowerCase();
+    if (type === 'checkbox' || type === 'radio') return type;
+    const auto = (el.getAttribute('autocomplete') || '').toLowerCase().split(/\s+/);
+    const words = labelWords(el);
+    const hit = FILL_RULES.find((rule) => (rule.types && rule.types.includes(type))
+      || (rule.auto && rule.auto.some((token) => auto.includes(token)))
+      || (rule.re && rule.re.test(words)));
+    if (hit) return hit.kind;
+    if (TYPE_KIND[type]) return TYPE_KIND[type];
+    return el.tagName === 'TEXTAREA' ? 'message' : 'text';
+  }
+
+  function lookup(kind) {
+    return Object.prototype.hasOwnProperty.call(GANDALF, kind) ? GANDALF[kind] : kind;
+  }
+
+  function clampDate(el, value) {
+    const min = el.getAttribute('min');
+    const max = el.getAttribute('max');
+    if (min && value < min) return min;
+    if (max && value > max) return max;
+    return value;
+  }
+
+  function stepOf(el) {
+    const raw = (el.getAttribute('step') || '').trim().toLowerCase();
+    if (raw === 'any') return 0;
+    const step = Number.parseFloat(raw);
+    return Number.isFinite(step) && step > 0 ? step : 1;
+  }
+
+  function numberValue(el, kind, record) {
+    const raw = String(lookup(kind)).replace(/[^\d.-]/g, '');
+    let value = Number.parseFloat(raw);
+    if (!Number.isFinite(value)) value = Number.parseFloat(GANDALF.number);
+    const min = Number.parseFloat(el.getAttribute('min'));
+    const max = Number.parseFloat(el.getAttribute('max'));
+    if ((el.type || '').toLowerCase() === 'range') {
+      const low = Number.isFinite(min) ? min : 0;
+      const high = Number.isFinite(max) ? max : 100;
+      value = low + (high - low) / 2;
+    }
+    const wanted = value;
+    if (Number.isFinite(min) && value < min) value = min;
+    if (Number.isFinite(max) && value > max) value = max;
+    const step = stepOf(el);
+    if (step > 0) {
+      const base = Number.isFinite(min) ? min : 0;
+      value = Number((base + Math.round((value - base) / step) * step).toFixed(10));
+      if (Number.isFinite(max) && value > max) value = Number((value - step).toFixed(10));
+      if (Number.isFinite(min) && value < min) value = Number((value + step).toFixed(10));
+    }
+    if (record && value !== wanted) {
+      record.note = "moved to what the field's min, max and step allow";
+    }
+    return String(value);
+  }
+
+  function dateValue(el, wanted, record) {
+    const moved = clampDate(el, wanted);
+    if (moved !== wanted) {
+      record.note = `moved to the field's ${moved > wanted ? 'min' : 'max'}`;
+    }
+    return moved;
+  }
+
+  function dateMask(el) {
+    const hint = `${el.getAttribute('placeholder') || ''} ${el.getAttribute('pattern') || ''}`
+      .toLowerCase();
+    const [year, month, day] = GANDALF.birthDate.split('-');
+    const sep = (hint.match(/[./-]/) || ['-'])[0];
+    if (/(dd|tt)\s*[./-]\s*mm/.test(hint)) return [day, month, year].join(sep);
+    if (/mm\s*[./-]\s*(dd|tt)/.test(hint)) return [month, day, year].join(sep);
+    return GANDALF.birthDate;
+  }
+
+  function textValue(el, kind, record) {
+    const type = (el.type || '').toLowerCase();
+    if (type === 'date') return dateValue(el, GANDALF.birthDate, record);
+    if (type === 'datetime-local') {
+      return `${dateValue(el, GANDALF.birthDate, record)}T${GANDALF.time}`;
+    }
+    if (type === 'month') return GANDALF.birthDate.slice(0, 7);
+    if (type === 'week') return GANDALF.week;
+    if (type === 'time') return GANDALF.time;
+    if (type === 'color') return GANDALF.color;
+    if (type === 'number' || type === 'range') return numberValue(el, kind, record);
+    if (kind === 'birthDate' || kind === 'date') return dateMask(el);
+    let value = String(lookup(kind));
+    const max = Number.parseInt(el.getAttribute('maxlength'), 10);
+    if (max > 0 && value.length > max) {
+      value = `${value.slice(0, Math.max(0, max - 1))}…`;
+      record.note = `cut to the field's maxlength of ${max}`;
+    }
+    return value;
+  }
+
+  function optionScore(option, hints) {
+    const value = (option.value || '').trim().toLowerCase();
+    const text = (option.textContent || '').trim().toLowerCase();
+    const at = hints.findIndex((hint) => value === hint || text === hint);
+    if (at > -1) return at;
+    const loose = hints.findIndex((hint) => text.startsWith(hint) || value.startsWith(hint));
+    return loose > -1 ? loose + hints.length : -1;
+  }
+
+  function pickOption(el, kind) {
+    const options = Array.from(el.options).filter((option) => !option.disabled);
+    const real = options.filter((option) => option.value !== ''
+      && !PLACEHOLDER_RE.test(option.textContent || ''));
+    const pool = real.length ? real : options;
+    if (!pool.length) return null;
+    const hints = SELECT_HINTS[kind];
+    if (hints) {
+      const scored = pool
+        .map((option) => ({ option, score: optionScore(option, hints) }))
+        .filter((entry) => entry.score > -1)
+        .sort((a, b) => a.score - b.score);
+      if (scored.length) return scored[0].option;
+    }
+    return pool[0];
+  }
+
+  function imageFile(mime, name, extension) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    ctx.fillStyle = '#8b8b8b';
+    ctx.fillRect(0, 0, 64, 64);
+    ctx.strokeStyle = '#e6e8ee';
+    ctx.lineWidth = 6;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(18, 18);
+    ctx.lineTo(46, 46);
+    ctx.moveTo(46, 18);
+    ctx.lineTo(18, 46);
+    ctx.stroke();
+    const url = canvas.toDataURL(mime);
+    if (url.indexOf(`data:${mime}`) !== 0) return null;
+    const binary = atob(url.split(',')[1]);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return new File([bytes], `${name}.${extension}`, { type: mime });
+  }
+
+  function fileForAccept(token, index) {
+    const names = FILE_NAMES[index % FILE_NAMES.length];
+    if (/^(\*\/\*|text\/plain|text\/\*|\.txt)$/.test(token)) {
+      return new File([FILE_TEXT], names.text, { type: 'text/plain' });
+    }
+    if (/^(image\/svg\+xml|\.svg)$/.test(token)) {
+      return new File([FILE_SVG], `${names.image}.svg`, { type: 'image/svg+xml' });
+    }
+    if (/^(image\/\*|image\/png|\.png)$/.test(token)) {
+      return imageFile('image/png', names.image, 'png');
+    }
+    if (/^(image\/jpe?g|\.jpe?g)$/.test(token)) {
+      return imageFile('image/jpeg', names.image, 'jpg');
+    }
+    if (/^(image\/webp|\.webp)$/.test(token)) {
+      return imageFile('image/webp', names.image, 'webp');
+    }
+    return null;
+  }
+
+  function fileFor(el, index) {
+    const accept = (el.getAttribute('accept') || '').trim().toLowerCase();
+    if (!accept) return fileForAccept('*/*', index);
+    const tokens = accept.split(',').map((token) => token.trim()).filter(Boolean);
+    for (const token of tokens) {
+      const made = fileForAccept(token, index);
+      if (made) return made;
+    }
+    return null;
+  }
+
+  function fillFile(el, record) {
+    if (!window.DataTransfer || !window.File) {
+      record.note = 'this browser will not let a script build a FileList';
+      return;
+    }
+    const wanted = el.multiple ? 2 : 1;
+    const files = [];
+    for (let i = 0; i < wanted; i++) {
+      const made = fileFor(el, i);
+      if (made) files.push(made);
+    }
+    if (!files.length) {
+      record.note = `no test file matches accept="${el.getAttribute('accept')}"`;
+      return;
+    }
+    const transfer = new DataTransfer();
+    files.forEach((file) => transfer.items.add(file));
+    el.files = transfer.files;
+    fire(el);
+    record.value = files.map((file) => file.name).join(', ');
+  }
+
+  function snapshot(el) {
+    return {
+      value: el.value,
+      checked: el.checked,
+      files: el.files || null,
+      selected: el.tagName === 'SELECT'
+        ? Array.from(el.options).map((option) => option.selected)
+        : null,
+    };
+  }
+
+  function restore(el, before) {
+    if (!el.isConnected || !before) return;
+    const type = (el.type || '').toLowerCase();
+    if (type === 'file') {
+      try { el.files = before.files; } catch (err) { el.value = ''; }
+    } else if (type === 'checkbox' || type === 'radio') {
+      nativeSet(el, 'checked', before.checked);
+    } else if (before.selected) {
+      Array.from(el.options).forEach((option, i) => {
+        option.selected = Boolean(before.selected[i]);
+      });
+    } else {
+      nativeSet(el, 'value', before.value);
+    }
+    fire(el);
+  }
+
+  function wantsCheck(el, group) {
+    if (el.required || CONSENT_RE.test(labelWords(el))) return true;
+    return group.length < 2 || el === group[0];
+  }
+
+  function fillOne(el, group) {
+    const kind = kindOf(el);
+    const type = (el.type || '').toLowerCase();
+    const record = { el, kind, value: '', note: '', before: snapshot(el), skipped: '' };
+
+    const reason = skipReason(el);
+    if (reason) {
+      record.skipped = reason;
+      return record;
+    }
+
+    if (el.tagName === 'SELECT') {
+      const option = pickOption(el, kind);
+      if (!option) {
+        record.skipped = 'no option to choose';
+        return record;
+      }
+      if (el.multiple) {
+        Array.from(el.options).forEach((entry) => { entry.selected = false; });
+        option.selected = true;
+        const second = Array.from(el.options).find((entry) => entry !== option
+          && !entry.disabled && entry.value !== '');
+        if (second) second.selected = true;
+        record.value = Array.from(el.selectedOptions)
+          .map((entry) => entry.textContent.trim()).join(', ');
+      } else {
+        nativeSet(el, 'value', option.value);
+        record.value = (option.textContent || option.value).trim();
+      }
+      fire(el);
+    } else if (type === 'checkbox') {
+      if (!wantsCheck(el, group)) {
+        record.skipped = 'one box per group is enough';
+        return record;
+      }
+      nativeSet(el, 'checked', true);
+      fire(el);
+      record.value = 'checked';
+    } else if (type === 'radio') {
+      nativeSet(el, 'checked', true);
+      fire(el);
+      record.value = 'selected';
+    } else if (type === 'file') {
+      fillFile(el, record);
+      if (!record.value) {
+        record.skipped = record.note || 'no file could be built';
+        return record;
+      }
+    } else {
+      const value = textValue(el, kind, record);
+      if (!Object.prototype.hasOwnProperty.call(GANDALF, kind)) record.kind = 'literal';
+      nativeSet(el, 'value', value);
+      fire(el);
+      record.value = el.value;
+      if (el.value !== value) {
+        const said = el.value
+          ? `the control rewrote it, asked for ${value}`
+          : `the control refused ${value}`;
+        record.note = record.note ? `${record.note}; ${said}` : said;
+      }
+      if (!el.value) {
+        record.skipped = record.note;
+        return record;
+      }
+    }
+
+    if (el.validity && !el.validity.valid) {
+      record.invalid = el.validationMessage || 'the browser rejects this value';
+    }
+    return record;
+  }
+
+  function groupOf(entry, el) {
+    if (!el.name) return [el];
+    const type = (el.type || '').toLowerCase();
+    return entry.fields.filter((other) => other.name === el.name
+      && (other.type || '').toLowerCase() === type);
+  }
+
+  function radioLabel(el) {
+    const labels = el.labels
+      ? Array.from(el.labels).map((label) => label.textContent).join(' ')
+      : '';
+    return (labels || el.getAttribute('aria-label') || el.value || '').trim();
+  }
+
+  function radioChoice(entry, el) {
+    const group = groupOf(entry, el);
+    const usable = group.filter((option) => !skipReason(option));
+    if (!usable.length) return group[0];
+    const hints = SELECT_HINTS[groupKind(el)];
+    if (!hints) return usable[0];
+    const scored = usable
+      .map((option) => ({
+        option,
+        score: optionScore({ value: option.value, textContent: radioLabel(option) }, hints),
+      }))
+      .filter((item) => item.score > -1)
+      .sort((a, b) => a.score - b.score);
+    return scored.length ? scored[0].option : usable[0];
+  }
+
+  function fillForm(entry, log) {
+    const seen = new Set();
+    const records = [];
+
+    entry.fields.filter((el) => el.isConnected).forEach((el) => {
+      const type = (el.type || '').toLowerCase();
+      if (type === 'radio') {
+        const key = `radio:${el.name || el.id || records.length}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        const chosen = radioChoice(entry, el);
+        records.push(fillOne(chosen, groupOf(entry, chosen)));
+        return;
+      }
+      records.push(fillOne(el, type === 'checkbox' ? groupOf(entry, el) : [el]));
+    });
+
+    formRecords.set(formKey(entry), records);
+    setFillMarks(formMarked);
+    refreshFormBadge();
+    if (log) logForm(entry, records);
+    if (openTool === formTool) refreshPanel();
+    return records;
+  }
+
+  function resetForm(entry) {
+    const records = formRecords.get(formKey(entry));
+    if (!records) return;
+    records.forEach((record) => {
+      if (record.skipped) return;
+      restore(record.el, record.before);
+    });
+    formRecords.delete(formKey(entry));
+    setFillMarks(formMarked);
+    refreshFormBadge();
+    if (openTool === formTool) refreshPanel();
+  }
+
+  function fillAllForms(log) {
+    scanForms();
+    formList.forEach((entry) => fillForm(entry, log));
+    return formList.length;
+  }
+
+  function resetAllForms() {
+    formList.slice().forEach((entry) => resetForm(entry));
+  }
+
+  function allRecords() {
+    return formList.flatMap((entry) => formRecords.get(formKey(entry)) || []);
+  }
+
+  function refreshFormBadge() {
+    const records = allRecords();
+    const written = records.filter((record) => !record.skipped);
+    const bad = written.filter((record) => record.invalid);
+    if (!written.length) {
+      setBadge(formTool, null, '', 'form filler');
+      return;
+    }
+    setBadge(
+      formTool,
+      bad.length ? 'hit' : 'clean',
+      (bad.length || written.length) > 99 ? '99' : String(bad.length || written.length),
+      bad.length
+        ? `form filler — ${written.length} field(s) filled, ${bad.length} still rejected`
+        : `form filler — ${written.length} field(s) filled with Gandalf the Grey`
+    );
+  }
+
+  function setFillMarks(on) {
+    formMarked = on;
+    q(`[${FILL_ATTR}]`).forEach((el) => el.removeAttribute(FILL_ATTR));
+    if (on) {
+      allRecords()
+        .filter((record) => !record.skipped && record.el.isConnected)
+        .forEach((record) => record.el.setAttribute(FILL_ATTR, record.kind));
+    }
+    if (formControls) formControls[2].setAttribute('aria-pressed', String(on));
+  }
+
+  function logForm(entry, records) {
+    const written = records.filter((record) => !record.skipped);
+    console.group(`form filler: ${formTitle(entry)} — ${written.length} field(s)`);
+    records.forEach((record) => {
+      const head = record.skipped
+        ? `%c[skipped] ${fieldName(record.el)} — ${record.skipped}`
+        : `%c${fieldName(record.el)} → ${record.value}`;
+      const tone = record.skipped
+        ? 'color: #9aa4b8;'
+        : `color: ${record.invalid ? '#f87171' : '#86efac'}; font-weight: bold;`;
+      console.log(head, tone, record.el);
+      if (record.invalid) console.log(`   ↳ ${record.invalid}`);
+    });
+    console.groupEnd();
+  }
+
+  function fieldName(el) {
+    const name = el.getAttribute('name') || el.id;
+    const tag = el.tagName.toLowerCase();
+    const type = el.tagName === 'INPUT' ? `[${(el.type || 'text').toLowerCase()}]` : '';
+    return name ? `${name} ${tag}${type}` : `${tag}${type}`;
+  }
+
+  function formTitle(entry) {
+    if (!entry.el) return 'fields outside any <form>';
+    const id = entry.el.id ? `#${entry.el.id}` : '';
+    const name = entry.el.getAttribute('name') ? `[name="${entry.el.getAttribute('name')}"]` : '';
+    return `<form>${id || name}`;
+  }
+
+  function formMeta(entry) {
+    const bits = [`${entry.fields.length} control(s)`];
+    if (entry.el) {
+      const action = entry.el.getAttribute('action');
+      bits.push(`${(entry.el.getAttribute('method') || 'get').toUpperCase()} ${action || '(this page)'}`);
+    } else {
+      bits.push('no <form> element — filled one by one');
+    }
+    return bits.join(' · ');
+  }
+
+  function formControlNodes() {
+    if (formControls) return formControls;
+
+    const badge = document.createElement('span');
+    badge.className = 'badge';
+
+    formFillAll = document.createElement('button');
+    formFillAll.type = 'button';
+    formFillAll.className = 'primary';
+    formFillAll.textContent = 'fill all';
+    formFillAll.title = 'Write Gandalf the Grey into every form on the page';
+    formFillAll.addEventListener('click', () => fillAllForms(true));
+
+    const mark = document.createElement('button');
+    mark.type = 'button';
+    mark.textContent = 'mark in page';
+    mark.title = 'Outline every field that was filled';
+    mark.setAttribute('aria-pressed', 'false');
+    mark.addEventListener('click', () => setFillMarks(!formMarked));
+
+    formResetAll = document.createElement('button');
+    formResetAll.type = 'button';
+    formResetAll.textContent = 'reset all';
+    formResetAll.title = 'Put every field back the way it was';
+    formResetAll.addEventListener('click', () => resetAllForms());
+
+    const again = document.createElement('button');
+    again.type = 'button';
+    again.textContent = 'scan again';
+    again.addEventListener('click', () => { scanForms(); refreshPanel(); });
+
+    formControls = [badge, formFillAll, mark, formResetAll, again];
+    return formControls;
+  }
+
+  function fieldRow(record) {
+    const row = document.createElement('button');
+    row.type = 'button';
+    row.className = 'row';
+    const value = record.skipped
+      ? record.skipped
+      : `${record.value}${record.note ? ` — ${record.note}` : ''}`;
+    row.innerHTML = `<span class="tag">${escapeHtml(fieldName(record.el))}</span>`
+      + `<span class="doc">${escapeHtml(record.skipped ? 'not filled' : record.kind)}</span>`
+      + `<span class="excerpt${record.skipped ? '' : ' filled'}">${escapeHtml(value)}</span>`
+      + (record.invalid ? `<span class="warn">${escapeHtml(record.invalid)}</span>` : '');
+    row.addEventListener('click', () => flash(record.el));
+    return row;
+  }
+
+  function formCard(entry) {
+    const records = formRecords.get(formKey(entry)) || null;
+    const written = records ? records.filter((record) => !record.skipped) : [];
+
+    const card = document.createElement('div');
+    card.className = 'result';
+
+    const head = document.createElement('div');
+    head.className = 'result-head';
+    head.innerHTML = `<span class="idx">${entry.index}</span>`
+      + `<span class="name">${escapeHtml(formTitle(entry))}</span>`
+      + `<span class="meta">${escapeHtml(formMeta(entry))}</span>`
+      + '<span class="spacer"></span>';
+
+    const fill = document.createElement('button');
+    fill.type = 'button';
+    fill.className = 'mini primary';
+    fill.textContent = records ? 'fill again' : 'fill';
+    fill.addEventListener('click', () => fillForm(entry, true));
+    head.appendChild(fill);
+
+    const undo = document.createElement('button');
+    undo.type = 'button';
+    undo.className = 'mini';
+    undo.textContent = 'reset';
+    undo.disabled = !records;
+    undo.addEventListener('click', () => resetForm(entry));
+    head.appendChild(undo);
+
+    if (entry.el) {
+      const show = document.createElement('button');
+      show.type = 'button';
+      show.className = 'mini';
+      show.textContent = 'show';
+      show.addEventListener('click', () => flash(entry.el));
+      head.appendChild(show);
+    }
+
+    card.appendChild(head);
+
+    const body = document.createElement('div');
+    body.className = 'result-body';
+    if (!records) {
+      body.innerHTML = '<p class="note">Not filled yet.</p>';
+    } else {
+      const summary = document.createElement('p');
+      summary.className = 'hint';
+      const bad = written.filter((record) => record.invalid).length;
+      const left = records.length - written.length;
+      summary.innerHTML = `<b>${written.length}</b> field(s) written`
+        + (left ? `, ${left} left alone` : '')
+        + (bad ? `, <b>${bad}</b> still rejected by the browser` : '')
+        + '. A click on a row scrolls to the field and flashes it.';
+      body.appendChild(summary);
+      records.forEach((record) => body.appendChild(fieldRow(record)));
+    }
+    card.appendChild(body);
+    return card;
+  }
+
+  function renderForm(body) {
+    const entries = scanForms();
+    const badge = formControlNodes()[0];
+    const written = allRecords().filter((record) => !record.skipped).length;
+    badge.textContent = entries.length
+      ? `${entries.length} form(s)${written ? ` · ${written} field(s) filled` : ''}`
+      : 'no form';
+    badge.className = `badge${written ? ' clean' : ''}`;
+    formFillAll.disabled = !entries.length;
+    formResetAll.disabled = !written;
+
+    if (!entries.length) {
+      body.innerHTML = '<p class="empty">No form and no free-standing field on this page.</p>';
+      return;
+    }
+
+    body.innerHTML = '<p class="hint">Every form on the page, with the fields it '
+      + 'would be filled with. <b>fill</b> writes <b>Gandalf the Grey</b> into one form, '
+      + '<b>fill all</b> into all of them, and <b>reset</b> puts every field back the way '
+      + 'it was. Each field is matched by its <code>autocomplete</code>, its type and its '
+      + 'name or label; <code>data-dev-form="skip"</code> keeps a field out and '
+      + '<code>data-dev-form="&lt;kind&gt;"</code> forces one. Nothing is submitted — the '
+      + 'submit button is yours to press.</p>';
+    entries.forEach((entry) => body.appendChild(formCard(entry)));
+  }
+
+  function targetEntry(target) {
+    scanForms();
+    if (typeof target === 'number') return formList[target - 1] || null;
+    if (typeof target === 'string') {
+      const el = document.querySelector(target);
+      if (!el) return null;
+      return formList.find((entry) => entry.el === el
+        || entry.fields.includes(el)) || null;
+    }
+    if (target && target.nodeType === 1) {
+      return formList.find((entry) => entry.el === target
+        || entry.fields.includes(target)
+        || (entry.el && entry.el.contains(target))) || null;
+    }
+    return null;
+  }
+
+  function fillTarget(target, log) {
+    if (target === undefined || target === null) return fillAllForms(log);
+    const entry = targetEntry(target);
+    if (!entry) {
+      console.warn('form filler: no form found for', target);
+      return null;
+    }
+    return fillForm(entry, log);
+  }
+
+  function resetTarget(target) {
+    if (target === undefined || target === null) {
+      resetAllForms();
+      return;
+    }
+    const entry = targetEntry(target);
+    if (entry) resetForm(entry);
+  }
+
+  TOOLS.push(formTool);
 
   function removeSelf() {
     abortSweep();
+    setPicking(false);
     closePanel();
     clearPage();
     setSpace(0);
@@ -1894,6 +3154,10 @@
       abortSweep();
       return;
     }
+    if (picking) {
+      stopPicking();
+      return;
+    }
     if (!panel.hidden) closePanel();
   });
 
@@ -1901,6 +3165,7 @@
   window.addEventListener('resize', () => {
     renderReadout();
     syncSpace();
+    queuePins();
     rescanOverflow();
   }, { passive: true });
 
@@ -1915,6 +3180,7 @@
   function firstScan() {
     a11yScan(true);
     overflowScan(true);
+    adoptMarked();
   }
 
   if (document.readyState === 'loading') {
@@ -1953,8 +3219,22 @@
     srcset: {
       measure: startSweep,
       abort: abortSweep,
+      pick: () => startPicking(),
+      done: () => stopPicking(),
+      select: (el) => { if (el && el.nodeType === 1) togglePick(el); },
+      selected: () => picks.slice(),
+      clear: clearPicks,
       data: measurements,
       config: SRCSET_CONFIG,
+    },
+    form: {
+      forms: () => scanForms().map((entry) => entry.el),
+      fill: (target) => fillTarget(target, true),
+      reset: (target) => resetTarget(target),
+      mark: (on) => setFillMarks(on !== false),
+      records: () => allRecords(),
+      data: GANDALF,
+      rules: FILL_RULES,
     },
     qr: {
       grid: (text) => qrGrid(text || location.href),

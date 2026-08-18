@@ -152,8 +152,8 @@ length. Established 2026-08-18 with `dev_srcset` and `dev_a11yInspector`, and
 folded into **one dashboard** on the same day: a bar along the bottom edge of
 the page, one icon per tool, a panel where a tool needs room. It carries the
 page information, the a11y inspector, the horizontal-overflow check, a QR
-code of the current URL and the srcset measurement. **A new tool is a section
-in that file, not a folder of its own.**
+code of the current URL, the srcset measurement and the form filler. **A new
+tool is a section in that file, not a folder of its own.**
 
 The dividing line: a component is **authored into** a page (markup, a class
 vocabulary, `data-js-behavior`, `init(el, services)`, a stylesheet in the
@@ -179,15 +179,36 @@ What that buys, and what it costs:
 - **One handle, `window.__devTools.dashboard`**, with `open()` / `close()` /
   `destroy()` plus one object per tool (`…dashboard.a11y.scan()`); a second
   load re-opens instead of stacking a second copy.
-- **The JS carries no comments** — the readme is the documentation. Four
-  tools in one file would otherwise read as four documented tools, with
+- **The JS carries no comments** — the readme is the documentation. Six
+  tools in one file would otherwise read as six documented tools, with
   comments drifting from the readme the moment either changes.
+- **A tool is pointed at an element by clicking it.** Since 2026-08-18 the
+  srcset measurement takes its images by click — panel folds away, page takes
+  the clicks in the capture phase, every click toggles one element in or out,
+  several at a time — and `data-dev-srcset` is only a **pre-selection** for a
+  page you measure repeatedly, not the way in. Asking an author to edit the
+  markup before a tool will look at something is the friction a tool exists to
+  remove. A selection that has to survive into the probe frame is stored as a
+  CSS path, and an element the probe does not have is reported, not dropped.
+  Where clicking the page would mean something else, the panel's own list is
+  the pointing device instead: the form filler finds forms by tag and puts a
+  **fill** button beside each, and its `data-dev-form` **steers** what is
+  written rather than selecting what is looked at.
 - **The page under test is changed as little as possible, and never
   invisibly.** The srcset sweep still measures a copy in a probe frame.
   What is written into the page is one spacer holding the bar's height, one
   style element, and the marker attributes a tool sets while you ask for
   them — all named `data-dev-dashboard-…`, so `grep data-dev-` finds every
   leftover, and all taken back by `destroy()`.
+- **A tool that changes the page for real owes three things.** The form
+  filler (2026-08-18) writes values a submit would send — not a marker, and
+  nothing `destroy()` can sweep up. So it acts **only on an explicit press**,
+  never on load and never inside a scan; it **ships the way back**, snapshotting
+  value, checked state, selected options and file list before the first
+  character and restoring them on **reset**; and it **stops at the edge of the
+  irreversible** — nothing is submitted, no request leaves, the submit button
+  stays the developer's to press. A tool that cannot offer the way back marks
+  instead of writing.
 - **Accessibility at a developer's bar, and stated as such**: real buttons,
   Esc, `aria-pressed`/`aria-expanded`, a focus ring — but no ARIA patterns,
   no live regions, no reduced-motion audit. Holding a tool to the product

@@ -19,8 +19,9 @@
       What it brings instead is one case per thing the dashboard can find:
       the four page-info tokens (declared below, as a consuming project
       declares them), a set of deliberate accessibility mistakes, an element
-      that is wider than the document, and images marked for the srcset
-      measurement.
+      that is wider than the document, five images with distinct layout
+      behaviour for the srcset measurement to be pointed at, and three forms
+      for the filler — one of them awkward on purpose.
 
       THE MARKUP BELOW IS WRONG ON PURPOSE. Do not copy from it.
   -->
@@ -206,6 +207,7 @@
     .hero,
     .column,
     .tile,
+    .linked,
     .avatar {
       overflow: hidden;
       border-radius: 10px;
@@ -231,15 +233,115 @@
       aspect-ratio: 4 / 3;
     }
 
+    .linked {
+      max-width: 600px;
+      aspect-ratio: 16 / 9;
+    }
+
+    .linked a {
+      display: block;
+      height: 100%;
+    }
+
     .avatar {
       width: 120px;
       height: 120px;
       border-radius: 999px;
     }
 
+    /* form filler cases: one labelled field per kind the filler knows. */
+    .form {
+      margin: 1rem 0 1.5rem;
+      padding: 1.25rem;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--surface);
+    }
+
+    .form h3 {
+      margin-top: 0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.75rem 1rem;
+      align-items: start;
+    }
+
+    .grid p {
+      margin: 0;
+      max-width: none;
+    }
+
+    .f {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .f--wide {
+      grid-column: 1 / -1;
+    }
+
+    label,
+    legend {
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .hint-inline {
+      color: #6f7a8d;
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 0.75rem;
+    }
+
+    input,
+    select,
+    textarea {
+      padding: 0.45em 0.6em;
+      border: 1px solid #333a4a;
+      border-radius: 7px;
+      background: #0f1116;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.9rem;
+    }
+
+    textarea {
+      min-height: 5.5em;
+      resize: vertical;
+    }
+
+    fieldset {
+      margin: 0;
+      padding: 0.6rem 0.9rem 0.8rem;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .choice {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text);
+      font-size: 0.9rem;
+    }
+
+    .choice input {
+      flex: 0 0 auto;
+    }
+
+    .actions {
+      display: flex;
+      gap: 0.5rem;
+      margin: 1.25rem 0 0;
+    }
+
     .hero img,
     .column img,
     .tile img,
+    .linked img,
     .avatar img {
       display: block;
       width: 100%;
@@ -371,30 +473,38 @@
     <section>
       <h2>srcset measurement</h2>
       <p>
-        The images below are marked with <code>data-dev-srcset</code>, each
-        one a different layout behaviour. The 🖼 icon opens the panel, and
-        <b>measure</b> sweeps the viewport range in a probe frame of its own.
-        <b>This needs a local server</b> — over <code>file://</code> the frame
-        cannot be read, and the panel says so.
+        The 🖼 icon opens the panel; <b>pick images</b> then hands the page
+        over: every image you click joins the selection and gets a numbered
+        badge, a second click on it drops it again, and <kbd>Esc</kbd> or
+        <b>done</b> brings the panel back with the list. <b>measure</b> sweeps
+        the viewport range in a probe frame of its own. <b>This needs a local
+        server</b> — over <code>file://</code> the frame cannot be read, and
+        the panel says so.
+      </p>
+      <p>
+        The four images below additionally carry
+        <code>data-dev-srcset</code>, which pre-selects them at load with the
+        attribute's value as their label — that is all the attribute still
+        does. Each one is a different layout behaviour.
       </p>
 
       <h3>1 · full bleed</h3>
       <div class="hero">
         <img src="../../_shared/media/img/content/videoPosterDemo.svg" alt="" width="1600" height="600"
-             data-dev-srcset="1 · hero, full bleed" />
+             data-dev-srcset="hero, full bleed" />
       </div>
 
       <h3>2 · text column, max. 760px</h3>
       <div class="column">
         <img src="../../_shared/media/img/content/videoPosterDemo.svg" alt="" width="760" height="428"
-             data-dev-srcset="2 · text column, max. 760px" />
+             data-dev-srcset="text column, max. 760px" />
       </div>
 
       <h3>3 · gallery tiles</h3>
       <div class="tiles">
         <div class="tile">
           <img src="../../_shared/media/img/content/videoPosterDemo.svg" alt="" width="400" height="300"
-               data-dev-srcset="3 · gallery tile" />
+               data-dev-srcset="gallery tile" />
         </div>
         <div class="tile">
           <img src="../../_shared/media/img/content/videoPosterDemo.svg" alt="" width="400" height="300" />
@@ -404,15 +514,281 @@
         </div>
       </div>
       <p class="case__tag">
-        Only the first tile is marked: four tiles of equal width are one
-        measurement, not four.
+        Only the first tile is pre-selected: three tiles of equal width are one
+        measurement, not three. Click the others if you want to see for
+        yourself that they measure the same.
       </p>
 
       <h3>4 · fixed 120px avatar</h3>
       <div class="avatar">
         <img src="../../_shared/media/img/content/videoPosterDemo.svg" alt="" width="120" height="120"
-             data-dev-srcset="4 · avatar, fixed 120px" />
+             data-dev-srcset="avatar, fixed 120px" />
       </div>
+
+      <h3>5 · inside a link, not pre-selected</h3>
+      <div class="linked">
+        <a href="https://example.com/this-link-is-not-followed">
+          <img src="../../_shared/media/img/content/videoPosterDemo.svg" alt="" width="600" height="338" />
+        </a>
+      </div>
+      <p class="case__tag">
+        Picking swallows the click: selecting this image does not follow the
+        link, and the link works again the moment picking ends. Its label falls
+        back to the file name, since there is no attribute to read one from.
+      </p>
+    </section>
+
+    <section>
+      <h2>Form filler</h2>
+      <p>
+        The 📝 icon lists every form on this page. <b>fill</b> writes
+        <b>Gandalf the Grey</b> into one of them, <b>fill all</b> into all
+        three, and <b>reset</b> puts every field back the way it was. Nothing
+        is submitted — the submit button stays yours to press.
+      </p>
+      <p>
+        The form below is deliberately awkward: a five-digit
+        <code>pattern</code>, a <code>min</code> on the date that no Third Age
+        birthday clears, a <code>maxlength</code> shorter than the quote, a
+        number field whose missing <code>step</code> still rules out
+        <code>19.54</code>, a text field whose placeholder is the only clue to
+        the date format it wants, a group of checkboxes, a readonly field and
+        two fields that steer the filler with <code>data-dev-form</code>. The
+        panel reports each of those, and the browser's own verdict on the value
+        that was written.
+      </p>
+
+      <form class="form" id="contactForm" method="post" action="#contactForm">
+        <h3>1 · Fellowship application</h3>
+
+        <div class="grid">
+          <p class="f">
+            <label for="anrede">Anrede</label>
+            <select id="anrede" name="anrede" autocomplete="honorific-prefix">
+              <option value="">bitte wählen</option>
+              <option value="frau">Frau</option>
+              <option value="herr">Herr</option>
+              <option value="divers">Divers</option>
+            </select>
+          </p>
+          <p class="f">
+            <label for="vorname">Vorname</label>
+            <input id="vorname" name="vorname" type="text" autocomplete="given-name" required />
+          </p>
+          <p class="f">
+            <label for="nachname">Nachname</label>
+            <input id="nachname" name="nachname" type="text" autocomplete="family-name" required />
+          </p>
+          <p class="f">
+            <label for="email">E-Mail</label>
+            <input id="email" name="email" type="email" autocomplete="email" required />
+          </p>
+          <p class="f">
+            <label for="telefon">Telefon</label>
+            <input id="telefon" name="telefon" type="tel" autocomplete="tel" />
+          </p>
+          <p class="f">
+            <label for="website">Website</label>
+            <input id="website" name="website" type="url" />
+          </p>
+          <p class="f">
+            <label for="strasse">Straße</label>
+            <input id="strasse" name="strasse" type="text" autocomplete="street-address" />
+          </p>
+          <p class="f">
+            <label for="hausnummer">Hausnummer</label>
+            <input id="hausnummer" name="hausnummer" type="text" />
+          </p>
+          <p class="f">
+            <label for="plz">PLZ</label>
+            <input id="plz" name="plz" type="text" autocomplete="postal-code"
+                   pattern="[0-9]{5}" maxlength="5" />
+            <small class="hint-inline">pattern: 5 digits</small>
+          </p>
+          <p class="f">
+            <label for="ort">Ort</label>
+            <input id="ort" name="ort" type="text" autocomplete="address-level2" />
+          </p>
+          <p class="f">
+            <label for="land">Land</label>
+            <select id="land" name="land" autocomplete="country-name">
+              <option value="">bitte wählen</option>
+              <option value="de">Deutschland</option>
+              <option value="at">Österreich</option>
+              <option value="ch">Schweiz</option>
+            </select>
+          </p>
+          <p class="f">
+            <label for="geburtsdatum">Geburtsdatum</label>
+            <input id="geburtsdatum" name="geburtsdatum" type="date"
+                   autocomplete="bday" min="1900-01-01" />
+            <small class="hint-inline">min: 1900-01-01</small>
+          </p>
+          <p class="f">
+            <label for="firma">Firma</label>
+            <input id="firma" name="firma" type="text" autocomplete="organization" />
+          </p>
+          <p class="f">
+            <label for="position">Position</label>
+            <input id="position" name="position" type="text" />
+          </p>
+          <p class="f">
+            <label for="codewort">Codewort</label>
+            <input id="codewort" name="codewort" type="text" data-dev-form="nickname" />
+            <small class="hint-inline">data-dev-form="nickname"</small>
+          </p>
+          <p class="f">
+            <label for="losung">Losung</label>
+            <input id="losung" name="losung" type="text" data-dev-form="Mellon" />
+            <small class="hint-inline">data-dev-form="Mellon"</small>
+          </p>
+          <p class="f">
+            <label for="referenz">Referenz</label>
+            <input id="referenz" name="referenz" type="text" value="TA-3019" readonly />
+            <small class="hint-inline">readonly</small>
+          </p>
+          <p class="f">
+            <label for="intern">Intern</label>
+            <input id="intern" name="intern" type="text" data-dev-form="skip" />
+            <small class="hint-inline">data-dev-form="skip"</small>
+          </p>
+
+          <p class="f f--wide">
+            <label for="betreff">Betreff</label>
+            <input id="betreff" name="betreff" type="text" />
+          </p>
+          <p class="f f--wide">
+            <label for="nachricht">Nachricht</label>
+            <textarea id="nachricht" name="nachricht" maxlength="160"></textarea>
+            <small class="hint-inline">maxlength: 160</small>
+          </p>
+          <p class="f f--wide">
+            <label for="anhang">Anhang</label>
+            <input id="anhang" name="anhang" type="file"
+                   accept="image/png,image/jpeg" multiple />
+            <small class="hint-inline">accept: image/png, image/jpeg · multiple</small>
+          </p>
+
+          <fieldset class="f--wide">
+            <legend>Kontaktweg</legend>
+            <label class="choice">
+              <input type="radio" name="kontaktweg" value="mail" /> E-Mail
+            </label>
+            <label class="choice">
+              <input type="radio" name="kontaktweg" value="phone" /> Telefon
+            </label>
+            <label class="choice">
+              <input type="radio" name="kontaktweg" value="palantir" /> Palantír
+            </label>
+          </fieldset>
+
+          <fieldset class="f--wide">
+            <legend>Interessen <span class="hint-inline">a group — one box is enough</span></legend>
+            <label class="choice">
+              <input type="checkbox" name="interessen" value="ringe" /> Ringe der Macht
+            </label>
+            <label class="choice">
+              <input type="checkbox" name="interessen" value="pfeifenkraut" /> Pfeifenkraut
+            </label>
+            <label class="choice">
+              <input type="checkbox" name="interessen" value="feuerwerk" /> Feuerwerk
+            </label>
+          </fieldset>
+
+          <fieldset class="f--wide">
+            <legend>What the field itself decides</legend>
+            <div class="grid">
+              <p class="f">
+                <label for="gaeste">Gäste</label>
+            <input id="gaeste" name="gaeste" type="number" min="5" max="10" />
+                <small class="hint-inline">number, 5–10</small>
+              </p>
+              <p class="f">
+                <label for="budget">Budget</label>
+            <input id="budget" name="budget" type="number" min="0" />
+                <small class="hint-inline">number, no step given</small>
+              </p>
+              <p class="f">
+                <label for="wichtigkeit">Wichtigkeit</label>
+            <input id="wichtigkeit" name="wichtigkeit" type="range" min="0" max="10" />
+                <small class="hint-inline">range 0–10</small>
+              </p>
+              <p class="f">
+                <label for="farbe">Lieblingsfarbe</label>
+            <input id="farbe" name="farbe" type="color" />
+                <small class="hint-inline">color</small>
+              </p>
+              <p class="f">
+                <label for="anreise">Anreise</label>
+            <input id="anreise" name="anreise" type="text" placeholder="TT.MM.JJJJ" />
+                <small class="hint-inline">text, placeholder as the mask</small>
+              </p>
+              <p class="f">
+                <label for="gutschein">Gutscheincode</label>
+            <input id="gutschein" name="gutschein" type="text" maxlength="6" />
+                <small class="hint-inline">maxlength 6</small>
+              </p>
+            </div>
+          </fieldset>
+
+          <p class="f f--wide">
+            <label class="choice">
+              <input type="checkbox" name="datenschutz" required />
+              Ich akzeptiere die Datenschutzerklärung
+            </label>
+          </p>
+        </div>
+
+        <p class="actions">
+          <button type="submit">Absenden</button>
+          <button type="reset">Zurücksetzen</button>
+        </p>
+      </form>
+
+      <form class="form" id="newsletterForm" method="post" action="#newsletterForm">
+        <h3>2 · Newsletter</h3>
+        <p class="case__tag">
+          A second form, so <b>fill all</b> has something to prove.
+        </p>
+        <div class="grid">
+          <p class="f">
+            <label for="nlMail">E-Mail</label>
+            <input id="nlMail" name="email" type="email" required />
+          </p>
+          <p class="f">
+            <label class="choice">
+              <input type="checkbox" name="agb" required /> Ich stimme zu
+            </label>
+          </p>
+        </div>
+        <p class="actions">
+          <button type="submit">Eintragen</button>
+        </p>
+      </form>
+
+      <h3>3 · Fields outside any form</h3>
+      <p>
+        Two controls that no <code>&lt;form&gt;</code> element owns — which is
+        what a component demo usually looks like. The panel collects them under
+        one entry of its own, and it collects the unlabelled field from the
+        accessibility section up there along with them: the filler takes every
+        field the page has, not only the ones you meant to build.
+      </p>
+      <div class="case grid">
+        <p class="f">
+          <label for="looseSearch">Suche</label>
+          <input id="looseSearch" name="suche" type="search" />
+        </p>
+        <p class="f f--wide">
+          <label for="looseNote">Notiz</label>
+          <textarea id="looseNote" name="notiz"></textarea>
+        </p>
+      </div>
+
+      <p class="case__tag" id="submitNote">
+        Nothing submitted yet — this demo swallows the submit and reports the
+        field count here instead.
+      </p>
     </section>
 
   </main>
@@ -424,6 +800,16 @@
       box.textContent = 'a second offender — press "scan again" in the overflow panel';
       this.parentNode.after(box);
       this.disabled = true;
+    });
+
+    document.querySelectorAll('form').forEach(function (form) {
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        const filled = Array.from(new FormData(form).entries())
+          .filter(function (entry) { return String(entry[1]).length; });
+        document.getElementById('submitNote').textContent =
+          form.id + ' submitted (not really) with ' + filled.length + ' filled field(s).';
+      });
     });
   </script>
 

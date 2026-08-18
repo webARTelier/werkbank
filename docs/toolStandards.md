@@ -85,19 +85,61 @@ prefix included.
      is why the bar folds away to a strip.
    - one `style[data-dev-dashboard-style]` carrying the marker rules. Inert
      until a marker attribute is set.
-   - `data-dev-dashboard-flag` / `data-dev-dashboard-focus` on the elements
-     a tool points at — **opt-in** behind a control, taken back by that same
-     control, by closing the panel and by `destroy()`.
+   - `data-dev-dashboard-flag` / `data-dev-dashboard-focus` /
+     `data-dev-dashboard-pick` / `data-dev-dashboard-hover` /
+     `data-dev-dashboard-fill` on the elements a tool points at, and
+     `data-dev-dashboard-picking` on `<html>` while the srcset tool is taking
+     clicks — **opt-in** behind a control, taken back by that same control, by
+     closing the panel and by `destroy()`.
 
    Where a measurement can be taken without touching the page at all, it is:
    the srcset sweep measures a copy of the page in a probe frame, so scroll
    position, state and layout of the document you are looking at never move.
 
-5. **One author-facing hook, `data-dev-<stem>`**, lowercase, where a tool
-   needs elements marked at all: `data-dev-srcset="hero"`. The optional
-   value is the label the element is reported under. The stem is the tool's
-   short name — the same one it uses as its key under the handle — and the
-   readme names it.
+   **A tool that changes the page for real is the exception, and it carries
+   three obligations.** The form filler (2026-08-18) writes values a submit
+   would send — not a marker, not something `destroy()` can sweep up — so:
+   it acts **only on an explicit press**, never on load and never as part of
+   a scan; it **ships the way back**, taking a snapshot of value, checked
+   state, selected options and file list before the first character and
+   restoring it on **reset**; and it **stops at the edge of the irreversible**
+   — nothing is submitted, no request is sent, the submit button stays the
+   developer's to press. A tool that cannot offer the way back should mark
+   instead of write.
+
+5. **A tool is pointed at an element by clicking it, not by an attribute in
+   the markup.** The srcset measurement asked for `data-dev-srcset` on every
+   image until 2026-08-18 and now takes a selection by click: the panel folds
+   away, the page takes the clicks (capture phase, `preventDefault` — a
+   linked image must not navigate), and every click toggles one element in or
+   out. Editing the markup to measure it is exactly the friction a tool
+   exists to remove, and a click also selects things an author would never
+   put an attribute on.
+
+   Where a tool keeps such a hook, it is **one author-facing attribute,
+   `data-dev-<stem>`**, lowercase, whose optional value is the label the
+   element is reported under; the stem is the tool's short name — the same one
+   it uses as its key under the handle — and the readme names it.
+   `data-dev-srcset` stayed for that reason: it **pre-selects** at load, which
+   is what a page you measure over and over wants, and it names what it
+   marks. What it no longer is, is the way in.
+
+   **A list in the panel is the pointing device where clicking the page would
+   mean something else.** The form filler does not take clicks: a form is found
+   by its tag, there are rarely more than three on a page, and a click inside a
+   form is how a form is *operated*. So it lists what it found and puts the
+   **fill** button next to each entry — which is the same principle, a tool you
+   point at something without editing the markup first, reached by the means
+   that fits the thing. `data-dev-form` exists alongside it and **steers rather
+   than selects**: `skip` keeps a field out, any other value forces what is
+   written.
+
+   **A selection that outlives the moment is stored as a CSS path**, not as an
+   element reference: the srcset sweep measures a fresh copy of the page in a
+   probe frame, so the nodes you clicked are not the nodes it measures. Path
+   from the root, `nth-of-type` per step, anchored on the nearest unique `id`
+   where there is one, and an element the copy does not have is **reported as
+   not found** rather than quietly dropped.
 
 6. **The bar is the launcher.** There are no corner slots to hand out any
    more: a tool is an icon in the bar, and a panel above it if it has
@@ -162,8 +204,8 @@ rewritten: `q`, `describe`, `escapeHtml`, `debounce`, `flash`, `setFlags`,
 
 ## Documentation: the readme is the documentation
 
-- **The JS carries no comments.** One file holding four tools would otherwise
-  be read as four documented tools, and the comments would drift from the
+- **The JS carries no comments.** One file holding six tools would otherwise
+  be read as six documented tools, and the comments would drift from the
   readme the moment either changes. The code says what it does; the readme
   says what it is for.
 - **`readme.md`** carries: the one-sentence "what it answers", `Load it` ·
@@ -178,7 +220,8 @@ rewritten: `q`, `describe`, `escapeHtml`, `debounce`, `flash`, `setFlags`,
   tokens would hide leakage in either direction. The demo's job is to give
   every tool something real to find — the four page-info tokens declared the
   way a project declares them, one deliberate mistake per accessibility
-  check, an element that is too wide, and marked images.
+  check, an element that is too wide, marked images, and forms that push back
+  (a `pattern`, a `min`, a `maxlength`, a readonly field).
 - **The component demos load the dashboard**, one line each, inside the
   `<!-- for development only -->` markers. It replaced `dev_pageInfo.js` and
   `dev_qrCode.js`, which used to be loaded there as modules and are now the
