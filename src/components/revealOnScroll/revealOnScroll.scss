@@ -1,0 +1,170 @@
+// =============================================================
+// revealOnScroll — the look of an element on its way into view
+// =============================================================
+//
+// revealOnScroll.js boots on a container, takes the items marked with
+// data-reveal-item inside it (or the container itself when none are marked)
+// and writes ONE state attribute per item:
+//   [data-reveal-pending] -> this item is still waiting to be revealed
+//
+// It sets no inline styles and runs no animation, so everything visual — the
+// waiting look and the transition out of it — lives here. The resting state
+// is deliberately NOT declared: an item that has been revealed carries no
+// opacity, translate or scale of this component's, so its look at rest stays
+// entirely the project's.
+//
+// Nothing in this file hides anything on its own: the waiting look applies
+// only where the script has written the attribute, and the script only ever
+// writes it on an item that is off screen. So a chunk that never arrives
+// leaves the page exactly as authored — there is no pre-enhancement block
+// here for that reason, only the opt-in rule documented in
+// revealOnScroll.html for a project that wants its first screen to animate
+// too. See docs/preEnhancement.md.
+//
+// Two readers get the content instead of the movement: under
+// prefers-reduced-motion the waiting state is neutralised altogether, and in
+// print it is lifted, because paper cannot scroll anything into view. Both
+// blocks sit AFTER the state they lift — same specificity, so source order is
+// what settles it. A project that keys its own look off [data-reveal-pending]
+// owes itself the same two exemptions.
+//
+// A third exemption is not a preference but the keyboard: while the focus is
+// inside an item the transition is dropped, so an item the keyboard has just
+// reached stands at full contrast before its focus ring is drawn rather than
+// fading in underneath it. Same obligation for a project's own waiting look.
+//
+// revealOnScroll owns no vocabulary: it enhances content the project already
+// has and writes nothing but the state attribute above. "c-reveal" is the
+// convenience component shipped alongside it — styling only, so the
+// demo/snippet works out of the box. The JS hooks onto the container via
+// data-js-behavior and never reads "c-reveal", so an item can be styled any
+// way you like.
+
+@use "mediaqueries" as *;
+
+
+
+// Convenience item: fades in and rises into place. Upwards is the default
+// because that is the reveal that reads as "the content arrives with the
+// scroll"; the modifiers below turn it into a sideways slide or a zoom.
+//
+// The override surface: declared on the component root, not in :root, so it
+// stays scoped and a single item can be retuned in place
+// (`style="--reveal-distance: 8px"` on this element still wins).
+.c-reveal {
+
+  // How far the item travels on its way in (shared spacing scale,
+  // _shared/scss/_foundations.scss).
+  --reveal-distance: var(--space-l);
+
+  // Where it comes from — a `translate` value, i.e. the offset it starts at.
+  // The modifiers below set this one property; a direction they do not cover
+  // is one declaration on the item itself.
+  --reveal-translate: 0 var(--reveal-distance);
+
+  // The size it starts at. 1 = no zoom, which is the default; the zoom
+  // modifier turns it into a slight scale-up.
+  --reveal-scale: 1;
+
+  // Motion (shared motion tokens). The duration is doubled against the shared
+  // default: a reveal covers a longer distance than a state change, and at
+  // the usual duration it reads as a jump rather than an arrival.
+  --reveal-duration: calc(var(--an-duration) * 2);
+  --reveal-ease: var(--an-ease);
+
+  // Per-item delay. The script's data-reveal-stagger sequences a group that
+  // comes in together; this is the CSS side of the same idea, for a fixed
+  // order that does not depend on when an item arrives:
+  // `.c-reveal:nth-child(2) { --reveal-delay: 80ms; }`
+  --reveal-delay: 0s;
+
+  transition:
+    opacity var(--reveal-duration) var(--reveal-ease) var(--reveal-delay),
+    translate var(--reveal-duration) var(--reveal-ease) var(--reveal-delay),
+    scale var(--reveal-duration) var(--reveal-ease) var(--reveal-delay);
+
+
+
+  // The waiting state, written by revealOnScroll.js and removed again when
+  // the item crosses the trigger line. Everything about "not yet here" keys
+  // off this attribute — restyle it to taste.
+  &[data-reveal-pending] {
+    opacity: 0;
+    translate: var(--reveal-translate);
+    scale: var(--reveal-scale);
+  }
+
+
+
+  // Focus does not wait. revealOnScroll.js takes the pending attribute off
+  // the moment the keyboard reaches an item, but the transition would still
+  // fade and move it for a full duration afterwards — so the focus ring would
+  // be drawn on a box at partial opacity that is also still travelling, which
+  // is exactly what "the current focus position is clearly visible" is about.
+  // Dropping the transition while the focus is inside turns that change into
+  // a jump instead: the item is simply there, at full contrast, before the
+  // ring is. It matches on the same style recalculation that removes the
+  // attribute, which is why there is nothing left to animate.
+  &:focus-within {
+    transition: none;
+  }
+
+  // A reveal is motion, and this reader asked for less of it: the waiting
+  // state is dropped entirely rather than made instant, so there is no
+  // appearance to wait for at all — the content is simply in the page.
+  @include reduced-motion {
+    transition: none;
+
+    &[data-reveal-pending] {
+      opacity: 1;
+      translate: none;
+      scale: none;
+    }
+  }
+
+  // Paper does not scroll, so nothing on it can ever enter the viewport: an
+  // item still waiting would print as an empty box. The transition goes with
+  // it — a print rendering must not depend on an animation having finished.
+  @include print-only {
+    transition: none;
+
+    &[data-reveal-pending] {
+      opacity: 1;
+      translate: none;
+      scale: none;
+    }
+  }
+
+
+
+  // Fade only: no movement at all, for an item whose box must not shift (a
+  // media tile in a grid, anything beside a sticky element).
+  &--fade {
+    --reveal-translate: none;
+  }
+
+
+
+  // Sideways. An inline offset can widen the scrollable area of an ancestor
+  // that does not clip, so give the container `overflow-x: clip` where the
+  // item sits near the page edge. That is not cosmetic: at a narrow width the
+  // widened area is a horizontal scrollbar on a page that must only scroll
+  // one way, which is a reflow failure the reveal would be responsible for.
+  &--left {
+    --reveal-translate: calc(var(--reveal-distance) * -1) 0;
+  }
+
+
+
+  &--right {
+    --reveal-translate: var(--reveal-distance) 0;
+  }
+
+
+
+  // Zoom: grows into place from slightly smaller, without travelling.
+  &--zoom {
+    --reveal-translate: none;
+    --reveal-scale: 0.94;
+  }
+}

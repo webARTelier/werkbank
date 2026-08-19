@@ -67,7 +67,7 @@ component here is reusable and most can appear several times).
   already there, and the look belongs to the consuming project.
   `formValidation`, `inlineSVG`, `inputCharCount`, `scaleSVG`, `scrollSpy`,
   `stickyObserver`, and the scripts behind `adaptiveScrollFade`,
-  `dateInputFormat`, `flexNeighborMarker`.
+  `dateInputFormat`, `flexNeighborMarker`, `revealOnScroll`.
 
 Two supporting signals where the question feels balanced: a module usually
 manages a **collection or a region** (n panels, n images, n messages) while a
@@ -95,7 +95,7 @@ region plus its queue.
 ### The folder is not the unit that carries the prefix
 
 A component folder is a **delivery unit**, not a role. `offCanvasNav` ships
-two blocks, and four folders are a function that happens to ship a ready-made
+two blocks, and five folders are a function that happens to ship a ready-made
 look alongside it:
 
 | Folder               | Role     | What it ships                       |
@@ -103,6 +103,7 @@ look alongside it:
 | `adaptiveScrollFade` | function | `c-scrollFade` — carries the mask   |
 | `dateInputFormat`    | function | `c-dateField*` — dresses the field  |
 | `flexNeighborMarker` | function | `o-flexNeighbor` — a layout object  |
+| `revealOnScroll`     | function | `c-reveal` — the arrival animation  |
 | `stickyObserver`     | function | `c-stickyBar` — the pinned look     |
 
 Each of those stylesheets said as much before the classification existed

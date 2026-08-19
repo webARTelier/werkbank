@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>revealOnScroll – Demo</title>
+  <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
+  <link rel="stylesheet" href="../../../dist/css/revealOnScroll.min.css" />
+  <script type="module" src="../../../dist/js/boot.min.js"></script>
+
+  <!-- for development only -->
+  <script src="../../tools/dev_dashboard/dev_dashboard.js"></script>
+  <!-- end for development only -->
+
+  <!--
+      DEMO-ONLY STYLES
+      ----------------------------------------------------------------------
+      revealOnScroll.min.css ships the whole reveal: the waiting look, the
+      movement and its timing (.c-reveal). What is left to the page is the
+      space between the examples, the boxes that make the movement visible
+      and the framed scroll box of the last one — that is all the .demo*
+      rules below are. (Tokens like --space-* / --color-* come from
+      shared.min.css.)
+  -->
+
+  <style>
+    .demo {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2xl);
+    }
+
+    .demo__example {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-s);
+    }
+
+    .demo__example h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      color: var(--color-text);
+    }
+
+    /* A plain surface so the fade and the movement are actually visible. */
+    .demo__card {
+      margin: 0;
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--borderRadius);
+      padding: var(--space-m);
+
+      background-color: var(--color-bg-elevated);
+    }
+
+    .demo__cards {
+      margin: 0;
+      padding: 0;
+
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-s);
+
+      list-style: none;
+    }
+
+    /* The sideways reveals start outside their own box, so the row clips
+       instead of growing a horizontal scrollbar. */
+    .demo__row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-s);
+
+      overflow-x: clip;
+    }
+
+    .demo__scrollBox {
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--borderRadius);
+      padding: var(--space-s);
+      /* A fixed height, not a vh share: the box has to be shorter than its
+         content on every viewport, or there is nothing to scroll and nothing
+         to reveal. */
+      max-block-size: 240px;
+      overflow: auto;
+
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-s);
+    }
+
+    /* The module container is the box's only child, so the gap above cannot
+       reach the cards — the space between them has to be its own. */
+    .demo__stack {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-s);
+    }
+
+    /* The box is a tab stop (tabindex="0" in the markup), because a scroll
+       container that only the mouse can scroll is not keyboard operable — the
+       links inside it are reachable, but the text between them is not. With
+       the tabindex the browser handles the arrow / PageUp / PageDown / Home /
+       End keys itself, and a tab stop owes the reader a focus ring. */
+    .demo__scrollBox:focus-visible {
+      outline: 2px solid var(--color-focus-ring-light);
+      outline-offset: var(--outlineOffset);
+    }
+
+    /* Demo-only scroll room: enough that the next example starts below the
+       fold and its reveal can be watched, without turning the page into a
+       void. */
+    .demo__room {
+      block-size: 45vh;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <main class="shell">
+
+    <section class="hero">
+      <a class="back" href="../../../index.html">← Overview</a>
+      <h1>revealOnScroll</h1>
+      <p>Reveals elements as they enter the viewport — an observer marks, CSS animates.</p>
+    </section>
+
+    <section class="stage" aria-label="Live demo">
+
+      <!--
+          CSS has no selector for "this element is on screen now", and a
+          scroll-driven animation (animation-timeline: view()) answers a
+          different question: it is scrubbed, so it runs backwards with the
+          scroll and never settles. The module boots on a CONTAINER, takes
+          the items marked with data-reveal-item inside it and writes ONE
+          attribute per item:
+            [data-reveal-pending] -> this item is still waiting
+          The shipped stylesheet keys the waiting look (transparent, offset
+          by --reveal-distance) and the transition out of it off that
+          attribute.
+
+          Wiring — six instances, one mode each
+            - Example 1: data-js-behavior="revealOnScroll" on the section,
+              data-reveal-item on the heading and the two cards. Nothing
+              else — the default fade-and-rise.
+            - Example 2: data-reveal-items=":scope > li" instead of a marker
+              on every card (the lane for markup you cannot edit), plus
+              data-reveal-stagger="90" — the cards arrive one after another.
+            - Example 3: the four directions of the shipped look, as
+              modifiers: .c-reveal--fade / --left / --right / --zoom.
+            - Example 4: data-reveal-offset="200" — the trigger line sits
+              200px above the bottom edge of the viewport, so the panel is
+              revealed only once it has really come in. Zoom this page to
+              400%: the viewport is then shorter than the offset, a line
+              above the top edge could never be crossed, and the module
+              drops back to 0 (with a console note) instead of leaving the
+              panel waiting for good. It re-checks on every resize, so
+              zooming out restores the late line.
+            - Example 5: no data-reveal-item anywhere inside, so the
+              container IS the item — the single-element lane.
+            - Example 6: the items scroll inside a framed
+              overflow: auto box and nothing extra is wired for it — an
+              observer on the default root already sees that the box clips
+              them. data-reveal-repeat lets the reveal replay every time an
+              item leaves the view and comes back. Scroll the box, not the
+              page.
+
+          Progressive enhancement
+            - Nothing in the markup or the CSS hides anything. Two
+              observers watch every item: the trigger line reveals, and a
+              second one without any offset is the only thing that ever
+              marks — and it can only report an item the reader CANNOT see.
+              So no item is taken away from the reader, which is also why
+              the first screen does not animate (the opt-in for that is
+              documented in revealOnScroll.html). Without JavaScript, or
+              with a chunk that never arrives, this page is simply the
+              page.
+            - The script sets no inline styles and runs no animation. Under
+              prefers-reduced-motion the waiting state is dropped entirely,
+              and printing lifts it — paper cannot scroll anything into
+              view.
+
+          Accessibility
+            - A waiting item is transparent, not hidden: it keeps its box
+              and its place in the accessibility tree, so a screen reader,
+              find-in-page and reading mode see the whole document at any
+              time. Tab through the last example: the keyboard reveals an
+              item before the scrolling does, and a focused item is never
+              hidden again.
+            - That reveal is not animated either. .c-reveal drops its
+              transition while the focus is inside, so the item is at full
+              contrast before the focus ring is drawn on it — a ring fading
+              in over a second on a box that is still travelling is not a
+              clearly visible focus position.
+            - The scroll box of example 6 is a tab stop (tabindex="0", a
+              name and a focus ring, demo-only markup): a box only the
+              mouse can scroll would leave the text between its links
+              unreachable.
+
+          Try it
+            - Scroll down slowly. Watch the DOM in the inspector while you
+              do: data-reveal-pending disappears item by item, and in the
+              default lane both observers are dropped once the last item of
+              an instance is done.
+        -->
+
+      <p class="stage__intro">
+        Scroll this page. Every card below <strong>fades and rises into
+        place</strong> the moment it enters the viewport — and stays there.
+        The script only ever marks what the browser reports as out of sight,
+        so nothing you can already see is taken away; the six examples add a
+        stagger, a
+        selector instead of a marker per item, the four directions, a late
+        trigger line, the single-element lane and a reveal that replays
+        inside its own scroll box.
+      </p>
+
+      <div class="demo">
+
+        <!-- Example 1: the default — marked items, fade and rise -->
+        <section class="demo__example" data-js-behavior="revealOnScroll">
+          <h2 class="c-reveal" data-reveal-item>1 — Marked items, default look</h2>
+
+          <p class="stage__intro c-reveal" data-reveal-item>
+            The section carries <code>data-js-behavior="revealOnScroll"</code>,
+            each element to be revealed carries <code>data-reveal-item</code>,
+            and the look comes from <code>.c-reveal</code>. Three items, three
+            reveals — the heading included.
+          </p>
+
+          <p class="demo__card c-reveal" data-reveal-item>
+            This card was transparent and 32px lower a moment ago. The
+            distance is <code>--reveal-distance</code>, the timing
+            <code>--reveal-duration</code> / <code>--reveal-ease</code> — all
+            declared on <code>.c-reveal</code> itself, so a single item can be
+            retuned with an inline custom property.
+          </p>
+
+          <p class="demo__card c-reveal" data-reveal-item>
+            Reveal-once is the default: the attribute is gone, the item is
+            unobserved, and when the last item of an instance is done both of
+            its observers are disconnected. Scrolling back up leaves
+            everything in place.
+          </p>
+        </section>
+
+        <div class="demo__room" aria-hidden="true"></div>
+
+        <!-- Example 2: item selector instead of a marker, plus a stagger -->
+        <section class="demo__example">
+          <h2>2 — A selector instead of a marker, and a stagger</h2>
+
+          <p class="stage__intro">
+            The cards below carry no <code>data-reveal-item</code>:
+            <code>data-reveal-items=":scope&nbsp;&gt;&nbsp;li"</code> names
+            them from the container instead — the lane for markup you cannot
+            edit, a CMS list or a generated grid. With
+            <code>data-reveal-stagger="90"</code> the four of them are
+            released 90ms apart, in document order, so the grid arrives as a
+            sequence. A reader who asked for reduced motion gets no sequence
+            and no reveal at all: the content is simply there.
+          </p>
+
+          <ul class="demo__cards" role="list"
+              data-js-behavior="revealOnScroll"
+              data-reveal-items=":scope > li"
+              data-reveal-stagger="90">
+            <li class="demo__card c-reveal">First</li>
+            <li class="demo__card c-reveal">Second</li>
+            <li class="demo__card c-reveal">Third</li>
+            <li class="demo__card c-reveal">Fourth</li>
+          </ul>
+        </section>
+
+        <div class="demo__room" aria-hidden="true"></div>
+
+        <!-- Example 3: the four directions the shipped look offers -->
+        <section class="demo__example">
+          <h2>3 — The four directions</h2>
+
+          <p class="stage__intro">
+            One instance, four modifiers of the same component:
+            <code>--fade</code> does not move at all (for a box that must not
+            shift), <code>--left</code> and <code>--right</code> slide in
+            sideways, <code>--zoom</code> grows into place. Each of them sets
+            exactly one custom property, so a fifth direction is one
+            declaration on the item — no new modifier needed.
+          </p>
+
+          <div class="demo__row" data-js-behavior="revealOnScroll">
+            <p class="demo__card c-reveal c-reveal--fade" data-reveal-item>
+              <code>--fade</code> — opacity only
+            </p>
+            <p class="demo__card c-reveal c-reveal--zoom" data-reveal-item>
+              <code>--zoom</code> — from 0.94
+            </p>
+            <p class="demo__card c-reveal c-reveal--left" data-reveal-item>
+              <code>--left</code> — from the inline start
+            </p>
+            <p class="demo__card c-reveal c-reveal--right" data-reveal-item>
+              <code>--right</code> — from the inline end
+            </p>
+          </div>
+        </section>
+
+        <div class="demo__room" aria-hidden="true"></div>
+
+        <!-- Example 4: a late trigger line -->
+        <section class="demo__example">
+          <h2>4 — A later trigger line</h2>
+
+          <p class="stage__intro">
+            <code>data-reveal-offset="200"</code> moves the trigger line 200px
+            above the bottom edge of the viewport: the panel is not revealed
+            when its first pixel appears but once it has come that far in.
+            Useful for a tall element whose top edge would otherwise arrive
+            long before the reader is looking at it.
+          </p>
+
+          <p class="demo__card c-reveal" style="--reveal-distance: 64px;"
+             data-js-behavior="revealOnScroll"
+             data-reveal-offset="200">
+            Watch the bottom edge of the window as this panel comes up: it
+            stays transparent for 200 more pixels of scrolling, then travels
+            its 64px into place. The offset is also what keeps the repeat lane
+            honest — an item that stops crossing the line is only hidden again
+            once it is completely out of sight, never while it is still
+            visible below the line.
+          </p>
+        </section>
+
+        <div class="demo__room" aria-hidden="true"></div>
+
+        <!-- Example 5: the single-element lane — the container is the item -->
+        <section class="demo__example">
+          <h2>5 — The single-element lane</h2>
+
+          <p class="stage__intro">
+            The blockquote below has no marked item inside it, so the
+            container is the item itself: one attribute on one element, and no
+            wrapper to write. It is the same code path as everywhere else —
+            the fallback is in the item lookup, not in a second mode.
+          </p>
+
+          <blockquote class="demo__card c-reveal c-reveal--zoom"
+                      style="--reveal-duration: 1.2s;"
+                      data-js-behavior="revealOnScroll">
+            <p>
+              “Pick the least powerful language that does the job.” The
+              watching is the browser's (IntersectionObserver), the animating
+              is the stylesheet's, and what is left for the script is one
+              attribute per item.
+            </p>
+          </blockquote>
+        </section>
+
+        <div class="demo__room" aria-hidden="true"></div>
+
+        <!-- Example 6: a scroll container, and a reveal that replays -->
+        <section class="demo__example">
+          <h2>6 — Inside a scroll box, replaying</h2>
+
+          <p class="stage__intro">
+            The items below scroll inside the framed <code>overflow: auto</code>
+            box — and there is <strong>no root option to set</strong>: an
+            observer on the default root intersects an item with the clip box
+            of every ancestor, so the box is the browser's business, not the
+            module's. <code>data-reveal-repeat</code> puts an item back into
+            its waiting state once it has left the view, so <strong>scroll the
+            box up and down</strong> and the reveal replays as often as you
+            like. Tab into it as well: the keyboard reveals an item before the
+            scrolling does, and whatever holds the focus is never hidden
+            again.
+          </p>
+
+          <div id="demoScrollBox" class="demo__scrollBox"
+               tabindex="0" role="group" aria-label="Scrollable example">
+            <div class="demo__stack"
+                 data-js-behavior="revealOnScroll"
+                 data-reveal-stagger="60"
+                 data-reveal-repeat>
+              <p class="demo__card c-reveal" data-reveal-item>
+                First item in the box. <a href="#demoScrollBox">A link</a> so
+                there is something to tab to.
+              </p>
+              <p class="demo__card c-reveal" data-reveal-item>
+                Second item. What decides here is whether the box shows it
+                <em>and</em> the box itself is on screen — both are one
+                intersection to the browser.
+              </p>
+              <p class="demo__card c-reveal" data-reveal-item>
+                Third item. <a href="#demoScrollBox">Another link</a> — tab
+                past the fold and watch it arrive before it is scrolled to.
+              </p>
+              <p class="demo__card c-reveal" data-reveal-item>
+                Fourth item, and the one that shows the stagger inside the
+                box: 60ms apart, in document order.
+              </p>
+              <p class="demo__card c-reveal" data-reveal-item>
+                Fifth item. Scroll back to the top of the box and down again —
+                every one of these replays, because the container carries
+                <code>data-reveal-repeat</code>.
+              </p>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</body>
+
+</html>

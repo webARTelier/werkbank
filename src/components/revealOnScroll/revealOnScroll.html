@@ -1,0 +1,163 @@
+<!--
+  revealOnScroll — copy-paste snippet
+  ============================================================================
+  Copy the block below into your own project.
+
+  1) In <head> (or before </body>): load the shared styles, this component's
+     styles and the boot script. boot.min.js lazily loads the revealOnScroll
+     module as soon as it finds data-js-behavior="revealOnScroll" in the DOM —
+     you do not import revealOnScroll.js yourself. Adjust the paths to where
+     you serve /dist.
+
+       <link rel="stylesheet" href="/dist/css/shared.min.css" />
+       <link rel="stylesheet" href="/dist/css/revealOnScroll.min.css" />
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+  2) Put data-js-behavior="revealOnScroll" on the CONTAINER of the elements
+     that should be revealed, and data-reveal-item on each of them. While an
+     item is still waiting it carries the attribute data-reveal-pending; the
+     script removes it when the item comes into view, and the CSS animates the
+     rest.
+       - A container with no data-reveal-item inside it IS the item, so a
+         single element needs nothing but data-js-behavior.
+       - data-reveal-items="<selector>" replaces the marker where the items
+         cannot carry an attribute of their own (CMS output, a generated
+         list). The selector is resolved inside the container, so start it
+         with :scope for a child selector — ":scope > li".
+       - .c-reveal is the optional convenience look: a fade plus a rise into
+         place, with .c-reveal--fade / --left / --right / --zoom for the other
+         directions and the --reveal-* custom properties for distance,
+         duration, easing and delay. The script does not read it — style your
+         own items and key the waiting look off [data-reveal-pending].
+       - REQUIRED for a sideways reveal: .c-reveal--left / --right start the
+         item outside its own box, which widens the scroll area of any
+         ancestor that does not clip — give that ancestor `overflow-x: clip`.
+         Left out, a narrow viewport gets a horizontal scrollbar on a page
+         that should only scroll one way (WCAG 1.4.10 / BITV 9.1.4.10), and
+         the reveal is what caused it. The vertical default cannot do this: a
+         page may scroll that way.
+
+  Notes
+    - Progressive enhancement, and it works the honest way round: nothing in
+      the markup or the CSS hides anything. The only thing that ever marks an
+      item is an observer reporting that the item CANNOT BE SEEN — off screen,
+      clipped inside a scroll box, in a closed panel — so nothing the reader is
+      looking at is ever taken away, and if the chunk 404s or the engine has no
+      IntersectionObserver, the page simply stands there as authored.
+    - The script sets no inline styles and runs no animation — it toggles one
+      attribute per item and the CSS does the animating (honouring
+      prefers-reduced-motion, which drops the waiting state altogether, and
+      print, which lifts it: paper cannot scroll anything into view).
+    - Nothing here is hidden from assistive technology. A waiting item is
+      transparent, not `hidden`: it keeps its box and its place in the
+      accessibility tree, so a screen reader, find-in-page and reading mode
+      always see the whole document. Keyboard focus reveals its item at once
+      (and keeps it revealed), so focus never sits in a transparent box — and
+      "at once" includes the animation: the stylesheet drops the transition
+      while the focus is inside, so the item is at full contrast before the
+      focus ring is drawn on it instead of fading in underneath it.
+    - Keep the movement short. A single reveal is one second by default, well
+      under the five seconds from which moving content needs a way to stop it
+      (WCAG 2.2.2 / BITV 9.2.2.2) — but data-reveal-stagger multiplies: 20
+      items 300ms apart are six seconds of movement on one screen. Budget
+      stagger × items against that, and mind a raised --reveal-duration.
+    - Any number of instances can live on one page, and each one owns its
+      items and its two observers (one for the trigger line, one for plain
+      visibility). Items are revealed once by default — both observers are
+      dropped when the last item is done.
+    - There is no root option, and none is needed: an IntersectionObserver
+      against the viewport already intersects an item with the clip box of
+      every ancestor on the way up, so an item inside an overflow: auto box is
+      handled without naming the box — and, unlike a container root, it waits
+      until the reader has actually scrolled to that box.
+    - OPT-IN, not shipped: animating the FIRST screen too. The items above the
+      fold are visible before the module arrives, so revealing them can only
+      mean taking them away first — which this component will not do. If you
+      want them to animate anyway, hide them in your own CSS until the module
+      has taken over:
+
+        @media (scripting: enabled) {
+          [data-reveal-first]:not([data-revealonscroll-ready]) .c-reveal {
+            opacity: 0;
+          }
+        }
+
+      Add data-reveal-first (any name; it is your attribute) to the
+      containers this should apply to. The reveal then happens by itself, out
+      of the transition on .c-reveal, the moment init() sets
+      data-revealonscroll-ready. What you are signing up for: if the chunk
+      never arrives, those items stay invisible for good — the reason this
+      block is not part of the component. Use it for decoration, never for the
+      only copy of something the reader needs, and consider a
+      <link rel="modulepreload" href="/dist/js/modules/revealOnScroll.min.js" />
+      next to the boot script to shorten the wait.
+    - Optional config (attributes on the container):
+        data-reveal-items    CSS selector for the items, resolved inside the
+                             container (":scope > li"). Default:
+                             [data-reveal-item] — and a container with no
+                             marked item is the single item itself
+        data-reveal-offset   px the trigger line sits above the bottom edge of
+                             the viewport, so an item is revealed only once it
+                             has come that far in. Has to stay below the
+                             viewport height (a line above the top edge of the
+                             screen could never be crossed; such a value is
+                             reported and dropped to 0). That is re-checked on
+                             every resize, so a rotation or 400% zoom that
+                             makes the viewport shorter than the offset falls
+                             back instead of leaving the items waiting for
+                             good. Default: 0 — as soon as its edge appears
+        data-reveal-stagger  ms between two items that are revealed together,
+                             in document order — a grid of cards then arrives
+                             as a sequence. Skipped under
+                             prefers-reduced-motion. Default: 0
+        data-reveal-repeat   presence only: an item that has left the view
+                             waits again, so the reveal replays on the way
+                             back. Default: revealed once and done
+-->
+
+
+
+<!-- Basic: a container marks its items; each one fades and rises into place
+     as it comes into view -->
+<section data-js-behavior="revealOnScroll">
+  <h2 class="c-reveal" data-reveal-item>Section heading</h2>
+  <p class="c-reveal" data-reveal-item>First paragraph …</p>
+  <p class="c-reveal" data-reveal-item>Second paragraph …</p>
+</section>
+
+
+
+<!-- Staggered, and late: the cards arrive one after another, each once it is
+     120px inside the viewport -->
+<ul data-js-behavior="revealOnScroll"
+    data-reveal-items=":scope > li"
+    data-reveal-offset="120"
+    data-reveal-stagger="90">
+  <li class="c-reveal">First card …</li>
+  <li class="c-reveal">Second card …</li>
+  <li class="c-reveal">Third card …</li>
+</ul>
+
+
+
+<!-- Single element: no marked item inside, so the container is the item.
+     A modifier picks the direction, a custom property the distance — and
+     because it is a sideways one, whatever this figure sits in needs
+     `overflow-x: clip` so those 64px cannot widen the page. -->
+<figure class="c-reveal c-reveal--left" style="--reveal-distance: 64px;"
+        data-js-behavior="revealOnScroll">
+  <img src="/media/chart.svg" alt="Revenue per quarter">
+</figure>
+
+
+
+<!-- Inside a scroll box (styling owned by your project): nothing extra to
+     wire — the observer already sees that the box clips its content.
+     data-reveal-repeat lets the reveal replay every time an item leaves the
+     view and comes back. -->
+<div id="scrollBox">
+  <div data-js-behavior="revealOnScroll" data-reveal-repeat>
+    <p class="c-reveal" data-reveal-item>…scrollable content…</p>
+    <p class="c-reveal" data-reveal-item>…scrollable content…</p>
+  </div>
+</div>

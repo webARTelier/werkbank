@@ -31,6 +31,7 @@ export const registry = {
   rafThrottle: () => import('./modules/rafThrottle.min.js'),
   readMore: () => import('./modules/readMore.min.js'),
   resolveLocale: () => import('./modules/resolveLocale.min.js'),
+  revealOnScroll: () => import('./modules/revealOnScroll.min.js'),
   scaleSVG: () => import('./modules/scaleSVG.min.js'),
   scrollSpy: () => import('./modules/scrollSpy.min.js'),
   siteSearch: () => import('./modules/siteSearch.min.js'),
