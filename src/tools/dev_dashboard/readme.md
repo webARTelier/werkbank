@@ -42,9 +42,11 @@ over and over:
 ```
 
 Marked images join the selection shortly after `load`, with the value as their
-label; without a value the file name is the label. Pre-select one image per
-distinct layout behaviour: four tiles of equal width are one measurement, not
-four.
+label; without a value the file name is the label. They carry the selection's
+outline and badge from that moment on, without the panel having been opened —
+what is pre-selected is visible in the page, not only in the list. Pre-select
+one image per distinct layout behaviour: four tiles of equal width are one
+measurement, not four.
 
 The form filler takes an attribute too, and there it steers rather than
 selects — `data-dev-form="skip"` keeps a field (or everything inside an
@@ -90,7 +92,9 @@ not a clickable finding — does not light up.
   button is for.
 - **Closing a panel takes that tool's marks out of the page** — but not what
   the form filler wrote. That is a change to the page, not a marker, and only
-  **reset** undoes it.
+  **reset** undoes it. The srcset selection is the other exception: it is not a
+  scan's findings but a state you built, so its outlines and badges stay for as
+  long as something is selected (see *Pick the images*).
 - <kbd>Esc</kbd> closes the open panel, or aborts a running sweep.
 - The **chevron** folds the bar down to a thin strip, which is how you look at
   something the bar would otherwise sit in front of; the state is remembered
@@ -108,6 +112,11 @@ above the dashboard counts what you have:
 - **Click an image to select it, click it again to drop it.** As many as you
   like — that is the point. Each one gets a numbered badge above its top-left
   corner and a blue outline; the one under the cursor is outlined amber.
+- **The marks are the selection, so they stay.** They are there right after
+  `load` for a pre-selected image, they survive picking ending and the panel
+  closing, and they renumber when a row is dropped. Only **clear**, a reload
+  and the **✕** take them away — plus the sweep itself, which draws its own
+  curtain over the page and hands them back when it is done.
 - **The click never reaches the page.** A linked image does not navigate, a
   slider does not slide. The page has the click back the moment picking ends.
 - **Click anything, not only an `<img>`.** A click lands on the nearest
@@ -121,7 +130,7 @@ above the dashboard counts what you have:
 - <kbd>Esc</kbd> or **done** ends picking and opens the panel on the selection.
   Each row scrolls its image into view on a click and drops it on the ✕;
   **clear** empties the whole list. The selection survives all of that — only
-  a reload forgets it.
+  a reload forgets it — and so do its marks in the page.
 
 **The selection is remembered as a CSS path**, because the sweep measures a
 fresh copy of the page in the probe frame rather than the elements you clicked.

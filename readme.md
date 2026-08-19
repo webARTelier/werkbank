@@ -230,8 +230,8 @@ visuals — including the focus style — to the consuming project.
 ## Dev tools
 
 Next to the components sits a second, separate area: **development tools** in
-[`src/tools/`](src/tools/), indexed by [`tools.html`](tools.html). A tool is
-not a component — it is *pointed at* a page rather than authored into one:
+[`src/tools/`](src/tools/). A tool is not a component — it is *pointed at* a
+page rather than authored into one:
 
 - **One file, one `<script>` line.** A tool is a single classic script with no
   imports and no build step. Its whole UI, CSS included, comes along inside a
@@ -256,9 +256,9 @@ across the viewport range. It has a
 
 ## Demos
 
-Run `npm run build` once, then open `index.html` (the component gallery),
-`tools.html` (the tool index), or any `demo.html` in the browser. A tool demo
-needs a **local server** rather than `file://`.
+Run `npm run build` once, then open `index.html` (the component gallery) or
+any `demo.html` in the browser. A tool demo needs a **local server** rather
+than `file://`.
 
 ## Further reading
 

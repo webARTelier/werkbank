@@ -214,10 +214,10 @@ rewritten: `q`, `describe`, `escapeHtml`, `debounce`, `flash`, `setFlags`,
   `Operate it` and in `What it reports`.
 - **`demo.html` hangs on nothing from the build** — no `shared.min.css`, no
   `boot.min.js`, all styles in the document, the dashboard loaded with one
-  `<script src="dev_dashboard.js">` at the end of `<body>`, and a back link
-  to `tools.html`. That is a rule, not laziness: a tool has to be shown
-  working on a page it knows nothing about, and borrowing the project's
-  tokens would hide leakage in either direction. The demo's job is to give
+  `<script src="dev_dashboard.js">` at the end of `<body>`. That is a rule,
+  not laziness: a tool has to be shown working on a page it knows nothing
+  about, and borrowing the project's tokens would hide leakage in either
+  direction. The demo's job is to give
   every tool something real to find — the four page-info tokens declared the
   way a project declares them, one deliberate mistake per accessibility
   check, an element that is too wide, marked images, and forms that push back
@@ -226,4 +226,9 @@ rewritten: `q`, `describe`, `escapeHtml`, `debounce`, `flash`, `setFlags`,
   `<!-- for development only -->` markers. It replaced `dev_pageInfo.js` and
   `dev_qrCode.js`, which used to be loaded there as modules and are now the
   bar's read-out and its QR panel.
-- **New panels go into `tools.html`**, the tool index at the project root.
+- **There is no index page.** A new tool is a section in `dev_dashboard.js`,
+  a paragraph in `Operate it` and one in `What it reports`, and something for
+  it to find in `demo.html` — nothing else has to be registered anywhere.
+  `tools.html` listed the tools until 2026-08-19 and was deleted once there
+  was one bar to list: an index whose only entry is the file beside it is a
+  second place to keep the same sentence true.

@@ -1355,7 +1355,6 @@
   const srcsetRange = { from: SRCSET_CONFIG.minViewport, to: SRCSET_CONFIG.maxViewport };
 
   let picking = false;
-  let marksOn = false;
   let hovered = null;
   let pinFrame = 0;
   let missing = [];
@@ -1447,13 +1446,13 @@
     return { el, paths: pathsFor(el), label: labelFor(el), probeEl: null };
   }
 
-  function pinsWanted() {
-    return marksOn && picks.length > 0;
+  function marksWanted() {
+    return picks.length > 0 && !sweeping;
   }
 
   function syncPins() {
     pinFrame = 0;
-    pins.hidden = !pinsWanted();
+    pins.hidden = !marksWanted();
     if (pins.hidden) return;
     while (pins.children.length > picks.length) pins.lastElementChild.remove();
     while (pins.children.length < picks.length) {
@@ -1477,14 +1476,13 @@
   }
 
   function queuePins() {
-    if (pinFrame || !pinsWanted()) return;
+    if (pinFrame || !marksWanted()) return;
     pinFrame = requestAnimationFrame(syncPins);
   }
 
-  function setPickMarks(on) {
-    marksOn = on;
+  function syncPickMarks() {
     q(`[${PICK_ATTR}]`).forEach((el) => el.removeAttribute(PICK_ATTR));
-    if (on) {
+    if (marksWanted()) {
       picks.forEach((pick, i) => {
         if (pick.el.isConnected) pick.el.setAttribute(PICK_ATTR, String(i + 1));
       });
@@ -1493,7 +1491,7 @@
   }
 
   function syncPicks() {
-    setPickMarks(marksOn);
+    syncPickMarks();
     pickCount.textContent = picks.length === 1 ? '1 selected' : `${picks.length} selected`;
     $('pickClear').disabled = picks.length === 0;
     if (clearButton) clearButton.disabled = picks.length === 0;
@@ -1559,7 +1557,6 @@
     document[method]('click', onPickClick, true);
     if (on) {
       document.documentElement.setAttribute(PICKING_ATTR, '');
-      marksOn = true;
     } else {
       document.documentElement.removeAttribute(PICKING_ATTR);
       hovered?.removeAttribute(HOVER_ATTR);
@@ -1915,7 +1912,7 @@
     missing = [];
 
     setPicking(false);
-    setPickMarks(false);
+    syncPickMarks();
     closePanel();
     overlay.hidden = false;
     setBadge(srcsetTool, 'busy', '', 'srcset — measuring');
@@ -1960,6 +1957,7 @@
 
     destroyProbe();
     sweeping = false;
+    syncPickMarks();
     overlay.hidden = true;
     setBadge(srcsetTool, null, '', srcsetTool.title);
 
@@ -2094,7 +2092,6 @@
     measureButton.disabled = picks.length === 0;
     clearButton.disabled = picks.length === 0;
     pickButton.setAttribute('aria-pressed', String(picking));
-    setPickMarks(true);
 
     renderSelection(body);
 
@@ -2235,7 +2232,6 @@
     badge: null,
     controls: () => srcsetControlNodes(),
     onOpen: (body) => renderSrcset(body),
-    onClose: () => setPickMarks(false),
   };
 
   $('abortBtn').addEventListener('click', abortSweep);

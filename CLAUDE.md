@@ -145,12 +145,12 @@ module / component / function; where the chunk is meant, "module" is right.
 
 ## Tools: a second area, pointed at a page
 
-`src/tools/dev_dashboard/` holds the **development tools**, indexed by
-`tools.html`. They are not components and the component checklist does not
-apply — see `docs/toolStandards.md`, which is deliberately a fraction of the
-length. Established 2026-08-18 with `dev_srcset` and `dev_a11yInspector`, and
-folded into **one dashboard** on the same day: a bar along the bottom edge of
-the page, one icon per tool, a panel where a tool needs room. It carries the
+`src/tools/dev_dashboard/` holds the **development tools**. They are not
+components and the component checklist does not apply — see
+`docs/toolStandards.md`, which is deliberately a fraction of the length.
+Established 2026-08-18 with `dev_srcset` and `dev_a11yInspector`, and folded
+into **one dashboard** on the same day: a bar along the bottom edge of the
+page, one icon per tool, a panel where a tool needs room. It carries the
 page information, the a11y inspector, the horizontal-overflow check, a QR
 code of the current URL, the srcset measurement and the form filler. **A new
 tool is a section in that file, not a folder of its own.**
