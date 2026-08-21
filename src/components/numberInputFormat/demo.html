@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="de">
+
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>numberInputFormat – Demo</title>
+    <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
+    <link rel="stylesheet" href="../../../dist/css/numberInputFormat.min.css" />
+    <script type="module" src="../../../dist/js/boot.min.js"></script>
+
+    <!-- for development only -->
+     <script src="../../tools/dev_dashboard/dev_dashboard.js"></script>
+    <!-- end for development only -->
+
+  </head>
+
+  <body>
+
+    <main class="shell">
+
+      <section class="hero">
+        <a class="back" href="../../../index.html">← Overview</a>
+        <h1>numberInputFormat</h1>
+        <p>Groups a number field while typing — in the page's language.</p>
+      </section>
+
+      <section class="stage" aria-label="Live demo">
+
+        <!--
+            Groups a plain text field into a readable number as you type,
+            paste or edit. This page is lang="de", so the separators are the
+            German ones ("1.234,56"); on an English page the very same markup
+            produces "1,234.56". Both come from Intl, not from a table.
+
+            Wiring
+              - data-js-behavior="numberInputFormat" boots the module. It may
+                sit on the <input> (Example 1) or on a wrapper that holds one
+                or more fields (Example 2).
+              - data-numberinputformat marks the <input> to format.
+              - Use type="text" (or "tel" / "search"). type="number" is
+                skipped and reported: it cannot group and does not allow
+                setSelectionRange, so the caret could not be preserved.
+
+            Behavior
+              - The value is rebuilt from its sign, its integer digits and its
+                fraction digits on every edit, so it can never end up
+                half-grouped. The caret is preserved as a section plus a digit
+                count, so editing in the middle works; a Backspace/Delete that
+                lands on a group separator removes the adjacent digit instead
+                of re-inserting the separator. Formatting only — the number is
+                not validated.
+              - A leading zero is dropped as the value is read ("0007" is 7,
+                "0012.50" is 12,50): a grouped number never carries one, and
+                left in, "0007" would render as "0.007" — a thousandth of what
+                was typed. A lone "0" stays.
+              - Do not put maxlength on a formatted field: the separators
+                count towards it, so it limits an unpredictable number of
+                digits. Use data-numberinputformat-decimals plus min/max with
+                formValidation.
+              - Typing speaks the page's language; a paste is read as a value
+                (with two separators present, the last one is the decimal
+                point). See Example 4.
+
+            Progressive enhancement / accessibility
+              - It is a normal text input: without JavaScript a number can
+                still be typed, just without the grouping. There is no
+                pre-enhancement state and no ready attribute — nothing is
+                hidden and no control is promised.
+              - inputmode="decimal" is added (a touch keypad WITH the decimal
+                key) only when the author has not set inputmode.
+              - Label + placeholder + a hint wired via aria-describedby (WCAG
+                3.3.2) are the author's job; the module only formats. Where
+                data-numberinputformat-decimals is set, the hint has to name
+                the cap — it is silent, like maxlength (Example 3).
+              - Two things a screen reader announces differently from what
+                happens, neither fixable inside the component (it echoes the
+                KEY): Backspace on a group separator removes the adjacent
+                DIGIT while the separator is what is read out, and a second
+                "-" takes the sign off while "minus" is what is read out. The
+                value stays correct and readable throughout; no live region,
+                which would only compete with the echo on every keystroke.
+          -->
+
+        <!-- Example 1: attribute on the input itself -->
+        <p class="stage__intro">
+          <strong>Single field:</strong> type digits and the thousands
+          separators appear automatically. Try editing in the middle, or
+          backspacing onto a separator — the caret stays where you expect.
+          Type <code>-</code> to make it negative, and again to take it back.
+        </p>
+        <p class="c-numberField">
+          <label class="c-numberField__label" for="number-single">Quantity</label>
+          <input
+            class="c-numberField__control"
+            id="number-single"
+            type="text"
+            name="quantity"
+            placeholder="0"
+            aria-describedby="number-single-hint"
+            data-js-behavior="numberInputFormat"
+            data-numberinputformat
+          />
+          <span class="c-numberField__hint" id="number-single-hint">Whole or decimal number, unlimited decimals</span>
+        </p>
+
+        <!-- Example 2: on a wrapper — formats every field inside -->
+        <p class="stage__intro" style="margin-top: var(--space-xl);">
+          <strong>Wrapper scope:</strong> <code>data-js-behavior</code> sits on
+          the surrounding element, so every
+          <code>data-numberinputformat</code> field inside it is formatted.
+          Both fields arrive pre-filled and are re-grouped on load.
+        </p>
+        <div data-js-behavior="numberInputFormat">
+          <p class="c-numberField">
+            <label class="c-numberField__label" for="number-from">From</label>
+            <input
+              class="c-numberField__control"
+              id="number-from"
+              type="text"
+              value="1000"
+              placeholder="0"
+              aria-describedby="number-range-hint"
+              data-numberinputformat
+            />
+          </p>
+          <p class="c-numberField" style="margin-top: var(--space-s);">
+            <label class="c-numberField__label" for="number-to">To</label>
+            <input
+              class="c-numberField__control"
+              id="number-to"
+              type="text"
+              value="2500000"
+              placeholder="0"
+              aria-describedby="number-range-hint"
+              data-numberinputformat
+            />
+          </p>
+          <span class="c-numberField__hint" id="number-range-hint">Whole or decimal number</span>
+        </div>
+
+        <!-- Example 3: two decimals + the machine value, in a real form -->
+        <p class="stage__intro" style="margin-top: var(--space-xl);">
+          <strong>Two decimals, and what the form posts:</strong> the price
+          field caps the fraction at two digits while typing and pads to two on
+          blur. It also carries
+          <code>data-numberinputformat-submit</code>, so its
+          <code>name</code> moves to a hidden input holding
+          <code>1234.56</code> — while the quantity field beside it posts what
+          it shows. The form is a plain <code>GET</code> to this page, so press
+          <em>Submit</em> and read the query string in the address bar.
+        </p>
+        <p class="stage__intro">
+          Two things that lane hands to you, both accessibility: your server
+          only ever sees the hidden input, so an <strong>error message has to
+          be wired to the visible field</strong> (WCAG 3.3.1) — and a
+          <strong>redisplayed value goes back into the visible field</strong>,
+          where the module re-reads it. That round trip is safe, and the price
+          field below demonstrates it: its authored value is the machine value
+          <code>1234.500</code>, exactly as a server would send it back. A
+          separator with four digits in front of it cannot be a grouping —
+          grouped, that number reads <code>1.234.500</code> — so it is a
+          decimal point, and the field shows <code>1.234,50</code> rather than
+          one and a bit million. A first group of <code>0</code> settles the
+          same question the other way round: <code>0.999</code> comes back as
+          <code>0,999</code>, because nobody writes 999 as <code>0.999</code>.
+        </p>
+        <p class="stage__intro">
+          One thing that lane does <em>not</em> hand back: the cap cuts a value
+          that arrives whole. Typing cannot exceed
+          <code>decimals="2"</code> in the first place, but a redisplayed
+          <code>1234.567</code> enters this field as <code>1.234,56</code> —
+          truncated, not rounded, because <code>1.234,57</code> would be a
+          calculated value and this component does not calculate. So do not
+          send back more decimals than the field accepts.
+        </p>
+        <form action="" method="get">
+          <p class="c-numberField">
+            <label class="c-numberField__label" for="number-price">Price</label>
+            <input
+              class="c-numberField__control"
+              id="number-price"
+              type="text"
+              name="price"
+              value="1234.500"
+              placeholder="0,00"
+              aria-describedby="number-price-hint"
+              data-js-behavior="numberInputFormat"
+              data-numberinputformat
+              data-numberinputformat-decimals="2"
+              data-numberinputformat-submit
+            />
+            <span class="c-numberField__hint" id="number-price-hint">At most two decimals; posted as 1234.50</span>
+          </p>
+          <p class="c-numberField" style="margin-top: var(--space-s);">
+            <label class="c-numberField__label" for="number-amount">Quantity (no opt-in)</label>
+            <input
+              class="c-numberField__control"
+              id="number-amount"
+              type="text"
+              name="amount"
+              value="9876"
+              aria-describedby="number-amount-hint"
+              data-js-behavior="numberInputFormat"
+              data-numberinputformat
+            />
+            <span class="c-numberField__hint" id="number-amount-hint">Posted exactly as shown: 9.876</span>
+          </p>
+          <p style="margin-top: var(--space-s);">
+            <button type="submit">Submit</button>
+            <button type="reset">Reset</button>
+          </p>
+        </form>
+
+        <!-- Example 4: a foreign-locale value, pasted -->
+        <p class="stage__intro" style="margin-top: var(--space-xl);">
+          <strong>Paste from another locale:</strong> copy
+          <code>1,234.56</code> (English) into the German field below. Two
+          different separators are present, so the last one is the decimal
+          point whatever the page's language — it arrives as
+          <code>1.234,56</code>. A lone separator is genuinely ambiguous and
+          the page decides: <code>1.234</code> pasted here is one thousand two
+          hundred and thirty-four, while <code>12.5</code> is twelve and a
+          half, because three digits after a separator is a grouping and one
+          is not. Both sides have to look like one: <code>1234.560</code> has
+          four digits in front, and a grouped number never does — grouped it
+          would read <code>1.234.560</code> — so that separator is a decimal
+          point too. Nor does a grouping ever start with a zero, so
+          <code>0.999</code> is nine hundred and ninety-nine thousandths, and
+          <code>0012.50</code> loses its padding on the way in and arrives as
+          <code>12,50</code>.
+        </p>
+        <p class="c-numberField">
+          <label class="c-numberField__label" for="number-paste">Paste target</label>
+          <input
+            class="c-numberField__control"
+            id="number-paste"
+            type="text"
+            placeholder="1.234,56"
+            aria-describedby="number-paste-hint"
+            data-js-behavior="numberInputFormat"
+            data-numberinputformat
+          />
+          <span class="c-numberField__hint" id="number-paste-hint">Try 1,234.56 — 1.234 — 12.5 — 1234.560 — 0.999 — 0012.50 — 1 234,56</span>
+        </p>
+
+        <!-- Example 5: right-aligned, integers only -->
+        <p class="stage__intro" style="margin-top: var(--space-xl);">
+          <strong>Integers only, right-aligned:</strong>
+          <code>data-numberinputformat-decimals="0"</code> refuses a decimal
+          separator altogether, and the alignment is the stylesheet's
+          <code>--numberField-text-align</code> knob — a column of amounts
+          reads better flush right.
+        </p>
+        <p class="c-numberField" style="--numberField-text-align: end;">
+          <label class="c-numberField__label" for="number-integer">Population</label>
+          <input
+            class="c-numberField__control"
+            id="number-integer"
+            type="text"
+            value="83445000"
+            aria-describedby="number-integer-hint"
+            data-js-behavior="numberInputFormat"
+            data-numberinputformat
+            data-numberinputformat-decimals="0"
+          />
+          <span class="c-numberField__hint" id="number-integer-hint">Whole numbers only</span>
+        </p>
+
+      </section>
+
+    </main>
+
+  </body>
+</html>

@@ -126,11 +126,17 @@
 // resolveLocale + formatTemplate are the pair every announcing component here
 // uses (see inputCharCount): the page's language picks a template, the
 // template keeps word order with the translation.
+// pageLocale + numberSeparators are the pair that reads a number the way the
+// page writes it — "1.234" is one value in English and another in German.
+// They lived here until numberInputFormat became their second consumer, which
+// is the signal to hoist (see CLAUDE.md, "DI vs. direct import").
 import { rafThrottle } from './rafThrottle.js';
 import { focusableSelector } from './focusableSelector.js';
 import { uniqueId } from './uniqueId.js';
 import { resolveLocale } from './resolveLocale.js';
 import { formatTemplate } from './formatTemplate.js';
+import { pageLocale } from './pageLocale.js';
+import { numberSeparators } from './numberSeparators.js';
 
 
 
@@ -217,42 +223,6 @@ const labels = {
     directionDescending: 'descending',
   },
 };
-
-
-
-// <html lang> as something Intl will accept, or undefined for the browser's
-// own default. An empty or malformed tag makes every Intl constructor throw,
-// and a table unsortable because a lang attribute has a typo would be a poor
-// trade.
-function pageLocale() {
-  const lang = (document.documentElement.lang || '').trim();
-  if (!lang) return undefined;
-
-  try {
-    Intl.getCanonicalLocales(lang);
-    return lang;
-  } catch {
-    return undefined;
-  }
-}
-
-
-
-// The group and decimal separator of the page's language, asked of the
-// platform rather than assumed: "1.234" is one number in English and another
-// in German. Visible text is parsed with these; a data-datatable-value is not
-// (see parseNumber).
-function numberSeparators(locale) {
-  try {
-    const parts = new Intl.NumberFormat(locale).formatToParts(12345.6);
-    const valueOf = (type) =>
-      parts.find((part) => part.type === type)?.value || '';
-
-    return { group: valueOf('group'), decimal: valueOf('decimal') || '.' };
-  } catch {
-    return { group: '', decimal: '.' };
-  }
-}
 
 
 

@@ -1,0 +1,121 @@
+// =============================================================
+// numberInputFormat — a labelled number field with grouped digits
+// =============================================================
+//
+// This stylesheet dresses a plain number field (label + input + optional
+// hint) so the demo and copy-paste snippet look at home in the shared design.
+// The formatting itself is pure JavaScript progressive enhancement and needs
+// none of it — a bare <input data-numberinputformat> is grouped the same.
+//
+// numberInputFormat owns no vocabulary: it enhances a field the project
+// already has. The "c-numberField*" classes are the component shipped
+// alongside it — styling only. numberInputFormat.js does NOT hook onto them;
+// it targets the markup's data attribute ("data-numberinputformat"), so the
+// field can be restyled freely without touching the behaviour.
+//
+// Contract with the JS: it writes NO class, NO state attribute and no inline
+// style. It sets the value, an inputmode where the author set none, and — in
+// the opt-in machine-value lane — a hidden sibling input. So there is no
+// pre-enhancement block here and no ready attribute: nothing is hidden before
+// init(), no control is promised, and there would be nothing for CSS to key
+// off. See docs/preEnhancement.md.
+//
+// One rule below is not decoration but the answer to the one visible change
+// the module does make: a pre-filled value re-groups on init and every
+// keystroke inserts or removes separators. tabular-nums keeps every digit the
+// same width so the value does not jitter sideways while that happens — the
+// Layer 4 answer (reserve, do not hide) for this component.
+
+@use "focus" as *;
+
+
+
+// Field wrapper: stacks the label, the control and the optional hint.
+//
+// The override surface: declared on the component root, not in :root, so it
+// stays scoped and a single instance can be retuned in place.
+.c-numberField {
+
+  // Spacing (shared scale, _shared/scss/_foundations.scss)
+  --numberField-gap: var(--space-3xs); // gap label <-> control <-> hint
+  --numberField-padding-block: var(--space-2xs);
+  --numberField-padding-inline: var(--space-xs);
+  --numberField-radius: var(--borderRadius);
+
+  // Type scale. The hint is in em, relative to the field's own font-size, so
+  // it scales with the surrounding text instead of borrowing a spacing token.
+  --numberField-hint-fontSize: 0.875em;
+
+  // Where the digits sit in the field. "start" by default, because a form
+  // field reads as a field; a column of amounts is the case for "end", which
+  // is why this is a knob and not a decision.
+  --numberField-text-align: start;
+
+  // Colors (shared semantic tokens, _shared/scss/_colors_semantic.scss)
+  --numberField-label-color: var(--color-text);
+  --numberField-hint-color: var(--color-text-muted);
+  --numberField-text-color: var(--color-text);
+  --numberField-placeholder-color: var(--color-text-muted);
+  --numberField-bg-color: var(--color-bg-surface);
+  --numberField-border-color: var(--color-border);
+  --numberField-border-color-hover: var(--color-border-strong);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--numberField-gap);
+
+  font-family: system-ui, sans-serif;
+
+  color: var(--numberField-text-color);
+
+
+
+  &__label {
+    color: var(--numberField-label-color);
+    font-weight: 600;
+  }
+
+
+
+  // The formatted input. tabular-nums is the load-bearing rule here (see the
+  // header): it keeps every digit the same width, so the value does not shift
+  // sideways as group separators are inserted while typing.
+  &__control {
+
+    // The control sits on a dark surface -> the light tone.
+    @include focus-ring(light);
+
+    & {
+      border: 1px solid var(--numberField-border-color);
+      border-radius: var(--numberField-radius);
+      padding: var(--numberField-padding-block) var(--numberField-padding-inline);
+
+      font: inherit;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.02em;
+      text-align: var(--numberField-text-align);
+
+      color: var(--numberField-text-color);
+      background-color: var(--numberField-bg-color);
+    }
+
+    &::placeholder {
+      color: var(--numberField-placeholder-color);
+    }
+
+    &:hover {
+      border-color: var(--numberField-border-color-hover);
+    }
+  }
+
+
+
+  // Format hint (e.g. "Amount in euro, two decimals"), visually subordinate.
+  // Wire it to the input via aria-describedby so screen-reader users hear it
+  // too.
+  &__hint {
+    font-size: var(--numberField-hint-fontSize);
+    line-height: 1.4;
+    color: var(--numberField-hint-color);
+  }
+}

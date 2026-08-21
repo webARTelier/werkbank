@@ -426,7 +426,11 @@ paragraphs, and several live examples exercising each mode of the component.
   `matchesAccept` (would a field's `accept` have offered this file?),
   `fileKey` (name + size + timestamp, the closest thing to a `File`'s
   identity — for deciding whether to ADD a file, never whether two are the
-  same thing), `uniqueId` (an id that is free in the document),
+  same thing), `pageLocale` (`<html lang>` as something `Intl` will accept, or
+  `undefined` — not to be confused with `resolveLocale`, which picks from the
+  locales a component ships translations for), `numberSeparators` (the group
+  and decimal character of a locale, from `Intl.NumberFormat().formatToParts()`
+  — never assume `.` and `,`), `uniqueId` (an id that is free in the document),
   `focusableSelector` (elements the keyboard already reaches), `describedBy`
   (add/remove one id in a field's `aria-describedby`),
   `navExpandedMediaQuery` (the `--bp-navigation` query), `otherModalOpen` (is

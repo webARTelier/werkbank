@@ -240,7 +240,7 @@ of them, and the wrong one for most.
 | `marquee` | none | not needed | the clipping row is plain CSS from the first paint; the strip is just static until it runs |
 | `video` | none | not needed | the JS-only toggle ships with `hidden` in the markup and the script reveals it — the same idea, expressed in HTML |
 | `stickyObserver`, `scrollSpy`, `flexNeighborMarker`, `adaptiveScrollFade` | additive marker/fade appears | not needed | nothing is hidden, and the result depends on measurement CSS cannot anticipate |
-| `dateInputFormat`, `formValidation` | none | not needed | behaviour on interaction only |
+| `dateInputFormat`, `numberInputFormat`, `formValidation` | none | not needed | behaviour on interaction only. The two formatters do re-group a pre-filled value on `init()`, which can widen it — a Layer 4 case their own stylesheets answer with `tabular-nums`, not something to hide, so neither owns a ready attribute at all |
 | `inlineSVG`, `scaleSVG`, `countdown`, `inputCharCount` | layout shift | Layer 4 | the change cannot be predicted, only kept from shifting — see the table above |
 
 `video`'s approach is worth a note: a control that is useless without the

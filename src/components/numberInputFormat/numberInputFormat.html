@@ -1,0 +1,216 @@
+<!--
+  numberInputFormat — copy-paste snippet
+  ============================================================================
+  Copy the block(s) below into your own project.
+
+  1) In <head> (or before </body>): load the shared styles, this component's
+     styles and the boot script. boot.min.js lazily loads the
+     numberInputFormat module as soon as it finds
+     data-js-behavior="numberInputFormat" in the DOM — you do not import
+     numberInputFormat.js yourself. Adjust the paths to where you serve /dist.
+
+       <link rel="stylesheet" href="/dist/css/shared.min.css" />
+       <link rel="stylesheet" href="/dist/css/numberInputFormat.min.css" />
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+  2) Drop the markup below where the number field should appear. While typing,
+     the value is grouped in the page's language — "1.234,56" on a German
+     page, "1,234.56" on an English one, taken from <html lang> via Intl. The
+     field is a normal text input, so it works without JavaScript too — it
+     just won't group the digits.
+
+  Wiring
+    - data-js-behavior="numberInputFormat" boots the module. It may sit on the
+      <input> itself (Example 1) or on a wrapper holding one or more fields
+      (Example 2) — the module formats every [data-numberinputformat] in
+      scope.
+    - data-numberinputformat marks the <input> to format.
+    - Use type="text" (or "tel" / "search"). type="number" is skipped and
+      reported: it cannot group, it disagrees with itself across engines about
+      the decimal comma, and it does not allow setSelectionRange — so the
+      caret could not be preserved, which is the whole point.
+
+  THE SUBMITTED VALUE — read this before shipping a form
+    By default the field posts exactly what it shows: "1.234,56". That is
+    deliberate — silently rewriting a number a server reads differently is the
+    one way this component could do damage — so either your server parses the
+    display value, or you switch the machine value on:
+
+      data-numberinputformat-submit
+
+    With it, the field's own name MOVES to an injected
+    <input type="hidden"> carrying "1234.56" (a "." decimal, no grouping, a
+    leading "-" where negative). The name moves rather than being copied,
+    because two inputs of one name would post two values. It degrades the
+    right way: until the module runs, the visible field still carries its name
+    and still posts, so a script that never arrives costs the grouping, not
+    the field. The field needs a name for this — one without is reported and
+    formatted anyway, just without a machine value. See Example 3.
+
+    Two things this lane makes YOUR job, and both of them are accessibility:
+
+      1. An error message must point at the VISIBLE field. Your server only
+         ever sees the hidden input, so a message rendered from the posted
+         name has to be wired to the input the reader can focus — via
+         aria-describedby on the visible field, never on the hidden one. A
+         message describing a field nobody can reach fails WCAG 3.3.1.
+      2. A redisplayed value goes back into the VISIBLE field. After a
+         failed submit you hold "1234.56"; put it there and the module reads
+         it and re-groups it. Machine values round-trip safely — a grouping's
+         first group is one to three digits with no leading zero, so
+         "1234.560" comes back as 1.234,560 (as 1.234,56 where you set
+         decimals="2") and not as one and a bit million, and "0.999" comes
+         back as 0,999 and not as 999.
+         What cannot round-trip is one to three leading digits with exactly
+         three decimals ("1.500", "10.500", "123.456"): those are genuinely
+         ambiguous and read as the page's grouping. Post two decimals, or
+         send the value back already grouped.
+
+  Notes / Configuration (all optional, all per field)
+    - data-numberinputformat-decimals="2" caps the fraction at two digits
+      WHILE TYPING and pads to two on blur ("1,5" -> "1,50"). "0" means
+      integers only. Unset, the fraction is unlimited and nothing is padded.
+      An empty field is never padded — that would invent a value. If you set
+      it, SAY SO IN THE HINT — see Accessibility below.
+    - The cap CUTS a wholesale value, and only that one. While typing, a digit
+      beyond it cannot be entered, so nothing is lost. A paste, an authored
+      value or a value redisplayed after a failed submit has no keystroke to
+      refuse: "1234.567" enters a decimals="2" field as 1.234,56. That is
+      truncation and not rounding (1.234,57 would be a calculated value, and
+      this component does not calculate), so do not send back more decimals
+      than the field accepts. Nothing is reported — the cap is what you asked
+      for.
+    - Blur also tidies: a dangling separator goes ("12," -> "12") and a bare
+      fraction gains its zero (",5" -> "0,5"). Blur itself never shortens
+      anything.
+    - Leading zeros are dropped as the value is read ("0007" is 7, "0012.50"
+      is 12,50): a grouped number never carries one, and left in, "0007" would
+      render as "0.007" — a thousandth of what was typed. A lone "0" stays.
+    - Do NOT put maxlength on a formatted field. The separators the module
+      writes count towards it, so maxlength="5" stops the reader after "1.234"
+      — four digits, not five — and the limit moves as separators appear;
+      the module's own writes bypass it entirely. Cap the fraction with
+      data-numberinputformat-decimals and the magnitude with min/max plus
+      formValidation.
+    - Negative numbers are always allowed: a "-" anywhere makes the value
+      negative and is rendered leading; typing it again takes it off, so the
+      key toggles the sign. "This field may not go below zero" is a
+      constraint, not a format — use min="0" with formValidation.
+    - Pasting is read as a value, not as keystrokes: with two separators
+      present the LAST one is the decimal point, so "1,234.56" and "1.234,56"
+      both arrive as 1234.56 whatever the page's language. A lone separator is
+      ambiguous and the page's language decides — on a German page "1.234" is
+      1234 and "1,234" is 1.234. A lone separator only counts as a grouping
+      where it actually groups: three digits after it AND a first group of one
+      to three digits with no leading zero before it, so "12.5", "1234.560"
+      and "0.999" are all decimal points.
+    - Typing, by contrast, speaks only the page's language: the decimal
+      separator is the page's decimal character, because the module itself
+      writes the group character and the two readings would collide.
+    - Progressive enhancement: there is no pre-enhancement state and no ready
+      attribute. Nothing is hidden before the module runs and no control is
+      promised — the field is a field either way. The stylesheet's
+      tabular-nums keeps the value from jittering as separators appear.
+    - The module adds inputmode="decimal" (a touch keypad WITH the decimal
+      key) only if you have not set inputmode yourself.
+
+  Accessibility (author responsibility — the module only formats)
+    - Give the field a <label> (or aria-label).
+    - Provide a format hint (WCAG 3.3.2): a placeholder AND a visible hint
+      wired via aria-describedby, as shown below.
+    - When the field collects the user's own data, set autocomplete (WCAG
+      3.3.5 Identify Input Purpose) — e.g. autocomplete="postal-code". Skip it
+      for arbitrary numbers such as a quantity.
+    - If you set data-numberinputformat-decimals, the hint MUST name the
+      limit ("at most two decimals"). The cap behaves like maxlength: the key
+      beyond it does nothing and says nothing, and an instruction given up
+      front is the only thing that keeps that from reading as a broken field.
+      WCAG 3.3.2 again. Example 3 below shows it.
+    - With data-numberinputformat-submit, see the two duties above — an error
+      message wired to the hidden input reaches nobody.
+
+  What a screen reader will say, and where it differs from what happened
+    Worth knowing before an accessibility review; neither has a fix inside
+    the component, because a screen reader echoes the KEY and the key is not
+    what the module did. In both cases the value stays correct and stays
+    readable at any time — what is briefly wrong is the echo.
+    - Backspace/Delete on a group separator removes the adjacent DIGIT
+      instead (otherwise the separator would come straight back and trap the
+      caret). NVDA and JAWS announce the separator, the digit is what goes.
+    - Typing "-" a second time takes the sign off rather than inserting
+      anything, and is announced as "minus" either way.
+    There is deliberately no live region: it would add a second, competing
+    announcement on every keystroke, and a field is not a status.
+-->
+
+
+
+<!-- Example 1: attribute on the input itself -->
+<p class="c-numberField">
+  <label class="c-numberField__label" for="number-single">Quantity</label>
+  <input
+    class="c-numberField__control"
+    id="number-single"
+    type="text"
+    name="quantity"
+    placeholder="0"
+    aria-describedby="number-single-hint"
+    data-js-behavior="numberInputFormat"
+    data-numberinputformat
+  />
+  <span class="c-numberField__hint" id="number-single-hint">Whole or decimal number</span>
+</p>
+
+
+
+<!-- Example 2: attribute on a wrapper (formats every field it contains) -->
+<div data-js-behavior="numberInputFormat">
+  <p class="c-numberField">
+    <label class="c-numberField__label" for="number-from">From</label>
+    <input
+      class="c-numberField__control"
+      id="number-from"
+      type="text"
+      placeholder="0"
+      aria-describedby="number-range-hint"
+      data-numberinputformat
+    />
+  </p>
+  <p class="c-numberField">
+    <label class="c-numberField__label" for="number-to">To</label>
+    <input
+      class="c-numberField__control"
+      id="number-to"
+      type="text"
+      placeholder="0"
+      aria-describedby="number-range-hint"
+      data-numberinputformat
+    />
+  </p>
+  <span class="c-numberField__hint" id="number-range-hint">Whole or decimal number</span>
+</div>
+
+
+
+<!-- Example 3: two decimals, and the machine value in the form -->
+<!--
+  "price" travels in an injected <input type="hidden"> as 1234.56; the visible
+  field keeps the grouped value and loses its name while the module runs.
+-->
+<p class="c-numberField">
+  <label class="c-numberField__label" for="number-price">Price</label>
+  <input
+    class="c-numberField__control"
+    id="number-price"
+    type="text"
+    name="price"
+    placeholder="0,00"
+    aria-describedby="number-price-hint"
+    data-js-behavior="numberInputFormat"
+    data-numberinputformat
+    data-numberinputformat-decimals="2"
+    data-numberinputformat-submit
+  />
+  <!-- The hint names the cap, because the cap is silent — see Accessibility. -->
+  <span class="c-numberField__hint" id="number-price-hint">At most two decimals; posted as 1234.56</span>
+</p>

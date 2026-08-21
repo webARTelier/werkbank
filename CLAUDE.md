@@ -67,7 +67,8 @@ component here is reusable and most can appear several times).
   already there, and the look belongs to the consuming project.
   `formValidation`, `inlineSVG`, `inputCharCount`, `scaleSVG`, `scrollSpy`,
   `stickyObserver`, and the scripts behind `adaptiveScrollFade`,
-  `dateInputFormat`, `flexNeighborMarker`, `loadFragment`, `revealOnScroll`.
+  `dateInputFormat`, `flexNeighborMarker`, `loadFragment`,
+  `numberInputFormat`, `revealOnScroll`.
 
   `loadFragment` (2026-08-20) is the one that fetches: it hangs on a link the
   project already has, puts a region of the answer into a box the project
@@ -114,17 +115,18 @@ region plus its queue.
 ### The folder is not the unit that carries the prefix
 
 A component folder is a **delivery unit**, not a role. `offCanvasNav` ships
-two blocks, and six folders are a function that happens to ship a ready-made
+two blocks, and seven folders are a function that happens to ship a ready-made
 look alongside it:
 
-| Folder               | Role     | What it ships                       |
-| -------------------- | -------- | ----------------------------------- |
-| `adaptiveScrollFade` | function | `c-scrollFade` — carries the mask   |
-| `dateInputFormat`    | function | `c-dateField*` — dresses the field  |
-| `flexNeighborMarker` | function | `o-flexNeighbor` — a layout object  |
-| `loadFragment`       | function | `c-fragment` — the busy/error box   |
-| `revealOnScroll`     | function | `c-reveal` — the arrival animation  |
-| `stickyObserver`     | function | `c-stickyBar` — the pinned look     |
+| Folder               | Role     | What it ships                        |
+| -------------------- | -------- | ------------------------------------ |
+| `adaptiveScrollFade` | function | `c-scrollFade` — carries the mask    |
+| `dateInputFormat`    | function | `c-dateField*` — dresses the field   |
+| `flexNeighborMarker` | function | `o-flexNeighbor` — a layout object   |
+| `loadFragment`       | function | `c-fragment` — the busy/error box    |
+| `numberInputFormat`  | function | `c-numberField*` — dresses the field |
+| `revealOnScroll`     | function | `c-reveal` — the arrival animation   |
+| `stickyObserver`     | function | `c-stickyBar` — the pinned look      |
 
 Each of those stylesheets said as much before the classification existed
 ("styling only — a convenience look so the demo/snippet works out of the
@@ -339,8 +341,9 @@ of dependency — not by preference. Keep this split consistent:
   `rafThrottle`, `getCssCustomProperty`, `formatTemplate`, `decodeFragment`,
   `parseNonNegative`, `uniqueId`, `focusableSelector`,
   `navExpandedMediaQuery`, `otherModalOpen`, `parseByteSize`,
-  `formatByteSize`, `matchesAccept`, `fileKey` (see
-  `docs/componentStandards.md` §10 for what each one does). The last four were
+  `formatByteSize`, `matchesAccept`, `fileKey`, `pageLocale`,
+  `numberSeparators` (see `docs/componentStandards.md` §10 for what each one
+  does). `parseByteSize`, `formatByteSize`, `matchesAccept` and `fileKey` were
   born in `fileUpload` and hoisted the day `uploadQueue` needed them, which is
   exactly the signal described above. That second consumer is gone again since
   the queue became a lane of `fileUpload` itself (2026-08-14), so all four have
@@ -350,6 +353,14 @@ of dependency — not by preference. Keep this split consistent:
   live at all; and **hoisting is not undone when a consumer disappears** —
   moving a general helper back into one component would only have to be
   reverted the next time something needs it.
+
+  `pageLocale` and `numberSeparators` are the same story with a live second
+  consumer. Both were born in `dataTable`, which parses the visible text of a
+  cell, and were hoisted on 2026-08-20 when `numberInputFormat` needed the
+  very same pair for the very same reason: reading — and writing — a number
+  the way the page's language does, asked of `Intl.NumberFormat` rather than
+  assumed. Two consumers means Rollup splits each into its own chunk in
+  `dist/js/modules/`, loaded alongside whichever of the two arrives first.
 
 Do **not** route pure utilities through `services`: `boot.js` loads eagerly on
 every page, so anything it imports for the `services` object lands in the
