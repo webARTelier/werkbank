@@ -1,0 +1,225 @@
+// =============================================================
+// loadFragment — the look of a box that is being filled
+// =============================================================
+//
+// loadFragment.js boots on a LINK and writes ONE state attribute:
+//   [data-fragment-state="loading"] -> a request for this box is running
+//   [data-fragment-state="error"]   -> the last one failed, nothing replaced
+// on the target box, and "loading" on the link itself while its own request
+// runs. It sets no inline styles, so everything visual lives here.
+//
+// The one element it creates is the polite live region it announces through,
+// marked [data-fragment-status] and appended to the target. It is styled from
+// here in two ways, because the two states it carries are not the same kind of
+// message: while a load runs the ring already says it to whoever can see it,
+// so the sentence is visually hidden and spoken only; a failed load has
+// nothing visible to say beyond an outline, so there the sentence is shown.
+// Colour is not the difference between those two states either way — 1.4.1 —
+// the message is.
+//
+// The resting state is deliberately not declared: a box that has been filled
+// carries nothing of this component's but the emptied status region, which
+// draws nothing, so what the fragment looks like once it is there stays
+// entirely the project's. The one exception is the focus ring — the script
+// can put the focus on this box (see the end of the block), and a focus
+// nobody can see is not a resting look, it is a bug.
+//
+// The one rule the busy look follows: it does NOT empty the box. Whatever
+// stands in the target is dimmed, not removed — a load can fail, and a reader
+// must not lose what they had to a request that never came back. Same
+// obligation for a project that writes its own busy look.
+//
+// loadFragment owns no vocabulary: it enhances a link the project already
+// has. "c-fragment" is the convenience component shipped alongside it —
+// styling only, so the demo and the snippet work out of the box. The JS never
+// reads it: put the class on the target box if you want this look, or key
+// your own off the attribute and load nothing from here at all. The link
+// carries the same attribute, so a busy trigger is a rule in your own
+// stylesheet ('a[data-fragment-state="loading"] { … }') — there is no class
+// here for it, because the trigger is your link.
+
+@use "focus" as *;
+@use "mediaqueries" as *;
+@use "visuallyHidden" as *;
+
+
+
+// The target box: a place for the busy indicator to sit, and the two states.
+//
+// The override surface: declared on the component root, not in :root, so it
+// stays scoped and a single box can be retuned in place
+// (`style="--fragment-busy-opacity: 0.6"` on this element still wins).
+.c-fragment {
+
+  // Sizing — only ever applied while a load runs, so an empty box has room
+  // for the indicator instead of collapsing to nothing.
+  --fragment-min-block-size: var(--space-3xl);
+
+  // The busy look: how far the content that is already there is dimmed, and
+  // the ring drawn over it.
+  //
+  // The dim is a contrast decision and not a taste one: the text under it is
+  // still text, a reader is still asked to read it, and 1.4.3 knows no
+  // exception for "not current yet". Measured against --color-bg-elevated,
+  // the lightest of the three surfaces here and therefore the worst case
+  // (text / text-secondary / text-muted, computed from the oklch tokens):
+  //   0.35 -> 5.53 / 4.09 / 2.65   two of three below AA
+  //   0.60 -> 8.77 / 6.30 / 3.82   the muted tone still below
+  //   0.75 -> 10.71 / 7.63 / 4.53  all three clear 4.5:1 — the shipped value
+  // The margin on the muted tone is 0.03, so this is as far as the palette
+  // lets the content be dimmed at all: do not lower it, and re-measure before
+  // introducing a surface lighter than --color-bg-elevated. What says
+  // "working" is the ring; the dim only has to be visible next to it.
+  --fragment-busy-opacity: 0.75;
+  --fragment-spinner-size: var(--space-l);
+  --fragment-spinner-width: 2px;
+  --fragment-spinner-color: var(--color-text-muted);
+
+  // The error look. An outline and not a border: it costs no layout, so a
+  // failed load does not move the page around. The box is not a tab stop, so
+  // the outline channel is free almost all the time — for the one moment it
+  // is not, see the focus ring at the end of this block.
+  --fragment-error-color: var(--color-error);
+  --fragment-error-width: 1px;
+  --fragment-error-offset: var(--outlineOffset);
+
+  // The space between the content that is still standing and the sentence
+  // saying the new content did not arrive.
+  --fragment-status-gap: var(--space-s);
+
+  // Motion (shared motion tokens).
+  --fragment-duration: var(--an-duration);
+  --fragment-ease: var(--an-ease);
+  --fragment-spin-duration: 0.8s;
+
+  position: relative;
+
+
+
+  // A request is running. Both parts of this block are about not taking
+  // anything away: the box keeps its content, and it keeps a minimum height
+  // so an empty one does not collapse under the indicator.
+  &[data-fragment-state="loading"] {
+    min-block-size: var(--fragment-min-block-size);
+
+    // Dimmed, never emptied — the load can still fail, and then this is what
+    // the reader is left with. The status region is not part of that content
+    // and is hidden here anyway, so it is left out rather than faded.
+    > *:not([data-fragment-status]) {
+      opacity: var(--fragment-busy-opacity);
+      transition: opacity var(--fragment-duration) var(--fragment-ease);
+    }
+
+    // The loading sentence is spoken, not shown: the ring above is what says
+    // the same thing visually, and a line of text appearing under the content
+    // would move the page while it waits. Visually hidden and NOT
+    // display: none — the point is that it stays in the accessibility tree.
+    > [data-fragment-status] {
+      @include visually-hidden;
+    }
+
+    // The indicator. Decorative and nothing else: what the state means is
+    // said by aria-busy, which the script writes on this same element, so
+    // there is nothing here for assistive technology to miss.
+    &::after {
+      content: "";
+
+      position: absolute;
+      inset-block-start: 50%;
+      inset-inline-start: 50%;
+
+      border: var(--fragment-spinner-width) solid var(--fragment-spinner-color);
+      border-block-start-color: transparent;
+      border-radius: 50%;
+      inline-size: var(--fragment-spinner-size);
+      block-size: var(--fragment-spinner-size);
+
+      translate: -50% -50%;
+      animation: fragmentSpin var(--fragment-spin-duration) linear infinite;
+    }
+
+    // A ring that turns is motion for its own sake. This reader gets the same
+    // ring standing still — the gap in it still reads as "working", and the
+    // dimmed content still says which box is waiting.
+    @include reduced-motion {
+
+      > * {
+        transition: none;
+      }
+
+      &::after {
+        animation: none;
+      }
+    }
+
+    // The custom properties above are colours this mode does not replace, so
+    // the ring is restated in system colours — otherwise it can end up drawn
+    // in a colour the forced palette has already used for the background.
+    @include forced-colors {
+      --fragment-spinner-color: CanvasText;
+    }
+  }
+
+
+
+  // The last load failed and nothing was replaced: the box still holds what
+  // it held, and the link still points at the page. The outline is what says
+  // that to whoever can see it; the sentence below is what says it at all —
+  // the script writes that one, in the page's language or in the author's own
+  // words.
+  &[data-fragment-state="error"] {
+    outline: var(--fragment-error-width) solid var(--fragment-error-color);
+    outline-offset: var(--fragment-error-offset);
+
+    // Here the sentence is shown as well as spoken: an outline is a state,
+    // not a message, and it is also the one thing in this file a reader may
+    // simply not see. ":not(:empty)" because a host can blank the text, and
+    // then there is no gap to hold open either.
+    > [data-fragment-status]:not(:empty) {
+      margin-block-start: var(--fragment-status-gap);
+
+      color: var(--fragment-error-color);
+    }
+
+    @include forced-colors {
+      --fragment-error-color: CanvasText;
+    }
+  }
+
+
+
+  // The box is not a tab stop and it is focused exactly once: when the focus
+  // stood INSIDE it and the exchange destroyed the element holding it, the
+  // script puts it on the box itself (a tabindex="-1" it lends and gives back
+  // again). The reader got there with the keyboard, so the engines read that
+  // programmatic focus as a keyboard one and :focus-visible matches — and
+  // then a ring is the only thing that says where they have landed. Without
+  // one the focus is somewhere invisible, which is the failure the recovery
+  // exists to prevent, one step further on. adaptiveScrollFade rings its
+  // container for the same reason: an element that can hold the focus shows
+  // it.
+  @include focus-ring(light);
+
+
+
+  // Restated inside the error state, because an attribute selector costs as
+  // much specificity as a class does: [data-fragment-state="error"] above
+  // would otherwise beat the ring and leave a focused box wearing the 1px
+  // error outline instead. The error is not lost by that — in this state the
+  // sentence in the status region is shown, and a message says more than a
+  // line does.
+  &[data-fragment-state="error"]:focus-visible {
+    @include focus-ring-outline(light);
+  }
+}
+
+
+
+// The individual `rotate` property, not a transform: the ring is centred with
+// `translate`, and the two compose instead of overwriting each other.
+@keyframes fragmentSpin {
+
+  to {
+    rotate: 360deg;
+  }
+}

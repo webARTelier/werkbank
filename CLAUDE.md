@@ -67,7 +67,26 @@ component here is reusable and most can appear several times).
   already there, and the look belongs to the consuming project.
   `formValidation`, `inlineSVG`, `inputCharCount`, `scaleSVG`, `scrollSpy`,
   `stickyObserver`, and the scripts behind `adaptiveScrollFade`,
-  `dateInputFormat`, `flexNeighborMarker`, `revealOnScroll`.
+  `dateInputFormat`, `flexNeighborMarker`, `loadFragment`, `revealOnScroll`.
+
+  `loadFragment` (2026-08-20) is the one that fetches: it hangs on a link the
+  project already has, puts a region of the answer into a box the project
+  already has, and writes one state attribute onto it. Neither element is
+  its own — the link works without it and the box holds whatever it held —
+  so there is no host to be attached to and no vocabulary to bring. It is
+  also the second reading of the machinery rule above: a network request, a
+  parser and a per-target abort registry say how hard it was to write, not
+  what it is.
+
+  Since 2026-08-21 it also puts one element into that box: the polite live
+  region it announces the loading and the error state through
+  (`[data-fragment-status]`). That does not make it a `c-`, and the reason is
+  the machinery rule again — an announcement is an **instrument**, not
+  vocabulary. It carries no class, the project styles nothing with it, and
+  swapping it for a project's own would leave nothing to design. The test is
+  the same one `dataTable` and `inputCharCount` already pass with their own
+  status regions: a function may build whatever it needs in order to *say*
+  something, as long as what it leaves behind is not a look.
 
 Two supporting signals where the question feels balanced: a module usually
 manages a **collection or a region** (n panels, n images, n messages) while a
@@ -95,7 +114,7 @@ region plus its queue.
 ### The folder is not the unit that carries the prefix
 
 A component folder is a **delivery unit**, not a role. `offCanvasNav` ships
-two blocks, and five folders are a function that happens to ship a ready-made
+two blocks, and six folders are a function that happens to ship a ready-made
 look alongside it:
 
 | Folder               | Role     | What it ships                       |
@@ -103,6 +122,7 @@ look alongside it:
 | `adaptiveScrollFade` | function | `c-scrollFade` — carries the mask   |
 | `dateInputFormat`    | function | `c-dateField*` — dresses the field  |
 | `flexNeighborMarker` | function | `o-flexNeighbor` — a layout object  |
+| `loadFragment`       | function | `c-fragment` — the busy/error box   |
 | `revealOnScroll`     | function | `c-reveal` — the arrival animation  |
 | `stickyObserver`     | function | `c-stickyBar` — the pinned look     |
 
@@ -298,6 +318,17 @@ of dependency — not by preference. Keep this split consistent:
   Example: `reporter` (has a configured `level`, is optional/mockable). Use DI
   when the thing must be shared, configured at the composition root, or swapped
   (e.g. a no-op in tests).
+
+  Since 2026-08-20 the **loader itself** is in there too —
+  `initModulesInScope` / `destroyModulesInScope`, for `loadFragment`, which
+  puts markup into the page and has to hand the new subtree over. It is the
+  clearest case the channel has: state (the cleanup `WeakMap`), a lifecycle,
+  and one instance per page. And here DI is not merely the better channel but
+  the only one that works — a component chunk that imported `boot.js` as a
+  flat sibling would inherit its `./registry.js` import, a path relative to
+  `dist/js` that resolves to nothing from `dist/js/modules`. The usual
+  objection does not apply either: nothing new lands in `boot.min.js`, because
+  both functions were already in it.
 - **Pure, stateless utilities → direct import from `_shared/js/`.** Imported as
   flat siblings (e.g. `import { rafThrottle } from './rafThrottle.js';`), which
   the build resolves from `_shared/js/`. A utility only one component imports

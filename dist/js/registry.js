@@ -21,6 +21,7 @@ export const registry = {
   inlineSVG: () => import('./modules/inlineSVG.min.js'),
   inputCharCount: () => import('./modules/inputCharCount.min.js'),
   lightbox: () => import('./modules/lightbox.min.js'),
+  loadFragment: () => import('./modules/loadFragment.min.js'),
   marquee: () => import('./modules/marquee.min.js'),
   navExpandedMediaQuery: () => import('./modules/navExpandedMediaQuery.min.js'),
   offCanvasNav: () => import('./modules/offCanvasNav.min.js'),

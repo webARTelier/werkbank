@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>loadFragment – Demo</title>
+  <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
+  <link rel="stylesheet" href="../../../dist/css/loadFragment.min.css" />
+
+  <!--
+      The fragments this page loads come out of the other demo pages of this
+      collection — a dialog, a countdown, an accordion — so their stylesheets
+      are loaded here too. In a real page you load the CSS of whatever your
+      fragments can contain, exactly as you would if the markup had been in
+      the page from the start: this module ships behaviour, not the styles of
+      what it fetches.
+  -->
+  <link rel="stylesheet" href="../../../dist/css/dialog.min.css" />
+  <link rel="stylesheet" href="../../../dist/css/countdown.min.css" />
+  <link rel="stylesheet" href="../../../dist/css/accordion.min.css" />
+
+  <script type="module" src="../../../dist/js/boot.min.js"></script>
+
+  <!-- for development only -->
+  <script src="../../tools/dev_dashboard/dev_dashboard.js"></script>
+  <!-- end for development only -->
+
+  <!--
+      DEMO-ONLY STYLES
+      ----------------------------------------------------------------------
+      loadFragment.min.css ships the whole busy and error look (.c-fragment
+      on the target box). What is left to the page is the space between the
+      examples, the row of trigger links and the frame around the panels so
+      it is visible where a fragment lands — that is all the .demo* rules
+      below are. (Tokens like --space-* / --color-* come from
+      shared.min.css.)
+  -->
+
+  <style>
+    .demo {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2xl);
+    }
+
+    .demo__example {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-s);
+    }
+
+    .demo__example h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      color: var(--color-text);
+    }
+
+    .demo__links {
+      margin: 0;
+      padding: 0;
+
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-s);
+
+      list-style: none;
+    }
+
+    /* The box a fragment lands in. Framed so it is visible even while it is
+       empty — the component itself gives the box nothing but a minimum
+       height while a load is running. */
+    .demo__panel {
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--borderRadius);
+      padding: var(--space-m);
+
+      background-color: var(--color-bg-elevated);
+    }
+
+    .demo__panel > :first-child {
+      margin-block-start: 0;
+    }
+
+    .demo__panel > :last-child {
+      margin-block-end: 0;
+    }
+
+    /* A fragment arrives with the classes of the page it came from, and
+       those were written for THAT page's surface: .stage__intro is muted
+       against the page background, and on the elevated surface of a panel
+       or a dialog the same colour measures 3.6:1 (axe-core, WCAG 1.4.3).
+       This is exactly what the readme asks you to mind when you pick a
+       selector — and this rule is the answer to it: the fragment is not
+       edited, the surface it lands on says what it needs. */
+    .c-fragment .stage__intro {
+      color: var(--color-text-secondary);
+    }
+
+    /* The placeholder line a panel holds before anything has been loaded
+       into it — and the thing that proves the point of the busy look: it is
+       dimmed while a load runs, not taken away. */
+    .demo__placeholder {
+      margin: 0;
+
+      color: var(--color-text-muted);
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <main class="shell">
+
+    <section class="hero">
+      <a class="back" href="../../../index.html">← Overview</a>
+      <h1>loadFragment</h1>
+      <p>Loads a region of another page into a box in this one — from a link that still works as a link.</p>
+    </section>
+
+    <section class="stage" aria-label="Live demo">
+
+      <!--
+          A link navigates: it replaces the whole page. Putting ONE region of
+          another page into a box that is already here — a dialog body, a
+          detail panel beside a list — is what HTML has no element for, and
+          an <iframe> is a second document rather than part of this one.
+
+          The module boots on the LINK and writes ONE state attribute:
+            [data-fragment-state="loading" | "error"]
+          on the target box (and "loading" on the link while its own request
+          runs). The shipped stylesheet keys the busy look — the content
+          dims, a ring turns over it — and the error outline off that
+          attribute.
+
+          Wiring — four examples
+            - Example 1: two attributes on one link, and neither module
+              knows about the other. data-open-dialog opens the dialog,
+              data-fragment-target fills its body. The fragment comes out of
+              this collection's dialog demo page, selected with
+              data-fragment-select=".stage__intro".
+            - Example 2: four links, one panel. The last click wins — a
+              request still running is aborted, and only the newest answer
+              is written. One of the links points at a URL that is not
+              there, so the error state can be watched: the panel keeps what
+              it held and gets an outline. One carries
+              data-fragment-refresh, so it fetches again on every click
+              while the others do nothing once their content is standing in
+              the box.
+            - Example 3: the fragment brings its own components. The
+              countdown link selects one live countdown out of the countdown
+              demo, the accordion link selects both accordions out of the
+              accordion demo (two matches, both inserted). Every load hands
+              the box to the loader — destroyModulesInScope() before the old
+              content goes, initModulesInScope() after the new one is in —
+              so the countdown really ticks, the accordion really opens, and
+              swapping one for the other tears the first one down.
+            - Example 4: the fragment is a trigger itself. The link lifts a
+              block out of THIS page — a block holding one loadFragment link
+              pointed at the same panel — so the copy that lands in the
+              panel is a trigger the loader has enhanced, standing inside
+              the box it fills. Pressing it is the one case where the module
+              moves the focus, because otherwise there would be none left.
+
+          Progressive enhancement
+            - Every trigger here is a real <a href> to a page that exists.
+              Without JavaScript, before the chunk has arrived, on a
+              cross-origin href and when the target is not in the document,
+              the click does what the markup says: it opens that page. Try
+              it — middle-click any of these links, or open one in a new
+              tab; a modified click is never intercepted.
+            - Nothing is hidden to make room. A panel keeps what it holds
+              until the answer is in hand, which is why the failing link
+              leaves the placeholder line standing.
+
+          Accessibility
+            - Both states are said, not only drawn. Every box here holds a
+              polite role="status" region the module put there, and the two
+              sentences of a load go into it: while the request runs the
+              sentence is spoken only (the ring says the same thing to
+              whoever can see it), and when it failed it is shown as well —
+              the last link of example 2 replaces the built-in wording with
+              its own. The turning ring itself says nothing.
+            - aria-busy is written around the EXCHANGE, not around the
+              request: the panels carry aria-live="polite", so they announce
+              the result once instead of narrating a half-filled box — while
+              the loading sentence, written before the request goes out, is
+              not swallowed by a region whose updates are held back.
+            - The focus is not moved, except where it would otherwise be
+              lost. In example 1 the dialog has already placed it; in 2 and 3
+              it stays on the link that was clicked. Example 4 is the
+              exception: the link sits INSIDE the box it fills, so replacing
+              that content would drop the focus on <body> — it goes to the
+              box instead, which is why that panel has a name.
+
+          Try it
+            - Watch the DOM in the inspector: data-fragment-state appears on
+              the panel and on the link, the status region under the panel
+              fills with a sentence and empties again, aria-busy appears only
+              for the exchange itself, and everything is gone once the
+              fragment is in and enhanced.
+            - Click the failing link and read the panel: what stood there is
+              still standing, there is an outline around it, and underneath
+              it a sentence saying the content did not arrive.
+            - Example 4: tab to the link inside the panel, press it, and
+              watch where the focus lands.
+            - Open the console for the reporter: the failing link reports
+              the HTTP status, and every fragment taken out of a demo page
+              reports the <script> elements dropped from it. Nothing here
+              stages the other two warnings, and deliberately so — a box
+              that is neither a live region nor an overlay, and a fragment
+              bringing an id this page already has, are both mistakes, not
+              modes to show off.
+        -->
+
+      <p class="stage__intro">
+        Three boxes, filled from other pages of this collection. The trigger
+        is always a <strong>plain link to a real page</strong> — the module
+        fetches it, takes the named region out of the answer and puts it
+        here; every other click, and every reader without the script, gets
+        the page itself.
+      </p>
+
+      <div class="demo">
+
+        <!-- Example 1: into a dialog — two attributes on one link -->
+        <section class="demo__example">
+          <h2>1 — Into a dialog</h2>
+
+          <p class="stage__intro">
+            The link carries <code>data-open-dialog</code> and
+            <code>data-fragment-target</code>. Two modules read the same
+            anchor and neither knows about the other: <code>dialog</code>
+            opens the overlay, <code>loadFragment</code> fills its body with
+            the paragraphs it selects out of the dialog demo page. Without
+            JavaScript the same link simply opens that page.
+          </p>
+
+          <ul class="demo__links">
+            <li>
+              <a href="../dialog/demo.html"
+                 data-js-behavior="loadFragment"
+                 data-open-dialog="fragmentDialog"
+                 data-fragment-target="#fragmentDialogBody"
+                 data-fragment-select=".stage__intro">Open the dialog demo's intro</a>
+            </li>
+          </ul>
+
+          <dialog id="fragmentDialog" class="c-dialog" data-js-behavior="dialog"
+                  aria-labelledby="fragmentDialogTitle">
+            <div class="c-dialog__panel">
+
+              <header class="c-dialog__header">
+                <h2 class="c-dialog__title" id="fragmentDialogTitle">Loaded into the dialog</h2>
+                <button type="button" class="c-dialog__close" data-close-dialog
+                        aria-label="Close dialog">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+                    <path d="M6 6 18 18M18 6 6 18" />
+                  </svg>
+                </button>
+              </header>
+
+              <div id="fragmentDialogBody" class="c-dialog__body c-fragment"
+                   data-dialog-scroll>
+                <p class="demo__placeholder">Nothing loaded yet.</p>
+              </div>
+
+            </div>
+          </dialog>
+        </section>
+
+        <!-- Example 2: several links, one panel, plus the error state -->
+        <section class="demo__example">
+          <h2>2 — Several links, one panel</h2>
+
+          <p class="stage__intro">
+            All five links fill the same box, so who owns it is kept with the
+            box and not with them: click two in quick succession and the
+            first request is aborted — only the newest answer is ever
+            written. A link whose content is already standing there does
+            nothing on a second click, unless it carries
+            <code>data-fragment-refresh</code>. The last two links point at
+            files that do not exist: the panel keeps its content, takes an
+            outline and says underneath it that nothing arrived — once in the
+            module's own words, once in the wording the link supplies with
+            <code>data-fragment-error-text</code>.
+          </p>
+
+          <ul class="demo__links">
+            <li>
+              <a href="../tabs/demo.html"
+                 data-js-behavior="loadFragment"
+                 data-fragment-target="#fragmentPanel"
+                 data-fragment-select=".stage__intro">tabs</a>
+            </li>
+            <li>
+              <a href="../toast/demo.html"
+                 data-js-behavior="loadFragment"
+                 data-fragment-target="#fragmentPanel"
+                 data-fragment-select=".stage__intro">toast</a>
+            </li>
+            <li>
+              <a href="../marquee/demo.html"
+                 data-js-behavior="loadFragment"
+                 data-fragment-target="#fragmentPanel"
+                 data-fragment-select=".stage__intro"
+                 data-fragment-refresh>marquee (always refetched)</a>
+            </li>
+            <li>
+              <a href="./thisPageDoesNotExist.html"
+                 data-js-behavior="loadFragment"
+                 data-fragment-target="#fragmentPanel"
+                 data-fragment-select=".stage__intro">a page that is not there</a>
+            </li>
+            <li>
+              <a href="./thisPageIsMissingToo.html"
+                 data-js-behavior="loadFragment"
+                 data-fragment-target="#fragmentPanel"
+                 data-fragment-select=".stage__intro"
+                 data-fragment-loading-text="Fetching the second missing page."
+                 data-fragment-error-text="That second page is not there either — nothing was replaced.">the same, in its own words</a>
+            </li>
+          </ul>
+
+          <div id="fragmentPanel" class="demo__panel c-fragment" aria-live="polite">
+            <p class="demo__placeholder">
+              Nothing loaded yet — and this line stays right here while a
+              request runs. It is dimmed, not removed: the load can fail, and
+              then this is what you are left with.
+            </p>
+          </div>
+        </section>
+
+        <!-- Example 3: the fragment brings its own components -->
+        <section class="demo__example">
+          <h2>3 — The fragment brings its own components</h2>
+
+          <p class="stage__intro">
+            Both fragments carry <code>data-js-behavior</code> markup of their
+            own. Every load hands the box to the loader —
+            <code>destroyModulesInScope()</code> before the old content goes,
+            <code>initModulesInScope()</code> after the new one is in — so the
+            countdown ticks and the accordion opens, and swapping one for the
+            other tears the previous one down instead of leaving its timers
+            running. The busy state is held until that has finished, so the
+            unenhanced markup is never on screen.
+          </p>
+
+          <ul class="demo__links">
+            <li>
+              <a href="../countdown/demo.html"
+                 data-js-behavior="loadFragment"
+                 data-fragment-target="#fragmentLive"
+                 data-fragment-select="[data-countdown-label='the New Year']">a live countdown</a>
+            </li>
+            <li>
+              <a href="../accordion/demo.html"
+                 data-js-behavior="loadFragment"
+                 data-fragment-target="#fragmentLive"
+                 data-fragment-select="[data-js-behavior='accordion']">both accordions</a>
+            </li>
+          </ul>
+
+          <div id="fragmentLive" class="demo__panel c-fragment" aria-live="polite">
+            <p class="demo__placeholder">Nothing loaded yet.</p>
+          </div>
+        </section>
+
+        <!-- Example 4: the fragment is a trigger, and the focus survives it -->
+        <section class="demo__example">
+          <h2>4 — A fragment that fills the box it sits in</h2>
+
+          <p class="stage__intro">
+            The link below lifts the block underneath the panel out of
+            <em>this</em> page, so what lands in the panel is another
+            <code>loadFragment</code> trigger — enhanced by the loader on
+            arrival, and standing <strong>inside</strong> the box it fills.
+            Press that inner link and the element holding the focus is
+            replaced: without help the focus would drop to
+            <code>&lt;body&gt;</code> and the tab order would restart at the
+            top of the page, so the module puts it on the panel instead. That
+            is the one case where it moves the focus — and the reason this
+            panel carries <code>role="region"</code> and a name, so a reader
+            is told where they have landed.
+          </p>
+
+          <ul class="demo__links">
+            <li>
+              <a href="./demo.html"
+                 data-js-behavior="loadFragment"
+                 data-fragment-target="#fragmentNested"
+                 data-fragment-select="#nestedSource > *"
+                 data-fragment-refresh>load a fragment that links deeper</a>
+            </li>
+          </ul>
+
+          <div id="fragmentNested" class="demo__panel c-fragment"
+               role="region" aria-label="Nested fragment" aria-live="polite">
+            <p class="demo__placeholder">Nothing loaded yet.</p>
+          </div>
+
+          <!-- The block the link above lifts out of this page. It is a
+               working trigger here too — and clicked from HERE the focus is
+               outside the panel and stays put, which is exactly the
+               difference this example is about. -->
+          <p class="demo__placeholder">
+            Below is the block that gets lifted. Pressing it here leaves the
+            focus where it is; pressing the copy inside the panel is what
+            makes the module step in.
+          </p>
+
+          <div id="nestedSource">
+            <a href="../tabs/demo.html"
+               data-js-behavior="loadFragment"
+               data-fragment-target="#fragmentNested"
+               data-fragment-select=".stage__intro"
+               data-fragment-refresh>fill the panel with the tabs intro</a>
+          </div>
+        </section>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</body>
+
+</html>

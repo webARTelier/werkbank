@@ -42,11 +42,13 @@ component's `<name>.js` directly. Everything else is lazy.
 
 **Composition root.** On load, `boot.js` builds the shared `services` object
 **once** and keeps it at module scope so the same instances are reused for every
-`init` call (including later re-scans). Today that is just the `reporter`
-(`createReporter({ level: 'warn' })`); further shared collaborators are added
-here. This is the DI seam described in `CLAUDE.md` — only configured/stateful
-singletons belong in `services`; pure utilities are direct-imported into each
-component's own lazy chunk instead.
+`init` call (including later re-scans). Today that is the `reporter`
+(`createReporter({ level: 'warn' })`) and the loader's own
+`initModulesInScope` / `destroyModulesInScope`, for a component that puts
+markup into the page and has to hand the new subtree over (`loadFragment`);
+further shared collaborators are added here. This is the DI seam described in
+`CLAUDE.md` — only configured/stateful singletons belong in `services`; pure
+utilities are direct-imported into each component's own lazy chunk instead.
 
 **Two registries** (both from the auto-generated `registry.js`, see §1):
 

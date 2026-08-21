@@ -35,6 +35,18 @@ const reporter = createReporter({ level: 'warn' });
 
 const services = {
   reporter,
+
+  // The loader itself, for a module that puts markup into the page and has
+  // to hand the new subtree over (loadFragment) or take an old one back.
+  // Both are function declarations below and therefore hoisted, so naming
+  // them here is safe. They come through the services object rather than
+  // being imported by the module: a component chunk that imported boot.js
+  // would inherit its `./registry.js` import, and that path is relative to
+  // dist/js — from dist/js/modules it points at nothing. Cost: none. Every
+  // page loads boot.min.js anyway, and these two are already in it.
+  initModulesInScope,
+  destroyModulesInScope,
+
   // add further shared functions here (debounce, readCssProp, ...)
 };
 

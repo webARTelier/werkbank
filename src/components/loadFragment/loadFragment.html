@@ -1,0 +1,185 @@
+<!--
+  loadFragment — copy-paste snippet
+  ============================================================================
+  Copy the block below into your own project.
+
+  1) In <head> (or before </body>): load the shared styles, this component's
+     styles and the boot script. boot.min.js lazily loads the loadFragment
+     module as soon as it finds data-js-behavior="loadFragment" in the DOM —
+     you do not import loadFragment.js yourself. Adjust the paths to where
+     you serve /dist.
+
+       <link rel="stylesheet" href="/dist/css/shared.min.css" />
+       <link rel="stylesheet" href="/dist/css/loadFragment.min.css" />
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+  2) Put data-js-behavior="loadFragment" on a LINK — a real <a href> to a real
+     page — and name the box its answer goes into with data-fragment-target.
+     On a plain left click the module fetches the href, takes the elements
+     matching data-fragment-select out of the answer and puts them into that
+     box; every other click (a new tab, a middle click, a download) stays the
+     browser's, and so does the whole thing without JavaScript.
+       - data-fragment-select is resolved against the ANSWER and every match
+         is inserted, in document order — so it can name the wrapper to keep
+         ("#teaser-42") or the children to unwrap ("main > *"). Left out, the
+         whole body of the answer is taken: the lane for an endpoint that
+         already returns exactly the fragment.
+       - The URL has to be same-origin. A cross-origin href is not fetched at
+         all — the click navigates, and the foreign page stays a foreign page.
+       - .c-fragment is the optional convenience look on the target: the
+         content dims, a ring turns over it, a failed load leaves an outline,
+         and the box shows a focus ring for the one occasion the script
+         focuses it. The script does not read the class — style your own box
+         and key it off [data-fragment-state] instead (and ring it: the focus
+         the script places is read as a keyboard focus). The link carries the
+         same attribute while its own request runs, so a busy trigger is one
+         rule of yours: a[data-fragment-state="loading"] { … }.
+       - Give the box aria-live="polite" unless it is inside an overlay that
+         moves the focus into it. Without either, the fragment arrives in
+         silence — the module reports that rather than letting it pass.
+
+  Notes
+    - Progressive enhancement, and it is the whole design: the trigger is a
+      link to a page that exists. Before the chunk arrives, if it 404s, with
+      JavaScript off, on a cross-origin href and when the target is not in the
+      document, the click does what the markup says — it opens that page. So
+      point the href at a real page and pick the region out of it, rather than
+      at a partial endpoint that is broken to navigate to. (An endpoint is
+      supported — leave data-fragment-select out — but then you own the
+      fallback: give the reader a real page to land on.)
+    - Nothing is ever hidden to make room. The box keeps what it holds until
+      the replacement is in hand, and the shipped busy look dims that content
+      instead of removing it — a load can fail, and then that is what the
+      reader is left with, plus the link they can click again.
+    - What arrives is enhanced. Every load calls destroyModulesInScope() on
+      the box before replacing its content and initModulesInScope() on it
+      afterwards (both from boot.js), so a fragment can bring its own
+      data-js-behavior markup — an accordion, a slider, a form — and it comes
+      alive on arrival while the one it replaced is torn down properly.
+      <script> elements inside the selected fragment are removed and reported
+      instead: inserted this way they never run, so leaving them would only
+      look like behaviour. What the answer carries outside the selection is
+      never touched.
+    - Both states are said, not only drawn. The module puts one polite
+      role="status" region into the box and writes the loading and the error
+      sentence into it — built in for de and en, overridable per link with
+      data-fragment-loading-text / data-fragment-error-text. While the load
+      runs the sentence is spoken only (the ring says the same thing to
+      whoever sees it); when it failed it is shown as well, because an outline
+      is a state and not a message. An empty value opts a sentence out.
+    - The focus is not moved, with one exception: if it stood INSIDE the box,
+      replacing that box's content would drop it on <body> and restart the tab
+      order at the top of the page — so it goes to the box instead. That
+      happens as soon as a loaded fragment contains a link filling the same
+      box, and such a box should carry an accessible name (role="region" plus
+      aria-label, or aria-labelledby); the module reports it if it does not.
+      Everywhere else the focus stays: an overlay host has already placed it,
+      and a reader who clicked "details" asked for content, not to be moved.
+    - aria-busy is written around the EXCHANGE, not around the request: from
+      the moment the box comes apart to the moment the new content has been
+      enhanced. So a box with aria-live announces the result once instead of
+      in pieces — while the loading sentence, which runs earlier, is not
+      swallowed by a busy region.
+    - Mind what the fragment brings with it. Headings and landmarks come along
+      as they were written — a <main> or a second <h1> lifted into a dialog is
+      a document outline nobody can read. An id that is already in this page
+      is reported: a duplicate one quietly breaks every label and aria-*
+      reference pointing at it. Relative URLs inside the fragment resolve
+      against THIS page, not the page they came from; that is HTML, not this
+      module, so serve root-relative paths or a <base> on the source.
+    - The language does come along, because that one would otherwise be lost:
+      a page states it on <html>, which stays behind in the answer, so the
+      elements taken from a document in another language get that lang written
+      onto them. A bare text node cannot carry it — one more reason to select
+      elements rather than the naked body of a foreign-language answer.
+    - Two links may fill the same box (two tabs, a table of rows and one
+      detail panel): the last click wins, the running request is aborted and
+      only the newest one writes anything.
+    - A box already showing this exact URL is not fetched again — reopening a
+      dialog costs nothing. Add data-fragment-refresh to a link whose content
+      can change between two clicks. Such a click does clear an error state
+      another load left on the box: what stands there is what was asked for.
+    - It loads, and that is all. No history entry, no routing, no form
+      submission, no polling: those are a different component, and mostly a
+      different library. The request is a GET, so there is no CSRF token to
+      send.
+    - Optional config (attributes on the link):
+        data-fragment-target   REQUIRED. CSS selector for the box the answer
+                               goes into, resolved against the whole document.
+                               A target that is not there when the link is
+                               clicked is reported and the click navigates
+        data-fragment-select   CSS selector resolved against the answer; every
+                               match is inserted, in document order. Default:
+                               the whole body of the answer
+        data-fragment-refresh  presence only: fetch again on every click.
+                               Default: a box already showing this URL is left
+                               alone
+        data-fragment-loading-text / data-fragment-error-text
+                               what the status region says. Default: the
+                               built-in sentence in the page's language (de,
+                               en). An empty value says nothing at all
+-->
+
+
+
+<!-- Basic: the link fills a panel in the page. The panel is a live region, so
+     the reader is told when the content is complete — that is what the
+     aria-busy the script writes around the exchange is for. The two sentences
+     of the load itself come out of the status region the module puts in the
+     box, and here they are the built-in ones. -->
+<a href="/teasers/42"
+   data-js-behavior="loadFragment"
+   data-fragment-target="#detailPanel"
+   data-fragment-select="main > *">Show the details</a>
+
+<div id="detailPanel" class="c-fragment" aria-live="polite">
+  <!-- whatever stands here is kept until the answer is in hand -->
+</div>
+
+
+
+<!-- Into a dialog: two attributes on one link, and neither module knows about
+     the other. dialog opens it (data-open-dialog), loadFragment fills it —
+     both read the same anchor, and without JavaScript the link still opens
+     /teasers/42 as a page. -->
+<a href="/teasers/42"
+   data-js-behavior="loadFragment"
+   data-open-dialog="detailDialog"
+   data-fragment-target="#detailDialogBody"
+   data-fragment-select="main > *">Open the details</a>
+
+<dialog id="detailDialog" class="c-dialog" data-js-behavior="dialog">
+  <div class="c-dialog__panel">
+    <div id="detailDialogBody" class="c-dialog__body c-fragment"></div>
+  </div>
+</dialog>
+
+
+
+<!-- Several links, one box: a list of rows and one detail panel. The last
+     click wins — a request still running is aborted, and only the newest
+     answer is ever written. data-fragment-refresh on a row whose content can
+     have changed since it was last shown.
+
+     The first row also replaces the two built-in sentences with its own: say
+     what did not arrive, not why — a reader cannot act on an HTTP status, and
+     the reporter has it. -->
+<ul>
+  <li>
+    <a href="/orders/1001"
+       data-js-behavior="loadFragment"
+       data-fragment-target="#orderPanel"
+       data-fragment-select="#order"
+       data-fragment-loading-text="Die Bestellung wird geladen."
+       data-fragment-error-text="Die Bestellung konnte nicht geladen werden.">Order 1001</a>
+  </li>
+  <li>
+    <a href="/orders/1002"
+       data-js-behavior="loadFragment"
+       data-fragment-target="#orderPanel"
+       data-fragment-select="#order"
+       data-fragment-refresh>Order 1002 (always refetched)</a>
+  </li>
+</ul>
+
+<div id="orderPanel" class="c-fragment" aria-live="polite"></div>
