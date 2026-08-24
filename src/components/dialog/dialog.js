@@ -71,6 +71,7 @@
 
 import { rafThrottle } from './rafThrottle.js';
 import { focusableSelector } from './focusableSelector.js';
+import { otherModalOpen } from './otherModalOpen.js';
 
 
 
@@ -131,6 +132,11 @@ const defaults = {
 // Shared across all dialog instances on the page: how many are currently
 // open. The body scroll lock is released only when this hits zero, so closing
 // one dialog while another is still open does not unlock the page.
+//
+// The counter can only ever see dialogs THIS module drives, which is why it
+// is not the whole answer: the scroll-lock class is shared with lightbox and
+// offCanvasNav, and neither of them is in here. Hence otherModalOpen() on
+// the way out as well — see unlockScroll.
 let openCount = 0;
 
 
@@ -528,11 +534,20 @@ class Dialog {
 
 
 
+  // Two conditions, because two different things can still need the page
+  // frozen. The counter answers for this module's own dialogs (a dialog
+  // opened from inside another one). otherModalOpen() answers for the
+  // modals this module knows nothing about: the body class is shared with
+  // lightbox and offCanvasNav, so a dialog opened from inside a drawer — or
+  // over a lightbox — must not hand the page back when it closes. Both read
+  // the DOM for the same reason a counter cannot: a count in one module only
+  // ever sees that module's own dialogs.
   unlockScroll = () => {
     openCount = Math.max(0, openCount - 1);
-    if (openCount === 0) {
-      document.body.classList.remove(this.config.scrollLockClass);
-    }
+    if (openCount > 0) return;
+    if (otherModalOpen(this.dialog)) return;
+
+    document.body.classList.remove(this.config.scrollLockClass);
   };
 
 

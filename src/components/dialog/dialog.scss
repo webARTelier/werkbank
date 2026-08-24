@@ -290,9 +290,9 @@
 
 
 
-// Body scroll lock, toggled by dialog.js while a dialog is open. Modal
-// dialogs make the background inert but do not stop the page behind them from
-// scrolling.
+// Body scroll lock, toggled by dialog.js while a dialog is open (shared with
+// lightbox and offCanvasNav, which declare the same rule). Modal dialogs make
+// the background inert but do not stop the page behind them from scrolling.
 body.is-scrollLocked {
   overflow: hidden;
 }

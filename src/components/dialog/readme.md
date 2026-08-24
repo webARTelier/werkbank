@@ -6,8 +6,9 @@ Accessible dialog/modal built on the native `<dialog>` element.
 - `dialog.html` – markup
 - `dialog.scss` – styles (source; compiled to `dist/css/dialog.min.css`)
 - `dialog.js` – behavior
-- `_shared/js/rafThrottle.js`, `_shared/js/focusableSelector.js` – utilities
-  imported by the behavior (copy them alongside it)
+- `_shared/js/rafThrottle.js`, `_shared/js/focusableSelector.js`,
+  `_shared/js/otherModalOpen.js` – utilities imported by the behavior (copy
+  them alongside it)
 
 ## Usage
 The dialog is a native `<dialog class="c-dialog" data-js-behavior="dialog">` with a unique `id`. It relies on the platform for the heavy lifting — the top layer, focus trap, `::backdrop`, `Esc` and focus restoration all come from the browser — so the module is a thin progressive enhancement that wires the outside trigger, adds backdrop-click dismissal, locks body scroll and stops media on close.
@@ -16,6 +17,7 @@ The dialog is a native `<dialog class="c-dialog" data-js-behavior="dialog">` wit
 - **Close control:** any element inside the dialog carrying `data-close-dialog` (a `<form method="dialog">` submit closes it natively too).
 - **Modal (default):** opened with `showModal()`. Add `data-dialog-nonmodal` for a non-modal dialog opened with `show()` that leaves the rest of the page interactive and scrollable. Note that `Esc` only closes a **modal** dialog — the platform fires no `cancel`/`close` for a non-modal one — so a non-modal dialog must always keep a visible close control (the × button or a footer action).
 - **Static:** add `data-dialog-static` to disable backdrop-click and `Esc` dismissal, so the dialog can only be closed by an explicit action.
+- **Body scroll lock:** a modal dialog makes the page behind it inert but does not stop it from scrolling, so a body class does (`is-scrollLocked`). The class is shared with `lightbox` and `offCanvasNav`, and it is released only when *nothing* still needs the page frozen: neither another dialog of this module's own (counted, so nested dialogs work) nor another modal in the page, read from the DOM via `dialog[open]:modal` the same way those two read it. That second condition is what keeps a dialog opened from inside a drawer — or over an open lightbox — from handing the page back on close; the counter alone cannot see them.
 - **Media cleanup:** on close every `<video>`/`<audio>` is paused. An embedded media `<iframe>` (e.g. a video) is only reloaded — the reliable way to stop it playing — when you mark it with `data-dialog-media`; unmarked frames are left untouched so a map, an embedded form or an app keeps its state instead of reloading on every close.
 - Point `aria-labelledby` at the title's `id` so screen readers announce the dialog.
 - **Scrollable body:** mark the scroll region with `data-dialog-scroll`. A plain overflowing box scrolls with the mouse but is invisible to the keyboard, so whenever that region actually overflows **and** contains nothing else focusable, the JS makes it a tab stop (`tabindex="0"`) — the browser then wires up the arrow/paging keys — and exposes it as a named `role="region"`, borrowing the dialog's own label. It is removed again once the box fits, so a short dialog is never a dead tab stop. Overflow is tracked live while the dialog is open (a `ResizeObserver` on the region and its children plus a `MutationObserver` on its child list), so content that loads or reflows after opening flips the tab stop too — not just a viewport resize. This mirrors `adaptiveScrollFade` and satisfies WCAG 2.1.1 / 4.1.2.
