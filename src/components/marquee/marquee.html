@@ -32,6 +32,12 @@
       reveals the button once it is functional.
     - The m-marquee* classes are styling hooks for YOUR css only; the JS
       binds exclusively to the data attributes.
+    - The container clips only while an ancestor holds it to a width. A
+      marquee nested in a box that may grow with its content — a grid or
+      flex item at its default min-inline-size: auto, which is what a
+      wrapper usually is — pushes the page sideways instead of being cut
+      off. Put min-inline-size: 0 on that wrapper. The module reports the
+      condition and caps its clone count at the viewport meanwhile.
 
   Notes / Configuration (all optional, on the module element)
     - data-marquee-direction="left|right"   visual scroll direction

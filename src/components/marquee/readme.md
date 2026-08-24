@@ -37,7 +37,30 @@ Put `data-js-behavior="marquee"` on the module element. Inside it:
 
 The clone count is re-evaluated (debounced) on resize, via `ResizeObserver`,
 after web fonts load and on window `load`, so the loop never shows a gap on
-wide viewports and cleans itself up when it is not needed.
+wide viewports and cleans itself up when it is not needed. The count follows
+from the visible width, and that width is capped at the viewport: nothing the
+reader can see is wider, and it means the clones can never be what asks for
+more clones.
+
+### The container needs a width of its own
+
+The clipping container clips only while an ancestor holds it to a width, and
+that is the one requirement the markup above cannot express. In this
+collection's own layout `<body>` is a grid, so a marquee placed straight into
+it is fine. A marquee **inside** anything else — a `tabs` panel, a
+`<details>`, a wrapper of your own — sits in a box whose default
+`min-inline-size: auto` lets it grow with its content, and then the strip
+never clips: the tracks stand side by side and push the page sideways instead
+of being cut off (WCAG 1.4.10).
+
+```css
+/* the wrapper a marquee is nested in */
+.my-panel { min-inline-size: 0; }
+```
+
+`_demo.scss` does exactly this for `.shell`. Where the condition is measured
+anyway, the module reports it and keeps running at the capped clone count — so
+the failure is a visible layout bug with a console message, never a runaway.
 
 ### Options (all optional; on the module element)
 

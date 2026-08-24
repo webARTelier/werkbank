@@ -19,7 +19,9 @@
  * 1. Clone management: the track is cloned just often enough (at least
  *    `clones`, more on a wider viewport) that one full cycle never exposes a
  *    gap. The count is re-evaluated (debounced) on resize, via
- *    ResizeObserver, after fonts load and on window load.
+ *    ResizeObserver, after fonts load and on window load. It follows from the
+ *    visible width, and that width is capped at the viewport so the
+ *    clones can never be what asks for more clones — see getVisibleWidth.
  * 2. The animation itself, via the Web Animations API — each track travels
  *    exactly one track width per cycle, so the loop is seamless. No inline
  *    styles; pausing/resuming happens on the Animation objects.
@@ -29,6 +31,19 @@
  * 4. Pause control: hovering pauses, focus inside the track pauses, and an
  *    author-provided toggle button ([data-marquee-toggle]) lets the user
  *    pause/resume explicitly (WCAG 2.2.2 Pause, Stop, Hide).
+ *
+ * Placement: the container needs a width of its own
+ * -------------------------------------------------
+ * The clipping container clips only while an ancestor holds it to a width.
+ * In this collection's own layout <body> is a grid, so a marquee dropped
+ * straight into it is fine — but one placed inside anything else (a tabs
+ * panel, a <details>, a wrapper of the project's own) sits in a box whose
+ * default min-inline-size: auto lets it grow with its content. Then the
+ * strip never clips: the tracks stand side by side and push the page
+ * sideways instead of being cut off. Give such a wrapper
+ * min-inline-size: 0 — which is what _demo.scss does for .shell, for
+ * exactly this reason. The module reports the condition where it measures
+ * it and keeps running at a clone count capped to the viewport.
  *
  * Accessibility
  * -------------
@@ -177,6 +192,11 @@ class Marquee {
     this.isRunning = false;
     this.resizeObserver = null;
 
+    // One warning per instance about a container that does not clip (see
+    // warnUnclipped) — the condition is re-measured on every rebuild, so
+    // without this it would be reported on every resize frame.
+    this.warnedUnclipped = false;
+
     // Seconds per cycle actually applied to the running animations, always
     // derived from the track width (see getCycleDuration). The fallback
     // stands in until the first measurement.
@@ -320,8 +340,28 @@ class Marquee {
 
 
   // The smallest available visible width for the marquee track.
+  //
+  // The viewport is in the list, and it is the one candidate that is not a
+  // convenience: the other three are boxes the clones themselves can widen.
+  // A clipping container only stays put while an ancestor holds it to a width
+  // — the moment one of them is free to grow with its content (a grid or flex
+  // item at its default min-inline-size: auto is the usual way), the clones
+  // widen the box, the wider box asks for more clones, and those widen it
+  // again. Measured before this cap: 12 tracks after 0.7s, 23 after 2s, 39
+  // after 4s, tens of thousands if the page is left alone.
+  //
+  // The viewport ends that, because nothing the reader can see is wider than
+  // it: the strip never scrolls (it is overflow: hidden), so whatever part of
+  // it lies past the viewport edge cannot come into view and needs no track
+  // to fill it. Taking the minimum keeps every narrower box winning, so a
+  // marquee in a 300px sidebar is unaffected — and so is every correctly
+  // clipped one, whose container is inside the viewport anyway.
   getVisibleWidth = () => {
-    const widths = [this.container.clientWidth, this.root.clientWidth];
+    const widths = [
+      this.container.clientWidth,
+      this.root.clientWidth,
+      document.documentElement.clientWidth,
+    ];
 
     if (this.parent instanceof HTMLElement) {
       widths.push(this.parent.clientWidth);
@@ -337,6 +377,38 @@ class Marquee {
 
 
 
+  // The cap above keeps the clone count finite, but it cannot make the strip
+  // clip: a container wider than the viewport is one no ancestor holds to a
+  // width, so the tracks stand side by side in the open and push the page
+  // into a horizontal scrollbar (WCAG 1.4.10) instead of being cut off.
+  // Since the marquee's own content is what widens such a box, the layout
+  // mistake shows up here first, and it is an authoring one — hence the
+  // reporter.
+  //
+  // clientWidth is the padding box, not the content: a container that DOES
+  // clip stays at its clipped width however many tracks are inside it, so
+  // this cannot fire for a correctly placed marquee.
+  warnUnclipped = () => {
+    if (this.warnedUnclipped) return;
+    if (this.container.clientWidth <= document.documentElement.clientWidth) {
+      return;
+    }
+
+    this.warnedUnclipped = true;
+    this.reporter?.report(
+      'marquee',
+      `${this.config.selContainer} is wider than the viewport, so it is not` +
+      ' clipping: an ancestor is being widened by the marquee\'s own tracks.' +
+      ' A grid or flex item at its default min-inline-size: auto is the usual' +
+      ' cause — set min-inline-size: 0 on it (or give the marquee a container' +
+      ' with a width of its own). The clone count is capped at the viewport' +
+      ' meanwhile, so the marquee still runs.',
+      this.root
+    );
+  };
+
+
+
   // Builds the clones and their animations, and rebuilds them whenever the
   // structure the seamless loop depends on changed: the required clone count
   // (viewport resized) OR the source track's width. Width matters because
@@ -345,12 +417,22 @@ class Marquee {
   // copies. A nested widget mutating the original AFTER it was cloned (a
   // countdown injecting its pause control, web fonts widening the text)
   // changes that width, hence the re-clone to restore parity — and the
-  // re-pace to the new width. Writes stay idempotent: re-cloning does not
-  // change the ORIGINAL track's width, so a ResizeObserver notification
-  // caused by our own clone insertion settles instead of looping.
+  // re-pace to the new width.
+  //
+  // Writes stay idempotent, and that takes both halves of the input: a
+  // re-clone does not change the ORIGINAL track's width, and the clone count
+  // is derived from a width the clones cannot inflate (see getVisibleWidth).
+  // The first half alone is not enough — it was, for a while, and a marquee
+  // whose container was free to grow cloned itself without bound. So a
+  // ResizeObserver notification caused by our own clone insertion settles
+  // instead of looping.
   run = () => {
     const contentWidth = this.animated.offsetWidth;
     const requiredCloneCount = this.getRequiredCloneCount();
+
+    // Before the early return, so a marquee that has settled at the capped
+    // count still says why it is not clipping.
+    this.warnUnclipped();
 
     if (
       this.isRunning &&
