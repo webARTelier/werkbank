@@ -25,6 +25,7 @@ import { globalRegistry, registry } from './registry.js';
 
 // shared services (dependency injection)
 import { createReporter } from './createReporter.js';
+import { createConsentGate } from './createConsentGate.js';
 
 
 
@@ -33,8 +34,37 @@ import { createReporter } from './createReporter.js';
 // the same services when called for dynamically inserted markup.
 const reporter = createReporter({ level: 'warn' });
 
+// THE ONE PLACE A PROJECT NAMES ITS CONSENT-MANAGEMENT PLATFORM.
+//
+// Shipped with the attribute lane and nothing else: the gate reads a token
+// list off <html data-consent="…">, so out of the box it answers "not
+// granted" on every page that does not set it — which is the safe answer and
+// the reason embedConsent's click lane is the ground truth rather than this.
+//
+// Wire your CMP here, not in a component. Every CMP can write that attribute
+// from its own callback, and doing it that way is what also lets the CSS see
+// the answer. Ready-made blocks for Cookiebot, Usercentrics, Klaro!, Borlabs
+// Cookie, Complianz and TCF — plus where each half of the wiring belongs —
+// are in src/components/embedConsent/readme.md under "Ready-made adapters"
+// and "Where each piece goes". Where you would rather ask the CMP directly,
+// pass a resolve callback instead:
+//
+//   createConsentGate({
+//     events: ['CookiebotOnAccept', 'CookiebotOnDecline'],
+//     resolve: (token) => window.Cookiebot?.consent?.[token] === true,
+//   })
+//
+// It costs a page with no embed on it nothing but these few bytes: the
+// observer and the listeners are only created once a component subscribes.
+const consent = createConsentGate();
+
 const services = {
   reporter,
+
+  // Has the visitor already allowed content from a given third party? Built
+  // here because only the composition root can know which CMP is running —
+  // see createConsentGate.js for why no component may answer that itself.
+  consent,
 
   // The loader itself, for a module that puts markup into the page and has
   // to hand the new subtree over (loadFragment) or take an old one back.

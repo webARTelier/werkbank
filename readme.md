@@ -94,6 +94,7 @@ reads it. The full decision rule is in [`CLAUDE.md`](CLAUDE.md).
 | `dateInputFormat`    | function (`c-dateField`)      | Auto-formats a text field into a grouped date mask (`DD.MM.YYYY`).  |
 | `dialog`             | component                     | Modal dialogs on the native `<dialog>` element.                     |
 | `dropdownNav`        | module                        | Multi-level dropdown / mega-menu nav on the ARIA disclosure pattern.|
+| `embedConsent`       | component                     | Holds a third-party embed's place until the visitor has allowed it.  |
 | `fileUpload`         | component                     | A file field that names what is attached, with an upload lane.      |
 | `flexNeighborMarker` | function (`o-flexNeighbor`)   | Marks flex items that have a neighbour on the same row.             |
 | `formValidation`     | function                      | Inline validation messages on the Constraint Validation API.        |
@@ -116,7 +117,7 @@ reads it. The full decision rule is in [`CLAUDE.md`](CLAUDE.md).
 | `tabs`               | module                        | ARIA tabs enhancement of an anchor-link table of contents.          |
 | `toast`              | module                        | Transient messages in a stack, announced via a live region.         |
 | `tooltip`            | component                     | Hoverable, dismissible hint on a control, shown by CSS alone.       |
-| `video`              | module                        | CMS-maintainable video embeds with responsive sources.              |
+| `video`              | module                        | CMS-maintainable self-hosted video with responsive sources.         |
 
 Each folder under `src/components/<name>/` contains exactly:
 
@@ -225,7 +226,11 @@ pure utility from `src/_shared/js/` the component imports (e.g.
 The JS exports a single `init(el, services)` and never
 self-initializes, so it slots into any loader; `services.reporter` is
 optional and only used for warnings — without it the module degrades
-silently.
+silently. `embedConsent` is the one that takes a second service,
+`services.consent` (built in `boot.js`, see
+[`createConsentGate.js`](src/_shared/js/createConsentGate.js)); it too is
+optional, and without it the component's click lane is simply the only way
+in.
 
 Note for behaviour-only components (`tabs`, `formValidation`,
 `inputCharCount`, …): they ship a stub stylesheet by design and leave all

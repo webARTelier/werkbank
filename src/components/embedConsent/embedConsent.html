@@ -1,0 +1,323 @@
+<!--
+  embedConsent — copy-paste snippet
+  ============================================================================
+  Copy the block(s) below into your own project.
+
+  1) In <head> (or before </body>): load the shared styles, this component's
+     stylesheet and the boot script. boot.min.js lazily loads the
+     embedConsent module as soon as it finds
+     data-js-behavior="embedConsent" in the DOM — you do not import
+     embedConsent.js yourself. Adjust the paths to where you serve /dist.
+
+       <link rel="stylesheet" href="/dist/css/shared.min.css" />
+       <link rel="stylesheet" href="/dist/css/embedConsent.min.css" />
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+  2) Give every instance its own media container: the project layout owns
+     size and aspect ratio (e.g. `aspect-ratio: 16 / 9` on the wrapper).
+     Here that ratio is a MINIMUM, not a fixed box — a long notice may make
+     the box taller, because clipping the notice would defeat the whole
+     component. The EMBED never does: once the iframe is in, the box is
+     exactly the ratio you asked for. A container with no height at all
+     falls back to --embedConsent-min-block-size (12rem).
+     Note: object-fit cannot reach INTO the iframe — content with a
+     different ratio letterboxes there.
+
+  3) THE NOTICE IS NOT OPTIONAL, and the component enforces it: where
+     [data-embedconsent-notice] is missing or empty the load button stays
+     hidden and the console says why. A play button over a poster tells the
+     visitor nothing, so pressing it is not informed consent.
+
+     Keep it on its own element — the paragraph, not the panel around it.
+     The script points the button's aria-describedby at whatever carries
+     the attribute, and a description containing the button would read the
+     button's own label back as part of its explanation.
+
+     What the notice has to carry:
+
+       - WHO would receive data (name the provider and the company).
+       - WHAT is transferred — at minimum the IP address; say if it goes to
+         a third country.
+       - WHY / what for, in one clause.
+       - A LINK to your own privacy policy.
+
+     Wording is your lawyer's or your DPO's call, not this component's. The
+     examples below are a structure to fill in, not legal text.
+
+  4) The poster must be a file YOU serve. A provider's thumbnail endpoint
+     (img.youtube.com/vi/…, Vimeo's thumbnail API) IS the request this
+     component exists to defer — using one puts the visitor's IP at the
+     provider before anything was agreed. The poster is optional; without
+     one the notice sits on the component's own surface.
+
+     The script checks this one, because it is the only mistake here that
+     fails SILENTLY: a poster served from a known thumbnail host is
+     reported to the console. Your own domain, and your own CDN, are not.
+
+  5) Several boxes from the same provider on one page? Add
+     data-embedconsent-group to each of them and one press fills them all,
+     for that page view. Nothing is stored, nothing is remembered, and it
+     is off unless you ask for it — six unrelated videos keep costing six
+     presses. Details under "One press for a whole group" below.
+
+  Two ways in, and the second never replaces the first
+    - THE CLICK works with no configuration at all: no consent platform, no
+      cookie, nothing stored. It covers this page view only — a reload puts
+      the notice back. Nothing is remembered on purpose: a record of what a
+      visitor allowed carries an obligation to prove it and to let them
+      withdraw it, and that belongs to your CMP, not to an embed.
+    - THE CONSENT GATE skips the click for a visitor who has already allowed
+      this provider. Nothing in the markup and nothing in this component
+      knows which platform you run: the gate reads a token list off <html>,
+
+        <html lang="en" data-consent="youtube maps">
+
+      and your project writes that from its platform's own callback. No
+      banner writes this attribute by itself — the name is ours, so those
+      few lines of translation are yours, and they belong next to your
+      banner's own script rather than in here. Getting the attribute into
+      the page BEFORE the first paint is a separate question with four
+      answers, ranked in the readme under "Where each piece goes"; the
+      shipped defaults are picked so that none of them needs boot.js
+      edited.
+    - Consent withdrawn later removes the iframe again and puts the notice
+      back. That half is a visitor's right and it needs no extra wiring.
+
+  One press for a whole group
+    Six videos on a page cost a visitor six presses. Put
+    data-embedconsent-group on each box and one press fills every other box
+    naming the same data-embedconsent-service — for that page view, storing
+    nothing, exactly as the single press stores nothing.
+
+      <div class="c-embedConsent" data-js-behavior="embedConsent"
+           data-embedconsent-provider="youtube"
+           data-embedconsent-service="youtube"
+           data-embedconsent-group> … </div>
+
+    Opt-in per box, and it stays that way: a box without the attribute is
+    never filled by somebody else's press, even from the same provider.
+    Give the attribute a VALUE and it names a group instead
+    (data-embedconsent-group="products"), so a hero video and one buried in
+    a legal text can stay apart although both are YouTube.
+
+    What holds it honest, and what you inherit by using it:
+      - THE LABEL SAYS SO. Leave the button empty and the shipped label
+        reads "Load and play YouTube — the others on this page are loaded
+        too". Write your own and it is yours to keep accurate.
+      - ONLY THE BOX YOU PRESSED may start a player. The rest are created
+        without the autoplay parameter — nobody pressed them, and five
+        players starting at once is exactly WCAG 2.2.2.
+      - THE NOTICE RULE STILL STANDS. A box whose own notice is empty is
+        not in any group and is not filled: the press that would fill it
+        explained nothing about it.
+      - IT NEVER CROSSES PROVIDERS. The key is the service token, so a
+        press about YouTube cannot load a map.
+      - ONE ANNOUNCEMENT, from the box you pressed ("2 further embeds from
+        YouTube on this page have been loaded as well"). The boxes that
+        filled stay silent, so a group of six is one sentence, not six.
+      - loading="lazy" is what makes this cheap: the boxes below the fold
+        request nothing until the reader reaches them.
+
+  Killing the notice flash for a visitor who already consented
+    boot.min.js is a deferred module and this component is a second, lazily
+    imported chunk, so the first paint is always the facade — a visitor who
+    consented long ago sees the notice for a moment. JavaScript cannot
+    close that gap; a render-blocking stylesheet can, which is the reason
+    the gate's default lane is an attribute. Set it server-side (or from a
+    tiny inline script in <head>) and add ONE rule per token to your own
+    CSS:
+
+      html[data-consent~="youtube"]
+      .c-embedConsent[data-embedconsent-service="youtube"]
+      [data-embedconsent-facade] { display: none; }
+
+    It is your rule and not shipped here, because only your project knows
+    its token names. Without it nothing breaks — the notice is simply
+    visible for a moment before the embed replaces it.
+
+  Wiring
+    - data-js-behavior="embedConsent" goes on the component element.
+      (Combine with other modules via a comma: data-js-behavior="a,b".)
+    - The <button data-embedconsent-toggle hidden> keeps its `hidden`
+      attribute: the script reveals it once it is functional, so a page
+      without JS never shows a dead control. Text inside it is kept; leave
+      it empty and the script writes a localized label (de/en from
+      <html lang>) — "Load <provider>", or "Load and play <provider>"
+      where the click really does start a player. If you write your own
+      label for a video, say the same thing: a button reading "load" that
+      then starts sound is a control describing itself wrongly.
+      On a page in neither language the script marks its own strings with
+      lang="en", so a screen reader does not read English in a French
+      voice (WCAG 3.1.2). Yours are yours to mark.
+    - The [data-embedconsent-fallback] link STAYS visible after
+      enhancement, deliberately: "not here, but at the provider" is a
+      legitimate answer, and it is the only way in for a visitor without
+      JavaScript.
+    - The c-embedConsent* classes are styling hooks for the CSS only;
+      the JS binds exclusively to the data attributes.
+
+  Notes / Configuration
+    - data-embedconsent-provider="…"  youtube | vimeo | googleMaps |
+                                      openStreetMap. With it,
+                                      data-embedconsent-id is what that
+                                      provider needs.
+    - data-embedconsent-id="…"        youtube/vimeo: a full URL or a bare
+                                      id. googleMaps: what you would type
+                                      into the search box.
+                                      openStreetMap: a bbox,
+                                      "minLon,minLat,maxLon,maxLat".
+    - data-embedconsent-src="URL"     the generic lane: the iframe URL
+                                      verbatim, for a provider with no
+                                      preset or a keyed Maps Embed API URL.
+                                      Wins over a preset. Must be an
+                                      ABSOLUTE http(s) URL: a relative one
+                                      is not a third-party embed, and
+                                      anything the URL parser rejects is
+                                      reported and left alone rather than
+                                      handed to an iframe broken.
+    - data-embedconsent-service="…"   the token the gate is asked for;
+                                      defaults to the provider name.
+    - data-embedconsent-category="…"  a second token, for a platform that
+                                      only knows categories ("marketing").
+                                      Either one being granted is enough.
+    - data-embedconsent-title="…"     accessible title for the iframe. Set
+                                      it — the fallback is generic.
+    - data-embedconsent-allow="…"     permissions policy for the iframe,
+                                      overriding the preset's. An empty
+                                      value means none at all.
+    - data-embedconsent-autoplay="false"
+                                      stops the click lane adding the
+                                      provider's autoplay parameter, for a
+                                      player you want in the page but not
+                                      playing. The shipped button label
+                                      follows it.
+    - data-embedconsent-group         opt-in: a press here also fills every
+                                      other box naming the same service, for
+                                      that page view. Empty = the group IS
+                                      the service token; a value names a
+                                      group. See "One press for a whole
+                                      group" above.
+    - data-embedconsent-ready         written by the JS on the root ("the
+                                      button here works"). Nothing in the
+                                      shipped CSS reads it; it is there for
+                                      your own rules.
+    - --embedConsent-* (CSS props)    the floor, the panel's measure,
+                                      padding, colors and the button — see
+                                      embedConsent.scss.
+
+  Autoplay: a video loaded by the CLICK starts playing, and the shipped
+  button label says so ("Load and play YouTube") — pressing that is a
+  request to watch it. One loaded by the consent gate does NOT: nobody
+  asked for it in this page view, and sound starting on its own is what
+  WCAG 2.2.2 is about. data-embedconsent-autoplay="false" turns the click
+  lane's playback off too, and the label goes back to "Load YouTube".
+
+  The `your-media-container` wrappers below are placeholders for YOUR
+  layout element: replace the class and give it size and aspect ratio in
+  your project's CSS (e.g. `aspect-ratio: 16 / 9`). Kept as a class, not
+  an inline style, so structure and appearance stay separated.
+-->
+
+
+
+<!-- A) YouTube. Media container: e.g. 16 / 9. -->
+<div class="your-media-container">
+  <div class="c-embedConsent" data-js-behavior="embedConsent" data-embedconsent-provider="youtube" data-embedconsent-id="https://www.youtube.com/watch?v=a3ICNMQW7Ok" data-embedconsent-service="youtube" data-embedconsent-category="marketing" data-embedconsent-title="What the video shows">
+
+    <div class="c-embedConsent__facade" data-embedconsent-facade>
+
+      <img class="c-embedConsent__poster" src="/media/videoPoster.jpg" alt="" data-embedconsent-poster>
+
+      <div class="c-embedConsent__panel">
+        <p class="c-embedConsent__notice" data-embedconsent-notice>
+          Loading this video connects you to <strong>YouTube</strong>, a
+          service of Google Ireland Ltd. Your IP address, your browser
+          details and, if you are signed in, your YouTube account are
+          transmitted to Google and may be processed in the USA. Details
+          are in our <a href="/privacy">privacy policy</a>.
+        </p>
+
+        <p class="c-embedConsent__actions">
+          <button class="c-embedConsent__toggle" type="button" data-embedconsent-toggle hidden>
+            Load and play video from YouTube
+          </button>
+
+          <a class="c-embedConsent__fallback" href="https://www.youtube.com/watch?v=a3ICNMQW7Ok" data-embedconsent-fallback>
+            Watch on YouTube instead
+          </a>
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+
+
+<!-- B) Google Maps. No poster here — the notice sits on the component's own
+     surface, which is the honest rendering for a map nobody has a picture
+     of. Media container: e.g. 4 / 3. -->
+<div class="your-media-container">
+  <div class="c-embedConsent" data-js-behavior="embedConsent" data-embedconsent-provider="googleMaps" data-embedconsent-id="Brandenburger Tor, Berlin" data-embedconsent-service="googleMaps" data-embedconsent-category="marketing" data-embedconsent-title="Map showing our office">
+
+    <div class="c-embedConsent__facade" data-embedconsent-facade>
+
+      <div class="c-embedConsent__panel">
+        <p class="c-embedConsent__notice" data-embedconsent-notice>
+          Loading this map connects you to <strong>Google Maps</strong>, a
+          service of Google Ireland Ltd. Your IP address and your browser
+          details are transmitted to Google and may be processed in the
+          USA. Details are in our <a href="/privacy">privacy policy</a>.
+        </p>
+
+        <p class="c-embedConsent__actions">
+          <button class="c-embedConsent__toggle" type="button" data-embedconsent-toggle hidden>
+            Load map from Google Maps
+          </button>
+
+          <a class="c-embedConsent__fallback" href="https://www.google.com/maps?q=Brandenburger+Tor,+Berlin" data-embedconsent-fallback>
+            Open in Google Maps instead
+          </a>
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+
+
+<!-- C) OpenStreetMap — the same wiring for a provider with no advertising
+     business at the other end of it. Whether it needs consent at all is
+     your project's call; the id is the bbox from the OSM export tab. -->
+<div class="your-media-container">
+  <div class="c-embedConsent" data-js-behavior="embedConsent" data-embedconsent-provider="openStreetMap" data-embedconsent-id="13.3696,52.5121,13.3859,52.5199" data-embedconsent-service="openStreetMap" data-embedconsent-title="Map showing our office">
+
+    <div class="c-embedConsent__facade" data-embedconsent-facade>
+
+      <div class="c-embedConsent__panel">
+        <p class="c-embedConsent__notice" data-embedconsent-notice>
+          Loading this map connects you to
+          <strong>OpenStreetMap</strong>, run by the OpenStreetMap
+          Foundation (United Kingdom). Your IP address and your browser
+          details are transmitted there. Details are in our
+          <a href="/privacy">privacy policy</a>.
+        </p>
+
+        <p class="c-embedConsent__actions">
+          <button class="c-embedConsent__toggle" type="button" data-embedconsent-toggle hidden>
+            Load map from OpenStreetMap
+          </button>
+
+          <a class="c-embedConsent__fallback" href="https://www.openstreetmap.org/#map=16/52.516/13.377" data-embedconsent-fallback>
+            Open in OpenStreetMap instead
+          </a>
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+</div>

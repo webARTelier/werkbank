@@ -1,12 +1,18 @@
 # video
 
-CMS-maintainable video embeds: self-hosted `<video>` with responsive sources
-(resolution ladders and art direction via `<source media>`), or YouTube behind
-a GDPR-friendly click-to-load facade (youtube-nocookie, nothing loads from
-Google before the click).
+CMS-maintainable **self-hosted** video: a `<video>` with responsive sources
+(resolution ladders and art direction via `<source media>`), in two
+behavioural modes the markup picks.
+
+> **Third-party video moved out.** The YouTube click-to-load facade that used
+> to ship here as variant C is now [`embedConsent`](../embedConsent/readme.md),
+> which generalises it to Vimeo, maps and any other iframe — and adds the two
+> halves this facade did not have: the notice that makes the click an informed
+> one, and the seam that lets a visitor's existing consent skip the click.
+> Nothing in this component knows a third-party host any more.
 
 ## Files needed to copy
-- `video.html` – markup (three variants; the play/pause SVGs are
+- `video.html` – markup (two variants; the play/pause SVGs are
   inlined there)
 - `video.scss` – styles (source; compiled to
   `dist/css/video.min.css`)
@@ -24,10 +30,8 @@ Wrap every instance in your own **media container** — the project layout owns
 size and aspect ratio (e.g. `aspect-ratio: 16 / 9` on the wrapper). The module
 root fills that container and the media covers it with `object-fit: cover`.
 This is the project-wide media-sizing rule, not a quirk of this component.
-Caveat: `object-fit` cannot reach *into* the YouTube iframe — footage whose
-ratio differs from the container letterboxes there.
 
-Three variants, all with `data-js-behavior="video"` on the module
+Two variants, both with `data-js-behavior="video"` on the module
 element (see `video.html` for ready-to-paste markup):
 
 ### A) Self-hosted, click-to-play (default)
@@ -46,22 +50,7 @@ opt-in). The corner placement of the toggle is the author-set
 `m-video--ambient` modifier class; the behaviour follows the native
 `autoplay` attribute.
 
-### C) YouTube, click-to-load facade
-
-```html
-<div class="m-video" data-js-behavior="video"
-  data-video-youtube="https://www.youtube.com/watch?v=…"
-  data-video-title="What the video shows">
-```
-
-The CMS supplies a **locally hosted poster** (`[data-video-poster]`),
-a no-JS fallback link (`[data-video-fallback]`) and the video as a
-**full URL or bare 11-character id** — editors can simply paste the browser
-URL (`watch`, `youtu.be`, `shorts`, `embed` and `live` shapes are recognized).
-Only the user's click creates the `youtube-nocookie.com` iframe (with
-autoplay, so nobody presses play twice).
-
-### Responsive sources (self-hosted)
+### Responsive sources
 
 Declare one `<source media="…">` per rendition — first match wins, exactly
 like the native rule; keep one attribute-less source as the fallback, last in
@@ -84,9 +73,6 @@ chosen source.
   switch between play and pause; the inline SVGs are `aria-hidden`.
 - Autoplaying loops get a persistent pause control (WCAG 2.2.2) and do not
   start under `prefers-reduced-motion: reduce`.
-- The injected iframe gets a `title` (from `data-video-title` —
-  set it, the fallback is generic) and receives focus after the facade button
-  disappears.
 - Click-to-play hands keyboard focus over in both directions: play moves it
   from the hiding button to the `<video>` (whose native controls just
   appeared), pause moves it from the `<video>` back to the reappearing
@@ -96,10 +82,9 @@ chosen source.
 
 The JS exports `init(el, services)` and is loaded lazily by `boot.js` when it
 finds `data-js-behavior="video"`. It sets no inline styles: it toggles
-`hidden` on its elements, writes `is-playing` on the module element and stamps
-the injected iframe with `[data-video-embed]` — the hooks the
-stylesheet keys on. `services.reporter` is optional (used only for warnings,
-e.g. an unparseable YouTube URL, a missing toggle or a `<source media>` typo).
+`hidden` on the overlay button and writes `is-playing` on the module element —
+the hooks the stylesheet keys on. `services.reporter` is optional (used only
+for warnings, e.g. a missing toggle or a `<source media>` typo).
 
 ## Demo
 

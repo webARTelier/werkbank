@@ -1,17 +1,21 @@
 /**
  * video.js
  * --------------------------------------------------------------------------
- * Progressive-enhancement controller for CMS-maintained video embeds, in two
- * flavours picked from the markup:
+ * Progressive-enhancement controller for CMS-maintained, SELF-HOSTED video:
+ * a <video> with responsive sources — art direction (different footage /
+ * aspect ratios per viewport) and resolution ladders (same footage, higher
+ * pixel density), both declared as plain <source media="…"> elements — in
+ * two behavioural modes the markup picks (click-to-play, and the ambient
+ * loop an `autoplay` attribute asks for).
  *
- *   A) Self-hosted <video> with responsive sources — art direction (different
- *      footage / aspect ratios per viewport) and resolution ladders (same
- *      footage, higher pixel density), both declared as plain
- *      <source media="…"> elements.
- *   B) YouTube via a click-to-load facade — a locally hosted poster plus a
- *      play button; the actual iframe (youtube-nocookie.com) is only created
- *      after the user's click, so nothing is loaded from Google beforehand
- *      (GDPR-friendly "two-click" embed).
+ * Third-party video is NOT this module's business. It used to be: a YouTube
+ * click-to-load facade shipped here as a second flavour, and it moved to
+ * `embedConsent`, which generalises it to Vimeo, maps and anything else with
+ * an iframe — and adds the two halves a bare poster-plus-play-button facade
+ * never had. The information layer that makes the click an informed one, and
+ * the seam that lets a visitor's existing consent skip the click. See
+ * src/components/embedConsent/. One question, one answer: nothing in this
+ * file knows a third-party host any more.
  *
  * What the platform already does (so this script does NOT reimplement it)
  * ----------------------------------------------------------------------
@@ -23,9 +27,8 @@
  * - `autoplay muted loop playsinline` runs an ambient video natively.
  * - What the platform does NOT do: re-evaluate the media queries when the
  *   viewport changes after load (rotate, resize), hide/show the native
- *   controls around a custom play button, pause ambient videos for
- *   reduced-motion users, or defer a YouTube iframe until consent-by-click.
- *   Those gaps are all this script fills.
+ *   controls around a custom play button, or pause ambient videos for
+ *   reduced-motion users. Those gaps are all this script fills.
  *
  * What this script adds
  * ---------------------
@@ -40,52 +43,36 @@
  * 3. Ambient mode (the <video> carries `autoplay`): a persistent play/pause
  *    toggle (WCAG 2.2.2), and `prefers-reduced-motion: reduce` prevents the
  *    autostart — pressing play is the explicit opt-in.
- * 4. YouTube facade: extracts the video id from a full URL (watch, youtu.be,
- *    shorts, embed, live) or a bare 11-character id, and builds the
- *    youtube-nocookie iframe only on click.
  *
  * Accessibility
  * -------------
  * - The toggle button ships `hidden` in the markup and is only revealed by
  *   the script, so a page without JS never shows a dead control; the no-JS
- *   baseline is the native `controls` (self-hosted) or a plain link to
- *   YouTube (facade).
+ *   baseline is the native `controls`.
  * - Button labels are localized (de/en from <html lang>) and switch between
  *   "play" and "pause"; the icons are aria-hidden, the state is also mirrored
  *   as an `is-playing` class for styling.
- * - The injected iframe gets a `title` (from data-video-title) and receives
- *   focus after the facade button disappears, so keyboard users are not
- *   dropped into a void. The click-to-play mode hands focus over in both
- *   directions: when the focused play button hides, focus moves to the
- *   <video> (whose native controls just appeared); when a pause removes the
- *   native controls again, focus moves from the <video> back to the
- *   reappearing play button.
+ * - The click-to-play mode hands focus over in both directions: when the
+ *   focused play button hides, focus moves to the <video> (whose native
+ *   controls just appeared); when a pause removes the native controls again,
+ *   focus moves from the <video> back to the reappearing play button.
  * - Reduced motion starts ambient videos paused (see above).
  *
  * Configuration (on the element carrying data-js-behavior="video")
  * ---------------------------------------------------------------
- * - `data-video-youtube="URL-or-id"`  switches the module into facade mode.
- *                                     Accepts a full YouTube URL or the bare
- *                                     video id.
- * - `data-video-title="…"`            accessible title for the embedded iframe
- *                                     / the facade play button.
  * - `[data-video-toggle]`             the play (or play/pause) button inside
  *                                     the module, shipped `hidden`.
- * - `[data-video-fallback]`           facade only: the no-JS link to YouTube;
- *                                     hidden once the script runs.
- * - `[data-video-poster]`             facade only: the locally hosted poster
- *                                     image; hidden once the iframe exists.
- * - Self-hosted mode is configured through native attributes alone:
+ * - Everything else is configured through native attributes alone:
  *   `controls` (no-JS baseline, taken over by the script), `autoplay muted
  *   loop playsinline` (ambient mode), `poster`, `preload` and the <source
  *   media> list.
  *
  * Styling contract
  * ----------------
- * The script sets no inline styles. It toggles `hidden` on its elements,
- * writes `is-playing` on the module element and stamps the injected iframe
- * with [data-video-embed]; video.scss keys on exactly these hooks. The
- * m-video* classes are styling only — the JS never touches them.
+ * The script sets no inline styles. It toggles `hidden` on the button and
+ * writes `is-playing` on the module element; video.scss keys on exactly
+ * these hooks. The m-video* classes are styling only — the JS never touches
+ * them.
  * --------------------------------------------------------------------------
  */
 
@@ -99,26 +86,10 @@ const defaults = {
   // decoupled from the CSS). All of them live inside the module element.
   selVideo: 'video',                    // the self-hosted video
   selToggle: '[data-video-toggle]',     // play / play-pause button
-  selFallback: '[data-video-fallback]', // facade no-JS link
-  selPoster: '[data-video-poster]',     // facade poster image
-
-  // Per-instance option attributes (see the header comment).
-  youtubeAttr: 'data-video-youtube',
-  titleAttr: 'data-video-title',
-
-  // Flag written onto the injected YouTube iframe so the stylesheet can size
-  // it without the JS hooking onto styling classes.
-  embedAttr: 'data-video-embed',
 
   // State class written on the module element (styling hook only; the JS
   // never reads it back).
   playingClass: 'is-playing',
-
-  // Privacy-friendly embed host plus fixed player parameters: autoplay=1
-  // because the iframe only ever exists after an explicit user click, and
-  // rel=0 to keep the end screen from advertising unrelated videos.
-  embedUrl: 'https://www.youtube-nocookie.com/embed/',
-  embedParams: 'autoplay=1&rel=0',
 
   // <html lang> matching none of the offered locales falls back to this.
   fallbackLocale: 'en',
@@ -135,58 +106,13 @@ const labels = {
   de: {
     play: 'Video abspielen',
     pause: 'Video pausieren',
-    fallbackTitle: 'YouTube-Video',
   },
 
   en: {
     play: 'Play video',
     pause: 'Pause video',
-    fallbackTitle: 'YouTube video',
   },
 };
-
-
-
-// An id is exactly 11 characters from YouTube's id alphabet.
-function isYouTubeId(value) {
-  return /^[\w-]{11}$/.test(value || '');
-}
-
-
-
-// Extracts the video id from whatever the CMS field holds: a bare id or any
-// of the common URL shapes (watch?v=, youtu.be/, shorts/, embed/, live/ —
-// with or without www./m., also youtube-nocookie). Returns "" when nothing
-// usable is found so the caller can warn.
-function extractYouTubeId(raw) {
-  const value = (raw || '').trim();
-
-  if (isYouTubeId(value)) return value;
-
-  let url;
-  try {
-    url = new URL(value);
-  } catch {
-    return '';
-  }
-
-  const host = url.hostname.replace(/^(www|m)\./, '');
-
-  if (host === 'youtu.be') {
-    const id = url.pathname.split('/').filter(Boolean)[0];
-    return isYouTubeId(id) ? id : '';
-  }
-
-  if (host !== 'youtube.com' && host !== 'youtube-nocookie.com') return '';
-
-  const fromQuery = url.searchParams.get('v');
-  if (isYouTubeId(fromQuery)) return fromQuery;
-
-  const segments = url.pathname.split('/').filter(Boolean);
-  if (!['shorts', 'embed', 'live'].includes(segments[0])) return '';
-
-  return isYouTubeId(segments[1]) ? segments[1] : '';
-}
 
 
 
@@ -409,10 +335,9 @@ class HostedVideo {
 
     // Hiding the toggle while it holds the keyboard focus would drop the
     // focus to <body>, stranding keyboard users at the top of the page. Hand
-    // it to the video first (focusable — its native controls just came back),
-    // mirroring the facade's handoff to its iframe. Guarded by activeElement
-    // so play events from elsewhere (e.g. a source swap resuming playback)
-    // never steal the user's focus.
+    // it to the video first (focusable — its native controls just came
+    // back). Guarded by activeElement so play events from elsewhere (e.g. a
+    // source swap resuming playback) never steal the user's focus.
     if (playing && document.activeElement === this.toggle) {
       this.video.focus();
     }
@@ -477,109 +402,6 @@ class HostedVideo {
 
 
 
-// --------------------------------------------------------------------------
-// YouTube click-to-load facade: poster + play button now, iframe on click.
-// --------------------------------------------------------------------------
-class YouTubeFacade {
-
-  constructor(root, config, reporter) {
-    this.root = root;
-    this.config = config;
-    this.reporter = reporter;
-
-    this.toggle = root.querySelector(config.selToggle);
-    this.fallback = root.querySelector(config.selFallback);
-    this.poster = root.querySelector(config.selPoster);
-    this.labels = labels[
-      resolveLocale(Object.keys(labels), config.fallbackLocale)
-    ];
-
-    const raw = root.getAttribute(config.youtubeAttr);
-    this.videoId = extractYouTubeId(raw);
-
-    if (!this.videoId) {
-      this.reporter?.report(
-        'video',
-        `"${raw}" is not a recognizable YouTube URL or video id — the` +
-        ' facade stays unenhanced.',
-        this.root
-      );
-      return;
-    }
-
-    this.title = root.getAttribute(config.titleAttr) || '';
-
-    if (!this.title) {
-      this.reporter?.report(
-        'video',
-        `no ${config.titleAttr} set — the embedded iframe needs an` +
-        ` accessible title; using "${this.labels.fallbackTitle}".`,
-        this.root
-      );
-      this.title = this.labels.fallbackTitle;
-    }
-
-    this.setup();
-  }
-
-
-
-  setup = () => {
-    if (!this.toggle) {
-      this.reporter?.report(
-        'video',
-        `no ${this.config.selToggle} button found — the facade stays` +
-        ' unenhanced (the fallback link keeps working).',
-        this.root
-      );
-      return;
-    }
-
-    // The button replaces the no-JS link as the way in; naming the video in
-    // the label spares screen-reader users a click into the unknown.
-    this.toggle.setAttribute(
-      'aria-label', `${this.labels.play}: ${this.title}`
-    );
-    this.toggle.hidden = false;
-    this.toggle.addEventListener('click', this.handleActivate);
-
-    if (this.fallback) this.fallback.hidden = true;
-  };
-
-
-
-  // The click IS the consent: only now is anything requested from YouTube.
-  // autoplay=1 starts playback right away so the user does not have to press
-  // play twice.
-  handleActivate = () => {
-    const iframe = document.createElement('iframe');
-
-    iframe.src =
-      `${this.config.embedUrl}${this.videoId}?${this.config.embedParams}`;
-    iframe.title = this.title;
-    iframe.setAttribute(
-      'allow',
-      'accelerometer; autoplay; clipboard-write; encrypted-media;' +
-      ' gyroscope; picture-in-picture; web-share'
-    );
-    iframe.setAttribute('allowfullscreen', '');
-    iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
-    iframe.setAttribute(this.config.embedAttr, '');
-
-    this.toggle.hidden = true;
-    if (this.poster) this.poster.hidden = true;
-
-    this.root.classList.add(this.config.playingClass);
-    this.root.appendChild(iframe);
-
-    // The activated button just vanished from the tab order; hand focus to
-    // the player so keyboard users continue where they acted.
-    iframe.focus();
-  };
-}
-
-
-
 // loader-compatible entry point (boot.js -> mod.init(el, services))
 export function init(el, services = {}) {
   const reporter = services.reporter;
@@ -594,11 +416,6 @@ export function init(el, services = {}) {
 
   // Double-init is prevented by the loader (boot.js sets a per-element,
   // per-module flag before calling init), so no extra guard is needed here.
-  if (el.hasAttribute(defaults.youtubeAttr)) {
-    new YouTubeFacade(el, defaults, reporter);
-    return;
-  }
-
   const video = el.querySelector(defaults.selVideo);
 
   if (video) {
@@ -608,8 +425,8 @@ export function init(el, services = {}) {
 
   reporter?.report(
     'video',
-    `neither a <video> child nor ${defaults.youtubeAttr} found — nothing` +
-    ' to enhance.',
+    'no <video> child found — nothing to enhance. A third-party embed is'
+    + ' embedConsent, not this module.',
     el
   );
 }

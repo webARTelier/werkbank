@@ -91,7 +91,7 @@
     <section class="hero">
       <a class="back" href="../../../index.html">← Overview</a>
       <h1>video</h1>
-      <p>CMS-maintainable video embeds: self-hosted with responsive sources and art direction, or YouTube behind a GDPR-friendly click-to-load facade.</p>
+      <p>CMS-maintainable self-hosted video: responsive sources, art direction, and the two play modes the markup picks.</p>
     </section>
 
     <section class="stage" aria-label="Live demo">
@@ -108,16 +108,16 @@
               the script mirrors the native first-match-wins rule, re-runs
               it on every media-query change and carries playback position
               and play state over to the newly chosen source.
-            - The YouTube example is a facade: a locally hosted poster and
-              a play button. The youtube-nocookie.com iframe is created
-              only after the click — before that, nothing is requested
-              from Google.
+            - Self-hosted only. A YouTube or Vimeo player is
+              embedConsent's business, not this module's: the facade that
+              used to be example 4 here moved there, together with the
+              consent notice it was missing.
 
           Progressive enhancement
-            - Without JavaScript: example 1 and 3 play via their native
-              `controls`; example 2 autoplays natively as a muted loop;
-              example 4 is a poster with a plain link to YouTube. No
-              overlay button appears anywhere (they ship `hidden`).
+            - Without JavaScript: examples 1 and 3 play via their native
+              `controls`, and example 2 autoplays natively as a muted
+              loop. No overlay button appears anywhere (they ship
+              `hidden`).
 
           Accessibility
             - The overlay buttons carry localized, state-switching
@@ -126,9 +126,9 @@
             - The autoplaying loop offers a persistent pause toggle
               (WCAG 2.2.2) and does not start at all under
               prefers-reduced-motion: reduce — play is the opt-in.
-            - After activating the facade, focus moves to the iframe
-              (which gets a title), so keyboard users continue where they
-              acted.
+            - Click-to-play hands the focus over in both directions: to
+              the <video> when the pressed button hides, and back to the
+              button when a pause takes the native controls away again.
         -->
 
       <p class="stage__intro">
@@ -227,36 +227,6 @@
                 <source src="https://res.cloudinary.com/dxdxjequc/video/upload/w_360,h_640,c_fill/v1745751181/greenblob.mp4" media="(max-width: 767px)">
                 <source src="https://res.cloudinary.com/dxdxjequc/video/upload/w_1280,h_720,ar_16:9/v1745751181/greenblob.mp4">
               </video>
-
-              <button class="m-video__toggle" type="button" data-video-toggle hidden>
-                <svg class="m-video__icon m-video__icon--play" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" aria-hidden="true" focusable="false">
-                  <circle cx="24" cy="24" r="22.5" fill="rgba(0, 0, 0, 0.45)" stroke="currentColor" stroke-width="1.5" />
-                  <path d="M19.5 15.5 34 24l-14.5 8.5z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
-                </svg>
-              </button>
-
-            </div>
-          </div>
-        </div>
-
-        <!-- 4) YouTube click-to-load facade (youtube-nocookie) -->
-        <div class="demo__example">
-          <h2>4 — YouTube facade (click to load)</h2>
-          <p>
-            A locally hosted poster and a play button — check the network
-            panel: nothing is requested from Google until you click. The
-            click builds the <code>youtube-nocookie.com</code> iframe with
-            autoplay; without JavaScript the link opens the video on
-            YouTube. The CMS field accepts the full URL or the bare id.
-          </p>
-          <div class="demo__media">
-            <div class="m-video" data-js-behavior="video" data-video-youtube="https://www.youtube.com/watch?v=a3ICNMQW7Ok" data-video-title="YouTube demo video">
-
-              <img class="m-video__poster" src="../../_shared/media/img/content/videoPosterDemo.svg" alt="" data-video-poster>
-
-              <a class="m-video__fallback" href="https://www.youtube.com/watch?v=a3ICNMQW7Ok" data-video-fallback>
-                Watch on YouTube
-              </a>
 
               <button class="m-video__toggle" type="button" data-video-toggle hidden>
                 <svg class="m-video__icon m-video__icon--play" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" aria-hidden="true" focusable="false">

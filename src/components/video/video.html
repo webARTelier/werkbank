@@ -15,11 +15,16 @@
 
   2) Give every instance its own media container: the project layout owns
      size and aspect ratio (e.g. `aspect-ratio: 16 / 9` on the wrapper);
-     the module root fills the container and the media covers it via
-     object-fit: cover. Note: object-fit cannot reach INTO the YouTube
-     iframe — footage with a different ratio letterboxes there.
+     the module root fills the container and the <video> covers it via
+     object-fit: cover.
 
-  3) Pick a variant:
+  3) SELF-HOSTED VIDEO ONLY. For YouTube, Vimeo or any other third-party
+     embed, use `embedConsent` — the click-to-load facade that used to be
+     variant C of this component lives there now, with the consent notice
+     and the consent-platform seam it was missing. Nothing about this
+     component knows a third-party host any more.
+
+  4) Pick a variant:
 
      A) Self-hosted, click-to-play (default)
         The <video> ships native `controls` — the fully working no-JS
@@ -35,13 +40,7 @@
         The corner placement is the author-set m-video--ambient
         modifier class; the behaviour follows the `autoplay` attribute.
 
-     C) YouTube, click-to-load facade (GDPR-friendly)
-        Nothing is requested from Google before the click: the CMS
-        supplies a LOCALLY HOSTED poster plus the video URL or bare id.
-        The click builds the youtube-nocookie.com iframe with autoplay.
-        Without JS the fallback link opens the video on YouTube.
-
-  Responsive sources (self-hosted, variants A and B)
+  Responsive sources
     Declare one <source media="…"> per variant — first match wins, exactly
     like the native rule; keep ONE source without a media attribute as the
     fallback, last in the list. This covers both art direction (different
@@ -66,25 +65,14 @@
       the JS binds exclusively to the data attributes.
 
   Notes / Configuration
-    - data-video-youtube="URL-or-id"  facade mode. Accepts the
-                                                full URL (watch, youtu.be,
-                                                shorts, embed, live) or
-                                                the bare 11-character id.
-    - data-video-title="…"            accessible title for the
-                                                embedded iframe and the
-                                                facade play button. Set it
-                                                — the fallback is generic.
-    - [data-video-fallback]           facade no-JS link; hidden
-                                                by the script.
-    - [data-video-poster]             facade poster image; hidden
-                                                once the iframe exists.
+    - [data-video-toggle]             the play / play-pause button,
+                                                shipped `hidden`.
     - is-playing (class, written by the JS)     styling hook on the module
                                                 element, drives the icon
                                                 swap.
     - --video-* (CSS custom props)    toggle size, corner inset,
-                                                color, resting opacity,
-                                                fallback-link scrim — see
-                                                video.scss.
+                                                color, resting opacity —
+                                                see video.scss.
 
   The `your-media-container` wrappers below are placeholders for YOUR
   layout element: replace the class and give it size and aspect ratio in
@@ -137,29 +125,6 @@
         <circle cx="24" cy="24" r="22.5" fill="rgba(0, 0, 0, 0.45)" stroke="currentColor" stroke-width="1.5" />
         <rect x="17.5" y="15.5" width="4.5" height="17" rx="1.5" fill="currentColor" />
         <rect x="26" y="15.5" width="4.5" height="17" rx="1.5" fill="currentColor" />
-      </svg>
-    </button>
-
-  </div>
-</div>
-
-
-
-<!-- C) YouTube click-to-load facade: locally hosted poster, no request to
-     Google before the click. Media container: e.g. 16 / 9. -->
-<div class="your-media-container">
-  <div class="m-video" data-js-behavior="video" data-video-youtube="https://www.youtube.com/watch?v=a3ICNMQW7Ok" data-video-title="What the video shows">
-
-    <img class="m-video__poster" src="/media/videoPoster.jpg" alt="" data-video-poster>
-
-    <a class="m-video__fallback" href="https://www.youtube.com/watch?v=a3ICNMQW7Ok" data-video-fallback>
-      Watch on YouTube
-    </a>
-
-    <button class="m-video__toggle" type="button" data-video-toggle hidden>
-      <svg class="m-video__icon m-video__icon--play" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" aria-hidden="true" focusable="false">
-        <circle cx="24" cy="24" r="22.5" fill="rgba(0, 0, 0, 0.45)" stroke="currentColor" stroke-width="1.5" />
-        <path d="M19.5 15.5 34 24l-14.5 8.5z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
       </svg>
     </button>
 

@@ -43,10 +43,15 @@ component's `<name>.js` directly. Everything else is lazy.
 **Composition root.** On load, `boot.js` builds the shared `services` object
 **once** and keeps it at module scope so the same instances are reused for every
 `init` call (including later re-scans). Today that is the `reporter`
-(`createReporter({ level: 'warn' })`) and the loader's own
+(`createReporter({ level: 'warn' })`), the loader's own
 `initModulesInScope` / `destroyModulesInScope`, for a component that puts
-markup into the page and has to hand the new subtree over (`loadFragment`);
-further shared collaborators are added here. This is the DI seam described in
+markup into the page and has to hand the new subtree over (`loadFragment`),
+and the `consent` gate (`createConsentGate()`), which answers "has this
+visitor allowed content from this third party" for `embedConsent`. The gate is
+also **the one place a project names its consent-management platform** —
+deliberately here and nowhere near a component, because every platform answers
+differently and which category covers a map is the project's decision. Further
+shared collaborators are added here. This is the DI seam described in
 `CLAUDE.md` — only configured/stateful singletons belong in `services`; pure
 utilities are direct-imported into each component's own lazy chunk instead.
 
@@ -432,10 +437,13 @@ paragraphs, and several live examples exercising each mode of the component.
   and decimal character of a locale, from `Intl.NumberFormat().formatToParts()`
   — never assume `.` and `,`), `uniqueId` (an id that is free in the document),
   `focusableSelector` (elements the keyboard already reaches), `describedBy`
-  (add/remove one id in a field's `aria-describedby`),
+  (add/remove one id in a field's — or a button's — `aria-describedby`),
   `navExpandedMediaQuery` (the `--bp-navigation` query), `otherModalOpen` (is
-  another modal `<dialog>` still up). Plus `createReporter` (via DI in
-  `boot.js`).
+  another modal `<dialog>` still up). Plus, via DI in `boot.js`,
+  `createReporter` and `createConsentGate` (the consent seam — an attribute
+  token list on `<html>` by default, or a project-supplied `resolve`
+  callback; watchers exist only while something is subscribed, so a page
+  with no embed pays nothing).
 - **Dev dashboard** (`src/tools/dev_dashboard/`, loaded by every demo as one
   classic `<script>`): the bar along the bottom edge with the page
   information, the a11y inspector, the horizontal-overflow check, the QR code

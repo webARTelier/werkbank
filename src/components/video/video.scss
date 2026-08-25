@@ -6,19 +6,17 @@
 // component is its reference file): the consuming project wraps each instance
 // in its own media container that dictates the rendered size and aspect ratio
 // (e.g. `aspect-ratio` on the wrapper). The module root fills that container
-// and the actual media — <video>, facade poster, injected iframe — fills the
-// root with `object-fit: cover`. object-fit cannot reach INTO an iframe: the
-// YouTube player letterboxes footage whose ratio differs from the container;
-// real cover-cropping of an iframe is a project-level decision (oversize +
-// clip), not shipped here.
+// and the <video> fills the root with `object-fit: cover`.
+//
+// Self-hosted video only. The YouTube facade that used to ship here — poster,
+// fallback link, injected iframe and the scrim behind them — moved to
+// `embedConsent`, together with the consent question it never fully answered.
 //
 // The "m-video*" classes (BEM "m-" prefix) are styling only. video.js does
-// NOT hook onto them; it targets the behavioural data attributes
-// (data-video-toggle / -fallback / -poster) and writes exactly these hooks,
-// never inline styles:
+// NOT hook onto them; it targets the behavioural data attribute
+// (data-video-toggle) and writes exactly these hooks, never inline styles:
 //   is-playing on the module element      drives the play/pause icon swap
-//   hidden on toggle / fallback / poster  reveals and swaps the controls
-//   [data-video-embed]                    stamped on the injected iframe
+//   hidden on the toggle                  reveals and swaps the controls
 //
 // The ambient variant (autoplaying loop) is the author-set modifier class
 // m-video--ambient: it parks the persistent play/pause toggle in a corner
@@ -61,44 +59,26 @@
   --video-an-duration: calc(var(--an-duration) / 2);
   --video-an-easing: var(--an-ease);
 
-  // The facade's no-JS fallback link. Placement and box: the shared
-  // spacing/radius tokens (_shared/scss/_foundations.scss); the colour: the
-  // shared semantic tokens.
-  --video-fallback-inset: var(--space-s);
-  --video-fallback-padding: var(--space-3xs) var(--space-xs);
-  --video-fallback-radius: var(--borderRadius);
-  --video-fallback-color: var(--color-text-light);
-
-  // Scrim behind that link so it stays readable on arbitrary poster footage.
-  // Deliberately anchored to plain black, not a theme surface token: it sits
-  // on user media, not on the page's own surfaces (the button SVGs bake the
-  // same darkened disc in).
-  --video-scrim-color: rgba(0, 0, 0, 0.55);
-
   position: relative;
   inline-size: 100%;
   block-size: 100%;
 
 
 
-  // The JS swaps elements in and out via the `hidden` attribute. Author
+  // The JS swaps the toggle in and out via the `hidden` attribute. Author
   // styles override the user-agent's `[hidden] { display: none }`, so the
-  // display declarations below (e.g. on the poster) would silently defeat it
-  // — restore its authority explicitly.
+  // display declarations below would silently defeat it — restore its
+  // authority explicitly.
   & [hidden] {
     display: none;
   }
 
 
 
-  // The media itself fills the root. object-fit crops <video> and the facade
-  // poster to cover; on the iframe it is inert (see the header) but harmless.
-  &__video,
-  &__poster,
-  & [data-video-embed] {
+  // The media itself fills the root, cropped to cover.
+  &__video {
     display: block;
 
-    border: 0;
     inline-size: 100%;
     block-size: 100%;
 
@@ -175,28 +155,6 @@
     margin: 0;
     inline-size: var(--video-toggle-ambient-size);
     block-size: var(--video-toggle-ambient-size);
-  }
-
-
-
-  // Facade no-JS fallback: a plain link to YouTube, readable on top of the
-  // poster. Hidden by the JS once the play button is functional.
-  &__fallback {
-    @include focus-ring(light);
-
-    & {
-      position: absolute;
-      inset-block-end: var(--video-fallback-inset);
-      inset-inline: 0;
-
-      margin-inline: auto;
-      border-radius: var(--video-fallback-radius);
-      padding: var(--video-fallback-padding);
-      inline-size: fit-content;
-
-      color: var(--video-fallback-color);
-      background-color: var(--video-scrim-color);
-    }
   }
 }
 

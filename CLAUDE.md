@@ -42,11 +42,37 @@ component here is reusable and most can appear several times).
   plain table (`dataTable`), a native field (`dateInputFormat`), a file field
   that will not say what is attached to it (`fileUpload`), a field that
   should follow its own value (`autoGrowTextarea`), a password field nobody
-  can proof-read (`passwordToggle`), a scrolling box
+  can proof-read (`passwordToggle`), a link to somebody else's video that
+  should play in this page instead (`embedConsent`), a scrolling box
   (`adaptiveScrollFade`), a control that needs explaining (`tooltip`,
   `popover`). It always presupposes something else, and it is the shared
   vocabulary of the design system — styled once, reused in unrelated
   features. A component never depends on one specific module.
+
+  `embedConsent` (2026-08-25) is the case where the host is a *link*. It
+  holds a third-party embed's place until the visitor has allowed it, and
+  the question answers itself once you look for what is complete without
+  it: the `<a href>` to the video at YouTube, or to the map at Google, which
+  is authored into its facade and stays there after enhancement. That link
+  works with no script, no stylesheet and no consent platform; the component
+  wraps it in a poster, a notice and a button that brings the content into
+  the page instead of navigating to it. It is also pure system vocabulary —
+  styled once, identical whether the embed is a player, a map or a booking
+  form — which is the second signal. What it is *not* is a module: it
+  manages no collection (one embed, one host) and it is not placed, it is
+  attached to a link the page already had a reason for.
+
+  The `data-embedconsent-group` lane (2026-08-25) does not disturb that,
+  and it is worth saying because the code now holds a module-scope set of
+  live instances: a press on one box may fill the others on the page. That
+  set is a **registry of peers, not a collection the component owns** —
+  every one of those boxes is still exactly one component attached to
+  exactly one link, and none of them arrived through any of the others.
+  Read it the way `fileUpload`'s rows are read (n rows about one host's
+  value is still one host): what settles the prefix is what a thing is
+  attached to, never how many of it there are or what they know about each
+  other. A module's collection is its own — the lightbox's images, toast's
+  messages — and it did not come out of anything the module wraps.
 
   `fileUpload` is the instructive one, and it used to be two things: the
   progress-bar variant shipped as a module of its own (`m-uploadQueue`) on
@@ -321,6 +347,24 @@ of dependency — not by preference. Keep this split consistent:
   when the thing must be shared, configured at the composition root, or swapped
   (e.g. a no-op in tests).
 
+  Since 2026-08-25 the **consent gate** is in there as well —
+  `services.consent`, built by `createConsentGate()` in `boot.js`, for
+  `embedConsent`. It is the textbook case for this channel and the reason
+  the channel is described by *kind* rather than by preference: every
+  consent-management platform answers "has this visitor allowed YouTube"
+  differently (Cookiebot reads a category off a global, Usercentrics asks a
+  service list, Klaro watches a manager, TCF registers a callback), the
+  signatures drift with major versions, and **which of a project's
+  categories covers a map is a decision only that project can make**. So the
+  translation belongs at the composition root, where a project already knows
+  its platform, and nothing in `dist/js/modules/` knows a single CMP name.
+  It has state (a listener set, one MutationObserver), a lifecycle, and one
+  instance per page. The usual objection — that a service costs every page
+  bytes in `boot.min.js` — is answered rather than waved away: the observer
+  and the event listeners are created on the first `subscribe()` and torn
+  down with the last, so a page with no embed on it pays for the factory and
+  nothing else.
+
   Since 2026-08-20 the **loader itself** is in there too —
   `initModulesInScope` / `destroyModulesInScope`, for `loadFragment`, which
   puts markup into the page and has to hand the new subtree over. It is the
@@ -534,6 +578,18 @@ the consuming project — and the media fills that box and is cropped to it:
     not something a component ships.
   - **SVG is out of scope.** `inlineSVG` / `scaleSVG` scale through the
     `viewBox`, and an icon takes its box from the control it sits in.
+  - **A box that has to hold required text treats the ratio as a
+    minimum.** `embedConsent` is the only one, and the reason is not layout
+    taste: its facade carries the consent notice, and a paragraph of legally
+    required text in a 16/9 box 400px wide has about 225px to live in.
+    Clipping it, or putting it behind an inner scrollbar, would defeat the
+    component — so the root takes the container's height as a floor and the
+    notice may push it taller. The *embed* never does: the iframe is out of
+    flow, so the moment it is in, the box is exactly the ratio the project
+    asked for. Measured 320-1280px: from 480px up the root is exactly the
+    container's box. This is an exception to "the container owns the box",
+    not a revision of it, and it is earned by *what* is in the box rather
+    than by how it looks.
 
 
 ## Nesting: the outer module provides the container

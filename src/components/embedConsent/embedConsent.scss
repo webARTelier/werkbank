@@ -1,0 +1,375 @@
+// =============================================================
+// embedConsent — the box that stands in for a third-party embed
+// =============================================================
+//
+// Two renderings on one box. Before consent: a locally hosted poster with a
+// PANEL over it — the notice saying who would receive what, a button that
+// loads it, and a link to the content at the provider. After consent: the
+// iframe, filling the same box. The notice is the whole point of the
+// component, so it is styled as a piece of content and not as a scrim with a
+// play button in it: it carries text a visitor is expected to read before
+// deciding.
+//
+// Layout contract (the project-wide media-sizing rule, see CLAUDE.md): the
+// consuming project wraps each instance in its own container that dictates
+// size and aspect ratio (e.g. `aspect-ratio: 16 / 9`).
+//
+// Here that ratio is a MINIMUM, not a fixed box, and that is the one place
+// this component departs from `video`. The reason is the notice: a paragraph
+// of legally required text in a 16/9 box 400px wide has about 225px to live
+// in, and clipping it — or hiding it behind an inner scrollbar — would defeat
+// the entire component. So the root takes the container's height as a floor
+// (plus --embedConsent-min-block-size, for a project that forgot the
+// container altogether) and the facade may push it taller. The EMBED never
+// does: the iframe is taken out of flow, so once it is in, the box is exactly
+// the ratio the project asked for.
+//
+// Measured on the demo's six boxes, 320-1280px, Chromium and WebKit alike
+// (identical to the pixel in both). The width from which the ratio holds is
+// not a constant and cannot be: it is set by how long the project's notice
+// is, which is the one thing in this box the component does not write. On
+// the demo, whose longest notice is four lines plus a two-line button, the
+// root is exactly the container's box from 600px up; at 480px that same box
+// overshoots by 2px (398 against 396) while every shorter one is already
+// exact. Below that the notice pushes the box out for real — at 320px, 826
+// against 396 — and the container stretches most of the way with it,
+// because a percentage minimum inside a ratio-derived height resolves in two
+// passes. The remainder shows only where the container has a background, a
+// border or `overflow: hidden` of its own; the alternative (sizing the root
+// to max-content) puts the panel behind an inner scrollbar at exactly those
+// widths, and that is not a trade this component makes. Nothing is clipped
+// or scrolled at any width in that range.
+//
+// object-fit cannot reach INTO an iframe: footage or a map whose ratio
+// differs from the container letterboxes inside the frame.
+//
+// Contract with the JS
+//   - `hidden` on [data-embedconsent-facade] — the whole pre-consent
+//     rendering goes away in one move, and comes back the same way when a
+//     consent is withdrawn.
+//   - `hidden` off [data-embedconsent-toggle] — the button ships hidden in
+//     the markup and is revealed only where it works (which, per the
+//     component's one hard rule, means only where a notice exists to be
+//     informed by).
+//   - [data-embedconsent-embed] stamped on the injected iframe.
+//   - [data-embedconsent-status] — the polite live region the module builds
+//     for the two changes nobody clicked: consent arriving while the page is
+//     open, and consent being taken back. Visually hidden, because both are
+//     visible events; there is nothing to draw and everything to say.
+//   - [data-embedconsent-ready] on the root: "the button in this box works".
+//     Nothing here reads it — it is the hook a project's own no-flash rule
+//     hangs on (see the readme), which is also why it is not a class.
+//   - No state class, no inline styles.
+//
+// The "c-embedConsent*" classes are styling only. embedConsent.js does NOT
+// hook onto them; it targets the behavioural data attributes above.
+
+@use "focus" as *;
+@use "mediaqueries" as *;
+@use "visuallyHidden" as *;
+
+
+
+// The component root: the box both renderings fill.
+//
+// The custom properties are the override surface: declared on the component
+// root, not in :root, so they stay scoped and a single instance can be
+// retuned in place.
+.c-embedConsent {
+
+  // The floor described in the header. Deliberately a round number and not
+  // derived from anything: it is not a design, it is the smallest box in
+  // which a two-line notice and a button are still readable. The container
+  // is what should own the box — this only keeps a project that forgot one
+  // from ending up with a notice of zero height.
+  --embedConsent-min-block-size: 12rem;
+
+  // The notice's own measure at the narrow end. Below this a legal sentence
+  // is being read three words to the line.
+  --embedConsent-notice-min-inline-size: 14rem;
+
+  // Spacing (shared scale, _shared/scss/_foundations.scss). The facade's own
+  // padding keeps the notice card off the edges of the box.
+  --embedConsent-facade-padding: var(--space-s);
+  --embedConsent-panel-padding: var(--space-m);
+  --embedConsent-panel-gap: var(--space-s);
+  --embedConsent-actions-gap: var(--space-s);
+  --embedConsent-toggle-padding: var(--space-2xs) var(--space-s);
+
+  // Sizing. The measure is what keeps the notice readable on a wide hero: a
+  // line of 46 characters, not the full width of a 16/9 box.
+  --embedConsent-panel-max-inline-size: 46ch;
+  --embedConsent-radius: var(--borderRadius);
+
+  // Type
+  --embedConsent-font-size: 0.9375rem;
+  --embedConsent-line-height: 1.5;
+
+  // Colors (shared semantic tokens, _shared/scss/_colors_semantic.scss).
+  // The facade surface shows where there is no poster.
+  --embedConsent-facade-bg-color: var(--color-bg-surface);
+  --embedConsent-panel-color: var(--color-text-light);
+
+  // The panel's own background. Deliberately anchored to plain black
+  // rather than a theme surface token: it sits on the project's poster
+  // image, not on one of the page's own surfaces, so it has to hold up over
+  // footage this stylesheet has never seen. Measured for the worst case a
+  // poster can produce — pure white behind it, which blends to #404040 at
+  // this alpha: --color-text-light on that is 9.9:1, so the notice keeps AA
+  // for body text (1.4.3) whatever the image does. Do not lower the alpha
+  // without re-measuring that case.
+  --embedConsent-panel-bg-color: rgba(0, 0, 0, 0.75);
+
+  // The load button. White text on the plain accent measures 5.7:1, and the
+  // hover DEEPENS the accent instead of lightening it — mixing towards white
+  // would eat that contrast, mixing towards the page colour lifts it to
+  // about 7:1. The same recipe and the same measurement as siteSearch's
+  // submit button.
+  --embedConsent-toggle-bg-color: var(--color-accent);
+  --embedConsent-toggle-bg-color-hover:
+    color-mix(in srgb, var(--color-accent) 85%, var(--c-blue-black));
+  --embedConsent-toggle-color: var(--color-text-on-accent);
+
+  // Half the shared animation duration: a hover response, not a scene
+  // transition.
+  --embedConsent-an-duration: calc(var(--an-duration) / 2);
+  --embedConsent-an-easing: var(--an-ease);
+
+  position: relative;
+
+  inline-size: 100%;
+
+  // The container's height as a floor rather than a box — see the header for
+  // why the notice is allowed to push it. max() so a container that declared
+  // no height at all (where the percentage resolves against nothing) still
+  // lands on the absolute floor.
+  min-block-size: max(100%, var(--embedConsent-min-block-size));
+
+  // One implicit area both renderings sit in. The facade is the only item in
+  // flow, so it is what can make the box taller; the iframe and the status
+  // region are both out of flow and cannot.
+  display: grid;
+
+
+
+  // The JS swaps the facade in and out via the `hidden` attribute. Author
+  // styles override the user-agent's `[hidden] { display: none }`, so the
+  // display declarations below would silently defeat it — restore its
+  // authority explicitly.
+  & [hidden] {
+    display: none;
+  }
+
+
+
+  // Everything shown before consent, in one element so it can be taken away
+  // in one move. In flow, so a long notice grows the box (see the header);
+  // `position: relative` because the poster below is positioned against this
+  // rather than against the root.
+  //
+  // Centering is done with `margin: auto` on the panel rather than
+  // `place-items`, because that is the overflow-safe way: where the box
+  // really cannot grow — a project container that clips — the panel stays
+  // reachable by scrolling instead of having its first lines cut off above
+  // the top edge. With the growth above that is a backstop, not the normal
+  // case.
+  &__facade {
+    position: relative;
+
+    padding: var(--embedConsent-facade-padding);
+    overflow: auto;
+
+    display: flex;
+
+    background-color: var(--embedConsent-facade-bg-color);
+  }
+
+
+
+  // The locally hosted preview image. Behind the notice, filling the box —
+  // and never a provider's thumbnail URL, which would be the very request
+  // the component defers.
+  &__poster {
+    position: absolute;
+    inset: 0;
+    z-index: var(--zi-background);
+
+    display: block;
+
+    inline-size: 100%;
+    block-size: 100%;
+
+    object-fit: cover;
+  }
+
+
+
+  // The card: the information layer plus the two ways out of it. A card, not
+  // a caption — the text is the reason the button is allowed to exist.
+  &__panel {
+    position: relative;
+    z-index: var(--zi-aboveBackground);
+
+    margin: auto;
+    border-radius: var(--embedConsent-radius);
+    padding: var(--embedConsent-panel-padding);
+
+    // The measure floor, but never wider than the box it sits in. The knob
+    // is an rem value, so a reader who doubles their text size doubles it
+    // too — 14rem becomes 448px, which is wider than a 320px viewport and
+    // puts the whole page into horizontal scrolling. min() keeps the floor
+    // where it helps and drops it where it would cost more than it buys.
+    min-inline-size: min(var(--embedConsent-notice-min-inline-size), 100%);
+    max-inline-size: var(--embedConsent-panel-max-inline-size);
+
+    display: flex;
+    flex-direction: column;
+    gap: var(--embedConsent-panel-gap);
+
+    font-size: var(--embedConsent-font-size);
+    line-height: var(--embedConsent-line-height);
+
+    // `anywhere` rather than `break-word`, and the difference is the reason
+    // it is here: both break a word that would otherwise overflow its line,
+    // but only `anywhere` lowers the MIN-CONTENT size — and min-content is
+    // what a flex item contributes to the row it sits in. The button is
+    // that flex item, "OpenStreetMap" is that word, and at doubled text
+    // size it is what would push the whole page into horizontal scrolling
+    // even after the measure floor gave way. Nothing in here is the
+    // component's own text: a provider name, a host out of the generic src
+    // lane and the project's notice are all arbitrary strings.
+    overflow-wrap: anywhere;
+
+    color: var(--embedConsent-panel-color);
+    background-color: var(--embedConsent-panel-bg-color);
+  }
+
+
+
+  // The notice itself — and it is its OWN element, not the card, for a reason
+  // that is not layout: the JS points the button's aria-describedby at
+  // whatever carries [data-embedconsent-notice], and a description that
+  // contained the button would read the button's own label back as part of
+  // its explanation. It also keeps "is there a notice at all" answerable by
+  // reading one element's text.
+  &__notice {
+    margin: 0;
+  }
+
+
+
+  // The button and the link side by side: "load it here" and "open it
+  // there". Both are answers, which is why the link is not hidden once the
+  // script has run.
+  &__actions {
+    margin: 0;
+
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--embedConsent-actions-gap);
+    align-items: center;
+  }
+
+
+
+  &__toggle {
+
+    // Sits on the notice card, which is dark by construction -> light ring.
+    @include focus-ring(light);
+
+    & {
+      cursor: pointer;
+
+      border: 0;
+      border-radius: var(--embedConsent-radius);
+      padding: var(--embedConsent-toggle-padding);
+
+      font: inherit;
+
+      color: var(--embedConsent-toggle-color);
+      background-color: var(--embedConsent-toggle-bg-color);
+
+      transition: background-color var(--embedConsent-an-duration)
+        var(--embedConsent-an-easing);
+    }
+
+    &:hover {
+      background-color: var(--embedConsent-toggle-bg-color-hover);
+    }
+  }
+
+
+
+  &__fallback {
+    @include focus-ring(light);
+
+    & {
+      color: inherit;
+    }
+  }
+
+
+
+  // The injected iframe, filling the same box the facade did. object-fit is
+  // inert on an iframe (see the header) and is therefore not stated here.
+  & [data-embedconsent-embed] {
+    position: absolute;
+    inset: 0;
+
+    border: 0;
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+
+
+  // The live region the module announces the two unasked-for changes
+  // through. Spoken only: both of them are plain to see.
+  & [data-embedconsent-status] {
+    @include visually-hidden;
+  }
+}
+
+
+
+@include reduced-motion {
+  .c-embedConsent {
+
+    &__toggle {
+      transition: none;
+    }
+  }
+}
+
+
+
+// A contrast theme replaces the colours, but it does NOT replace an alpha
+// channel: measured in Edge with forced colors active, the panel's
+// rgba(0, 0, 0, 0.75) comes back as rgba(255, 255, 255, 0.75) — a
+// translucent card with the project's poster showing through it, which is
+// the one thing a reader who turned this mode on asked not to have. So the
+// panel restates its background as an opaque system colour, and takes a
+// border because Canvas on Canvas has no edge.
+//
+// The button is the second half. It ships `border: 0` (its accent fill is
+// what makes it a button), and with the fill gone that leaves a control
+// with no boundary at all sitting on a same-coloured card. In this mode the
+// border IS the button, so it comes back.
+//
+// The poster is deliberately left alone: forced colors does not touch
+// images, and hiding one would remove content rather than recolour it. With
+// an opaque panel over it there is nothing left to fix.
+@include forced-colors {
+  .c-embedConsent {
+    --embedConsent-panel-bg-color: Canvas;
+    --embedConsent-panel-color: CanvasText;
+
+    &__panel {
+      border: 1px solid CanvasText;
+    }
+
+    &__toggle {
+      border: 1px solid ButtonText;
+    }
+  }
+}

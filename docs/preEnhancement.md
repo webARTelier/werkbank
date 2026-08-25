@@ -239,6 +239,7 @@ of them, and the wrong one for most.
 | `tooltip` | none | not needed | the hint is out of the way at rest and the stylesheet does the showing on its own, so the first paint already is the enhanced rendering |
 | `marquee` | none | not needed | the clipping row is plain CSS from the first paint; the strip is just static until it runs |
 | `video` | none | not needed | the JS-only toggle ships with `hidden` in the markup and the script reveals it — the same idea, expressed in HTML |
+| `embedConsent` | the notice, shown for a moment to somebody who consented long ago | not needed here, and the rest is the project's | the facade is a poster, a paragraph and a real link: nothing is hidden, nothing is lost, and if the chunk never arrives the link still reaches the content. The one flash it *does* have cannot be closed from here — whether this visitor consented is not something CSS can know unless the project puts it in the document, which is exactly why the consent gate's default lane is an attribute on `<html>`. Its ready attribute is therefore written for a rule this component does not ship (see below) |
 | `stickyObserver`, `scrollSpy`, `flexNeighborMarker`, `adaptiveScrollFade` | additive marker/fade appears | not needed | nothing is hidden, and the result depends on measurement CSS cannot anticipate |
 | `dateInputFormat`, `numberInputFormat`, `formValidation` | none | not needed | behaviour on interaction only. The two formatters do re-group a pre-filled value on `init()`, which can widen it — a Layer 4 case their own stylesheets answer with `tabular-nums`, not something to hide, so neither owns a ready attribute at all |
 | `inlineSVG`, `scaleSVG`, `countdown`, `inputCharCount` | layout shift | Layer 4 | the change cannot be predicted, only kept from shifting — see the table above |
@@ -323,6 +324,18 @@ about to measure. A scroll offset the reader left behind goes with it, since an
 element that stops scrolling is at 0 by definition. Its two bail-outs — no
 track, or fewer than two slides — return before it is written, and the strip
 stays.
+
+`embedConsent` is the sixth, and it is the one whose flag no rule of its own
+reads. What it says is "the button in this box works now", written last, after
+the notice has been found and the button revealed — and the reason it exists is
+one layer up: a project that writes its consent tokens into the document
+(`<html data-consent="youtube">`) can hide the whole facade from the first
+paint with one rule per token, and it needs a stable hook to hang that on.
+The component cannot ship the rule itself, because only the project knows its
+token names; what it can do is guarantee the hook and say what it means. So
+here the pattern from §2 runs backwards in a second way: not only is the flag
+keyed positively, the rule keyed off it lives in a stylesheet this repository
+never sees.
 
 `autoGrowTextarea` is also the one component whose flag outlives a teardown,
 and the exception

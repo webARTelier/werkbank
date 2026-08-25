@@ -11,6 +11,13 @@
  * node too. Removing is the same story in reverse — the attribute goes only
  * once nothing is left in it, so a field is handed back exactly as it was
  * authored.
+ *
+ * addDescribedBy REPORTS whether it actually added the id. The two components
+ * above never need to ask: they describe a node they created themselves, with
+ * an id of their own, so the link cannot have been there before. embedConsent
+ * is the case that does — the notice it points at is the AUTHOR'S element and
+ * may already have been wired up by hand, and taking that apart on cleanup
+ * would be removing markup the component never wrote.
  * ----------------------------------------------------------------------------
  */
 
@@ -24,10 +31,12 @@ function tokensOf(field) {
 
 export function addDescribedBy(field, id) {
   const tokens = tokensOf(field);
-  if (tokens.includes(id)) return;
+  if (tokens.includes(id)) return false;
 
   tokens.push(id);
   field.setAttribute('aria-describedby', tokens.join(' '));
+
+  return true;
 }
 
 
