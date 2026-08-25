@@ -4,6 +4,7 @@ export const registry = {
   adaptiveScrollFade: () => import('./modules/adaptiveScrollFade.min.js'),
   autoGrowTextarea: () => import('./modules/autoGrowTextarea.min.js'),
   backToTop: () => import('./modules/backToTop.min.js'),
+  comboBox: () => import('./modules/comboBox.min.js'),
   countdown: () => import('./modules/countdown.min.js'),
   dataTable: () => import('./modules/dataTable.min.js'),
   dateInputFormat: () => import('./modules/dateInputFormat.min.js'),

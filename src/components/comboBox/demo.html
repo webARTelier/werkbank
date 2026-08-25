@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="de">
+
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>comboBox – Demo</title>
+    <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
+    <link rel="stylesheet" href="../../../dist/css/comboBox.min.css" />
+    <!-- Example 2 puts formValidation on the form, so its styles load too. -->
+    <link rel="stylesheet" href="../../../dist/css/formValidation.min.css" />
+    <script type="module" src="../../../dist/js/boot.min.js"></script>
+
+    <!-- for development only -->
+     <script src="../../tools/dev_dashboard/dev_dashboard.js"></script>
+    <!-- end for development only -->
+
+  </head>
+
+  <body>
+
+    <main class="shell">
+
+      <section class="hero">
+        <a class="back" href="../../../index.html">← Overview</a>
+        <h1>comboBox</h1>
+        <p>Type, and pick from a styled, keyboard-operable list of suggestions.</p>
+      </section>
+
+      <section class="stage" aria-label="Live demo">
+
+        <!--
+            The ARIA 1.2 combobox with list autocomplete, built on a native
+            <input list> plus <datalist>. That pair is the whole wiring and
+            it is also the fallback: without this module the browser offers
+            the very same values from its own popup.
+
+            Wiring
+              - data-js-behavior="comboBox" sits on the CONTAINER around the
+                field, never on the input — the module inserts the listbox
+                next to the input and the status region into the container.
+              - The input's list attribute pointing at a <datalist> is
+                everything else. The module reads the options from there and
+                takes the list attribute OFF the input while it runs, so the
+                native popup cannot open on top of the built one.
+              - An <option> may carry a label ("DE" / "Deutschland"): it is
+                shown beside the value and searched along with it.
+
+            Behavior
+              - One stated filtering rule: data-combobox-match="contains"
+                (default) or "start", applied to the value and the label.
+                Matching folds case and combining marks, so "zurich" finds
+                "Zürich"; the accented hit is simply not highlighted, because
+                an index into a folded string is not an index into the text
+                on screen.
+              - Manual selection: nothing is written into the field until the
+                reader takes an option, so the value cannot change under a
+                screen reader still reading it out.
+              - data-combobox-strict reports a value that is not one of the
+                options through the field's own setCustomValidity(), and
+                snaps a case- or accent-only difference to the option's
+                spelling on blur. It draws nothing and blocks nothing.
+              - The <datalist> is watched, so options rendered in later are
+                picked up without a re-init (Example 4).
+
+            Keyboard
+              Down/Up open and walk the list (wrapping), Alt+Down opens
+              without choosing, Alt+Up closes, Enter takes the highlighted
+              option, Escape closes, Tab leaves with what was typed. Home and
+              End are left to the caret. Escape NEVER clears the field, and
+              with the list already closed it is not consumed at all — so it
+              still reaches the dialog or menu the field may sit in.
+              Where the query matches nothing, all three opening keys show the
+              FULL list — the same one the chevron opens, which is out of the
+              tab order (WCAG 2.1.1: no function is pointer-only).
+
+            Progressive enhancement / accessibility
+              - Nothing is hidden: without the chunk the field is the native
+                combobox it was authored as. The optional toggle is the one
+                part that waits — it is invisible until the module sets
+                data-combobox-ready, because it opens a list only the module
+                can build.
+              - role="combobox" + aria-expanded + aria-controls +
+                aria-autocomplete on the input, role="listbox" on the popup,
+                one role="option" per row, aria-activedescendant and
+                aria-selected on the current one. The focus never leaves the
+                field.
+              - The listbox is named after the field's own <label>, so
+                renaming the field renames the list. A field without a name
+                is reported rather than shipped.
+              - The suggestion count is announced through a polite,
+                visually hidden role="status" — once per change of that
+                sentence, never twice in a row, and not at all for a field
+                the reader has just emptied.
+              - Example 2 carries formValidation on the form, which is the
+                partner data-combobox-strict needs: on its own the strict
+                verdict is the browser's transient bubble, while
+                formValidation renders the same validationMessage inline,
+                links it with aria-describedby and lists it in its summary.
+          -->
+
+        <!-- Example 1: the plain case -->
+        <p class="stage__intro">
+          <strong>Free text with suggestions:</strong> type <code>b</code> and
+          the list narrows to everything containing a “b”. Walk it with
+          <kbd>↓</kbd> / <kbd>↑</kbd>, take one with <kbd>Enter</kbd>, dismiss
+          it with <kbd>Esc</kbd> — the field keeps what you typed. The chevron
+          opens the full list, which is the way back when nothing matches.
+          Try <code>zurich</code>: it finds <em>Zürich</em>, because matching
+          folds accents as well as case.
+        </p>
+        <div class="c-comboBox" data-js-behavior="comboBox">
+          <label class="c-comboBox__label" for="combobox-city">City</label>
+          <div class="c-comboBox__field">
+            <input
+              class="c-comboBox__control"
+              id="combobox-city"
+              name="city"
+              type="text"
+              placeholder="Start typing…"
+              aria-describedby="combobox-city-hint"
+              list="combobox-city-options"
+            />
+            <button class="c-comboBox__toggle" type="button" data-combobox-toggle>
+              <span class="c-comboBox__toggleLabel">Show all cities</span>
+            </button>
+          </div>
+          <span class="c-comboBox__hint" id="combobox-city-hint">Type to search, or open the list. Free text is allowed.</span>
+
+          <datalist id="combobox-city-options">
+            <option value="Amsterdam"></option>
+            <option value="Antwerpen"></option>
+            <option value="Barcelona"></option>
+            <option value="Berlin"></option>
+            <option value="Bern"></option>
+            <option value="Bordeaux"></option>
+            <option value="Bremen"></option>
+            <option value="Brüssel"></option>
+            <option value="Genf"></option>
+            <option value="Hamburg"></option>
+            <option value="Kopenhagen"></option>
+            <option value="Lissabon"></option>
+            <option value="Málaga"></option>
+            <option value="München"></option>
+            <option value="Rotterdam"></option>
+            <option value="Salzburg"></option>
+            <option value="Straßburg"></option>
+            <option value="Wien"></option>
+            <option value="Zürich"></option>
+          </datalist>
+        </div>
+
+        <!-- Example 2: prefix matching, secondary labels, strict value -->
+        <p class="stage__intro" style="margin-top: var(--space-xl);">
+          <strong>Prefix matching, labels and a strict value:</strong> this
+          one is <code>data-combobox-match="start"</code>, so
+          <code>de</code> finds <em>Deutschland</em> but <code>land</code>
+          finds nothing. Each option carries a
+          <code>label</code>, shown beside the value and searched along with
+          it. <code>data-combobox-strict</code> makes anything that is not on
+          the list a constraint violation — press <em>Submit</em> with
+          <code>Norwegen</code> in the field and you get told so, because the
+          verdict goes through <code>setCustomValidity()</code> and not
+          through anything this component draws. Type <code>schweiz</code> in
+          lower case and leave the field: it is snapped to <em>Schweiz</em>,
+          so what you receive is what your list says.
+        </p>
+        <p class="stage__intro">
+          The form carries <code>formValidation</code>, which is the partner
+          this lane needs: without it the verdict is only the browser's
+          transient bubble, with nothing in the DOM tied to the field. With
+          it, the same text lands inline, linked by
+          <code>aria-describedby</code>, listed in the error summary and
+          marked with <code>aria-invalid</code> — the module still draws
+          nothing itself. Note <code>data-fv-item</code> on the
+          <code>c-comboBox</code> root rather than the field row: the row is
+          the popup's positioning context.
+        </p>
+        <form action="" method="get" data-js-behavior="formValidation">
+          <div
+            class="c-comboBox"
+            data-js-behavior="comboBox"
+            data-combobox-match="start"
+            data-combobox-strict
+            data-fv-item
+          >
+            <label class="c-comboBox__label" for="combobox-country">Country</label>
+            <div class="c-comboBox__field">
+              <input
+                class="c-comboBox__control"
+                id="combobox-country"
+                name="country"
+                type="text"
+                autocomplete="country-name"
+                aria-describedby="combobox-country-hint"
+                list="combobox-country-options"
+              />
+              <button class="c-comboBox__toggle" type="button" data-combobox-toggle>
+                <span class="c-comboBox__toggleLabel">Show all countries</span>
+              </button>
+            </div>
+            <span class="c-comboBox__hint" id="combobox-country-hint">Pick one of the listed countries.</span>
+
+            <datalist id="combobox-country-options">
+              <option value="Belgien" label="BE"></option>
+              <option value="Dänemark" label="DK"></option>
+              <option value="Deutschland" label="DE"></option>
+              <option value="Frankreich" label="FR"></option>
+              <option value="Italien" label="IT"></option>
+              <option value="Luxemburg" label="LU"></option>
+              <option value="Niederlande" label="NL"></option>
+              <option value="Österreich" label="AT"></option>
+              <option value="Polen" label="PL"></option>
+              <option value="Schweiz" label="CH"></option>
+              <option value="Spanien" label="ES"></option>
+              <option value="Tschechien" label="CZ"></option>
+            </datalist>
+          </div>
+          <p style="margin-top: var(--space-s);">
+            <button type="submit">Submit</button>
+            <button type="reset">Reset</button>
+          </p>
+        </form>
+
+        <!-- Example 3: no toggle, and a shared datalist -->
+        <p class="stage__intro" style="margin-top: var(--space-xl);">
+          <strong>No chevron, and one list for two fields:</strong> the toggle
+          is optional — leave the button out and the arrow keys and a click in
+          the field are the way in. Both fields below point at the
+          <em>same</em> <code>&lt;datalist&gt;</code>, which sits outside them
+          in the page: a datalist is a data source, not a part of the widget,
+          so nothing has to be duplicated.
+        </p>
+        <div class="c-comboBox" data-js-behavior="comboBox">
+          <label class="c-comboBox__label" for="combobox-from">From</label>
+          <div class="c-comboBox__field">
+            <input
+              class="c-comboBox__control"
+              id="combobox-from"
+              name="from"
+              type="text"
+              aria-describedby="combobox-route-hint"
+              list="combobox-station-options"
+            />
+          </div>
+        </div>
+        <div class="c-comboBox" data-js-behavior="comboBox" style="margin-top: var(--space-s);">
+          <label class="c-comboBox__label" for="combobox-to">To</label>
+          <div class="c-comboBox__field">
+            <input
+              class="c-comboBox__control"
+              id="combobox-to"
+              name="to"
+              type="text"
+              aria-describedby="combobox-route-hint"
+              list="combobox-station-options"
+            />
+          </div>
+          <span class="c-comboBox__hint" id="combobox-route-hint">Both fields read the same list of stations.</span>
+        </div>
+
+        <datalist id="combobox-station-options">
+          <option value="Basel SBB"></option>
+          <option value="Berlin Hbf"></option>
+          <option value="Frankfurt (Main) Hbf"></option>
+          <option value="Hamburg Hbf"></option>
+          <option value="Köln Hbf"></option>
+          <option value="München Hbf"></option>
+          <option value="Stuttgart Hbf"></option>
+          <option value="Wien Hbf"></option>
+          <option value="Zürich HB"></option>
+        </datalist>
+
+        <!-- Example 4: a datalist that changes after init -->
+        <p class="stage__intro" style="margin-top: var(--space-xl);">
+          <strong>A list that arrives later:</strong> this field starts with
+          three options. Press the button to write six more into its
+          <code>&lt;datalist&gt;</code> — the module is watching the element,
+          so the new entries are searchable immediately and no re-init is
+          needed. That is what makes a server-filled or fragment-loaded list
+          work.
+        </p>
+        <div class="c-comboBox" data-js-behavior="comboBox">
+          <label class="c-comboBox__label" for="combobox-fruit">Fruit</label>
+          <div class="c-comboBox__field">
+            <input
+              class="c-comboBox__control"
+              id="combobox-fruit"
+              name="fruit"
+              type="text"
+              aria-describedby="combobox-fruit-hint"
+              list="combobox-fruit-options"
+            />
+            <button class="c-comboBox__toggle" type="button" data-combobox-toggle>
+              <span class="c-comboBox__toggleLabel">Show all fruits</span>
+            </button>
+          </div>
+          <span class="c-comboBox__hint" id="combobox-fruit-hint">Three entries so far. Open the list, then add the rest.</span>
+
+          <datalist id="combobox-fruit-options">
+            <option value="Apfel"></option>
+            <option value="Aprikose"></option>
+            <option value="Banane"></option>
+          </datalist>
+        </div>
+        <p style="margin-top: var(--space-s);">
+          <button type="button" id="combobox-fruit-add">Add six more options</button>
+        </p>
+
+        <!--
+            Demo-only wiring for Example 4. This is the "server filled the
+            list" half of the story, kept here rather than in the component:
+            appending options to a <datalist> is the project's job, and
+            watching for it is the module's.
+          -->
+        <script type="module">
+          const button = document.getElementById('combobox-fruit-add');
+          const list = document.getElementById('combobox-fruit-options');
+          const later = [
+            'Birne', 'Brombeere', 'Erdbeere', 'Kirsche', 'Pflaume', 'Zwetschge',
+          ];
+
+          button.addEventListener('click', () => {
+            list.append(...later.map((value) => {
+              const option = document.createElement('option');
+              option.value = value;
+              return option;
+            }));
+
+            button.disabled = true;
+            button.textContent = 'Added — try typing “b”';
+          });
+        </script>
+
+      </section>
+
+    </main>
+
+  </body>
+</html>

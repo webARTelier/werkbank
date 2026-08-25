@@ -1,0 +1,225 @@
+<!--
+  comboBox — copy-paste snippet
+  ============================================================================
+  Copy the block(s) below into your own project.
+
+  1) In <head> (or before </body>): load the shared styles, this component's
+     styles and the boot script. boot.min.js lazily loads the comboBox module
+     as soon as it finds data-js-behavior="comboBox" in the DOM — you do not
+     import comboBox.js yourself. Adjust the paths to where you serve /dist.
+
+       <link rel="stylesheet" href="/dist/css/shared.min.css" />
+       <link rel="stylesheet" href="/dist/css/comboBox.min.css" />
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+  2) Drop the markup below where the field should appear. It is a plain
+     labelled <input> whose list attribute points at a <datalist> — the
+     native combobox, which already suggests those values on its own. The
+     module replaces that unstyleable popup with a real listbox: filtered by
+     one stated rule, walked with the arrow keys, announced properly and
+     yours to style.
+
+  Wiring — there is no attribute to add to the field
+    - data-js-behavior="comboBox" goes on the CONTAINER around the field, not
+      on the input: the module inserts the popup next to the input and the
+      status region into the container.
+    - The input's list attribute pointing at a <datalist> is the whole rest
+      of the wiring. The module reads the options from that <datalist>, and
+      takes the list attribute off the input while it runs so the browser's
+      own popup cannot open on top of the built one. It goes back on
+      teardown.
+    - The <datalist> may sit anywhere in the document and may be shared by
+      several fields; keeping it inside the container is only tidier.
+    - One container holds ONE field. The popup is positioned against the
+      element that holds the input, so a container with two fields would have
+      two popups fighting over one box.
+
+  Options in the <datalist>
+    - <option value="Berlin"> — the value is what goes into the field.
+    - <option value="DE" label="Deutschland"> — the label is shown as a
+      secondary text beside the value, exactly the way the native popup shows
+      it, and it is searched along with the value. It is NOT a separate
+      machine value: what the form posts is always the field's text.
+    - <option disabled> is dropped. A suggestion nobody may take is not a
+      suggestion.
+    - An empty value is dropped too.
+
+  Notes / Configuration (all optional, all on the container)
+    - data-combobox-match="contains" (default) | "start" — where the query
+      has to appear in an option. Matching folds case AND combining marks, so
+      "zurich" finds "Zürich" and "cafe" finds "Café"; the accented match is
+      simply not highlighted (an index into a folded string is not an index
+      into the text on screen).
+    - data-combobox-strict — the value has to be one of the options. An entry
+      that is not is reported through the field's own setCustomValidity(), so
+      checkValidity(), :invalid, the browser's bubble and formValidation all
+      learn about it at once — this module draws nothing and blocks nothing.
+      On blur, a value that differs from an option only in case or in accents
+      is snapped to the option's own spelling, so what you receive is what
+      your list says. An EMPTY field is never reported: "this is required" is
+      what required says.
+      A reset of the surrounding form lifts the report again: the module
+      listens for it, because a reset puts the values back without firing an
+      input event, and an emptied field would otherwise keep a message about
+      a list it is no longer being measured against.
+      Do not call setCustomValidity() on the same field from your own code,
+      and do not combine it with formValidation's data-fv-equals — two
+      writers of one custom message overwrite each other.
+    - data-combobox-message="…" — your own text for that report. Without it
+      the module uses its own, in the page's language (de / en, from
+      <html lang>).
+    - data-combobox-toggle on a <button type="button"> inside the field row —
+      an optional control that opens the FULL list, which is the way back
+      when what was typed matches nothing. It needs an accessible name (a
+      visually hidden text node, or aria-label); a missing one is reported.
+      The module puts it out of the tab order, because the arrow keys are the
+      keyboard's way into the list and a second tab stop for it is noise —
+      and where the query matches nothing those keys open the same full list,
+      so nothing the button does is pointer-only.
+      Hidden until the module runs — see Progressive enhancement.
+
+  Keyboard (ARIA APG, editable combobox with list autocomplete)
+    - Down / Up          open the list and walk it, wrapping at both ends
+    - Alt+Down           open without choosing anything yet
+    - Alt+Up             close
+    - Enter              take the highlighted option. With nothing
+                         highlighted the key belongs to the form, so the
+                         field can still be submitted from
+    - Escape             close the list. It never clears the field — a value
+                         someone typed is not thrown away by a key meant to
+                         dismiss a popup. With the list already closed the
+                         key is left alone, so it still reaches the dialog or
+                         the menu the field may sit in
+    - Tab                leave, keeping what was typed
+    - Home / End         left to the caret, where a text field needs them
+    Where the query matches nothing, Down / Up / Alt+Down open the FULL list
+    instead — the same list the toggle opens, so the way back from a typo does
+    not depend on the pointer (WCAG 2.1.1).
+    Nothing is ever written into the field until the reader asks for it
+    (manual selection), so the value cannot change under a screen reader that
+    is still reading it out.
+
+  Opening by pointer
+    - A click IN THE FIELD opens the list; the focus merely arriving there
+      does not, so tabbing through a form leaves no trail of open popups.
+    - The toggle opens the full list.
+    - An empty result never opens an empty box: the count is announced
+      instead, so a reader learns that the last character left nothing. A
+      field the reader has just EMPTIED announces nothing at all — the list
+      is closed there, and a count would be describing a popup that is not
+      on the screen.
+
+  Progressive enhancement
+    - Without JavaScript the field is the native combobox it was authored as:
+      the <datalist> is still wired to the input, so the browser still
+      suggests those values. Nothing is hidden and nothing is lost.
+    - The toggle is the one part that waits. It is hidden until the module
+      sets data-combobox-ready on the container, because it opens a list only
+      the module can build — and it stays hidden if the chunk never arrives,
+      which leaves the reader with the native popup rather than a dead
+      button.
+
+  Layout — one thing the project owns
+    The popup is inserted as the input's last sibling and positioned against
+    the element that holds it, so that element needs a position of its own
+    (the shipped c-comboBox__field has one). Watch for an ancestor with
+    "overflow: hidden": it clips the popup like any other absolutely
+    positioned box.
+
+  Accessibility (author responsibility — the module wires the pattern)
+    - Give the field a <label> (or aria-label). The listbox is named after
+      the field, so a field without a name leaves the list nameless too —
+      that is reported.
+    - Give the toggle a name as well; its chevron is a pseudo-element and
+      says nothing.
+    - Say what the field does (WCAG 3.3.2): a visible hint wired via
+      aria-describedby, as shown below. "Type to search" is worth stating —
+      a text field that also suggests does not look different from one that
+      does not.
+    - When the field collects the user's own data, set autocomplete (WCAG
+      1.3.5) — e.g. autocomplete="country-name". The module only sets
+      autocomplete="off" where you have set nothing, to keep the browser's
+      own autofill popup from rendering over the list. Mind the trap: on a
+      field that SHOULD carry a token, a forgotten one then reads as a
+      deliberate opt-out. The module cannot tell the two apart.
+    - With data-combobox-strict, put formValidation (or your own equivalent)
+      on the form. On its own, setCustomValidity() is the browser's transient
+      bubble on submit: no aria-invalid, and no message in the DOM tied to the
+      field. formValidation takes the very text authored here out of
+      validationMessage and renders it inline, links it with aria-describedby
+      and lists it in its error summary (WCAG 3.3.1 / 3.3.3). Point its
+      data-fv-item at the c-comboBox root, not at the field row — the row is
+      the popup's positioning context.
+-->
+
+
+
+<!-- Example 1: the plain case -->
+<div class="c-comboBox" data-js-behavior="comboBox">
+  <label class="c-comboBox__label" for="combobox-city">City</label>
+  <div class="c-comboBox__field">
+    <input
+      class="c-comboBox__control"
+      id="combobox-city"
+      name="city"
+      type="text"
+      placeholder="Start typing…"
+      aria-describedby="combobox-city-hint"
+      list="combobox-city-options"
+    />
+    <button class="c-comboBox__toggle" type="button" data-combobox-toggle>
+      <span class="c-comboBox__toggleLabel">Show all cities</span>
+    </button>
+  </div>
+  <span class="c-comboBox__hint" id="combobox-city-hint">Type to search, or open the list. Free text is allowed.</span>
+
+  <datalist id="combobox-city-options">
+    <option value="Amsterdam"></option>
+    <option value="Berlin"></option>
+    <option value="Bern"></option>
+    <option value="Bordeaux"></option>
+    <option value="Kopenhagen"></option>
+    <option value="Málaga"></option>
+    <option value="Zürich"></option>
+  </datalist>
+</div>
+
+
+
+<!-- Example 2: prefix matching, secondary labels, and a strict value -->
+<!--
+  The options carry a label, so each row reads "DE — Deutschland" and both
+  halves are searched. data-combobox-strict makes anything that is not one of
+  them a constraint violation, reported through the field's own validity.
+-->
+<div
+  class="c-comboBox"
+  data-js-behavior="comboBox"
+  data-combobox-match="start"
+  data-combobox-strict
+>
+  <label class="c-comboBox__label" for="combobox-country">Country</label>
+  <div class="c-comboBox__field">
+    <input
+      class="c-comboBox__control"
+      id="combobox-country"
+      name="country"
+      type="text"
+      autocomplete="country-name"
+      aria-describedby="combobox-country-hint"
+      list="combobox-country-options"
+    />
+    <button class="c-comboBox__toggle" type="button" data-combobox-toggle>
+      <span class="c-comboBox__toggleLabel">Show all countries</span>
+    </button>
+  </div>
+  <span class="c-comboBox__hint" id="combobox-country-hint">Pick one of the listed countries.</span>
+
+  <datalist id="combobox-country-options">
+    <option value="AT" label="Österreich"></option>
+    <option value="CH" label="Schweiz"></option>
+    <option value="DE" label="Deutschland"></option>
+    <option value="FR" label="Frankreich"></option>
+    <option value="IT" label="Italien"></option>
+  </datalist>
+</div>

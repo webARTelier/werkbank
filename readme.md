@@ -88,6 +88,7 @@ reads it. The full decision rule is in [`CLAUDE.md`](CLAUDE.md).
 | `adaptiveScrollFade` | function (`c-scrollFade`)     | Fade-out edges on scrollable containers, only where overflow is.    |
 | `autoGrowTextarea`   | component                     | A `<textarea>` as tall as its value, on `field-sizing` where there is one. |
 | `backToTop`          | module                        | Jump back to the top, shown once the page is scrolled far enough.   |
+| `comboBox`           | component                     | Typeahead listbox on a native `<input list>` + `<datalist>`.        |
 | `countdown`          | module                        | Live countdown to a target date/time.                               |
 | `dataTable`          | component                     | Sortable columns on a plain `<table>`, scrolling or stacked.        |
 | `dateInputFormat`    | function (`c-dateField`)      | Auto-formats a text field into a grouped date mask (`DD.MM.YYYY`).  |
@@ -99,11 +100,14 @@ reads it. The full decision rule is in [`CLAUDE.md`](CLAUDE.md).
 | `inlineSVG`          | function                      | Replaces `<img>` SVG references with inline SVG.                    |
 | `inputCharCount`     | function                      | Character-count display for inputs and textareas.                   |
 | `lightbox`           | module                        | Image/gallery viewer on the native `<dialog>`, from image links.    |
+| `loadFragment`       | function (`c-fragment`)       | Loads a region of another page into a box, from a real link.        |
 | `marquee`            | module                        | Infinitely scrolling content strip (news ticker).                   |
+| `numberInputFormat`  | function (`c-numberField`)    | Groups a number field while typing, in the page's language.         |
 | `offCanvasNav`       | module                        | Burger menu / off-canvas drawer on the native `<dialog>`.           |
 | `passwordToggle`     | component                     | Show/hide for a password field, by switching its `type`.            |
 | `popover`            | component                     | Anchor-positioned popover on the native Popover API.                |
 | `readMore`           | component                     | Long text cut to a preview, with the control that opens it.         |
+| `revealOnScroll`     | function (`c-reveal`)         | Reveals items as they enter the viewport, via IntersectionObserver. |
 | `scaleSVG`           | function                      | Scales SVGs from their `viewBox`.                                   |
 | `scrollSpy`          | function                      | IntersectionObserver-driven TOC highlight via `aria-current`.       |
 | `siteSearch`         | module                        | Site search form expanding out of a toggle, on `<search>`.          |

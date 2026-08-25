@@ -1,0 +1,457 @@
+// =============================================================
+// comboBox — a text field that suggests from a <datalist>
+// =============================================================
+//
+// The component is a labelled <input list> plus the listbox comboBox.js
+// builds out of the <datalist> it points at. The field, the label, the hint
+// and the optional toggle are authored; the listbox, its options and the
+// status region are not — unenhanced they would be a popup nothing opens,
+// so they only exist once there is a script to work them.
+//
+// Contract with the JS (comboBox.js)
+//   - "aria-expanded" on the control is the open state AND the styling hook
+//     — it is what assistive tech reads, so there is no second state class
+//     to keep in step with it, and it is what turns the chevron below. That
+//     rule reaches the toggle from the control with the sibling combinator,
+//     which is the one thing this file asks of the markup order: the toggle
+//     comes after the control inside the field row. Get it wrong and the
+//     chevron stops turning; nothing else notices.
+//   - "aria-selected" on an option is likewise both: the module points at
+//     the current option with aria-activedescendant and marks it here, and
+//     the highlight below is drawn from the ARIA state rather than from a
+//     class of our own.
+//   - The listbox is hidden with the "hidden" attribute — the platform's own
+//     way, which takes it out of the accessibility tree with the same
+//     declaration that takes it off the screen. This file only has to
+//     restore the display it declares (an author declaration beats the user
+//     agent's [hidden] rule whatever the specificity) and to give the
+//     transition its two ends.
+//   - "data-combobox-list" / "-option" / "-value" / "-label" / "-mark" are
+//     the injected nodes, addressed by attribute because the module does not
+//     own this file's class names (same reason dataTable addresses its
+//     status region that way). Restyle freely.
+//   - "data-combobox-status" is the injected live region the suggestion
+//     count is announced through. Its one rule here — visually hidden — is
+//     an accessibility necessity, not a design choice.
+//   - "data-combobox-ready" on the root says the module has taken over. Two
+//     rules wait for it, and both hand something to a control that has to
+//     exist: the toggle itself, and the gutter it stands in.
+//   - The module writes no class and no inline style, and nothing here is
+//     read back by it.
+//
+// Why the ready attribute is read POSITIVELY rather than through
+// pre-enhancement() (fileUpload and passwordToggle do the same, and
+// docs/preEnhancement.md says why)
+//   The toggle opens a list only the module can build, and "scripting:
+//   enabled" — the condition the mixin wraps its rules in — is not the same
+//   as the chunk arriving. Keyed the mixin's way, a reader with scripting
+//   off would be the one reader shown a button that can never work. So the
+//   toggle is off by default and switched on by the ready attribute.
+//   Nothing is hidden by that default: the label, the field and its hint are
+//   all there, and until the module runs the input still carries its list
+//   attribute, so the browser's own datalist popup is what answers.
+//
+// The popup's positioning context is the field row, not the root: the module
+// inserts the listbox as the input's last sibling, and a root that also
+// holds a label and a hint would push the popup below those. A project
+// building its own markup around the field therefore has one job — give the
+// element that holds the input a position of its own — and one thing to
+// watch: an ancestor with "overflow: hidden" clips the popup like any other
+// absolutely positioned box.
+
+@use "focus" as *;
+@use "mediaqueries" as *;
+@use "visuallyHidden" as *;
+
+
+
+// Field wrapper: stacks the label, the field row and the optional hint.
+//
+// The override surface: declared on the component root, not in :root, so it
+// stays scoped and a single instance can be retuned in place.
+.c-comboBox {
+
+  // Animation. Half the shared duration: the popup is a small hop under the
+  // field, not a surface arriving from off-screen.
+  --comboBox-duration: calc(var(--an-duration) / 2);
+  --comboBox-easing: var(--an-ease);
+
+  // Sizing
+  --comboBox-radius: var(--borderRadius);
+  --comboBox-toggle-size: 2rem; // hit area of the chevron button
+  --comboBox-toggle-icon-size: 0.45em; // the rotated square inside it
+  // Then the list scrolls. Capped against the viewport as well, because
+  // 16rem is 16rem of the READER's root font: at 200% zoom (WCAG 1.4.4) the
+  // popup would be 512px tall in a viewport 450px high, and its last options
+  // would sit below the fold. The keyboard scrolls the current option into
+  // view either way; a pointer would have to scroll the page.
+  --comboBox-list-max-block-size: min(16rem, 60svh);
+  --comboBox-list-enter-shift: var(--space-3xs); // how far it drops in
+
+  // Spacing
+  --comboBox-gap: var(--space-3xs); // gap label <-> field <-> hint
+  --comboBox-padding-block: var(--space-2xs);
+  --comboBox-padding-inline: var(--space-xs);
+  --comboBox-control-gutter: calc(
+    var(--comboBox-toggle-size) + var(--space-3xs)
+  );
+  --comboBox-list-offset: var(--space-3xs); // gap field <-> popup
+  --comboBox-list-padding: var(--space-3xs);
+  --comboBox-option-padding-block: var(--space-3xs);
+  --comboBox-option-padding-inline: var(--space-2xs);
+  --comboBox-option-gap: var(--space-s); // gap value <-> secondary label
+
+  // Type scale. Both in em, relative to the field's own font-size, so they
+  // scale with the surrounding text instead of borrowing a spacing token.
+  --comboBox-hint-fontSize: 0.875em;
+  --comboBox-option-label-fontSize: 0.875em;
+
+  // Layer. The popup overlaps whatever follows the field in the form, so it
+  // needs to win against it — but it is page content, not an overlay, and
+  // stays well below anything in the top layer.
+  --comboBox-list-zIndex: var(--zi-aboveContent);
+
+  // Colors (shared semantic tokens, _shared/scss/_colors_semantic.scss)
+  --comboBox-label-color: var(--color-text);
+  --comboBox-hint-color: var(--color-text-muted);
+  --comboBox-text-color: var(--color-text);
+  --comboBox-placeholder-color: var(--color-text-muted);
+  --comboBox-bg-color: var(--color-bg-surface);
+
+  // The field's border identifies it as a control, which is what WCAG 1.4.11
+  // asks 3:1 of — hence the control tone rather than the quiet one.
+  --comboBox-border-color: var(--color-border-control);
+  --comboBox-border-color-hover: var(--color-border-control-strong);
+
+  --comboBox-toggle-color: var(--color-text-secondary);
+  --comboBox-toggle-color-hover: var(--color-text);
+
+  --comboBox-list-bg-color: var(--color-bg-elevated);
+  --comboBox-list-border-color: var(--color-border);
+  --comboBox-list-shadow: 0 12px 32px var(--color-shadow);
+
+  --comboBox-option-color: var(--color-text);
+  --comboBox-option-label-color: var(--color-text-muted);
+  --comboBox-option-bg-color-hover: var(--color-bg-overlay);
+  --comboBox-option-bg-color-active: var(--color-accent);
+  --comboBox-option-color-active: var(--color-text-on-accent);
+  --comboBox-mark-color: var(--color-accent-secondary);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--comboBox-gap);
+
+  font-family: system-ui, sans-serif;
+
+  color: var(--comboBox-text-color);
+
+
+
+  &__label {
+    color: var(--comboBox-label-color);
+    font-weight: 600;
+  }
+
+
+
+  // The field row, and the popup's positioning context: the module inserts
+  // the listbox in here, as the input's last sibling.
+  &__field {
+    position: relative;
+
+    display: flex;
+  }
+
+
+
+  &__control {
+
+    // The control sits on a dark surface -> the light tone.
+    @include focus-ring(light);
+
+    & {
+      border: 1px solid var(--comboBox-border-color);
+      border-radius: var(--comboBox-radius);
+      padding: var(--comboBox-padding-block) var(--comboBox-padding-inline);
+
+      // A flex item is min-content wide by default, which for a text field
+      // means "as wide as its longest word can be forced to be". Zero lets
+      // the row decide instead.
+      flex: 1 1 auto;
+      min-inline-size: 0;
+
+      font: inherit;
+
+      color: var(--comboBox-text-color);
+      background-color: var(--comboBox-bg-color);
+    }
+
+    &::placeholder {
+      color: var(--comboBox-placeholder-color);
+    }
+
+    &:hover {
+      border-color: var(--comboBox-border-color-hover);
+    }
+  }
+
+
+
+  // The control that opens the full list. Absent until the module runs (see
+  // the header), and out of the tab order in the markup: the arrow keys are
+  // the keyboard's way into the list.
+  &__toggle {
+
+    @include focus-ring(light);
+
+    & {
+      position: absolute;
+      inset-block: 0;
+      inset-inline-end: 0;
+
+      cursor: pointer;
+
+      border: 0;
+      padding: 0;
+      inline-size: var(--comboBox-toggle-size);
+
+      display: none;
+      align-items: center;
+      justify-content: center;
+
+      color: var(--comboBox-toggle-color);
+      background-color: transparent;
+    }
+
+    // The chevron. A pseudo-element, so it adds nothing to the accessibility
+    // tree — what it shows is aria-expanded on the control next to it, where
+    // assistive tech reads it.
+    &::after {
+      content: '';
+
+      inline-size: var(--comboBox-toggle-icon-size);
+      block-size: var(--comboBox-toggle-icon-size);
+
+      border-inline-end: 2px solid currentColor;
+      border-block-end: 2px solid currentColor;
+
+      // Pointing down: "there is a list below". The nudge upwards is
+      // optical — a rotated square hangs low in its box.
+      rotate: 45deg;
+      translate: 0 -0.15em;
+
+      transition: rotate var(--comboBox-duration) var(--comboBox-easing);
+    }
+
+    &:hover {
+      color: var(--comboBox-toggle-color-hover);
+    }
+
+    @include reduced-motion {
+
+      &::after {
+        transition: none;
+      }
+    }
+  }
+
+
+
+  // The toggle's accessible name. Its chevron is a pseudo-element and says
+  // nothing, so this text node is the only name the button has — and it
+  // still reads if this stylesheet never loads, which an aria-label would
+  // not.
+  &__toggleLabel {
+    @include visually-hidden;
+  }
+
+
+
+  // Open: the chevron turns back on itself. Keyed off the ARIA state on the
+  // control rather than a class of our own, so the arrow and the
+  // announcement cannot drift apart.
+  &__control[aria-expanded='true'] ~ &__toggle::after {
+    rotate: -135deg;
+    translate: 0 0.1em;
+  }
+
+
+
+  // Both of these hand something to a control that has to exist first, so
+  // both wait for the module: the button itself, and the gutter it stands
+  // in. Without the second one the toggle would sit on top of a long value.
+  &[data-combobox-ready] &__toggle {
+    display: flex;
+  }
+
+
+
+  &[data-combobox-ready] &__field:has(.c-comboBox__toggle) &__control {
+    padding-inline-end: var(--comboBox-control-gutter);
+  }
+
+
+
+  // Format or usage hint (e.g. "Type to search, or pick from the list").
+  // Wire it to the input via aria-describedby so screen-reader users hear it
+  // too.
+  &__hint {
+    font-size: var(--comboBox-hint-fontSize);
+    line-height: 1.4;
+    color: var(--comboBox-hint-color);
+  }
+
+
+
+  // ----- the injected listbox (see the contract at the top) -----
+  //
+  // "display: block" is declared so the [hidden] rule below has something to
+  // switch, which is what lets the popup transition in and out: a discrete
+  // property needs both of its ends stated. Engines without
+  // "transition-behavior: allow-discrete" and @starting-style simply snap,
+  // which is the correct fallback for a popup.
+  & [data-combobox-list] {
+    position: absolute;
+    inset-block-start: calc(100% + var(--comboBox-list-offset));
+    inset-inline: 0;
+    z-index: var(--comboBox-list-zIndex);
+
+    display: block;
+
+    margin: 0;
+    border: 1px solid var(--comboBox-list-border-color);
+    border-radius: var(--comboBox-radius);
+    padding: var(--comboBox-list-padding);
+    max-block-size: var(--comboBox-list-max-block-size);
+    overflow-y: auto;
+
+    // The list scrolls inside itself; a flick that reaches its end must not
+    // carry on into the page behind it.
+    overscroll-behavior: contain;
+
+    list-style: none;
+
+    background-color: var(--comboBox-list-bg-color);
+    box-shadow: var(--comboBox-list-shadow);
+
+    opacity: 1;
+    translate: 0 0;
+    transition:
+      opacity var(--comboBox-duration) var(--comboBox-easing),
+      translate var(--comboBox-duration) var(--comboBox-easing),
+      display var(--comboBox-duration) allow-discrete;
+
+    @starting-style {
+      opacity: 0;
+      translate: 0 calc(var(--comboBox-list-enter-shift) * -1);
+    }
+
+    &[hidden] {
+      display: none;
+
+      opacity: 0;
+      translate: 0 calc(var(--comboBox-list-enter-shift) * -1);
+    }
+
+    @include reduced-motion {
+      transition: none;
+    }
+  }
+
+
+
+  & [data-combobox-option] {
+    cursor: pointer;
+
+    border-radius: var(--comboBox-radius);
+    padding:
+      var(--comboBox-option-padding-block)
+      var(--comboBox-option-padding-inline);
+
+    display: flex;
+    gap: var(--comboBox-option-gap);
+    align-items: baseline;
+    justify-content: space-between;
+
+    color: var(--comboBox-option-color);
+
+    &:hover {
+      background-color: var(--comboBox-option-bg-color-hover);
+    }
+  }
+
+
+
+  // The current option — the one aria-activedescendant points at. Drawn from
+  // the ARIA state, so what the eye follows and what a screen reader reads
+  // are the same thing.
+  & [data-combobox-option][aria-selected='true'] {
+    color: var(--comboBox-option-color-active);
+    background-color: var(--comboBox-option-bg-color-active);
+  }
+
+
+
+  // The option's secondary text, where the author gave the <option> a label
+  // that differs from its value ("DE" / "Deutschland").
+  & [data-combobox-label] {
+    flex-shrink: 0;
+
+    font-size: var(--comboBox-option-label-fontSize);
+    color: var(--comboBox-option-label-color);
+  }
+
+
+
+  & [data-combobox-option][aria-selected='true'] [data-combobox-label] {
+    color: inherit;
+  }
+
+
+
+  // The part of the option the reader has typed. A plain span in the markup,
+  // never a <mark>: that element means "relevant to the current context" and
+  // several screen readers announce it, which would have every suggestion
+  // read out with its matched fragment called out.
+  & [data-combobox-mark] {
+    font-weight: 700;
+    color: var(--comboBox-mark-color);
+  }
+
+
+
+  & [data-combobox-option][aria-selected='true'] [data-combobox-mark] {
+    color: inherit;
+  }
+
+
+
+  // The injected live region (see the contract at the top). It exists only
+  // to be read out, so it leaves the visual layout — but is not hidden:
+  // "display: none" and "visibility: hidden" would take it out of the
+  // accessibility tree too, and a live region nothing can observe announces
+  // nothing. The one rule in this file that is an accessibility necessity
+  // rather than a design decision (as with dataTable and inputCharCount).
+  & [data-combobox-status] {
+    @include visually-hidden;
+  }
+
+
+
+  // A forced-colors palette drops every background this file declares, and
+  // with it the only thing telling the current option from the rest. The
+  // system's own selection pair says it in the palette the reader chose, and
+  // the popup gets a border so it does not merge into the page behind it.
+  @include forced-colors {
+
+    & [data-combobox-list] {
+      border-color: CanvasText;
+    }
+
+    & [data-combobox-option][aria-selected='true'] {
+      color: HighlightText;
+      background-color: Highlight;
+      forced-color-adjust: none;
+    }
+  }
+}
