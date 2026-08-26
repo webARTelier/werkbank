@@ -1,0 +1,122 @@
+// =============================================================
+// copyToClipboard — the one style the component must own
+// =============================================================
+//
+// copyToClipboard is a function: it owns no vocabulary and ships no look. The
+// reason is not minimalism but the thing itself — a copy button is one of the
+// project's OWN buttons. It stands in a toolbar next to its siblings, on a
+// code block, in a card, and it has to look like the buttons around it. A
+// block shipped from here would be something to override, not something to
+// use.
+//
+// So this file ships two rules, and neither is a look. One is an
+// accessibility necessity: the live region the module injects must be
+// visually hidden — it exists only to be announced — and the component owns
+// that rather than hoping every project remembers it (inputCharCount ships
+// its stylesheet for the same single reason). The other keeps the `hidden`
+// attribute the control ships with actually hiding it; see the note on it
+// below, because it is the trap this component would otherwise walk every
+// project into.
+//
+// Contract with the JS (copyToClipboard.js) — every hook is only ever
+// WRITTEN, never read back, so restyling cannot break the behaviour:
+//
+//   [data-copy-state="copied"]   on the button AND on the source element,
+//   [data-copy-state="error"]    for data-copy-duration ms after a press
+//   .copy-srStatus               the injected live region (this file's rule)
+//   [data-copy-status]           the same node, for an inspector or a
+//                                project selector that wants the attribute
+//
+// The state attribute sits on both ends of the copy on purpose, so a rule can
+// answer on either:
+//
+//   .myCopy[data-copy-state="copied"] .myCopy__check { opacity: 1; }
+//   .myCopy[data-copy-state="error"]  { color: var(--color-error); }
+//   pre[data-copy-state="copied"]     { outline: 2px solid limegreen; }
+//
+// Four things to know before styling it.
+//
+// The state is never the ONLY channel. Whatever a rule here draws, the module
+// has also said in words through the live region — a checkmark alone is the
+// half of a copy button that leaves a screen-reader user with no result at
+// all, and it is the half this component exists for. So style the state
+// freely; just do not switch the announcement off unless something else (a
+// toast) is saying it instead.
+//
+// Do not swap the button's LABEL text from a rule either — not with
+// `content`, not by hiding one span and showing another. The label is the
+// control's accessible name, and a name that changes under a focused button
+// is announced as a different button rather than as a result. Change the
+// icon, the colour, the border; leave the words alone.
+//
+// A KEYFRAME animation does not replay on a second press inside the duration,
+// and that is the engine rather than the module. The JS takes the attribute
+// off and puts it back on in one task, so where the value is the same both
+// times ("copied" after "copied") the computed style never changes and an
+// `animation` has nothing to restart from. A `transition` is unaffected — it
+// is running towards the same value anyway — so state a flash as a
+// transition, or accept that the second copy in a row does not blink. What
+// does always change is the value on a failure ("copied" -> "error"), where a
+// keyframe animation runs as expected.
+//
+// The state on the SOURCE belongs to the last press. Two controls may point
+// at one box — a copy button and a second one whose message a toast carries —
+// and the box is marked for whichever of them copied it most recently; the
+// earlier control's own attribute still ends on its own duration. So a rule
+// on the source says "this was just copied", not "this control's state", and
+// there is never more than one instance of it.
+//
+// The button's own focus ring is the project's, like the rest of its look
+// (see the focus-ring convention in CLAUDE.md, which is why _focus.scss is
+// not @used here). demo.html shows one fully worked design around all of it.
+
+@use "visuallyHidden" as *;
+
+
+
+// The control ships `hidden` and the module removes it, which is this
+// component's whole pre-enhancement story (see copyToClipboard.js and
+// docs/preEnhancement.md §4). And `hidden` is not a strong promise: its
+// effect is a UA rule, "[hidden] { display: none }", specificity (0,0,0) —
+// so the moment a project writes ".button { display: inline-flex }", every
+// dead copy button on the page is back on screen, in a state where pressing
+// it does nothing. That is not a hypothetical: a copy button is one of the
+// project's own buttons, and giving a button a `display` is the first thing
+// anybody does to it.
+//
+// Hence this rule, and hence the !important — the same reason the
+// reduced-motion blocks in this collection carry one. There is no reading of
+// the markup in which an author wants their layout rule to resurrect a
+// control the module deliberately left hidden, and a specificity high enough
+// to be safe against ".toolbar .button" in a stylesheet loaded after this one
+// cannot be written without a hack. The scope is as narrow as the guarantee
+// needs: an element carrying one of this component's own source attributes,
+// and `hidden`.
+//
+// The module writes neither attribute, so nothing here fights it: it only
+// ever REMOVES `hidden`, and when it does, this rule stops applying.
+//
+// One consequence for whoever lays the control out: it arrives AFTER the
+// first paint, because the chunk is lazily imported, so the row it sits in
+// moves when it appears. Nothing here can prevent that — the whole point is
+// that the button is not on screen until it works — so where the shift would
+// be felt, reserve the slot in the project's own CSS: give the toolbar cell a
+// min-inline-size, or lay the button over the box it belongs to
+// (position: absolute) rather than beside it. This is not the "hidden
+// content" case docs/preEnhancement.md warns about; nothing is lost either
+// way, it is only the box moving once.
+[data-copy-target][hidden],
+[data-copy-text][hidden] {
+  display: none !important;
+}
+
+
+
+// The injected live region: in the DOM and announced (aria-live="polite"),
+// out of the visual layout. The mixin's recipe keeps it in the accessibility
+// tree, which "display: none" and "visibility: hidden" would not — and it is
+// absolutely positioned, so the region is not a flex or grid item of whatever
+// the button sits in and cannot add a gap to a toolbar.
+.copy-srStatus {
+  @include visually-hidden;
+}

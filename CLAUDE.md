@@ -102,10 +102,30 @@ component here is reusable and most can appear several times).
 - **Function (no prefix of its own) — it *enhances*.** It brings no
   vocabulary at all: it writes state classes/attributes onto markup that is
   already there, and the look belongs to the consuming project.
-  `formValidation`, `inlineSVG`, `inputCharCount`, `scaleSVG`, `scrollSpy`,
-  `stickyObserver`, and the scripts behind `adaptiveScrollFade`,
-  `dateInputFormat`, `flexNeighborMarker`, `loadFragment`,
-  `numberInputFormat`, `revealOnScroll`.
+  `copyToClipboard`, `formValidation`, `inlineSVG`, `inputCharCount`,
+  `scaleSVG`, `scrollSpy`, `stickyObserver`, and the scripts behind
+  `adaptiveScrollFade`, `dateInputFormat`, `flexNeighborMarker`,
+  `loadFragment`, `numberInputFormat`, `revealOnScroll`.
+
+  `copyToClipboard` (2026-08-26) is the one where the question has to be
+  asked about a control rather than about content, and it comes out a
+  function twice over. It brings no vocabulary at all — a copy button is one
+  of the project's own buttons, standing in a toolbar next to its siblings,
+  so there is nothing to ship but the two state values a rule reads
+  (`data-copy-state="copied" | "error"`). And there is no host it is
+  attached to either: the snippet it copies from is not *its* element, and
+  the button it enhances is not complete without it — which is exactly what
+  disqualifies `c-`, where the host has to work on its own. What settles it
+  in the other direction is that nothing is placed: the module writes one
+  attribute onto markup that is already there.
+
+  It is also the second reading of the machinery rule, on a smaller subject
+  than `loadFragment`'s: an injected live region, a timer, two custom events
+  and a platform API with a secure-context precondition say how hard the
+  thing was to write, not what it is. And the region it injects is an
+  **instrument**, not vocabulary — the same test `loadFragment`'s status
+  region passes: it carries no class the project styles, and swapping it for
+  a project's own would leave nothing to design.
 
   `loadFragment` (2026-08-20) is the one that fetches: it hangs on a link the
   project already has, puts a region of the answer into a box the project

@@ -1,0 +1,273 @@
+<!--
+  copyToClipboard — copy-paste snippet
+  ============================================================================
+  Copy the block(s) below into your own project.
+
+  1) In <head> (or before </body>): load the shared styles, this component's
+     stylesheet and the boot script. boot.min.js lazily loads the
+     copyToClipboard module as soon as it finds
+     data-js-behavior="copyToClipboard" in the DOM — you do not import
+     copyToClipboard.js yourself. Adjust the paths to where you serve /dist.
+
+       <link rel="stylesheet" href="/dist/css/shared.min.css" />
+       <link rel="stylesheet" href="/dist/css/copyToClipboard.min.css" />
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+     The stylesheet is two rules and no look: the visually-hidden recipe for
+     the live region the module injects, and the one that keeps `hidden`
+     hiding the control (see Wiring). It is small, and it is not optional —
+     without the first, that region is visible text on the page.
+
+  2) Put data-js-behavior="copyToClipboard" on a <button> and say what to
+     copy: data-copy-target="<selector>" for an element in the page, or
+     data-copy-text="…" for a literal string.
+
+  Wiring
+    - The button ships with the `hidden` attribute and the module removes it.
+      KEEP IT: without a script there is nothing that copies anything — no
+      attribute, no element, no CSS state — so a copy button in the markup is
+      a control that does nothing. `hidden` means the reader never sees a dead
+      one, and it also covers every case in which the module gives up: an
+      insecure origin (see below), a target selector that is not valid CSS, no
+      source configured at all. The control appears when it works and not
+      before. Nothing is lost either way — the text is on the page, selectable,
+      and Ctrl+C has always been there.
+    - You do NOT have to make `hidden` stick. Its effect is a UA rule with
+      specificity (0,0,0), so your own ".button { display: inline-flex }"
+      would put every dead copy button back on screen — which is why the
+      component's stylesheet carries one "display: none !important" for an
+      element that has this module's source attribute AND `hidden`. It is the
+      one declaration this component takes off you, and it stops applying the
+      moment the module removes the attribute.
+    - The control appears AFTER the first paint, so reserve its place where
+      the shift would be felt. The module's chunk is loaded lazily, which is
+      what makes "hidden until it works" possible at all — and it means the
+      row the button sits in moves once when it arrives. Nothing is lost, but
+      a snippet toolbar that jumps is worth one line of your own CSS: a
+      min-inline-size on the cell the button sits in, or a button positioned
+      over the box instead of beside it.
+    - type="button" is required inside a <form>. A <button> without a type
+      defaults to submit, so every copy would send the form off as well; the
+      module reports that and leaves the control hidden rather than
+      suppressing a submit the page asked for.
+    - Name the button. "Copy" is fine when there is one; a page with six
+      snippets needs six names a reader can tell apart ("Copy the install
+      command"). An icon-only control gets its name from a visually-hidden
+      text node — prefer that to an aria-label, because it still names the
+      control when your stylesheet has not arrived.
+    - The clipboard needs a SECURE CONTEXT. That is the platform's rule, not
+      this module's: navigator.clipboard does not exist on a page served over
+      plain http (localhost counts as secure). There the control stays hidden
+      and the console says so. No document.execCommand("copy") fallback ships
+      — it is deprecated, and an insecure origin is a deployment to fix.
+      Where it bites during development is your own LAN: the button works on
+      localhost and is gone the moment you open the same page on a phone at
+      http://192.168.x.x, which is how you would test it by touch. Use a
+      tunnel (cloudflared, ngrok) or a local certificate (mkcert). And if a
+      page can end up with none of its controls, say so on the page —
+      window.isSecureContext is the check; demo.html does exactly that.
+
+  What gets copied
+    - data-copy-target — the text the reader can SEE in that element: its
+      value for an <input>/<textarea>/<select>, otherwise its text content
+      with the outer whitespace trimmed. The indentation INSIDE it is kept, so
+      a <pre><code> block arrives in the clipboard as it stands on screen.
+      The selector is resolved against the whole document and looked up again
+      on every press, so a box filled later (a loaded fragment, a rendered
+      template) works without re-initialising anything.
+    - data-copy-text — a literal string, used exactly as written. This is
+      where anything that is not visible text belongs: a share URL, an href,
+      an order number your template knows. Pointing data-copy-target at an
+      <a> copies its LABEL, because that is what the label is.
+    - Text only. The clipboard also takes text/html, and this component
+      deliberately does not write it: what a receiving application pastes
+      would then depend on which of the two it prefers, and the promise here
+      is the string the reader can see.
+    - An EMPTY source is never copied. writeText("") would replace whatever
+      the reader had in their clipboard with nothing, so an empty target (or
+      one that is not there) is the failure path instead.
+
+  Options (all on the button)
+    - data-copy-target="<selector>"  the element to copy from. One of this and
+                                     data-copy-text is required; with both,
+                                     the literal wins and the console says so.
+    - data-copy-text="…"             the literal string to copy.
+    - data-copy-copied-text="…"      what the announcement says after a
+                                     successful copy. {text} interpolates the
+                                     copied string — use it only for a short
+                                     value. Default: the built-in sentence for
+                                     <html lang> ("Copied to the clipboard." /
+                                     "In die Zwischenablage kopiert."), English
+                                     elsewhere, and there the module marks that
+                                     sentence lang="en" because it is then a
+                                     passage in a language the page has not
+                                     declared. An EMPTY value opts the
+                                     announcement out — see the toast note.
+    - data-copy-error-text="…"       the same for a failed copy.
+    - data-copy-duration="2000"      ms the outcome stands: the state attribute
+                                     on the button and on the source, and the
+                                     sentence in the live region, which end
+                                     together. 0 keeps both until the next
+                                     press, for a design where the checkmark
+                                     is meant to stand.
+
+  Styling (all of it yours)
+    - The module writes ONE attribute and nothing else:
+        [data-copy-state="copied"]   on the button AND on the source element
+        [data-copy-state="error"]
+      Both ends carry it, so a rule can flash the snippet as well as the
+      control:
+        .myCopy[data-copy-state="copied"] .myCopy__check { opacity: 1; }
+        pre[data-copy-state="copied"] { outline: 2px solid #4ade80; }
+    - On the SOURCE, the state belongs to the last press. Two controls may
+      point at one box (a copy button, and a second one whose message a toast
+      carries): the box is marked for whichever copied it most recently, and
+      each button's own attribute still ends on its own duration. So a rule on
+      the source reads "this was just copied", and there is never more than one
+      of it on the page.
+    - A @keyframes animation does not replay on a second press inside the
+      duration — the module takes the attribute off and puts it back in one
+      task, so with the same value both times the computed style never changes
+      and the animation has nothing to restart from. State a flash as a
+      transition instead, or accept that the second copy in a row does not
+      blink. A failure ("copied" -> "error") is a real value change and
+      animates as expected.
+    - Do NOT swap the button's label text from CSS (`content`, or hiding one
+      span and showing another). The label is the control's accessible name,
+      and a name changing under a focused button is announced as a different
+      button rather than as a result. Change the icon, the colour, the border.
+    - The button's :focus-visible ring is yours too, like the rest of its look
+      — this component ships no vocabulary at all, because a copy button is
+      one of your own buttons standing next to its siblings.
+
+  Notes / progressive enhancement
+    - There is no pre-enhancement state and nothing can flash, because the
+      control is not on screen until it works (the `hidden` attribute above).
+      That is `video`'s approach rather than a CSS block, and where it applies
+      it is better: no ready attribute, no media query, and a chunk that never
+      arrives leaves the page exactly as authored.
+    - The focus never moves and no selection is touched. Not on success, and
+      not on a failure either: the text stays where it was, selectable, and
+      moving the reader's selection for them would be a different action from
+      the one they pressed.
+    - Every failure ends in the same place. A rejected write, a target that is
+      not in the document, an empty source: the state attribute goes to
+      "error", the live region says so, and the console gets the detail.
+
+  Accessibility
+    - The module injects a polite live region after the button and puts one
+      sentence in it per press. This is the half a hand-written copy button
+      does not have: a copy leaves no trace on the page — nothing navigated,
+      no value changed, no element appeared — so without it a screen-reader
+      user is told nothing at all (WCAG 4.1.3).
+    - Polite, not assertive, and both outcomes go through it. The reader
+      pressed a button and is waiting for exactly this sentence, so there is
+      nothing to interrupt.
+    - The button's accessible name never changes, which is why the module
+      neither rewrites it nor lets CSS do it.
+    - Every announcement is a NEW node in the region. Assigning the same text
+      to the same node is not a change and would not be announced — the second
+      "Copied" would be silent.
+    - The sentence does not outlive the state. When data-copy-duration is up,
+      the state attribute comes off AND the region is emptied — otherwise a
+      reader moving through the page with a virtual cursor later meets a
+      "Copied to the clipboard." standing at a control that shows nothing of
+      the sort any more. With data-copy-duration="0" both halves stand, and
+      that is the point: there the sentence is the standing checkmark's only
+      counterpart in words.
+
+  Working with toast — and the one thing to get right
+    The module says the result to a screen reader; it draws nothing. For a
+    VISIBLE message, `toast` is the component next door, and there are two
+    ways to reach it:
+
+      a) Declarative, no script: put data-toast-trigger + data-toast-message
+         on the same button. It fires on the PRESS, so it reports a copy
+         before the write has settled — fine for a link, wrong if you care
+         about the failure.
+
+      b) Accurate: listen for the module's own events, which are dispatched
+         once the outcome is known. They bubble, so one listener serves every
+         copy button on the page:
+
+           document.addEventListener('copy:copied', (event) => {
+             document.dispatchEvent(new CustomEvent('toast:show', {
+               detail: { message: 'Copied to the clipboard', variant: 'success' },
+             }));
+           });
+
+           document.addEventListener('copy:failed', (event) => { … });
+
+         event.detail is { text } on success and { text, error } on failure.
+
+    Either way: a toast is a live region of its own, so it announces the
+    message itself. Opt this module's announcement out with an EMPTY
+    data-copy-copied-text="" (and data-copy-error-text="") on those buttons,
+    or the reader hears the result twice. Where both are empty the module does
+    not even build its region — and warns in the console, because that is the
+    one way to wire this component up correctly and still tell a screen-reader
+    user nothing at all. Ignore it once a toast is listening; read it if you
+    have not written that listener yet.
+-->
+
+
+
+<!-- A code snippet: the button names what it copies, and ships `hidden` -->
+<div class="mySnippet">
+  <pre class="mySnippet__code"><code id="installCommand">npm install</code></pre>
+
+  <button
+    class="myButton mySnippet__copy"
+    type="button"
+    data-js-behavior="copyToClipboard"
+    data-copy-target="#installCommand"
+    hidden
+  >
+    Copy the install command
+  </button>
+</div>
+
+
+<!-- A literal string, with the value in the announcement (it is short) -->
+<p>
+  Your coupon code: <strong>SPRING-2026</strong>
+  <button
+    class="myButton"
+    type="button"
+    data-js-behavior="copyToClipboard"
+    data-copy-text="SPRING-2026"
+    data-copy-copied-text="Coupon code {text} copied to the clipboard."
+    hidden
+  >
+    Copy the coupon code
+  </button>
+</p>
+
+
+<!-- A field's value, and a state that stays until the next press -->
+<label class="myLabel" for="shareLink">Link to this page</label>
+<input class="myField" id="shareLink" type="text" readonly value="https://example.com/a/deep/page">
+<button
+  class="myButton"
+  type="button"
+  data-js-behavior="copyToClipboard"
+  data-copy-target="#shareLink"
+  data-copy-duration="0"
+  hidden
+>
+  Copy the link
+</button>
+
+
+<!-- Announced by toast instead: this module's own sentence is opted out -->
+<button
+  class="myButton"
+  type="button"
+  data-js-behavior="copyToClipboard"
+  data-copy-target="#installCommand"
+  data-copy-copied-text=""
+  data-copy-error-text=""
+  hidden
+>
+  Copy (a toast says so)
+</button>

@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>copyToClipboard – Demo</title>
+  <link rel="icon" href="../../../favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
+  <link rel="stylesheet" href="../../../dist/css/copyToClipboard.min.css" />
+
+  <!--
+      Example 5 hands its message to `toast` instead of announcing it here,
+      so that component's stylesheet is loaded too. Nothing about the pairing
+      is special — two modules on one page, neither knowing about the other,
+      joined by one event listener at the bottom of this file.
+  -->
+  <link rel="stylesheet" href="../../../dist/css/toast.min.css" />
+
+  <script type="module" src="../../../dist/js/boot.min.js"></script>
+
+  <!-- for development only -->
+  <script src="../../tools/dev_dashboard/dev_dashboard.js"></script>
+  <!-- end for development only -->
+
+  <!--
+      DEMO-ONLY STYLES
+      ----------------------------------------------------------------------
+      copyToClipboard.min.css ships ONE rule — the visually-hidden recipe
+      for the live region the module injects. Everything you can see below
+      is this page playing the project: the button, its two states, the code
+      block, the field. That is the whole point of the component being a
+      function — a copy button is one of your own buttons and has to look
+      like the ones beside it.
+
+      The only two rules that are about the component at all are the ones
+      keyed off [data-copy-state], and they are worth reading as the
+      reference for how to use it:
+
+        - The button holds THREE glyphs in one grid cell and cross-fades
+          between them, so its box never changes size. A button that grows
+          when it is pressed moves the next control out from under the
+          pointer that is still on its way.
+        - The label text is NOT swapped. It is the control's accessible
+          name; a name that changes under a focused button is announced as a
+          different button rather than as a result. The glyph carries the
+          state, and the words carry the name.
+        - The source element takes the same attribute, so the snippet that
+          was copied lights up as well as the control that copied it.
+
+      Note what is NOT here: a "[hidden] { display: none }" rule for the
+      button. There would have to be one — ".button { display: inline-flex }"
+      beats the UA rule that makes `hidden` hide anything, and without a
+      counter-rule the dead button of example 6 would be sitting on this page
+      — and the component ships it instead, because a project that has to
+      remember that is a project shipping dead controls. Comment the rule out
+      in copyToClipboard.scss and reload to watch it happen.
+  -->
+
+  <style>
+    .demo {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2xl);
+    }
+
+    .demo__example {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-s);
+    }
+
+    .demo__example h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      color: var(--color-text);
+    }
+
+    /* ----- the project's button design ----- */
+
+    /* A direct child of the column above would otherwise be stretched to the
+       full width of the example (align-items defaults to stretch). */
+    .demo__example > .button {
+      align-self: flex-start;
+    }
+
+    .button {
+      cursor: pointer;
+
+      border: 1px solid var(--color-border-control);
+      border-radius: var(--borderRadius);
+      padding: var(--space-2xs) var(--space-s);
+
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2xs);
+
+      font: inherit;
+      font-size: 0.9rem;
+      line-height: 1.2;
+
+      color: var(--color-text);
+      background-color: var(--color-bg-elevated);
+
+      transition:
+        color 150ms ease,
+        border-color 150ms ease,
+        background-color 150ms ease;
+    }
+
+    .button:hover {
+      border-color: var(--color-border-control-strong);
+      background-color: var(--color-bg-surface-strong);
+    }
+
+    .button:focus-visible {
+      outline: 2px solid var(--color-focus-ring-light);
+      outline-offset: var(--outlineOffset);
+    }
+
+    /* The three glyphs share one grid cell, so the button's box is the same
+       width in every state and nothing moves when it is pressed. */
+    .button__icons {
+      display: inline-grid;
+      grid-template-areas: "icon";
+      flex: none;
+    }
+
+    .button__icon {
+      grid-area: icon;
+
+      inline-size: 1.15rem;
+      block-size: 1.15rem;
+
+      opacity: 0;
+
+      transition: opacity 150ms ease;
+    }
+
+    .button__icon--copy {
+      opacity: 1;
+    }
+
+    /* ----- the two states the module writes ----- */
+
+    .button[data-copy-state="copied"] {
+      border-color: var(--color-success);
+      color: var(--color-success);
+    }
+
+    .button[data-copy-state="copied"] .button__icon--copy,
+    .button[data-copy-state="error"] .button__icon--copy {
+      opacity: 0;
+    }
+
+    .button[data-copy-state="copied"] .button__icon--done {
+      opacity: 1;
+    }
+
+    .button[data-copy-state="error"] {
+      border-color: var(--color-error);
+      color: var(--color-error);
+    }
+
+    .button[data-copy-state="error"] .button__icon--failed {
+      opacity: 1;
+    }
+
+    /* The same attribute, on the other end of the copy: the snippet that was
+       taken lights up too. */
+    .snippet__code[data-copy-state="copied"] {
+      border-color: var(--color-success);
+    }
+
+    /* ----- the code block ----- */
+
+    .snippet {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-xs);
+    }
+
+    .snippet__code {
+      margin: 0;
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--borderRadius);
+      padding: var(--space-s) var(--space-m);
+      max-inline-size: 100%;
+      overflow-x: auto;
+
+      font-size: 0.85rem;
+      line-height: 1.6;
+
+      background-color: var(--color-bg-surface);
+
+      transition: border-color 150ms ease;
+    }
+
+    /* ----- reduced motion -----
+
+       Everything above cross-fades: the button's colour, the three glyphs
+       sharing one grid cell, the border of the snippet that was copied. None
+       of it moves anything, and 150 ms is short — but a reader who has asked
+       for less motion has asked, and the answer is not "this one is small
+       enough". The state still arrives, in the same tick as the attribute;
+       what goes is the fade to it.
+
+       A raw @media here rather than the project's `reduced-motion` mixin
+       only because this is a demo's inline <style> and not a compiled
+       stylesheet — a component SCSS file would @use "mediaqueries". */
+
+    @media (prefers-reduced-motion: reduce) {
+
+      .button,
+      .button__icon,
+      .snippet__code {
+        transition: none;
+      }
+    }
+
+    /* ----- the field lane ----- */
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-3xs);
+      max-inline-size: 44ch;
+    }
+
+    .field__label {
+      font-size: 0.85rem;
+      color: var(--color-text-secondary);
+    }
+
+    .field__row {
+      align-self: stretch;
+
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-2xs);
+    }
+
+    .field__control {
+      flex: 1 1 18ch;
+      min-inline-size: 0;
+
+      border: 1px solid var(--color-border-control);
+      border-radius: var(--borderRadius);
+      padding: var(--space-2xs) var(--space-xs);
+
+      font: inherit;
+      font-size: 0.9rem;
+
+      color: var(--color-text);
+      background-color: var(--color-bg-surface);
+    }
+
+    .field__control:focus-visible {
+      outline: 2px solid var(--color-focus-ring-light);
+      outline-offset: var(--outlineOffset);
+    }
+
+    /* ----- the inline coupon lane ----- */
+
+    .coupon {
+      margin: 0;
+
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-2xs);
+    }
+
+    .coupon__value {
+      border-radius: var(--borderRadius);
+      padding: var(--space-3xs) var(--space-2xs);
+
+      font-family: ui-monospace, monospace;
+
+      background-color: var(--color-bg-overlay);
+    }
+
+    .note {
+      margin: 0;
+
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+    }
+
+    /* The insecure-origin notice. Revealed by the demo script at the bottom
+       of this page, so it is the same idiom the component itself uses for
+       its button: authored `hidden`, shown only where it applies. */
+    .warning {
+      /* .stage is a plain block, so the space between its children is theirs
+         to bring — .stage__intro above does the same. --space-xl rather than
+         the --space-2xl between two examples: the notice belongs to the page,
+         not to the first example, but it is not an example itself. */
+      margin: 0 0 var(--space-xl);
+      border: 1px solid var(--color-warning);
+      border-radius: var(--borderRadius);
+      padding: var(--space-s) var(--space-m);
+
+      font-size: 0.9rem;
+
+      color: var(--color-text);
+      background-color: var(--color-bg-surface);
+    }
+
+    .warning strong {
+      color: var(--color-warning);
+    }
+
+    /* Example 5's toast stack, in the corner where a project would put it. */
+    .m-toast {
+      position: fixed;
+      inset-block-end: var(--space-l);
+      inset-inline-end: var(--space-l);
+      z-index: 50;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <main class="shell">
+
+    <section class="hero">
+      <a class="back" href="../../../index.html">← Overview</a>
+      <h1>copyToClipboard</h1>
+      <p>One press puts a string into the clipboard — and says so, to whoever cannot see the checkmark.</p>
+    </section>
+
+    <section class="stage" aria-label="Live demo">
+
+      <!--
+          A copy leaves no trace on the page: nothing navigated, no value
+          changed, no element appeared. So the visible half of a copy button
+          is three lines anybody can write, and the other half — the one
+          that tells a screen-reader user anything happened at all — is
+          what this module is.
+
+          The module boots on the BUTTON and writes one attribute:
+            [data-copy-state="copied" | "error"]
+          on the button and on the source element, for
+          data-copy-duration ms. Every look on this page is the demo's own
+          CSS keyed off that attribute (see the DEMO-ONLY STYLES comment) —
+          the component's own stylesheet is a single visually-hidden rule
+          for the live region it injects.
+
+          Wiring — five examples
+            - Example 1: a code block. data-copy-target names the <code>,
+              and what lands in the clipboard is what stands on screen,
+              indentation and line breaks included — textContent, not a
+              rendering of it. The outer whitespace of the pretty-printed
+              markup is trimmed off.
+            - Example 2: a literal string, data-copy-text, with the value in
+              the announcement: data-copy-copied-text="… {text} …". Short
+              values only — a twelve-line snippet read out in full is not a
+              confirmation.
+            - Example 3: a field's value, so what is copied is whatever the
+              reader last typed, and data-copy-duration="0" — the state
+              stays until the next press instead of timing out.
+            - Example 4: the failure path. The button points at a selector
+              that matches nothing, which is reported at init as a warning
+              and enhanced anyway (a box can be filled later). Press it: the
+              state goes to "error", the live region says so, and nothing
+              in the clipboard is touched.
+            - Example 5: the message handed to `toast` instead. One
+              listener at the bottom of this file turns copy:copied into a
+              toast:show — and BOTH announcements would then be spoken, so
+              this button opts this module's own out with an empty
+              data-copy-copied-text="".
+
+          Progressive enhancement
+            - Every button here ships with the `hidden` attribute and the
+              module removes it. Nothing in HTML or CSS copies anything, so
+              a copy button without a script is a control that does nothing
+              — and that is `video`'s approach rather than a CSS
+              pre-enhancement block: no ready attribute, no media query.
+              Turn JavaScript off and reload: the snippets, the field and
+              the coupon code are all still here and still selectable,
+              with not one dead button among them.
+            - The same attribute covers every bail-out. Example 6 is a
+              button you cannot see, and never will: its target selector is
+              not valid CSS, so the module reported it and left the control
+              hidden.
+            - The clipboard needs a secure context, and that is the one
+              way to see all six buttons stay hidden at once. localhost and
+              127.0.0.1 count as secure, https counts, and everything else
+              does not — a LAN address is the case you meet in practice,
+              because testing a copy button by touch means opening the page
+              on a phone at http://192.168.x.x. There navigator.clipboard
+              does not exist, every control keeps the `hidden` attribute it
+              was authored with, and the page says so in the amber notice
+              above the examples.
+
+          Accessibility
+            - The result is SAID, not only drawn. Each button gets a polite
+              live region after it, and one sentence goes into it per press
+              — a new node each time, because assigning the same text to
+              the same node is not a change and the second "Copied" would
+              be silent.
+            - The sentence and the checkmark end together. When
+              data-copy-duration is up, the state attribute comes off AND
+              the region is emptied, so a virtual cursor moving through the
+              page later does not find a stale result standing at a control
+              that shows nothing of the sort. Example 3 is set to 0 and
+              keeps both — there the sentence is the standing checkmark's
+              only counterpart in words.
+            - The focus never moves and no selection is touched, on either
+              outcome. The text stays where it was, selectable.
+            - No label text is ever swapped, here or in the CSS. The label
+              is the control's accessible name; the glyph carries the
+              state. Watch it in the inspector: the button's text node is
+              the same before and after.
+            - Two of the buttons name what they copy ("Copy the install
+              command"), because a page with several is a page where "Copy"
+              alone does not tell them apart.
+
+          Try it
+            - Watch the DOM in the inspector: data-copy-state appears on the
+              button AND on the <code> it copied, and the live region beside
+              the button fills with a sentence. Two seconds later all three
+              are gone together — except in example 3, which is set to 0 and
+              holds every one of them until the next press.
+            - Press example 4 and read the console: one warning at init
+              ("nothing matches … yet") and the announced failure on the
+              press.
+            - Paste example 1 into an editor: the two lines and their
+              indentation arrive as they stand, not collapsed into one.
+      -->
+
+      <p class="stage__intro">
+        Five copy buttons, one component. What you see is this page's own CSS
+        reacting to a single attribute — <code>data-copy-state</code> — and
+        what you cannot see is the half that matters: a
+        <strong>polite live region</strong> beside every button, saying in
+        words what the checkmark says in green.
+      </p>
+
+      <!--
+          Not a fallback and not a workaround: the component's own contract,
+          made visible. On an origin that is not secure — a LAN address, a
+          hostname, plain http — navigator.clipboard does not exist, so
+          every button on this page stays hidden and the only explanation is
+          in the console. A demo page that shows nothing owes the reader the
+          reason on the page. Revealed by the script at the bottom.
+      -->
+      <p class="warning" id="insecureOrigin" hidden>
+        <strong>Every copy button on this page is hidden</strong> — and that
+        is the component working, not failing. This page is on
+        <code id="insecureOriginHost"></code>, which is not a
+        <em>secure context</em>, so <code>navigator.clipboard</code> does not
+        exist here and the module left all six controls with the
+        <code>hidden</code> attribute they were authored with. The snippets,
+        the field and the coupon code are all still readable and selectable,
+        which is the whole point. Open the page via
+        <code>http://localhost</code> or <code>http://127.0.0.1</code> — or
+        over https — to try the buttons.
+      </p>
+
+      <div class="demo">
+
+        <!-- Example 1: a code block -->
+        <section class="demo__example">
+          <h2>1 — A code snippet</h2>
+
+          <p class="stage__intro">
+            <code>data-copy-target</code> names the <code>&lt;code&gt;</code>
+            element. What lands in the clipboard is its text as it stands on
+            screen — both lines, with the indentation of the second one —
+            because the module reads <code>textContent</code> and not
+            <code>innerText</code>, which would collapse exactly the
+            whitespace a snippet is made of. Only the outer whitespace of the
+            pretty-printed markup is trimmed away.
+          </p>
+
+          <div class="snippet">
+            <pre class="snippet__code" id="installCommand"><code>npm install @hanseatics/ui-components
+  --save-exact</code></pre>
+
+            <button
+              class="button"
+              type="button"
+              data-js-behavior="copyToClipboard"
+              data-copy-target="#installCommand"
+              hidden
+            >
+              <span class="button__icons">
+                <svg class="button__icon button__icon--copy" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                  <rect x="9" y="9" width="12" height="12" rx="2" />
+                  <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" />
+                </svg>
+                <svg class="button__icon button__icon--done" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                  <path d="m4 12.5 5 5L20 6.5" />
+                </svg>
+                <svg class="button__icon button__icon--failed" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                  <path d="M6 6l12 12M18 6 6 18" />
+                </svg>
+              </span>
+              Copy the install command
+            </button>
+          </div>
+        </section>
+
+        <!-- Example 2: a literal string, quoted in the announcement -->
+        <section class="demo__example">
+          <h2>2 — A literal string</h2>
+
+          <p class="stage__intro">
+            <code>data-copy-text</code> carries the value itself. This is
+            where anything that is not visible text belongs — a share URL, an
+            <code>href</code>, an order number the template knows. The value
+            is short, so it goes into the announcement too:
+            <code>data-copy-copied-text="Coupon code {text} copied."</code>
+          </p>
+
+          <p class="coupon">
+            Your coupon code:
+            <strong class="coupon__value">SPRING-2026</strong>
+
+            <button
+              class="button"
+              type="button"
+              data-js-behavior="copyToClipboard"
+              data-copy-text="SPRING-2026"
+              data-copy-copied-text="Coupon code {text} copied to the clipboard."
+              hidden
+            >
+              <span class="button__icons">
+                <svg class="button__icon button__icon--copy" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                  <rect x="9" y="9" width="12" height="12" rx="2" />
+                  <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" />
+                </svg>
+                <svg class="button__icon button__icon--done" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                  <path d="m4 12.5 5 5L20 6.5" />
+                </svg>
+                <svg class="button__icon button__icon--failed" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                  <path d="M6 6l12 12M18 6 6 18" />
+                </svg>
+              </span>
+              Copy the coupon code
+            </button>
+          </p>
+        </section>
+
+        <!-- Example 3: a field's value, and a state that stays -->
+        <section class="demo__example">
+          <h2>3 — A field's value, and a state that stays</h2>
+
+          <p class="stage__intro">
+            Pointed at an <code>&lt;input&gt;</code>, the module copies its
+            <strong>value</strong> — so edit the field and press again, and
+            what you get is what you typed. <code>data-copy-duration="0"</code>
+            keeps the state until the next press instead of dropping it after
+            two seconds: the checkmark stands, which is the right choice where
+            the reader is meant to carry the value somewhere else and come
+            back.
+          </p>
+
+          <div class="field">
+            <label class="field__label" for="shareLink">Link to this page</label>
+
+            <div class="field__row">
+              <input
+                class="field__control"
+                id="shareLink"
+                type="text"
+                value="https://example.com/docs/copy-to-clipboard"
+              >
+
+              <button
+                class="button"
+                type="button"
+                data-js-behavior="copyToClipboard"
+                data-copy-target="#shareLink"
+                data-copy-duration="0"
+                hidden
+              >
+                <span class="button__icons">
+                  <svg class="button__icon button__icon--copy" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                    <rect x="9" y="9" width="12" height="12" rx="2" />
+                    <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" />
+                  </svg>
+                  <svg class="button__icon button__icon--done" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                    <path d="m4 12.5 5 5L20 6.5" />
+                  </svg>
+                  <svg class="button__icon button__icon--failed" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                    <path d="M6 6l12 12M18 6 6 18" />
+                  </svg>
+                </span>
+                Copy the link
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Example 4: the failure path -->
+        <section class="demo__example">
+          <h2>4 — When it cannot copy</h2>
+
+          <p class="stage__intro">
+            This button points at <code>#aBoxThatIsNotHere</code>. A selector
+            matching nothing <em>yet</em> is a warning and not a bail-out — the
+            box may be filled later by something else, and the source is looked
+            up again on every press. So the control is enhanced and it fails
+            honestly: the state goes to <code>error</code>, the live region says
+            the text can still be selected by hand, and the clipboard keeps
+            whatever was in it. An empty source is never written, because
+            <code>writeText("")</code> would take something away.
+          </p>
+
+          <button
+            class="button"
+            type="button"
+            data-js-behavior="copyToClipboard"
+            data-copy-target="#aBoxThatIsNotHere"
+            hidden
+          >
+            <span class="button__icons">
+              <svg class="button__icon button__icon--copy" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <rect x="9" y="9" width="12" height="12" rx="2" />
+                <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" />
+              </svg>
+              <svg class="button__icon button__icon--done" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <path d="m4 12.5 5 5L20 6.5" />
+              </svg>
+              <svg class="button__icon button__icon--failed" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <path d="M6 6l12 12M18 6 6 18" />
+              </svg>
+            </span>
+            Copy something that is not there
+          </button>
+
+          <!--
+              Example 6, and there is nothing to see: the selector is not
+              valid CSS, so querySelector would throw inside the click
+              listener where nothing could report it. The module reports it
+              at init instead and never takes the `hidden` attribute off —
+              which is the whole pre-enhancement story of this component in
+              one element.
+          -->
+          <button
+            class="button"
+            type="button"
+            data-js-behavior="copyToClipboard"
+            data-copy-target="#not a selector["
+            hidden
+          >
+            You will never see this button
+          </button>
+
+          <p class="note">
+            There is a second button in this markup that you cannot see, and
+            never will — its target selector is not valid CSS. Read the source
+            and the console.
+          </p>
+        </section>
+
+        <!-- Example 5: the message handed to toast -->
+        <section class="demo__example">
+          <h2>5 — The message handed to toast</h2>
+
+          <p class="stage__intro">
+            The module says the result; it draws nothing. For a
+            <strong>visible</strong> message,
+            <a href="../toast/demo.html">toast</a> is the component next door,
+            and one listener joins them — <code>copy:copied</code> in,
+            <code>toast:show</code> out. Neither module knows about the other.
+            A toast is a live region of its own, though, so this button opts
+            <em>this</em> module's announcement out with an empty
+            <code>data-copy-copied-text=""</code>: otherwise the reader is
+            told twice.
+          </p>
+
+          <div class="snippet">
+            <pre class="snippet__code" id="apiKey"><code>sk_live_4f8b2c1e9d7a</code></pre>
+
+            <button
+              class="button"
+              type="button"
+              data-js-behavior="copyToClipboard"
+              data-copy-target="#apiKey"
+              data-copy-copied-text=""
+              data-copy-error-text=""
+              data-demo-toast
+              hidden
+            >
+              <span class="button__icons">
+                <svg class="button__icon button__icon--copy" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                  <rect x="9" y="9" width="12" height="12" rx="2" />
+                  <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" />
+                </svg>
+                <svg class="button__icon button__icon--done" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                  <path d="m4 12.5 5 5L20 6.5" />
+                </svg>
+                <svg class="button__icon button__icon--failed" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                  <path d="M6 6l12 12M18 6 6 18" />
+                </svg>
+              </span>
+              Copy the API key
+            </button>
+          </div>
+
+          <p class="note">
+            The other way round needs no script at all:
+            <code>data-toast-trigger</code> on the same button. It fires on the
+            press, though, so it reports a copy before the write has settled —
+            fine for a share link, wrong if the failure matters.
+          </p>
+        </section>
+
+      </div>
+
+    </section>
+
+    <!-- Example 5's stack. Positioned by this page, as a project would. -->
+    <section class="m-toast" aria-label="Notifications" data-js-behavior="toast"></section>
+
+  </main>
+
+  <!--
+      DEMO-ONLY SCRIPT
+      ------------------------------------------------------------------
+      The seam between the two modules, and the whole of it. The events
+      bubble, so one delegated listener on the document serves every copy
+      button on the page — and they are dispatched once the write has
+      SETTLED, which is why they exist at all: the outcome is not known at
+      the moment of the press.
+
+      event.detail is { text } on success and { text, error } on failure.
+
+      data-demo-toast is this PAGE's marker, not the component's: only
+      example 5 wants a toast, and the other four buttons announce through
+      their own live region. That is the same decision in the other
+      direction — one of the two channels per control, never both.
+  -->
+  <script>
+    // The component's precondition, said on the page instead of only in the
+    // console — see the notice's comment above. `isSecureContext` is the
+    // platform's own answer to the question, and navigator.clipboard is
+    // checked beside it because that is what the module actually looks for.
+    if (!window.isSecureContext || !navigator.clipboard) {
+      document.getElementById('insecureOriginHost').textContent = location.origin;
+      document.getElementById('insecureOrigin').hidden = false;
+    }
+
+    document.addEventListener('copy:copied', (event) => {
+      if (!event.target.hasAttribute('data-demo-toast')) return;
+
+      document.dispatchEvent(new CustomEvent('toast:show', {
+        detail: {
+          message: `Copied ${event.detail.text} to the clipboard`,
+          variant: 'success',
+        },
+      }));
+    });
+
+    document.addEventListener('copy:failed', (event) => {
+      if (!event.target.hasAttribute('data-demo-toast')) return;
+
+      document.dispatchEvent(new CustomEvent('toast:show', {
+        detail: {
+          message: 'Nothing was copied — the text can be selected by hand.',
+          variant: 'error',
+        },
+      }));
+    });
+  </script>
+
+</body>
+</html>

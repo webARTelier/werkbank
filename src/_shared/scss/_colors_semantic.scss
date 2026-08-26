@@ -54,9 +54,16 @@
   // enough to keep AA contrast on the dark surfaces above.
   --color-error: var(--c-red-400);
   // The other two outcomes a message can report (e.g. toast). Same lightness
-  // band as the error tone, so the three read as one set — and none of them
-  // ever carries body text in this collection: they colour a border and an
-  // icon, where the bar is the 3:1 of WCAG 1.4.11.
+  // band as the error tone, so the three read as one set.
+  //
+  // They mostly colour a border and an icon, where the bar is the 3:1 of
+  // WCAG 1.4.11 — but not only: copyToClipboard's demo tints the button's
+  // LABEL while the copy stands, which is text and therefore the 4.5:1 of
+  // WCAG 1.4.3. Measured against --color-bg-elevated, the lightest surface a
+  // control sits on here: warning 8.48, success 8.23, error 5.05. So the
+  // whole set clears the text bar as it stands, and that is the number to
+  // re-check before darkening any of the three — not the 3:1. The error tone
+  // is the one with the thin margin.
   --color-warning: var(--c-amber-400);
   --color-success: var(--c-green-400);
 

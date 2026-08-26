@@ -239,6 +239,7 @@ of them, and the wrong one for most.
 | `tooltip` | none | not needed | the hint is out of the way at rest and the stylesheet does the showing on its own, so the first paint already is the enhanced rendering |
 | `marquee` | none | not needed | the clipping row is plain CSS from the first paint; the strip is just static until it runs |
 | `video` | none | not needed | the JS-only toggle ships with `hidden` in the markup and the script reveals it — the same idea, expressed in HTML |
+| `copyToClipboard` | none | not needed | `video`'s approach, and the second component to take it: the copy button is dead without the script — nothing in HTML or CSS copies anything — so it ships `hidden` and `init()` reveals it last. Every bail-out simply returns before that line, which is what makes the guard cover an insecure origin, an invalid target selector and a missing source as well. It owns no ready attribute at all, and it adds the one thing `video`'s note leaves out: `hidden` is a UA rule at specificity (0,0,0), so the component's stylesheet has to hold it against the project's own `.button { display: … }` (see below) |
 | `embedConsent` | the notice, shown for a moment to somebody who consented long ago | not needed here, and the rest is the project's | the facade is a poster, a paragraph and a real link: nothing is hidden, nothing is lost, and if the chunk never arrives the link still reaches the content. The one flash it *does* have cannot be closed from here — whether this visitor consented is not something CSS can know unless the project puts it in the document, which is exactly why the consent gate's default lane is an attribute on `<html>`. Its ready attribute is therefore written for a rule this component does not ship (see below) |
 | `stickyObserver`, `scrollSpy`, `flexNeighborMarker`, `adaptiveScrollFade` | additive marker/fade appears | not needed | nothing is hidden, and the result depends on measurement CSS cannot anticipate |
 | `dateInputFormat`, `numberInputFormat`, `formValidation` | none | not needed | behaviour on interaction only. The two formatters do re-group a pre-filled value on `init()`, which can widen it — a Layer 4 case their own stylesheets answer with `tabular-nums`, not something to hide, so neither owns a ready attribute at all |
@@ -249,6 +250,32 @@ script can simply ship with the `hidden` attribute and be revealed by `init()`.
 Where that works it is better than any CSS, because it needs no ready
 attribute and no media query. It only works for *adding* a control, not for
 changing an existing rendering.
+
+`copyToClipboard` took the same route in 2026-08 and found the one thing that
+note was missing: **`hidden` does not hide anything on its own.** Its effect is
+a UA rule, `[hidden] { display: none }`, at specificity (0,0,0) — so the first
+`.button { display: inline-flex }` a project writes puts every dead control
+back on screen, and giving a button a `display` is the first thing anybody does
+to one. `video` gets away with it because `m-video__toggle` is the component's
+own class and the component's own stylesheet gives it its `display`; a function
+that owns no vocabulary has no such rule to put the `display` in. So the
+component ships one instead:
+
+```scss
+[data-copy-target][hidden],
+[data-copy-text][hidden] { display: none !important; }
+```
+
+The `!important` is the same argument the reduced-motion blocks in this
+collection make: there is no reading of the markup in which an author wants a
+layout rule to resurrect a control the module deliberately left dead, and a
+specificity safe against `.toolbar .button` in a stylesheet loaded *after* this
+one cannot be written without a hack. The scope is the narrowest that still
+gives the guarantee — an element carrying this component's own source attribute
+*and* `hidden` — and the rule stops applying the moment `init()` removes the
+attribute. **Whenever a component takes the `hidden` route, check whether the
+element it hides has a `display` of its own from somewhere;** if it does not,
+this rule belongs with it.
 
 `dataTable` is the case that runs the other way, and it is worth knowing that
 the attribute can. Its stacked layout (rows as cards, below the `small`

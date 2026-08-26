@@ -78,7 +78,7 @@ The **role** column says what a piece is in BEM terms: a **module** (`m-`) is
 *placed* and occupies a region of the page, a **component** (`c-`) is
 *attached* to a host that is complete without it, and a **function** owns no
 vocabulary at all — it only enhances existing markup, so the look belongs to
-your project. Four functions ship a ready-made look alongside them anyway;
+your project. Seven functions ship a ready-made look alongside them anyway;
 the class in brackets is that offer, and the behaviour neither needs nor
 reads it. The full decision rule is in [`CLAUDE.md`](CLAUDE.md).
 
@@ -89,6 +89,7 @@ reads it. The full decision rule is in [`CLAUDE.md`](CLAUDE.md).
 | `autoGrowTextarea`   | component                     | A `<textarea>` as tall as its value, on `field-sizing` where there is one. |
 | `backToTop`          | module                        | Jump back to the top, shown once the page is scrolled far enough.   |
 | `comboBox`           | component                     | Typeahead listbox on a native `<input list>` + `<datalist>`.        |
+| `copyToClipboard`    | function                      | One press puts a string into the clipboard — announced, not only drawn. |
 | `countdown`          | module                        | Live countdown to a target date/time.                               |
 | `dataTable`          | component                     | Sortable columns on a plain `<table>`, scrolling or stacked.        |
 | `dateInputFormat`    | function (`c-dateField`)      | Auto-formats a text field into a grouped date mask (`DD.MM.YYYY`).  |
