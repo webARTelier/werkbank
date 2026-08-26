@@ -54,9 +54,29 @@ const reporter = createReporter({ level: 'warn' });
 //     resolve: (token) => window.Cookiebot?.consent?.[token] === true,
 //   })
 //
+// Two OPTIONAL callbacks go the other way — a visitor allowing a provider at
+// the box itself, permanently, instead of hunting for the banner again. Pass
+// both or neither (withdrawal has to be as easy as consent), and pass them
+// only where your platform can be told about ONE service; a category is
+// more than a video box explained. Nothing is stored here — the CMP stores,
+// documents, and writes its own answer back. See createConsentGate.js.
+//
+//   createConsentGate({
+//     resolve: …,
+//     grant:  (token) => window.UC_UI?.acceptService(serviceId(token)),
+//     revoke: (token) => window.UC_UI?.denyService(serviceId(token)),
+//   })
+//
 // It costs a page with no embed on it nothing but these few bytes: the
 // observer and the listeners are only created once a component subscribes.
-const consent = createConsentGate();
+//
+// The one thing that is NOT wired here: a page that cannot edit this file —
+// a demo in this collection, a CMS preview, a project that keeps its
+// vendored dist untouched — may put the same options object on
+// window.consentGateOptions before boot.min.js runs. Editing this call is
+// still the way to do it; that global is the way in for a page that has no
+// build of its own.
+const consent = createConsentGate(window.consentGateOptions);
 
 const services = {
   reporter,

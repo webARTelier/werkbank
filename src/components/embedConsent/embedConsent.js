@@ -36,12 +36,20 @@
  *
  * What this component is NOT
  * --------------------------
- * It is not a cookie banner, it does not ask the consent question itself, and
- * it STORES NOTHING — no cookie, no localStorage, no "always allow". A record
- * of what a visitor permitted is a legal document with an obligation to
- * withdraw and an obligation to prove attached to it, and that belongs to the
- * project's CMP. This component asks and forgets: a click covers this page
- * view, and a reload puts the notice back.
+ * It is not a cookie banner and it does not ask the consent question itself.
+ * It STORES NOTHING and WRITES NOTHING — no cookie, no localStorage, no
+ * consent record of its own. A record of what a visitor permitted is a legal
+ * document with an obligation to withdraw and an obligation to prove attached
+ * to it, and that belongs to the project's CMP. A click here covers this page
+ * view; a reload puts the notice back.
+ *
+ * Since the permanent lane (see 9 below) it can HAND a decision to that
+ * platform — which is the same sentence read in the other direction, not a
+ * softening of it. The component asks the gate, the gate calls a callback the
+ * project wrote, the platform stores, documents and answers back. Nothing in
+ * here keeps a byte of it, and a grant that never reached the platform is
+ * reported rather than remembered locally: a consent nobody can prove is not
+ * one worth having.
  *
  * Which category a service falls into is not decided here either. The markup
  * names the tokens to ask for and the project's boot.js says how they are
@@ -120,6 +128,41 @@
  *     any group, because the press that would fill it explained nothing to
  *     the visitor about it). The group never crosses providers: the key is
  *     the service token, so a press about YouTube cannot fill a map.
+ *  9. Optionally, ONE PRESS FOR GOOD. Where the project's consent gate can
+ *     hand a decision to its CMP (services.consent.canGrant()), a second
+ *     button offers the visitor the thing the click lane cannot: "and always
+ *     allow YouTube". The press does exactly what the plain one does — the
+ *     embed goes in here and now — and then asks the gate to tell the
+ *     platform. The platform stores it, documents it and writes its own
+ *     answer back, and the gate's subscription is what fills the rest of the
+ *     page and the next page. This component stores nothing either way, and
+ *     a grant that could not be handed over is REPORTED rather than
+ *     pretended: the button said "always" and only the page view was
+ *     delivered.
+ *
+ *     Five conditions, all of them checked, because this is the one control
+ *     here that outlives the page view:
+ *       - The project wired BOTH grant and revoke into the gate. Withdrawal
+ *         has to be as easy as consent (GDPR Art. 7(3)), so a project that
+ *         can only grant gets no grant control at all.
+ *       - The author shipped BOTH buttons, [data-embedconsent-grant] and
+ *         [data-embedconsent-revoke]. Same rule seen from the markup side:
+ *         the way back is part of the offer, not an afterthought somewhere
+ *         else on the page.
+ *       - The plain load button is available. A box offering only the
+ *         permanent choice would make a lasting decision the price of
+ *         watching one video, which is the dark pattern this whole lane
+ *         would otherwise be.
+ *       - There is a SERVICE token to grant. A category ("marketing") is
+ *         more than the notice explained, and it is not this component's to
+ *         translate — see createConsentGate.js.
+ *       - Rule 4 still stands, through the condition above: no notice, no
+ *         load button, therefore no permanent one either.
+ *
+ *     And the way back is a real control on the box, revealed exactly while
+ *     there is a platform-held consent to take back (never after a plain
+ *     click — a reload already takes that one back, so a "withdraw" there
+ *     would be a button that does nothing).
  *
  * Accessibility
  * -------------
@@ -148,6 +191,13 @@
  *   to the control.
  * - Nothing in the facade is colour-coded: the notice is text, and the
  *   states this component has are stated in words (WCAG 1.4.1).
+ * - The permanent lane's two controls are real buttons, shipped `hidden` and
+ *   labelled from the same de/en table, and the grant one carries the same
+ *   `aria-describedby` as the load button: it asks for more than the other,
+ *   so it may not ask for it with less. The revoke control is authored
+ *   OUTSIDE the facade and therefore comes before the iframe in the tab
+ *   order — the way out of the content precedes the content, which is where
+ *   it can be found.
  *
  * Configuration (on the element carrying data-js-behavior="embedConsent")
  * ----------------------------------------------------------------------
@@ -190,6 +240,16 @@
  *                                  click lane (see 4 above), and for a
  *                                  place in a group (see 8).
  * - `[data-embedconsent-toggle]`    the load button, shipped `hidden`.
+ * - `[data-embedconsent-grant]`     opt-in: the button that also asks the
+ *                                  project's CMP to remember this provider
+ *                                  (see 9 above). Shipped `hidden`, revealed
+ *                                  only where all five conditions hold.
+ * - `[data-embedconsent-revoke]`    the way back, and required alongside the
+ *                                  one above. Shipped `hidden`, revealed
+ *                                  while a platform-held consent is what is
+ *                                  filling this box. Put it OUTSIDE the
+ *                                  facade — the facade is hidden exactly
+ *                                  when this control is needed.
  * - `[data-embedconsent-poster]`    the LOCALLY hosted preview image.
  *                                  Optional — and never a provider's
  *                                  thumbnail URL, which would be the very
@@ -202,11 +262,11 @@
  *
  * Styling contract
  * ----------------
- * The script sets no inline styles. It toggles `hidden` on the facade,
- * stamps the injected iframe with [data-embedconsent-embed] and writes
- * [data-embedconsent-ready] on the root; embedConsent.scss keys on exactly
- * these hooks. The c-embedConsent* classes are styling only — the JS never
- * touches them.
+ * The script sets no inline styles. It toggles `hidden` on the facade, on the
+ * load button and on the permanent lane's two controls, stamps the injected
+ * iframe with [data-embedconsent-embed] and writes [data-embedconsent-ready]
+ * on the root; embedConsent.scss keys on exactly these hooks. The
+ * c-embedConsent* classes are styling only — the JS never touches them.
  * ----------------------------------------------------------------------------
  */
 
@@ -228,6 +288,11 @@ const defaults = {
   selToggle: '[data-embedconsent-toggle]',
   selFallback: '[data-embedconsent-fallback]',
   selPoster: '[data-embedconsent-poster]',
+
+  // The permanent lane's two controls (see 9 in the header). A pair, always:
+  // neither is wired without the other.
+  selGrant: '[data-embedconsent-grant]',
+  selRevoke: '[data-embedconsent-revoke]',
 
   // Per-instance option attributes (see the header comment).
   providerAttr: 'data-embedconsent-provider',
@@ -286,6 +351,14 @@ const defaults = {
 // away; "the others on this page" survives that without a single
 // recalculation. The announcement is the opposite case — it is written at
 // press time, when the number is exact — and there it earns its place.
+//
+// The permanent lane's own label (grantLoad / grantLoadPlay) takes the
+// autoplay axis and NOT the group one, and that is a claim about what the
+// press does rather than a saving of two strings: a consent handed to the
+// platform reaches every box on the page whether it opted into a group or
+// not, and the next page too. "Always allow YouTube" already says more than
+// "and the others on this page" would, and adding both would describe the
+// smaller half of the same press.
 const labels = {
 
   de: {
@@ -294,6 +367,9 @@ const labels = {
     loadGroup: '{provider} laden — und die übrigen auf dieser Seite',
     loadPlayGroup: '{provider} laden und abspielen — die übrigen auf dieser '
       + 'Seite werden mitgeladen',
+    grantLoad: '{provider} laden und dauerhaft erlauben',
+    grantLoadPlay: '{provider} laden, abspielen und dauerhaft erlauben',
+    revoke: 'Einwilligung für {provider} zurücknehmen',
     loaded: 'Der Inhalt von {provider} wurde geladen.',
     loadedGroupOne: 'Eine weitere Einbettung von {provider} auf dieser Seite '
       + 'wurde ebenfalls geladen.',
@@ -310,6 +386,9 @@ const labels = {
     loadGroup: 'Load {provider} — and the others on this page',
     loadPlayGroup: 'Load and play {provider} — the others on this page are '
       + 'loaded too',
+    grantLoad: 'Load {provider} and allow it permanently',
+    grantLoadPlay: 'Load and play {provider}, and allow it permanently',
+    revoke: 'Withdraw consent for {provider}',
     loaded: 'Content from {provider} has been loaded.',
     loadedGroupOne: 'One further embed from {provider} on this page has been '
       + 'loaded as well.',
@@ -631,8 +710,16 @@ class EmbedConsent {
   unsubscribe = null;
 
   // Whether the shipped label was written into an empty authored button, so
-  // destroy() knows whether there is a label to take back.
+  // destroy() knows whether there is a label to take back. One per button
+  // this component may label.
   wroteLabel = false;
+  wroteGrantLabel = false;
+  wroteRevokeLabel = false;
+
+  // Whether the permanent lane is live on this box: all five conditions in
+  // point 9 held. Read by syncRevoke, which must not reveal a way back on a
+  // box that was never offered a way in.
+  permanent = false;
 
   // The group this box joins (see groupKey), "" for a box on its own.
   group = '';
@@ -648,6 +735,7 @@ class EmbedConsent {
   // this component ran, and neither may be taken away if it was.
   generatedNoticeId = false;
   wroteDescribedBy = false;
+  wroteGrantDescribedBy = false;
 
 
 
@@ -661,6 +749,8 @@ class EmbedConsent {
     this.toggle = root.querySelector(defaults.selToggle);
     this.fallback = root.querySelector(defaults.selFallback);
     this.poster = root.querySelector(defaults.selPoster);
+    this.grantBtn = root.querySelector(defaults.selGrant);
+    this.revokeBtn = root.querySelector(defaults.selRevoke);
 
     // Asked once, here, because two separate rules read it (see `informed`).
     this.informed = !!this.notice?.textContent.trim();
@@ -844,6 +934,13 @@ class EmbedConsent {
 
     this.buildStatus();
     this.wireToggle();
+
+    // After wireToggle, because one of its five conditions is "the plain
+    // load button is available", and only wireToggle knows that. Before
+    // watchGate, because that may embed straight away on an existing
+    // consent — and the way back has to exist by then.
+    this.wirePermanent();
+
     this.watchGate();
 
     // One press may reach every other box in the same group, so an instance
@@ -968,6 +1065,188 @@ class EmbedConsent {
 
 
 
+  // The permanent lane (point 9 in the header): the only control here whose
+  // press outlives the page view, and therefore the only one with five
+  // conditions in front of it. Every one of them reports, because a control
+  // an author shipped and this component refused to reveal is exactly the
+  // silence that would be read as a bug.
+  //
+  // Opt-in through the MARKUP: a box with neither button says nothing at
+  // all. A project can wire the gate's callbacks for its whole site and
+  // still offer the permanent choice at three boxes out of forty.
+  wirePermanent = () => {
+    if (!this.grantBtn && !this.revokeBtn) return;
+
+    // A pair, and the pair is the point. GDPR Art. 7(3): withdrawing has to
+    // be as easy as consenting, so a box that can grant with one press and
+    // has no control to take it back is not a box this component completes.
+    // Neither half is wired without the other — a lone "withdraw" would be
+    // as wrong in the other direction, offering to take back something this
+    // box never offered to give.
+    if (!this.grantBtn || !this.revokeBtn) {
+      this.reporter?.report(
+        'embedConsent',
+        `the permanent lane needs BOTH ${defaults.selGrant} and`
+        + ` ${defaults.selRevoke} — withdrawing has to be as easy as`
+        + ' consenting, so a grant control with no way back is not revealed.'
+        + ` Missing: ${this.grantBtn ? defaults.selRevoke : defaults.selGrant}.`
+        + ' Neither button is wired.', this.root
+      );
+      return;
+    }
+
+    // One check for two causes: an author who shipped no load button at all,
+    // and rule 4, which is wireToggle leaving the button hidden because there
+    // is no notice to be informed by. Both end here, and both are reported
+    // there. What this adds is the reason of its own — a box offering ONLY
+    // the permanent choice would make a lasting decision the price of
+    // watching one video.
+    if (!this.toggle || this.toggle.hidden) {
+      this.reporter?.report(
+        'embedConsent',
+        `the plain ${defaults.selToggle} button is not available in this box,`
+        + ' so the permanent control is not either — it would make a lasting'
+        + ' decision the only way to see the content. The reason the load'
+        + ' button is unavailable is reported above.', this.root
+      );
+      return;
+    }
+
+    // Whether a decision can be handed to the platform at all is the
+    // project's answer, given once in boot.js. No callbacks — and every TCF
+    // setup, which has no write API — means no control, rather than a
+    // control that quietly only covers the page view.
+    if (!this.gate?.canGrant()) {
+      this.reporter?.report(
+        'embedConsent',
+        'the consent gate cannot hand a decision to your platform, so the'
+        + ' permanent control stays hidden. Pass grant AND revoke to'
+        + ' createConsentGate() in boot.js (or on window.consentGateOptions)'
+        + ' — see createConsentGate.js for what belongs in them, and why a'
+        + ' category-only platform should not have them at all.', this.root
+      );
+      return;
+    }
+
+    // The identity that is granted has to be the specific one. A category is
+    // more than this notice explained, and translating one into the other is
+    // the project's decision at the composition root, not this component's.
+    if (!this.service) {
+      this.reporter?.report(
+        'embedConsent',
+        `the permanent control needs a ${defaults.serviceAttr} to grant. The`
+        + ` ${defaults.categoryAttr} token is not a substitute: granting a`
+        + ' whole category from a single embed grants more than the notice'
+        + ' explained. It stays hidden.', this.root
+      );
+      return;
+    }
+
+    // The information is attached to this control too — it is the one that
+    // asks for more than the other, so it may not ask for it with less.
+    this.wroteGrantDescribedBy = addDescribedBy(this.grantBtn, this.notice.id);
+
+    if (!this.grantBtn.textContent.trim()) {
+      this.grantBtn.textContent = this.say(
+        this.autoplay ? 'grantLoadPlay' : 'grantLoad'
+      );
+
+      if (this.labelsLang) this.grantBtn.lang = this.labelsLang;
+      this.wroteGrantLabel = true;
+    }
+
+    if (!this.revokeBtn.textContent.trim()) {
+      this.revokeBtn.textContent = this.say('revoke');
+
+      if (this.labelsLang) this.revokeBtn.lang = this.labelsLang;
+      this.wroteRevokeLabel = true;
+    }
+
+    this.grantBtn.hidden = false;
+    this.grantBtn.addEventListener('click', this.handleGrant);
+    this.revokeBtn.addEventListener('click', this.handleRevoke);
+
+    // The revoke button stays hidden: syncRevoke reveals it only while a
+    // platform-held consent is what is filling this box.
+    this.permanent = true;
+  };
+
+
+
+  // The press does what the plain one does FIRST, and asks the platform
+  // second. That order is the header's rule about the gate held to in the one
+  // place it could be forgotten: a consent that never arrives anywhere — a
+  // CMP removed by a content blocker, a callback wrong about its version —
+  // must still leave the visitor with the content they pressed for.
+  //
+  // The group fan-out comes along for the same reason. Where the grant does
+  // arrive, it is redundant (the gate reaches every box asking for this
+  // token, group or no group); where it does not, it is the press behaving
+  // exactly as the plain button would have.
+  handleGrant = () => {
+    this.embed('click');
+    this.loadGroup();
+
+    if (this.gate.grant(this.service)) return;
+
+    this.reporter?.report(
+      'embedConsent',
+      `the consent gate could not hand "${this.service}" to your platform, so`
+      + ' this press covered the page view and nothing beyond it — while the'
+      + ' button promised otherwise. Check the grant callback against the CMP'
+      + ' version actually running.', this.root
+    );
+  };
+
+
+
+  // The way back. The platform is asked, and the embed goes either way —
+  // a reader who pressed "withdraw" may not be left looking at the content
+  // they just refused while a callback makes up its mind. Where the platform
+  // answers, `granted` is already false by then, so the gate's own
+  // withdrawal path finds nothing left to do rather than running twice.
+  //
+  // And where a platform answers "still granted" anyway, the gate re-embeds
+  // it: the CMP's word is the later and the more general one, exactly as on
+  // a withdrawal that arrives from a banner. That is a loud wiring bug
+  // rather than a quiet one, which is the point.
+  handleRevoke = () => {
+    const reached = this.gate.revoke(this.service);
+
+    this.granted = false;
+    this.retract();
+
+    if (reached) return;
+
+    this.reporter?.report(
+      'embedConsent',
+      `the consent gate could not take "${this.service}" back at your`
+      + ' platform, so this box is empty again but the consent may well still'
+      + ' be stored. Check the revoke callback against the CMP version'
+      + ' actually running.', this.root
+    );
+  };
+
+
+
+  // The way back is offered exactly while there is something to go back
+  // FROM: an embed that is in the box because the PLATFORM says so. After a
+  // plain click there is nothing to withdraw — a reload takes that one back
+  // on its own — and a "withdraw consent" button there would be a control
+  // that describes something this component never did.
+  // Idempotent on purpose: it is called from embed(), from retract() and from
+  // the gate's own change handler, because those three do not cover each
+  // other. embed() short-circuits on a box the visitor had already clicked
+  // in, and that box still gains a consent there is now something to
+  // withdraw.
+  syncRevoke = () => {
+    if (!this.permanent) return;
+
+    this.revokeBtn.hidden = !(this.granted && this.frame);
+  };
+
+
+
   watchGate = () => {
     if (!this.gate) return;
 
@@ -997,15 +1276,18 @@ class EmbedConsent {
 
     this.granted = next;
 
-    if (next) {
-      this.embed('granted');
-      return;
-    }
+    if (next) this.embed('granted');
 
     // Withdrawn: the consent that put this here has been taken back, and
     // that is true even for an embed the visitor clicked in themselves — a
     // CMP decision is the later and the more general one.
-    if (previous) this.retract();
+    else if (previous) this.retract();
+
+    // Outside both branches, and that is the case it exists for: a box the
+    // visitor had already clicked in gains a platform-held consent without
+    // anything else changing, because embed() finds a frame and returns. The
+    // way back has to appear all the same.
+    this.syncRevoke();
   };
 
 
@@ -1113,6 +1395,8 @@ class EmbedConsent {
     // up under the reader, which is a scroll nobody asked for.
     if (hadFocus) frame.focus({ preventScroll: true });
 
+    this.syncRevoke();
+
     if (reason === 'granted') this.announce('loaded');
   };
 
@@ -1139,13 +1423,22 @@ class EmbedConsent {
   retract = () => {
     if (!this.frame) return;
 
-    const hadFocus = this.frame.contains(document.activeElement)
-      || document.activeElement === this.frame;
+    // Asked of the ROOT rather than of the frame, because the frame is not
+    // the only thing in here that is about to disappear: the reader may be
+    // standing on the revoke button they just pressed, and syncRevoke is
+    // seconds away from hiding it. Everything else in the root is either the
+    // facade, which is coming back, or nothing.
+    const hadFocus = this.root.contains(document.activeElement);
 
     this.frame.remove();
     this.frame = null;
 
     this.facade.hidden = false;
+
+    // Before the focus lands, so the landing place is picked from what is
+    // actually there — and so the control the reader may be standing on is
+    // gone by the time anything is moved.
+    this.syncRevoke();
 
     // The reader was standing in a frame that no longer exists; without this
     // the focus falls back to <body> and their place in the page is gone.
@@ -1207,6 +1500,8 @@ class EmbedConsent {
     this.unsubscribe = null;
 
     this.toggle?.removeEventListener('click', this.handleClick);
+    this.grantBtn?.removeEventListener('click', this.handleGrant);
+    this.revokeBtn?.removeEventListener('click', this.handleRevoke);
 
     // Only what this component actually wrote. An author who had already
     // described their button by their own notice keeps both the link and
@@ -1214,6 +1509,11 @@ class EmbedConsent {
     if (this.toggle && this.wroteDescribedBy && this.notice?.id) {
       removeDescribedBy(this.toggle, this.notice.id);
       this.wroteDescribedBy = false;
+    }
+
+    if (this.grantBtn && this.wroteGrantDescribedBy && this.notice?.id) {
+      removeDescribedBy(this.grantBtn, this.notice.id);
+      this.wroteGrantDescribedBy = false;
     }
 
     if (this.generatedNoticeId) {
@@ -1232,6 +1532,30 @@ class EmbedConsent {
         this.wroteLabel = false;
       }
     }
+
+    // The permanent lane's pair goes back the same way: both shipped
+    // `hidden`, and a button that came in empty goes out empty.
+    if (this.grantBtn) {
+      this.grantBtn.hidden = true;
+
+      if (this.wroteGrantLabel) {
+        this.grantBtn.textContent = '';
+        this.grantBtn.removeAttribute('lang');
+        this.wroteGrantLabel = false;
+      }
+    }
+
+    if (this.revokeBtn) {
+      this.revokeBtn.hidden = true;
+
+      if (this.wroteRevokeLabel) {
+        this.revokeBtn.textContent = '';
+        this.revokeBtn.removeAttribute('lang');
+        this.wroteRevokeLabel = false;
+      }
+    }
+
+    this.permanent = false;
 
     this.frame?.remove();
     this.frame = null;

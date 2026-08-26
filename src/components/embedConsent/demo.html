@@ -9,6 +9,89 @@
   <link rel="stylesheet" href="../../../dist/css/shared.min.css" />
   <link rel="stylesheet" href="../../../dist/css/embedConsent.min.css" />
 
+  <!--
+      THE STAND-IN FOR A CONSENT PLATFORM
+      ----------------------------------------------------------------------
+      A classic inline script, and BEFORE boot.min.js, because both of those
+      are the point:
+
+        - Classic, so it runs during parsing. boot.min.js is a deferred
+          module; window.consentGateOptions has to exist by the time it
+          builds the gate.
+        - Early, so the stored answer is on <html> before the first paint.
+          That is the "kill the notice flash" story from the readme, played
+          for real: reload this page with YouTube allowed and no notice is
+          ever drawn for it.
+
+      What it does is what a real adapter does, in the same three steps:
+      read the platform's answer, write it as a token list, tell the page.
+      Here the "platform" is localStorage, so the choice genuinely survives
+      a reload — a component that stores nothing is only interesting if
+      something else does.
+
+      The two callbacks at the bottom are the whole new lane: grant and
+      revoke, per SERVICE token, both or neither.
+  -->
+  <script>
+    (function () {
+      var KEY = 'demoConsent';
+      var root = document.documentElement;
+
+      function stored() {
+        try {
+          return (window.localStorage.getItem(KEY) || '')
+            .split(/\s+/).filter(Boolean);
+        } catch (err) {
+
+          // A browser with storage switched off is not a granted consent.
+          return [];
+        }
+      }
+
+      function write(tokens) {
+        try {
+          window.localStorage.setItem(KEY, tokens.join(' '));
+        } catch (err) { /* nothing to do about it */ }
+
+        if (tokens.length) root.setAttribute('data-consent', tokens.join(' '));
+        else root.removeAttribute('data-consent');
+
+        window.dispatchEvent(new CustomEvent('consentchange'));
+      }
+
+      // The demo's own little API, so the strip at the bottom of the page
+      // and the gate's callbacks are talking to ONE thing.
+      window.demoCmp = {
+        tokens: stored,
+
+        allow: function (token) {
+          var tokens = stored();
+          if (tokens.indexOf(token) === -1) tokens.push(token);
+          write(tokens);
+        },
+
+        deny: function (token) {
+          write(stored().filter(function (t) { return t !== token; }));
+        },
+
+        clear: function () {
+          write([]);
+        },
+      };
+
+      // What boot.js picks up. A project edits boot.js instead; a demo page
+      // in this collection cannot, so this is the documented way in.
+      window.consentGateOptions = {
+        grant: function (token) { window.demoCmp.allow(token); },
+        revoke: function (token) { window.demoCmp.deny(token); },
+      };
+
+      // Before the first paint: the answer this visitor already gave.
+      var initial = stored();
+      if (initial.length) root.setAttribute('data-consent', initial.join(' '));
+    }());
+  </script>
+
   <script type="module" src="../../../dist/js/boot.min.js"></script>
 
   <!-- for development only -->
@@ -151,7 +234,7 @@
             content, and the gate lane still works, because a platform
             collected its own consent with its own information.
 
-          Wiring — five examples
+          Wiring — six examples
             - Example 1: YouTube, with a locally hosted poster. Note what
               the poster is NOT: img.youtube.com/vi/… is the very request
               this component defers, so the image is served from here —
@@ -170,6 +253,23 @@
               One press fills both, for this page view and nothing beyond
               it. Off by default — example 1 is YouTube too and stays put,
               because it never opted in.
+            - Example 6: the permanent lane. A second button that loads the
+              embed AND hands the service token to the platform, plus the
+              way back in the corner of the box. Opt-in twice over: the
+              grant/revoke callbacks in the head script here (a project puts
+              them in boot.js) and both buttons in the markup.
+
+          Two ways in became three, and the third stores nothing here either
+            The permanent press is the click lane plus one call:
+            services.consent.grant('youtube'). The gate hands the token to a
+            callback the project wrote, the platform stores and documents
+            it, and what comes back is the platform's own answer — read the
+            same way a grant from a banner is read. Where the hand-over
+            fails (a blocked CMP, a callback wrong about its version) the
+            visitor still has the content they pressed for and the console
+            says the "always" was not delivered. Nothing is ever remembered
+            locally to paper over it: a consent nobody can prove is not one
+            worth having.
 
           Progressive enhancement
             - Without JavaScript, and before the chunk has arrived, the
@@ -223,6 +323,17 @@
             - Press either button in example 5 and watch the other box fill
               without playing, then read the label the script wrote into
               both buttons: it says the press reaches further.
+            - Press "load and always allow" in example 6, then watch the two
+              boxes in example 5 fill on their own — and reload, to see the
+              notice never drawn again. Take it back with the small control
+              in the corner of example 6 and they empty again.
+            - Then do the same after pressing "Allow all three", and watch
+              the withdrawal NOT empty them. It revokes the service token
+              "youtube", and "marketing" is still granted — which every
+              video box also asks for. That is the granularity trap the
+              permanent lane is deliberately narrow about: it grants the
+              specific token and never the category, because a category is
+              more than one box's notice explained.
             - Open the console for the reporter: example 4 reports its empty
               notice, and nothing else here is staged to warn.
         -->
@@ -248,6 +359,14 @@
             gate lane reads — a real platform writes the same attribute from
             its own callback, in about five lines. Everything else on this
             page reacts to it without knowing it exists.
+          </p>
+
+          <p class="stage__intro">
+            It does store, though — in <code>localStorage</code>, which is
+            what makes example 6 honest: a component that stores nothing is
+            only interesting if something else does. Reload the page after
+            allowing something and it is still allowed, with no notice ever
+            drawn for it.
           </p>
 
           <div class="demo__cmp">
@@ -534,6 +653,88 @@
           </div>
         </section>
 
+
+        <!-- Example 6: the permanent lane. Both new buttons are left EMPTY
+             so the shipped labels show. The revoke button is a SIBLING of
+             the facade, not inside it — the facade is hidden exactly when
+             the way back is needed. Neither button would appear at all if
+             the head script had not passed grant and revoke into the
+             gate. -->
+        <section class="demo__example">
+          <h2>6 — Deciding once, for good</h2>
+
+          <p class="stage__intro">
+            Everything above covers one page view. This box offers the other
+            thing as well: <em>load it and always allow YouTube</em>. The
+            press does exactly what the plain button does — the player is
+            there, playing, because that is what the label promised — and
+            <strong>then</strong> hands the token <code>youtube</code> to the
+            platform through <code>services.consent.grant()</code>. The
+            platform stores it, writes <code>data-consent</code>, and the
+            gate's subscription does the rest: watch every other YouTube box
+            on this page fill without being touched.
+          </p>
+
+          <p class="stage__intro">
+            Then <strong>reload</strong>. No notice is drawn for any YouTube
+            box, not even for a moment — the fake platform in
+            <code>&lt;head&gt;</code> put the attribute on
+            <code>&lt;html&gt;</code> before the first paint. And the small
+            control in the corner of the box is the reason this lane is
+            allowed to exist at all: withdrawing has to be as easy as
+            consenting, so the component refuses to reveal the grant button
+            unless the way back is shipped with it.
+          </p>
+
+          <p class="stage__intro">
+            Four more things it refuses, all of them in the console rather
+            than on screen: one of the two buttons without the other, a gate
+            with no <code>grant</code>/<code>revoke</code> callbacks, a box
+            with no <code>data-embedconsent-service</code> (a category is
+            more than this notice explained), and a box whose plain load
+            button is unavailable — a lasting decision may never be the only
+            way to see a video.
+          </p>
+
+          <div class="demo__box">
+            <div class="c-embedConsent" data-js-behavior="embedConsent" data-embedconsent-provider="youtube" data-embedconsent-id="LXb3EKWsInQ" data-embedconsent-service="youtube" data-embedconsent-category="marketing" data-embedconsent-title="Costa Rica, the 4K test clip">
+
+              <div class="c-embedConsent__facade" data-embedconsent-facade>
+
+                <img class="c-embedConsent__poster" src="../../_shared/media/img/content/videoPosterDemo.svg" alt="" data-embedconsent-poster>
+
+                <div class="c-embedConsent__panel">
+                  <p class="c-embedConsent__notice" data-embedconsent-notice>
+                    Loading this video connects you to
+                    <strong>YouTube</strong>, a service of Google Ireland
+                    Ltd. Your IP address, your browser details and, if you
+                    are signed in, your YouTube account are transmitted to
+                    Google and may be processed in the USA. Allowing it
+                    permanently stores your choice with our consent platform
+                    until you take it back — here, or under
+                    <a href="javascript:;">privacy settings</a>. Details are
+                    in our <a href="javascript:;">privacy policy</a>.
+                  </p>
+
+                  <p class="c-embedConsent__actions">
+                    <button class="c-embedConsent__toggle" type="button" data-embedconsent-toggle hidden></button>
+
+                    <button class="c-embedConsent__grant" type="button" data-embedconsent-grant hidden></button>
+
+                    <a class="c-embedConsent__fallback" href="https://www.youtube.com/watch?v=LXb3EKWsInQ" data-embedconsent-fallback>
+                      Watch on YouTube instead
+                    </a>
+                  </p>
+                </div>
+
+              </div>
+
+              <button class="c-embedConsent__revoke" type="button" data-embedconsent-revoke hidden></button>
+
+            </div>
+          </div>
+        </section>
+
       </div>
 
     </section>
@@ -543,20 +744,21 @@
   <!--
       DEMO-ONLY SCRIPT
       ------------------------------------------------------------------------
-      The stand-in for a consent platform, and the reason it is only nine
-      lines: writing <html data-consent="…"> is the whole interface. A real
-      platform does the same thing from its own callback — see the readme for
-      Cookiebot and Klaro! doing exactly that — and the gate's
-      MutationObserver picks it up either way.
+      Only the buttons live here — the fake platform itself is the classic
+      script in <head>, because it has to be there before boot.min.js builds
+      the gate and before the first paint. Both halves talk to the same
+      window.demoCmp, which is exactly how a real setup is arranged: the
+      platform loads early, the page's own controls reach for it later.
 
-      The line under the buttons echoes the attribute back, so what the
-      component is reacting to is on screen rather than only in the
-      inspector.
+      The line under the buttons echoes the attribute back, and it is
+      redrawn on `consentchange` rather than after each press — so a grant
+      that comes from a BOX, out of the permanent lane, shows up here too.
+      Writing <html data-consent="…"> is still the whole interface.
   -->
   <script type="module">
     const root = document.documentElement;
     const state = document.querySelector('[data-cmp-state]');
-    const tokens = 'youtube googleMaps openStreetMap marketing';
+    const tokens = ['youtube', 'googleMaps', 'openStreetMap', 'marketing'];
 
     const show = () => {
       const value = root.getAttribute('data-consent');
@@ -566,14 +768,14 @@
     };
 
     document.querySelector('[data-cmp-grant]').addEventListener('click', () => {
-      root.setAttribute('data-consent', tokens);
-      show();
+      tokens.forEach((token) => window.demoCmp.allow(token));
     });
 
     document.querySelector('[data-cmp-withdraw]').addEventListener('click', () => {
-      root.removeAttribute('data-consent');
-      show();
+      window.demoCmp.clear();
     });
+
+    window.addEventListener('consentchange', show);
 
     show();
   </script>

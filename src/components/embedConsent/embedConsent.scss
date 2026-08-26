@@ -51,6 +51,10 @@
 //     the markup and is revealed only where it works (which, per the
 //     component's one hard rule, means only where a notice exists to be
 //     informed by).
+//   - `hidden` off [data-embedconsent-grant] and, while a platform-held
+//     consent is what fills the box, off [data-embedconsent-revoke] — the
+//     permanent lane's pair. Both ship hidden and both stay hidden on every
+//     page whose project wired no grant callback, which is the default.
 //   - [data-embedconsent-embed] stamped on the injected iframe.
 //   - [data-embedconsent-status] — the polite live region the module builds
 //     for the two changes nobody clicked: consent arriving while the page is
@@ -129,6 +133,29 @@
   --embedConsent-toggle-bg-color-hover:
     color-mix(in srgb, var(--color-accent) 85%, var(--c-blue-black));
   --embedConsent-toggle-color: var(--color-text-on-accent);
+
+  // The permanent control, and it is deliberately the QUIETER of the two: a
+  // ghost button beside the filled one. The privacy-preserving answer — load
+  // it for this page view and nothing further — is the one that stays
+  // primary, so a visitor who reads neither label still lands on the
+  // narrower choice. Its text is the panel's own colour (9.9:1 over the
+  // worst poster, see above) and the border is what makes it a control.
+  --embedConsent-grant-color: var(--embedConsent-panel-color);
+  --embedConsent-grant-border-color:
+    color-mix(in srgb, var(--embedConsent-panel-color) 55%, transparent);
+  --embedConsent-grant-bg-color-hover:
+    color-mix(in srgb, var(--embedConsent-panel-color) 15%, transparent);
+
+  // The way back, over the embed rather than in the panel — the facade is
+  // hidden exactly when this is needed. It carries the panel's own opaque
+  // recipe because it sits on somebody else's video: nothing about what is
+  // behind it is knowable here.
+  --embedConsent-revoke-inset: var(--space-2xs);
+  --embedConsent-revoke-padding: var(--space-3xs) var(--space-2xs);
+  --embedConsent-revoke-font-size: 0.8125rem;
+  --embedConsent-revoke-color: var(--embedConsent-panel-color);
+  --embedConsent-revoke-bg-color: var(--embedConsent-panel-bg-color);
+  --embedConsent-revoke-bg-color-hover: rgba(0, 0, 0, 0.9);
 
   // Half the shared animation duration: a hover response, not a scene
   // transition.
@@ -300,6 +327,81 @@
 
 
 
+  // The permanent choice, next to the one-page-view one. Same box as the
+  // toggle, quieter surface — see the knobs for why that ranking is the way
+  // round it is.
+  &__grant {
+    @include focus-ring(light);
+
+    & {
+      cursor: pointer;
+
+      border: 1px solid var(--embedConsent-grant-border-color);
+      border-radius: var(--embedConsent-radius);
+      padding: var(--embedConsent-toggle-padding);
+
+      font: inherit;
+
+      color: var(--embedConsent-grant-color);
+      background-color: transparent;
+
+      transition: background-color var(--embedConsent-an-duration)
+        var(--embedConsent-an-easing);
+    }
+
+    &:hover {
+      background-color: var(--embedConsent-grant-bg-color-hover);
+    }
+  }
+
+
+
+  // The way back, sitting on the embed. Positioned rather than in flow for
+  // one reason: when it is needed the facade is gone, and an in-flow control
+  // in the root's single grid area would end up underneath the iframe, which
+  // is appended after it. Hence the explicit z-index too — the frame is
+  // positioned as well and later in the DOM, so source order alone would put
+  // it on top.
+  //
+  // The corner is the block-start / inline-end one, which is a compromise and
+  // worth naming as such: a provider's own overlay controls tend to live
+  // there on hover (YouTube's share and watch-later buttons do). It is still
+  // the best of the four — the block-end edge is where every player puts its
+  // timeline and its full-screen button, and the block-start / inline-start
+  // corner is where the provider's title sits. A project that knows its embed
+  // moves this with the two inset knobs.
+  &__revoke {
+    @include focus-ring(light);
+
+    & {
+      position: absolute;
+      inset-block-start: var(--embedConsent-revoke-inset);
+      inset-inline-end: var(--embedConsent-revoke-inset);
+      z-index: var(--zi-content);
+
+      cursor: pointer;
+
+      border: 0;
+      border-radius: var(--embedConsent-radius);
+      padding: var(--embedConsent-revoke-padding);
+
+      font: inherit;
+      font-size: var(--embedConsent-revoke-font-size);
+
+      color: var(--embedConsent-revoke-color);
+      background-color: var(--embedConsent-revoke-bg-color);
+
+      transition: background-color var(--embedConsent-an-duration)
+        var(--embedConsent-an-easing);
+    }
+
+    &:hover {
+      background-color: var(--embedConsent-revoke-bg-color-hover);
+    }
+  }
+
+
+
   &__fallback {
     @include focus-ring(light);
 
@@ -335,7 +437,9 @@
 @include reduced-motion {
   .c-embedConsent {
 
-    &__toggle {
+    &__toggle,
+    &__grant,
+    &__revoke {
       transition: none;
     }
   }
@@ -354,7 +458,9 @@
 // The button is the second half. It ships `border: 0` (its accent fill is
 // what makes it a button), and with the fill gone that leaves a control
 // with no boundary at all sitting on a same-coloured card. In this mode the
-// border IS the button, so it comes back.
+// border IS the button, so it comes back — for the revoke control as well,
+// which ships borderless for the same reason and sits on an image rather
+// than on a card, so it needs both the border and an opaque hover.
 //
 // The poster is deliberately left alone: forced colors does not touch
 // images, and hiding one would remove content rather than recolour it. With
@@ -363,12 +469,14 @@
   .c-embedConsent {
     --embedConsent-panel-bg-color: Canvas;
     --embedConsent-panel-color: CanvasText;
+    --embedConsent-revoke-bg-color-hover: Canvas;
 
     &__panel {
       border: 1px solid CanvasText;
     }
 
-    &__toggle {
+    &__toggle,
+    &__revoke {
       border: 1px solid ButtonText;
     }
   }

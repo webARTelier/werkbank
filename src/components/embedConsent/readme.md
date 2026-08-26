@@ -1,8 +1,9 @@
 # embedConsent
 
 The box that stands in for a third-party embed until the visitor has allowed
-it — with the information layer that makes the click an informed one, and a
-seam that lets an existing consent skip the click entirely.
+it — with the information layer that makes the click an informed one, a seam
+that lets an existing consent skip the click entirely, and an opt-in lane for
+handing a visitor's "always allow" to your consent platform.
 
 ## Files needed to copy
 
@@ -216,6 +217,10 @@ Two tokens, one answer: the component asks with `data-embedconsent-service`
 (the exact service) *and* `data-embedconsent-category` (what a
 category-only platform would have granted), and either being present is
 enough. That is how one markup contract serves both granularities.
+
+The gate can also be given the **other direction** — `grant` and `revoke`,
+for a visitor who decides at the box itself and wants it to hold. That is an
+opt-in with conditions attached; see *Deciding once, for good* below.
 
 ### Where each piece goes
 
@@ -567,6 +572,105 @@ Write your own; the shape is always the same, and three questions settle it:
 Then call `applyConsent(...)` with the result. Nothing else in this component
 or in the collection needs to know your platform exists.
 
+### Deciding once, for good
+
+Everything above covers **one page view**. A click here is deliberately not
+remembered — and for most sites that is where it should stop. Where it is one
+press too many, the box can offer the other thing as well: *load it, and
+always allow YouTube.*
+
+The component still stores nothing. It hands the service token to the gate,
+the gate calls a callback **you** wrote, and your platform stores it,
+documents it and answers for it on the next page. What comes back is read the
+same way a grant from your banner is read.
+
+**Two halves, and neither works without the other.**
+
+In `boot.js` (or on `window.consentGateOptions`, for a page that cannot edit
+it — the demo does that), pass both callbacks:
+
+```js
+const consent = createConsentGate({
+  resolve: (token) => …,
+
+  grant:  (token) => window.UC_UI?.acceptService(serviceId(token)),
+  revoke: (token) => window.UC_UI?.denyService(serviceId(token)),
+});
+```
+
+And in the markup, both buttons, both `hidden`:
+
+```html
+<div class="c-embedConsent" … data-embedconsent-service="youtube">
+  <div class="c-embedConsent__facade" data-embedconsent-facade>
+    …
+    <p class="c-embedConsent__actions">
+      <button class="c-embedConsent__toggle" type="button"
+              data-embedconsent-toggle hidden></button>
+      <button class="c-embedConsent__grant" type="button"
+              data-embedconsent-grant hidden></button>
+      <a class="c-embedConsent__fallback" href="…"
+         data-embedconsent-fallback>Watch on YouTube instead</a>
+    </p>
+  </div>
+
+  <!-- OUTSIDE the facade: the facade is hidden exactly when this is needed -->
+  <button class="c-embedConsent__revoke" type="button"
+          data-embedconsent-revoke hidden></button>
+</div>
+```
+
+Leave both empty and the script writes the localized labels — *"Load and play
+YouTube, and allow it permanently"* and *"Withdraw consent for YouTube"*.
+
+#### What it refuses, and why
+
+Five conditions, checked; every failure is silent in the page and loud in the
+console, because a control an author shipped and this component declined to
+reveal is exactly the kind of silence that reads as a bug.
+
+| It stays hidden when | Because |
+| --- | --- |
+| only one of the two buttons is in the markup | withdrawing has to be as easy as consenting (GDPR Art. 7(3)); a grant with no way back is not an offer this component completes |
+| the gate has no `grant`/`revoke` | your platform has not been told how to be told. Every TCF setup lands here permanently: `__tcfapi` has no write command, so only the CMP's own UI may grant |
+| there is no `data-embedconsent-service` | a category (`marketing`) is more than this notice explained, and translating one into the other is your decision, not this component's |
+| the plain load button is unavailable | a box whose only way in is a lasting decision is a dark pattern, not a convenience |
+| the notice is empty | which is the row above, arrived at through the *no notice, no button* rule |
+
+#### What you owe the visitor when you switch it on
+
+- **The notice has to say so.** It is the same notice and it is now
+  justifying more: that the choice is remembered, by what, and how to take it
+  back. Your lawyer's wording. The component cannot check it — it can only
+  refuse to show a control with no notice at all.
+- **The grant must go *through* your platform.** Never write `data-consent`
+  yourself from a grant callback: a consent that never reached your
+  platform's own consent log is a consent nobody can prove. That is the
+  entire reason this is a callback rather than four lines in the gate.
+- **Whatever your callback triggers has to produce a change signal** — the
+  attribute being written, or your `consentchange` event. That is what tells
+  every *other* box on the page, and it is the same requirement your read
+  lane already has.
+- **Per service, not per category.** Pass the callbacks only where your
+  platform can be told about one service. Cookiebot's
+  `submitCustomConsent(pref, stat, mark)` takes categories, so a grant from a
+  video box would allow every marketing script on the site.
+- **The platform's own settings link does not stop being necessary.** The
+  revoke button is one route back, not the only one.
+
+#### What happens when the hand-over fails
+
+A blocked CMP, a callback wrong about the version it is talking to — the
+press still loads the embed, exactly as the plain button would have, and the
+reporter says the *"always"* was not delivered. Nothing is remembered locally
+to paper over it. The order is the header's rule about the gate held to in
+the one place it could be forgotten: **the gate may remove the click, never
+replace it.**
+
+Autoplay behaves exactly as on the plain button — the press is a request to
+watch, so the label says so and the player starts. Every *other* box the
+grant fills is created without it: nobody pressed those.
+
 ### Killing the notice flash
 
 `boot.min.js` is a deferred module and this component is a second, lazily
@@ -591,12 +695,19 @@ a moment.
 ### What this component does not do
 
 - It is **not a cookie banner** and does not ask the consent question.
-- It **stores nothing** — no cookie, no `localStorage`, no "always allow". A
-  record of what a visitor permitted is a legal document with an obligation
-  to prove it and an obligation to let them withdraw it attached, and that
-  belongs to your platform. A click here covers one page view; a reload puts
-  the notice back. A **group** press is the same promise made wider, not a
-  weaker one: it reaches further across the page and no further in time.
+- It **stores nothing and writes nothing** — no cookie, no `localStorage`, no
+  consent record of its own. A record of what a visitor permitted is a legal
+  document with an obligation to prove it and an obligation to let them
+  withdraw it attached, and that belongs to your platform. A click here
+  covers one page view; a reload puts the notice back. A **group** press is
+  the same promise made wider, not a weaker one: it reaches further across
+  the page and no further in time.
+- Since the permanent lane it can **hand** a decision to that platform — the
+  same sentence read in the other direction, not a softening of it. The
+  component asks the gate, the gate calls a callback you wrote, and your
+  platform does the storing, the documenting and the answering. A grant that
+  never got there is reported, never remembered here. See *Deciding once, for
+  good*.
 - It does **not** decide which category a service falls into.
 - It makes **no claim of compliance**. It puts the information in the right
   place at the right time and defers every request until it may be made;
@@ -615,6 +726,23 @@ a moment.
   button is revealed, so the label is picked rather than hedged.
 - The button gets `aria-describedby` pointing at the notice, so the
   information is announced *with* the control.
+- **The permanent lane's two controls are real buttons**, shipped `hidden`
+  and labelled from the same de/en table. The grant button carries the same
+  `aria-describedby` as the load button — it asks for more than the other, so
+  it may not ask for it with less. Its label takes the autoplay axis but not
+  the group one: a consent handed to the platform reaches every box asking
+  for that token, so "and the others on this page" would describe the smaller
+  half of the same press.
+- **The way back sits before the content in the tab order.** The revoke
+  button is authored outside the facade and the iframe is appended after it,
+  so a keyboard reader reaches "Withdraw consent for YouTube" and then the
+  embed. It is revealed only while a platform-held consent is what fills the
+  box — never after a plain click, where a reload is the way back and a
+  "withdraw" button would describe something the component never did.
+- **The focus is not dropped when the way back disappears.** Pressing revoke
+  hides the button the reader is standing on, so the landing place is worked
+  out from the root rather than from the iframe alone: the focus goes to the
+  load button that has just come back.
 - **Every string the script writes is marked with the language it is in,
   where that is not the page's own** (WCAG 3.1.2): a page in neither German
   nor English gets the English labels, and English text inside a French page
@@ -673,20 +801,24 @@ a moment.
 
 The JS exports `init(el, services)` and is boot-loaded per
 `data-js-behavior="embedConsent"` — never import `embedConsent.js` yourself.
-It sets no inline styles: it toggles `hidden` on the facade and the button,
-stamps `[data-embedconsent-embed]` on the injected iframe and writes
+It sets no inline styles: it toggles `hidden` on the facade, on the load
+button and on the permanent lane's two controls, stamps
+`[data-embedconsent-embed]` on the injected iframe and writes
 `[data-embedconsent-ready]` on the root.
 
 `services.reporter` is optional (used only for warnings).
 `services.consent` is optional too — without it the click lane is the only
-one, which is a complete component and not a degraded one.
+one, which is a complete component and not a degraded one. A gate that
+answers but cannot `grant` is the normal case, not a deficiency: the
+permanent lane is the one part of this component a project opts into twice.
 
 `init()` returns a cleanup function, so `destroyModulesInScope()` puts the
 element back the way it was authored — including the two things it only
-sometimes owns: the notice's `id` and the button's `aria-describedby` are
-taken back **only where this component wrote them**. The notice is your
-element, so an id or a description link you had already written by hand
-survives untouched.
+sometimes owns: the notice's `id` and the `aria-describedby` on the load and
+grant buttons are taken back **only where this component wrote them**. The
+notice is your element, so an id or a description link you had already
+written by hand survives untouched. Both permanent-lane buttons go back to
+`hidden`, and a button that came in empty goes out empty.
 
 A cleanup also takes the instance out of the group, so a press elsewhere can
 no longer reach it. In the other direction, markup brought in later by

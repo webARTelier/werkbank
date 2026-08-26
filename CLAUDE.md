@@ -74,6 +74,17 @@ component here is reusable and most can appear several times).
   other. A module's collection is its own — the lightbox's images, toast's
   messages — and it did not come out of anything the module wraps.
 
+  The **permanent lane** (2026-08-25) is the machinery rule again, and worth
+  one line because it looks like the strongest counter-argument the folder
+  has: the component now grows a second control that reaches a consent
+  platform, hands it a token, and gains a third piece of state (whether the
+  lane is live at all). None of that is the question either. The host is
+  still the `<a href>` to the video, still complete without any of it, and
+  what the new control changes is who remembers the answer — not what the
+  component is attached to. Read it exactly as `fileUpload`'s upload lane:
+  an endpoint, a queue and hidden inputs written into a form did not make
+  that one an `m-`, because the native file field was complete without them.
+
   `fileUpload` is the instructive one, and it used to be two things: the
   progress-bar variant shipped as a module of its own (`m-uploadQueue`) on
   the grounds that nothing hosted it. Folded back in on 2026-08-14 as a lane
@@ -364,6 +375,28 @@ of dependency — not by preference. Keep this split consistent:
   and the event listeners are created on the first `subscribe()` and torn
   down with the last, so a page with no embed on it pays for the factory and
   nothing else.
+
+  The **write direction** (2026-08-25, same day) only sharpens the case.
+  `grant` / `revoke` let a visitor's "always allow YouTube" at the box reach
+  the project's CMP, and every reason the read lane is DI applies harder:
+  the call differs per platform *and per major version*, which of a
+  project's services or categories may be granted from one embed is a legal
+  decision only that project can make, and a platform may have no write API
+  at all (TCF has none — only its own UI may grant). So the gate exposes
+  `canGrant()` and the component ships **no control** where the answer is
+  no, rather than a control that quietly covers one page view. Two rules
+  belong to the channel, not to the component: **both callbacks or
+  neither** (withdrawal has to be as easy as consent, Art. 7(3)), and the
+  grant goes **through** the CMP — a gate that wrote `data-consent` itself
+  would manufacture a consent nobody can prove.
+
+  One consequence for the "one place" claim above: `boot.js` still *is* that
+  place, but the shipped call now reads `createConsentGate(window.consentGateOptions)`,
+  so a page that cannot edit the file — a demo in this collection, a CMS
+  preview, a project vendoring `dist/` untouched — can pass the same options
+  from an inline script in `<head>`. Editing the call remains the way to do
+  it; the global is the way in for a page with no build of its own, and it is
+  what lets `embedConsent`'s demo play a real storing platform.
 
   Since 2026-08-20 the **loader itself** is in there too —
   `initModulesInScope` / `destroyModulesInScope`, for `loadFragment`, which

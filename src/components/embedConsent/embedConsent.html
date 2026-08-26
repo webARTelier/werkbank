@@ -60,6 +60,15 @@
      is off unless you ask for it — six unrelated videos keep costing six
      presses. Details under "One press for a whole group" below.
 
+  6) Want the visitor to be able to decide once and for all — "always allow
+     YouTube" — instead of pressing again on every page? That is the
+     PERMANENT LANE, example D below and "Deciding once, for good" further
+     down. It needs two things you have to supply: grant and revoke
+     callbacks into your consent platform (in boot.js, or on
+     window.consentGateOptions), and both buttons in the markup. Nothing is
+     stored here either — your platform stores it, and this component is
+     told the answer like any other.
+
   Two ways in, and the second never replaces the first
     - THE CLICK works with no configuration at all: no consent platform, no
       cookie, nothing stored. It covers this page view only — a reload puts
@@ -82,6 +91,12 @@
       edited.
     - Consent withdrawn later removes the iframe again and puts the notice
       back. That half is a visitor's right and it needs no extra wiring.
+    - THE PERMANENT LANE is the two of them joined up, and it is opt-in
+      twice over (a callback in boot.js, two buttons in the markup): the
+      visitor presses "load and always allow", the box fills like any
+      click, and the platform is asked to remember it so the next page does
+      not ask again. Still nothing stored here — see "Deciding once, for
+      good" below.
 
   One press for a whole group
     Six videos on a page cost a visitor six presses. Put
@@ -117,6 +132,75 @@
         filled stay silent, so a group of six is one sentence, not six.
       - loading="lazy" is what makes this cheap: the boxes below the fold
         request nothing until the reader reaches them.
+
+  Deciding once, for good
+    The click covers one page view, deliberately. Where that is one press
+    too many for your visitors, the box can offer the other thing as well —
+    "load it AND always allow YouTube" — and the difference to everything
+    above is that this one leaves the page: your consent platform stores it,
+    documents it, and answers for it on the next page.
+
+    This component still stores nothing. It hands the service token to the
+    gate, the gate calls a callback you wrote, and what comes back is the
+    platform's own answer.
+
+    Two halves, and neither works without the other:
+
+      1) IN boot.js (or on window.consentGateOptions, for a page that cannot
+         edit it), pass BOTH callbacks:
+
+           createConsentGate({
+             grant:  (token) => window.UC_UI?.acceptService(idFor(token)),
+             revoke: (token) => window.UC_UI?.denyService(idFor(token)),
+           })
+
+         Both or neither: withdrawing has to be as easy as consenting (GDPR
+         Art. 7(3)). Pass them only where your platform can be told about
+         ONE SERVICE — granting a whole category ("marketing") from a video
+         box grants more than the notice explained. A TCF platform has no
+         write API at all, so there it is "neither", and the control simply
+         never appears.
+
+         Whatever your callback triggers has to end up producing the same
+         signal your read lane already uses — the attribute being written,
+         or your consentchange event. That is what tells every other box on
+         the page.
+
+      2) IN THE MARKUP, both buttons, both `hidden`:
+
+           <button type="button" data-embedconsent-grant hidden></button>
+           …
+           <button type="button" data-embedconsent-revoke hidden></button>
+
+         The grant button goes next to the load button, inside the notice
+         panel. The REVOKE button goes OUTSIDE the facade — the facade is
+         hidden exactly when a visitor needs the way back — so it is a
+         sibling of it, and the shipped CSS parks it in the box's top
+         corner over the embed.
+
+    What the component refuses, and it refuses silently in the page and
+    loudly in the console:
+      - Only one of the two buttons: neither is wired.
+      - No grant/revoke callbacks in the gate: the control stays hidden.
+      - No data-embedconsent-service: nothing specific enough to grant.
+      - No plain load button (which includes: no notice, see 3 above): a box
+        whose only way in is a permanent decision is a dark pattern, not a
+        convenience.
+
+    What you owe the visitor when you switch this on:
+      - THE NOTICE HAS TO SAY SO. It is the same notice, and it is now
+        justifying more: that the choice is remembered, by what, for how
+        long, and how to take it back. Your lawyer's wording, and the
+        component cannot check it — it can only refuse to show a control
+        with no notice at all.
+      - The way back stays reachable. The revoke button is one route; your
+        platform's own settings link is the other, and it does not stop
+        being necessary.
+
+    Autoplay behaves exactly as on the plain button: the press is a request
+    to watch, so the label says "load, play and allow permanently" and the
+    player starts. Every OTHER box the grant fills is created without
+    autoplay — nobody pressed those.
 
   Killing the notice flash for a visitor who already consented
     boot.min.js is a deferred module and this component is a second, lazily
@@ -197,6 +281,20 @@
                                       the service token; a value names a
                                       group. See "One press for a whole
                                       group" above.
+    - data-embedconsent-grant         opt-in: the button that also asks your
+                                      consent platform to remember this
+                                      provider. Ships `hidden`; revealed only
+                                      where the gate can grant, a service
+                                      token exists, the load button is
+                                      available and the revoke button is
+                                      there too. See "Deciding once, for
+                                      good" above.
+    - data-embedconsent-revoke        the way back, required alongside it.
+                                      Ships `hidden`; revealed while a
+                                      platform-held consent is what fills
+                                      the box — never after a plain click,
+                                      where a reload is the way back. Put it
+                                      OUTSIDE the facade.
     - data-embedconsent-ready         written by the JS on the root ("the
                                       button here works"). Nothing in the
                                       shipped CSS reads it; it is there for
@@ -318,6 +416,52 @@
       </div>
 
     </div>
+
+  </div>
+</div>
+
+
+
+<!-- D) The permanent lane: "and always allow it". Both buttons are left
+     EMPTY so the shipped labels show; write your own and they are yours to
+     keep accurate. Neither appears unless your boot.js passed grant AND
+     revoke to createConsentGate() — see "Deciding once, for good" above.
+     Note where the revoke button sits: a sibling of the facade, not inside
+     it, because the facade is hidden exactly when it is needed. -->
+<div class="your-media-container">
+  <div class="c-embedConsent" data-js-behavior="embedConsent" data-embedconsent-provider="youtube" data-embedconsent-id="https://www.youtube.com/watch?v=a3ICNMQW7Ok" data-embedconsent-service="youtube" data-embedconsent-category="marketing" data-embedconsent-title="What the video shows">
+
+    <div class="c-embedConsent__facade" data-embedconsent-facade>
+
+      <img class="c-embedConsent__poster" src="/media/videoPoster.jpg" alt="" data-embedconsent-poster>
+
+      <div class="c-embedConsent__panel">
+        <p class="c-embedConsent__notice" data-embedconsent-notice>
+          Loading this video connects you to <strong>YouTube</strong>, a
+          service of Google Ireland Ltd. Your IP address, your browser
+          details and, if you are signed in, your YouTube account are
+          transmitted to Google and may be processed in the USA. Allowing
+          it permanently stores your choice with our consent platform until
+          you take it back — here, or under
+          <a href="/privacy">privacy settings</a>.
+        </p>
+
+        <p class="c-embedConsent__actions">
+          <button class="c-embedConsent__toggle" type="button" data-embedconsent-toggle hidden>
+            Load and play video from YouTube
+          </button>
+
+          <button class="c-embedConsent__grant" type="button" data-embedconsent-grant hidden></button>
+
+          <a class="c-embedConsent__fallback" href="https://www.youtube.com/watch?v=a3ICNMQW7Ok" data-embedconsent-fallback>
+            Watch on YouTube instead
+          </a>
+        </p>
+      </div>
+
+    </div>
+
+    <button class="c-embedConsent__revoke" type="button" data-embedconsent-revoke hidden></button>
 
   </div>
 </div>
