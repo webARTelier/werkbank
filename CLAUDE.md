@@ -102,10 +102,36 @@ component here is reusable and most can appear several times).
 - **Function (no prefix of its own) — it *enhances*.** It brings no
   vocabulary at all: it writes state classes/attributes onto markup that is
   already there, and the look belongs to the consuming project.
-  `copyToClipboard`, `formValidation`, `inlineSVG`, `inputCharCount`,
-  `scaleSVG`, `scrollSpy`, `stickyObserver`, and the scripts behind
-  `adaptiveScrollFade`, `dateInputFormat`, `flexNeighborMarker`,
-  `loadFragment`, `numberInputFormat`, `revealOnScroll`.
+  `copyToClipboard`, `filterList`, `formValidation`, `inlineSVG`,
+  `inputCharCount`, `scaleSVG`, `scrollSpy`, `stickyObserver`, and the
+  scripts behind `adaptiveScrollFade`, `dateInputFormat`,
+  `flexNeighborMarker`, `loadFragment`, `numberInputFormat`,
+  `revealOnScroll`.
+
+  `filterList` (2026-08-27) is the one where the **collection signal points
+  the wrong way**, and it is worth a paragraph because at first glance it
+  reads like a module: it boots on a region, that region holds n items, and
+  it decides which of them are on screen. Read the signal the way the
+  `fileUpload` note below reads it — *whose* collection. Those cards are the
+  page's. They were authored, they arrived through nothing this module did,
+  and they are a complete, readable list before it runs; a module's
+  collection is its own, the way the lightbox's images and toast's messages
+  are. What is left is a region that was finished without it, which is the
+  `c-` question — and that half is answered by the second test: it brings
+  **no vocabulary**. The bar is the project's own form controls, the cards
+  are the project's own cards, and the whole stylesheet is two rules that
+  are not a look. `formValidation` is the exact precedent: a form is
+  complete without it too, and it is a function rather than a `c-` for the
+  same reason.
+
+  It is also the machinery rule once more, on the largest surface a function
+  in here has had: an index of folded text per item, two match modes, facet
+  groups OR'd and AND'ed, a MutationObserver re-indexing whatever a later
+  render appends, an injected live region and a custom event. None of that
+  is the question. And the region it injects is an **instrument**, not
+  vocabulary — the same test `loadFragment`'s and `copyToClipboard`'s status
+  regions pass: it carries no class the project styles, and swapping it for a
+  project's own would leave nothing to design.
 
   `copyToClipboard` (2026-08-26) is the one where the question has to be
   asked about a control rather than about content, and it comes out a
@@ -439,8 +465,8 @@ of dependency — not by preference. Keep this split consistent:
   `parseNonNegative`, `uniqueId`, `focusableSelector`,
   `navExpandedMediaQuery`, `otherModalOpen`, `parseByteSize`,
   `formatByteSize`, `matchesAccept`, `fileKey`, `pageLocale`,
-  `numberSeparators` (see `docs/componentStandards.md` §10 for what each one
-  does). `parseByteSize`, `formatByteSize`, `matchesAccept` and `fileKey` were
+  `numberSeparators`, `foldText` (see `docs/componentStandards.md` §10 for
+  what each one does). `parseByteSize`, `formatByteSize`, `matchesAccept` and `fileKey` were
   born in `fileUpload` and hoisted the day `uploadQueue` needed them, which is
   exactly the signal described above. That second consumer is gone again since
   the queue became a lane of `fileUpload` itself (2026-08-14), so all four have
@@ -458,6 +484,15 @@ of dependency — not by preference. Keep this split consistent:
   the way the page's language does, asked of `Intl.NumberFormat` rather than
   assumed. Two consumers means Rollup splits each into its own chunk in
   `dist/js/modules/`, loaded alongside whichever of the two arrives first.
+
+  `foldText` is the third instance of the same signal and the shortest one
+  yet: four lines, born in `comboBox`, hoisted on 2026-08-27 when
+  `filterList` needed exactly the same test for exactly the same reason — a
+  reader looking for a value should not have to know how it is accented, so
+  both sides of a match are lowercased and stripped of their combining
+  marks. Copying four lines would have been the cheaper edit and the wrong
+  one: the two components would then have drifted on what "the same string"
+  means, which is a bug nobody reports because both halves look right.
 
 Do **not** route pure utilities through `services`: `boot.js` loads eagerly on
 every page, so anything it imports for the `services` object lands in the

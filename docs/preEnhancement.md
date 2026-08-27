@@ -240,6 +240,7 @@ of them, and the wrong one for most.
 | `marquee` | none | not needed | the clipping row is plain CSS from the first paint; the strip is just static until it runs |
 | `video` | none | not needed | the JS-only toggle ships with `hidden` in the markup and the script reveals it — the same idea, expressed in HTML |
 | `copyToClipboard` | none | not needed | `video`'s approach, and the second component to take it: the copy button is dead without the script — nothing in HTML or CSS copies anything — so it ships `hidden` and `init()` reveals it last. Every bail-out simply returns before that line, which is what makes the guard cover an insecure origin, an invalid target selector and a missing source as well. It owns no ready attribute at all, and it adds the one thing `video`'s note leaves out: `hidden` is a UA rule at specificity (0,0,0), so the component's stylesheet has to hold it against the project's own `.button { display: … }` (see below) |
+| `filterList` | none | not needed | `copyToClipboard`'s route, and the third component to take it: nothing in HTML or CSS filters a list, so the filter bar is dead without the script. It ships `hidden` and `init()` reveals it as its LAST step, so the two bail-outs (no items, no controls) are covered by simply returning before that line. It owns no ready attribute. Two things separate it from the two above: what stays behind is the **complete list**, which is what the reader came for rather than a shortcut they lose; and the same `display: none !important` rule it needs for `hidden` is also **permanent machinery**, because the module writes `hidden` on the items and on the empty message for as long as it runs (see below) |
 | `embedConsent` | the notice, shown for a moment to somebody who consented long ago | not needed here, and the rest is the project's | the facade is a poster, a paragraph and a real link: nothing is hidden, nothing is lost, and if the chunk never arrives the link still reaches the content. The one flash it *does* have cannot be closed from here — whether this visitor consented is not something CSS can know unless the project puts it in the document, which is exactly why the consent gate's default lane is an attribute on `<html>`. Its ready attribute is therefore written for a rule this component does not ship (see below) |
 | `stickyObserver`, `scrollSpy`, `flexNeighborMarker`, `adaptiveScrollFade` | additive marker/fade appears | not needed | nothing is hidden, and the result depends on measurement CSS cannot anticipate |
 | `dateInputFormat`, `numberInputFormat`, `formValidation` | none | not needed | behaviour on interaction only. The two formatters do re-group a pre-filled value on `init()`, which can widen it — a Layer 4 case their own stylesheets answer with `tabular-nums`, not something to hide, so neither owns a ready attribute at all |
@@ -276,6 +277,37 @@ gives the guarantee — an element carrying this component's own source attribut
 attribute. **Whenever a component takes the `hidden` route, check whether the
 element it hides has a `display` of its own from somewhere;** if it does not,
 this rule belongs with it.
+
+`filterList` is where that check comes back with a second answer, and it is
+worth knowing before the next component takes this route. Its bar is dead
+without the script, so it ships `hidden` and `init()` reveals it last — the
+same story, and its stylesheet carries the same rule for the same reason (a
+`.filterBar { display: flex }` would resurrect a dead bar). But the rule
+covers three attributes rather than one, and only the first of them is a
+pre-enhancement guard:
+
+```scss
+[data-filterlist-item][hidden],
+[data-filterlist-empty][hidden],
+[data-filterlist-controls][hidden] { display: none !important; }
+```
+
+The module writes and removes `hidden` on the **items** and on the empty
+message for as long as it runs — that is how it filters at all — so for those
+two the rule is not a guard that stops applying once `init()` has been
+through, it is **permanent machinery**. Commenting it out does not restore a
+look; it stops the component filtering anything, because a project's
+`.card { display: flex }` outranks the UA rule on every card the filter
+excluded. Same declaration, two different jobs, and only
+`[data-filterlist-controls]` is the one this section is about.
+
+The other thing `filterList` settles is what "nothing is lost" is worth
+measuring against. `copyToClipboard` hides a control and leaves selectable
+text; `backToTop` hides a shortcut to a place the reader can still scroll to.
+`filterList` hides a control and leaves **the whole list** — more than the
+enhanced state ever shows. That is the strongest form of the Layer 2 test
+there is, and it is why hiding the bar needs no `:target` escape and no
+opt-in note.
 
 `dataTable` is the case that runs the other way, and it is worth knowing that
 the attribute can. Its stacked layout (rows as cards, below the `small`

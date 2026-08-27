@@ -435,7 +435,10 @@ paragraphs, and several live examples exercising each mode of the component.
   `undefined` — not to be confused with `resolveLocale`, which picks from the
   locales a component ships translations for), `numberSeparators` (the group
   and decimal character of a locale, from `Intl.NumberFormat().formatToParts()`
-  — never assume `.` and `,`), `uniqueId` (an id that is free in the document),
+  — never assume `.` and `,`), `foldText` (lowercased and stripped of its
+  combining marks, so `zurich` finds `Zürich` — for the match TEST only,
+  never to locate a substring, because stripping a mark changes a string's
+  length), `uniqueId` (an id that is free in the document),
   `focusableSelector` (elements the keyboard already reaches), `describedBy`
   (add/remove one id in a field's — or a button's — `aria-describedby`),
   `navExpandedMediaQuery` (the `--bp-navigation` query), `otherModalOpen` (is

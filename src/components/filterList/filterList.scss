@@ -1,0 +1,105 @@
+// =============================================================
+// filterList — the two styles the component must own
+// =============================================================
+//
+// filterList is a function: it owns no vocabulary and ships no look. The
+// reason is the thing itself — a filter bar is the project's own form
+// controls and the list under it is the project's own cards. A block shipped
+// from here would be something to override, not something to use.
+//
+// So this file ships two rules, and neither is a look. One keeps the `hidden`
+// attribute the module writes actually hiding things; the other is an
+// accessibility necessity, the live region the module injects (inputCharCount
+// and copyToClipboard ship their stylesheets for that single reason too).
+//
+// Contract with the JS (filterList.js) — every hook is only ever WRITTEN,
+// never read back, so restyling cannot break the behaviour:
+//
+//   [data-filterlist-state]     "filtered" while something is filtering and
+//                               items are left, "empty" while nothing
+//                               matches. ABSENT on the region means the
+//                               whole list is showing
+//   [hidden]                    on every item that is out, and on
+//                               [data-filterlist-empty] while something
+//                               matches. REMOVED from
+//                               [data-filterlist-controls] once the module
+//                               runs
+//   [disabled]                  on [data-filterlist-reset] while there is
+//                               nothing to clear — the platform's own way
+//                               of saying so
+//   .filterlist-srStatus        the injected live region (rule below)
+//   [data-filterlist-status]    the same node, for an inspector or a
+//                               project selector that wants an attribute
+//
+// The state sits on the region, so every rule a project needs is one
+// descendant selector away:
+//
+//   [data-filterlist-state] [data-filterlist-reset] { … }  // "clear" is live
+//   [data-filterlist-state="empty"] .cardGrid       { … }  // nothing matches
+//   [data-filterlist-count]                         { … }  // the count
+//
+// Two things to know before styling it.
+//
+// The state is never the ONLY channel. Whatever a rule here draws, the module
+// has also said in words through the live region — a grid that quietly gets
+// shorter is precisely the half of a filter that leaves a screen-reader user
+// with no result at all, and it is the half this component exists for.
+//
+// An item leaving is NOT animated, and cannot be from here: `display: none`
+// has no transition to run and the rule below is !important on top of that.
+// That is deliberate rather than a limitation accepted. A filter is re-run on
+// every keystroke, so an item fading out is an item that may have to come
+// straight back — and half a card mid-fade is worse than an honest jump. A
+// project that wants motion should animate the container's height, or the
+// items' arrival (revealOnScroll is next door), not their removal.
+
+@use "visuallyHidden" as *;
+
+
+
+// `hidden` is not a strong promise: its effect is a UA rule,
+// "[hidden] { display: none }", specificity (0,0,0) — so the moment a project
+// writes ".card { display: flex }" or ".filterBar { display: grid }", every
+// filtered-out item and every dead control is back on screen. Giving a card a
+// `display` is the first thing anybody does to one, so this is not a
+// hypothetical; it is the default outcome.
+//
+// Hence this rule, and hence the !important — the same reason the
+// reduced-motion blocks in this collection carry one, and the same rule
+// copyToClipboard ships for its own dead button (see docs/preEnhancement.md
+// §4). There is no reading of the markup in which an author wants their
+// layout rule to resurrect an item the filter has excluded, and a specificity
+// high enough to be safe against ".cardGrid .card" in a stylesheet loaded
+// after this one cannot be written without a hack. The scope is as narrow as
+// the guarantee needs: an element carrying one of this component's own
+// attributes, and `hidden`.
+//
+// Two of the three are permanent machinery rather than a pre-enhancement
+// guard, which is worth knowing because it is the difference to
+// copyToClipboard's version of this rule. The module writes and removes
+// `hidden` on the items and on the empty message for as long as it runs, so
+// this rule is load-bearing the whole time — commenting it out does not
+// restore a look, it stops the component filtering anything. Only
+// [data-filterlist-controls] is the pre-enhancement half: the bar ships
+// `hidden` and init() takes it off as its last step, so a chunk that never
+// arrives leaves the full list and no dead controls above it.
+[data-filterlist-item][hidden],
+[data-filterlist-empty][hidden],
+[data-filterlist-controls][hidden] {
+  display: none !important;
+}
+
+
+
+// The injected live region: in the DOM and announced (role="status",
+// aria-live="polite"), out of the visual layout. The mixin's recipe keeps it
+// in the accessibility tree, which "display: none" and "visibility: hidden"
+// would not — and it is absolutely positioned, so it is not a flex or grid
+// item of whatever it lands in and cannot add a gap to the layout. That
+// matters more than it reads: the module inserts it BETWEEN the controls and
+// the items, so that it is met in the right place by somebody reading the
+// page linearly — which puts it in the middle of a layout rather than after
+// it.
+.filterlist-srStatus {
+  @include visually-hidden;
+}

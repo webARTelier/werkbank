@@ -97,6 +97,7 @@ reads it. The full decision rule is in [`CLAUDE.md`](CLAUDE.md).
 | `dropdownNav`        | module                        | Multi-level dropdown / mega-menu nav on the ARIA disclosure pattern.|
 | `embedConsent`       | component                     | Holds a third-party embed's place until the visitor has allowed it.  |
 | `fileUpload`         | component                     | A file field that names what is attached, with an upload lane.      |
+| `filterList`         | function                      | Client-side search and facet filtering over a card or list group.   |
 | `flexNeighborMarker` | function (`o-flexNeighbor`)   | Marks flex items that have a neighbour on the same row.             |
 | `formValidation`     | function                      | Inline validation messages on the Constraint Validation API.        |
 | `inlineSVG`          | function                      | Replaces `<img>` SVG references with inline SVG.                    |

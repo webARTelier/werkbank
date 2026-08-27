@@ -1,0 +1,215 @@
+<!--
+  filterList — copy-paste snippet
+  ============================================================================
+  Copy the block below into your own project.
+
+  1) In <head> (or before </body>): load the shared styles, this component's
+     styles and the boot script. boot.min.js lazily loads the filterList
+     module as soon as it finds data-js-behavior="filterList" in the DOM —
+     you do not import filterList.js yourself. Adjust the paths to where you
+     serve /dist.
+
+       <link rel="stylesheet" href="/dist/css/shared.min.css" />
+       <link rel="stylesheet" href="/dist/css/filterList.min.css" />
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+  2) Put data-js-behavior="filterList" on the REGION that holds both the
+     controls and the items. Everything the module reads is inside it:
+       - data-filterlist-item on each item — a card, an <li>, a table row
+         it is not worth making a dataTable. At least one is required.
+       - data-filterlist-query on the text field. <input type="search">
+         brings its own clear control and its own keyboard; the module adds
+         the filtering. Neither Enter here nor a press on the reset submits
+         anything once it is running.
+       - data-filterlist-facet="<group>" on a <select>, a checkbox or a radio.
+         Its VALUE is a token, matched against the item's
+         data-filterlist-tags. OR inside a group, AND across groups — tick
+         two colours and one size and you get "either colour, in that size".
+       - data-filterlist-controls on the wrapper around the controls. It ships
+         `hidden` and the module removes it; see Notes.
+       - data-filterlist-count where the visible count goes,
+         data-filterlist-empty for the nothing-found message (it ships
+         `hidden` too), and data-filterlist-reset on a <button> that clears
+         everything.
+
+  Notes
+    - Progressive enhancement, and this is the shape of it: nothing in HTML
+      or CSS filters a list, so the controls are a bar that does nothing
+      until the chunk arrives. They therefore ship with the `hidden`
+      attribute and the module removes it as its LAST step — video's
+      approach and copyToClipboard's, so there is no ready attribute and no
+      media query. Turn JavaScript off and reload: the full list is there,
+      complete and readable, with no dead controls above it. Every bail-out
+      ends the same way (no items, no controls), and the reporter says which
+      one in the console.
+    - The bar therefore arrives AFTER the first paint, so the row it sits in
+      moves once. Nothing here can prevent that — the point is that it is
+      not on screen until it filters — so where the shift would be felt,
+      reserve the slot in your own CSS: a min-block-size on the bar's
+      container, or the bar laid over the top of the list.
+    - Keep the stylesheet. Two of its three selectors are not a look but the
+      component working: `hidden` is a UA rule at specificity (0,0,0), so the
+      first `.card { display: flex }` you write puts every filtered-out card
+      back on screen. The rule is scoped to this component's own attributes
+      and stops applying the moment the module removes `hidden`.
+    - The count is SAID, not only drawn. The module injects one polite
+      live region and writes the count into it — debounced, so a screen
+      reader hears one number rather than one per keystroke — and links it to
+      the query field with aria-describedby, so the current count is read on
+      focus too. It is inserted right after the controls, so somebody reading
+      the page linearly meets the count where a sighted reader sees it. Do
+      NOT put aria-live on the item container as well: twelve cards leaving
+      at once is not a message, and the region already said it.
+    - Nothing found is announced in YOUR words: [data-filterlist-empty]'s own
+      text is the spoken sentence where you wrote one. Write the way out into
+      it ("press Clear to start again") and it reaches everybody — the two
+      channels cannot drift, because there is only one wording.
+    - Pressing the reset moves the focus to the query field. It has to: the
+      same pass disables the button, and a control disabled while it has the
+      focus hands the focus to <body>. The only other case in which the
+      module moves the focus is an item that goes out while the focus is
+      inside it — `hidden` would hand it to <body> the same way — and that
+      needs a later render to have started the pass, since a pass from a
+      control leaves the reader on the control. The press itself submits
+      nothing, so a <button> with no type is safe here, and a <select> or a
+      radio group goes back to its own empty-value option — the "any" state —
+      rather than to nothing at all.
+    - What is searched is the item's own visible text, whitespace collapsed.
+      Where that is too much — a card whose body copy matches everything —
+      put the text to search in data-filterlist-text on the item instead; it
+      REPLACES the item's own. A CMS template is the natural place for it,
+      and it is also where keywords that are not on screen belong.
+    - Accents do not have to be typed: "zurich" finds "Zürich", "cafe" finds
+      "Café". A transliteration is a different thing and is not covered —
+      "muenchen" does not find "München".
+    - A query is split on whitespace and EVERY term has to be found, in any
+      order: "red chair" and "chair red" are the same query. Substring by
+      default, so "art" finds "Stuttgart"; data-filterlist-match="word"
+      narrows that to the start of a word.
+    - The module owns `hidden` on the items, on [data-filterlist-empty] and
+      on [data-filterlist-controls], and `disabled` on
+      [data-filterlist-reset]. Do not author those attributes for other
+      purposes on those elements and do not write them from your own script
+      — the next pass overwrites them.
+    - Items that arrive later are picked up. A MutationObserver watches the
+      region for children, so a batch appended by loadFragment or a rendered
+      template is filtered as it stands, with nothing to re-initialise.
+    - An item leaving is not animated, and cannot be: `display: none` has no
+      transition to run. That is deliberate — a filter re-runs on every
+      keystroke, so an item fading out may have to come straight back, and
+      half a card mid-fade is worse than an honest jump. Animate the
+      container's height if you want motion there.
+    - It filters, and that is all. No sorting (that is dataTable's, for a
+      table), no paging, no URL or history entry, no request. For the last
+      two, listen for the module's own event: `filterlist:changed` bubbles off
+      the region on every pass, with detail { shown, total, query, facets }.
+    - Optional config (attributes on the region):
+        data-filterlist-match        "any" (default) or "word": where a
+                                     term may match — anywhere in the
+                                     text, or only at the start of a word
+        data-filterlist-count-text   the VISIBLE count template. Tokens
+                                     {shown} {total}. Default: the
+                                     built-in short form in the page's
+                                     language ("3 of 12")
+        data-filterlist-status-text  the SPOKEN counting sentence, same
+                                     tokens. Default: the built-in
+                                     sentence for <html lang> (de, en,
+                                     falling back to en). An empty value
+                                     opts it out
+        data-filterlist-none-text    the SPOKEN nothing-found sentence.
+                                     Defaults to [data-filterlist-empty]'s
+                                     own text where there is one, and to
+                                     the built-in sentence otherwise. Same
+                                     opt-out. With BOTH this and
+                                     data-filterlist-status-text empty the
+                                     module builds no region at all and
+                                     says so in the console. That setting
+                                     is a promise, not a preference:
+                                     something else on the page — a toast,
+                                     a router — MUST then announce the
+                                     result, or a screen-reader user is
+                                     left with a list that silently got
+                                     shorter
+-->
+
+
+
+<!-- Basic: a query field over a card grid. <search> rather than a <form>, so
+     there is no submission to prevent and no action to point anywhere; the
+     label is a real <label>, and the controls wrapper ships `hidden`. -->
+<section data-js-behavior="filterList">
+
+  <search data-filterlist-controls hidden>
+    <label for="teamQuery">Search the team</label>
+    <input id="teamQuery" type="search" autocomplete="off" data-filterlist-query>
+
+    <p aria-hidden="true" data-filterlist-count></p>
+  </search>
+
+  <ul role="list">
+    <li data-filterlist-item>
+      <h3>Amelie Roth</h3>
+      <p>Interface design</p>
+    </li>
+    <li data-filterlist-item>
+      <h3>Jonas Weber</h3>
+      <p>Accessibility</p>
+    </li>
+  </ul>
+
+  <p hidden data-filterlist-empty>Nobody here matches that.</p>
+</section>
+
+
+
+<!-- With facets: a select for one taxonomy and a checkbox group for another.
+     The item's data-filterlist-tags carries the tokens both of them match,
+     and data-filterlist-text keeps the search on the name and the role
+     rather than on the whole card. Note the empty-value option — that is
+     the "any" state of the select, and it is what the reset button puts it
+     back to. -->
+<section data-filterlist-match="word" data-js-behavior="filterList">
+
+  <div data-filterlist-controls hidden>
+
+    <search>
+      <label for="peopleQuery">Search</label>
+      <input id="peopleQuery" type="search" autocomplete="off" data-filterlist-query>
+    </search>
+
+    <label for="peopleTeam">Team</label>
+    <select id="peopleTeam" name="team" data-filterlist-facet="team">
+      <option value="">Any team</option>
+      <option value="design">Design</option>
+      <option value="engineering">Engineering</option>
+    </select>
+
+    <fieldset>
+      <legend>Location</legend>
+      <label><input type="checkbox" name="location" value="berlin" data-filterlist-facet="location"> Berlin</label>
+      <label><input type="checkbox" name="location" value="lisbon" data-filterlist-facet="location"> Lisbon</label>
+    </fieldset>
+
+    <button type="button" data-filterlist-reset>Clear the filters</button>
+    <p aria-hidden="true" data-filterlist-count></p>
+  </div>
+
+  <div>
+    <article data-filterlist-tags="design berlin"
+             data-filterlist-text="Amelie Roth interface design"
+             data-filterlist-item>
+      <h3>Amelie Roth</h3>
+      <p>Interface design, Berlin</p>
+      <p>Joined in 2019 and has been rebuilding the design system since.</p>
+    </article>
+    <article data-filterlist-tags="engineering lisbon"
+             data-filterlist-text="Jonas Weber accessibility"
+             data-filterlist-item>
+      <h3>Jonas Weber</h3>
+      <p>Accessibility, Lisbon</p>
+      <p>Runs the audits and writes most of the test fixtures.</p>
+    </article>
+  </div>
+
+  <p hidden data-filterlist-empty>No colleagues match those filters.</p>
+</section>

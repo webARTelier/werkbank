@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>filterList – Demo</title>
+  <link rel="icon" href="../../../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../../../dist/css/shared.min.css">
+  <link rel="stylesheet" href="../../../dist/css/filterList.min.css">
+
+  <script type="module" src="../../../dist/js/boot.min.js"></script>
+
+  <!-- for development only -->
+  <script src="../../tools/dev_dashboard/dev_dashboard.js"></script>
+  <!-- end for development only -->
+
+  <!--
+      DEMO-ONLY STYLES
+      ----------------------------------------------------------------------
+      filterList.min.css ships TWO rules — the one that keeps `hidden`
+      hiding, and the visually-hidden recipe for the live region the module
+      injects. Everything you can see below is this page playing the
+      project: the filter bar, the fields, the card grid, the cards, the
+      count, the empty message. That is the whole point of the component
+      being a function — a filter bar is your own form controls and the list
+      under it is your own cards.
+
+      The only rules that are about the component at all are the two keyed
+      off [data-filterlist-state], and they are worth reading as the reference
+      for how to use it. Both hang off the attribute's presence rather than
+      its value: its ABSENCE means "the whole list is showing", which is why
+      the module writes no third value for that.
+
+        - [data-filterlist-state] lights the filter bar's border, so the bar
+          says it is doing something.
+        - [data-filterlist-state] reveals the reset button — which the module
+          has also already disabled, so this page is showing that both
+          hooks are there rather than choosing between them.
+
+      Note what is NOT here: a "[hidden] { display: none }" rule. There
+      would have to be one — ".card { display: flex }" beats the UA rule
+      that makes `hidden` hide anything, and without a counter-rule every
+      filtered-out card below would stay on screen — and the component ships
+      it instead, because a project that has to remember that is a project
+      shipping a filter that filters nothing. Comment the rule out in
+      filterList.scss and reload to watch it happen.
+  -->
+
+  <style>
+    .demo {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2xl);
+    }
+
+    .demo__example {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-s);
+    }
+
+    .demo__example h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      color: var(--color-text);
+    }
+
+    /* ----- the project's filter bar ----- */
+
+    .filterBar {
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--borderRadius);
+      padding: var(--space-s);
+
+      display: flex;
+      flex-wrap: wrap;
+      align-items: end;
+      gap: var(--space-s);
+
+      background-color: var(--color-bg-surface);
+    }
+
+    .filterBar__field {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3xs);
+      flex: 1 1 14rem;
+      min-inline-size: 0;
+      max-inline-size: 26rem;
+    }
+
+    .filterBar__field--auto {
+      flex: 0 0 auto;
+    }
+
+    .filterBar__label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+    }
+
+    .filterBar input[type="search"],
+    .filterBar select {
+      border: 1px solid var(--color-border-control);
+      border-radius: var(--borderRadius);
+      padding: var(--space-2xs) var(--space-xs);
+
+      font: inherit;
+      font-size: 0.9rem;
+
+      color: var(--color-text);
+      background-color: var(--color-bg-elevated);
+    }
+
+    .filterBar input[type="search"]:focus-visible,
+    .filterBar select:focus-visible,
+    .filterBar input[type="checkbox"]:focus-visible,
+    .cardGrid:focus-visible,
+    .button:focus-visible {
+      outline: 2px solid var(--color-focus-ring-light);
+      outline-offset: var(--outlineOffset);
+    }
+
+    .filterBar fieldset {
+      margin: 0;
+      border: 0;
+      padding: 0;
+
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3xs);
+    }
+
+    .filterBar legend {
+      padding: 0;
+
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+    }
+
+    .filterBar__choices {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-xs);
+    }
+
+    .filterBar__choice {
+      cursor: pointer;
+
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-3xs);
+
+      font-size: 0.9rem;
+
+      color: var(--color-text-secondary);
+    }
+
+    /* The count is the project's text, in the project's own place. The module
+       writes the string and nothing else. */
+    .filterBar__count {
+      margin: 0;
+
+      flex: 0 0 auto;
+
+      font-size: 0.85rem;
+      font-variant-numeric: tabular-nums;
+
+      color: var(--color-text-muted);
+    }
+
+    .button {
+      cursor: pointer;
+
+      border: 1px solid var(--color-border-control);
+      border-radius: var(--borderRadius);
+      padding: var(--space-2xs) var(--space-s);
+
+      font: inherit;
+      font-size: 0.9rem;
+      line-height: 1.2;
+
+      color: var(--color-text);
+      background-color: var(--color-bg-elevated);
+
+      transition:
+        border-color 150ms ease,
+        background-color 150ms ease;
+    }
+
+    .button:hover:not(:disabled) {
+      border-color: var(--color-border-control-strong);
+      background-color: var(--color-bg-surface-strong);
+    }
+
+    /* The module's own way of saying "nothing to clear" — kept as a look of
+       its own, because a disabled control the module reveals for one frame
+       before the state rule below catches up should still read as inert. */
+    .button:disabled {
+      cursor: default;
+      color: var(--color-text-muted);
+    }
+
+    /* ----- the project's card grid ----- */
+
+    .cardGrid {
+      margin: 0;
+      padding: 0;
+
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+      gap: var(--space-s);
+
+      list-style: none;
+    }
+
+    /* This is the `display` the component's own stylesheet has to hold
+       `hidden` against — a plain ".card { display: flex }", the first thing
+       anybody writes for a card. */
+    .card {
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--borderRadius);
+      padding: var(--space-s);
+
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3xs);
+
+      background-color: var(--color-bg-elevated);
+    }
+
+    .card h3 {
+      margin: 0;
+      font-size: 0.98rem;
+      color: var(--color-text);
+    }
+
+    .card__role {
+      margin: 0;
+      font-size: 0.82rem;
+      color: var(--color-accent-secondary);
+    }
+
+    .card__blurb {
+      margin: 0;
+      font-size: 0.85rem;
+      line-height: 1.45;
+      color: var(--color-text-muted);
+    }
+
+    .emptyNote {
+      margin: 0;
+      border: 1px dashed var(--color-border);
+      border-radius: var(--borderRadius);
+      padding: var(--space-m);
+
+      text-align: center;
+      font-size: 0.9rem;
+
+      color: var(--color-text-secondary);
+    }
+
+    /* ----- the two rules that are about the component ----- */
+
+    /* Something is filtering. The bar says so on its own border, which is
+       the cheapest honest use of the attribute: a reader who scrolled back
+       up to it can see that what is below is a selection and not the list. */
+    [data-filterlist-state] .filterBar {
+      border-color: var(--color-border-focus);
+    }
+
+    /* "Clear" only exists once there is something to clear. The state
+       attribute is on the region, so this is one descendant selector — and
+       `visibility` rather than `display`, so the bar does not reflow when it
+       appears. */
+    .filterBar__reset {
+      visibility: hidden;
+    }
+
+    [data-filterlist-state] .filterBar__reset {
+      visibility: visible;
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="shell">
+
+    <section class="hero">
+      <a class="back" href="../../../index.html">← Overview</a>
+      <h1>filterList</h1>
+      <p>Filters a card grid that is already in the page — by what you type, by the facets you tick, and out loud.</p>
+    </section>
+
+    <section class="stage" aria-label="Live demo">
+
+      <!--
+          No selector in CSS asks whether an element's text contains a
+          string somebody is still typing, so a filter is the one job on
+          this page that genuinely needs a script. What a filter usually
+          does NOT have is the other half: the count in words, the empty
+          state, the way back, and a `hidden` that survives the project's
+          own ".card { display: flex }".
+
+          The module boots on the REGION holding the controls and the items,
+          and writes:
+            [data-filterlist-state]  "filtered" or "empty" on the region
+            [hidden]                 on the items that are out, and on the
+                                     empty message while something matches
+            [disabled]               on the reset button
+          Every look on this page is the demo's own CSS (see the DEMO-ONLY
+          STYLES comment) — the component's stylesheet is two rules, neither
+          of them a look.
+
+          Wiring — four examples
+            - Example 1: the query lane on its own. data-filterlist-query
+              on the field, data-filterlist-item on each card. Type
+              "design": the matching cards stay, the count changes, and the
+              live region says the number. Type "zurich" in example 2 to see
+              the accent folding — it finds "Zürich".
+            - Example 2: facets. A <select> and a checkbox group, each
+              control's VALUE matched against the card's data-filterlist-tags.
+              OR inside a group, AND across groups: tick both cities and
+              pick one team and you get "either city, in that team". The
+              cards also carry data-filterlist-text, so the search runs on the
+              name and the role rather than on the blurb — and
+              data-filterlist-match="word" narrows a term to the start of a
+              word, so "sign" no longer finds "design".
+            - Example 3: items that arrive after init(). The "Load six more"
+              button below the grid is this page's own script appending
+              plain markup — no re-initialising, no event to fire. A
+              MutationObserver in the module re-indexes the region, so the
+              new cards obey the query that is already in the field.
+            - Example 4: a bail-out you cannot see. That region has a filter
+              bar and no items, so the module reported it and left the bar
+              with the `hidden` attribute it was authored with.
+
+          Progressive enhancement
+            - Every filter bar here ships with `hidden` and the module
+              removes it as its last step. Turn JavaScript off and reload:
+              all the cards are there, complete and readable, with no dead
+              controls above them. That is what makes hiding the bar allowed
+              at all — nothing is lost, and the full list is what the reader
+              came for.
+            - The bail-outs use the same attribute, which is why example 4
+              is a region with no bar rather than a bar that does nothing.
+            - The bar therefore arrives after the first paint and the row
+              moves once. Nothing here can prevent that; where it matters it
+              is one line of the project's CSS (a min-block-size on the
+              bar's container).
+
+          Accessibility
+            - The count is SAID, not only drawn. Each region gets one polite
+              live region and one sentence per pass — debounced 500 ms, so a
+              screen reader hears one number instead of one per keystroke —
+              and it is the field's aria-describedby, so the current count
+              is read on focus too.
+            - It is built complete and only then inserted, so the initial
+              "All 9 entries are shown." is a description rather than an
+              announcement fired at somebody who has not touched anything.
+              It is inserted right AFTER the filter bar, so somebody reading
+              the page linearly meets the count where a sighted reader sees
+              it and not below the whole grid.
+            - Nothing found is announced in the PAGE'S words. Example 2's
+              empty note says "press Clear to start again" — so that is what
+              is spoken, rather than a built-in sentence that would leave the
+              way out visible only to those who can see it.
+            - "Clear" moves the focus, and it is the only thing here that
+              does. The same pass disables the button, and a control disabled
+              while it has the focus hands the focus to <body> — so the
+              module puts it in the query field instead. Press Clear with the
+              keyboard and carry on tabbing to see it.
+            - Every announcement is a new node, which is what makes two
+              different queries both finding nothing announce twice.
+            - Filtered-out cards get `hidden`, so they leave the
+              accessibility tree with the layout. The grid itself is NOT a
+              live region: nine cards leaving at once is not a message.
+            - The reset button is `disabled` while there is nothing to
+              clear — the platform saying so, in every screen reader,
+              without a line of ARIA.
+
+          Try it
+            - Watch the DOM in the inspector: `hidden` appears on the cards
+              that are out, data-filterlist-state on the <section>, and the
+              [data-filterlist-status] region fills with a sentence half a
+              second after you stop typing.
+            - Type something that matches nothing: the grid goes away, the
+              empty message appears, and the region says so. Type a second
+              query that also matches nothing and note that it is announced
+              again — that is the new-node rule.
+            - In example 3, filter first and THEN press "Load six more": the
+              cards arriving are filtered on the way in.
+            - Read the console for example 4's warning.
+      -->
+
+      <p class="stage__intro">
+        Four filters, one component. What you see is this page's own CSS
+        reacting to a single attribute — <code>data-filterlist-state</code> —
+        and to <code>hidden</code>. What you cannot see is the half that
+        matters: a <strong>polite live region</strong> in every one of them,
+        saying in words how many cards are left.
+      </p>
+
+      <div class="demo">
+
+        <!-- Example 1: the query lane on its own -->
+        <section class="demo__example">
+          <h2>1 — A search field over a card grid</h2>
+
+          <p class="stage__intro">
+            <code>data-filterlist-query</code> on the field,
+            <code>data-filterlist-item</code> on each card, and nothing else. The
+            haystack is the card's own visible text, so
+            <strong>&ldquo;rebuilding&rdquo; finds the card whose blurb says
+            it</strong> — example 2 shows how to narrow that down.
+          </p>
+
+          <section data-js-behavior="filterList">
+
+            <div class="filterBar" data-filterlist-controls hidden>
+              <div class="filterBar__field">
+                <label class="filterBar__label" for="q1">Search the team</label>
+                <input id="q1" type="search" autocomplete="off" data-filterlist-query>
+              </div>
+
+              <p class="filterBar__count" aria-hidden="true" data-filterlist-count></p>
+            </div>
+
+            <ul class="cardGrid" role="list">
+              <li class="card" data-filterlist-item>
+                <h3>Amelie Roth</h3>
+                <p class="card__role">Interface design</p>
+                <p class="card__blurb">Joined in 2019 and has been rebuilding the design system since.</p>
+              </li>
+              <li class="card" data-filterlist-item>
+                <h3>Jonas Weber</h3>
+                <p class="card__role">Accessibility</p>
+                <p class="card__blurb">Runs the audits and writes most of the test fixtures.</p>
+              </li>
+              <li class="card" data-filterlist-item>
+                <h3>Léa Bernard</h3>
+                <p class="card__role">Interface design</p>
+                <p class="card__blurb">Draws the components nobody else wants to draw twice.</p>
+              </li>
+              <li class="card" data-filterlist-item>
+                <h3>Tomás Silva</h3>
+                <p class="card__role">Front-end engineering</p>
+                <p class="card__blurb">Keeps the build honest and the bundles small.</p>
+              </li>
+            </ul>
+
+            <p class="emptyNote" hidden data-filterlist-empty>
+              Nobody on the team matches that.
+            </p>
+          </section>
+        </section>
+
+        <!-- Example 2: facets, a reset, word matching, and the
+             data-filterlist-text override -->
+        <section class="demo__example">
+          <h2>2 — Facets, a reset, and word matching</h2>
+
+          <p class="stage__intro">
+            A <code>&lt;select&gt;</code> and a checkbox group, each control's
+            value matched against the card's <code>data-filterlist-tags</code>:
+            <strong>OR inside a group, AND across groups</strong>. The cards
+            carry <code>data-filterlist-text</code>, so the search runs on the
+            name, the role and the city and not on the blurb, and
+            <code>data-filterlist-match="word"</code> narrows a term to the start
+            of a word: <code>des</code> finds <em>design</em>,
+            <code>sign</code> no longer does. Try <code>zurich</code> — it
+            finds <em>Zürich</em>.
+          </p>
+
+          <section data-filterlist-match="word" data-js-behavior="filterList">
+
+            <div class="filterBar" data-filterlist-controls hidden>
+              <div class="filterBar__field">
+                <label class="filterBar__label" for="q2">Search</label>
+                <input id="q2" type="search" autocomplete="off" data-filterlist-query>
+              </div>
+
+              <div class="filterBar__field filterBar__field--auto">
+                <label class="filterBar__label" for="team2">Team</label>
+                <select id="team2" name="team" data-filterlist-facet="team">
+                  <option value="">Any team</option>
+                  <option value="design">Design</option>
+                  <option value="engineering">Engineering</option>
+                  <option value="research">Research</option>
+                </select>
+              </div>
+
+              <fieldset>
+                <legend>Location</legend>
+                <div class="filterBar__choices">
+                  <label class="filterBar__choice">
+                    <input type="checkbox" name="location" value="berlin" data-filterlist-facet="location">
+                    Berlin
+                  </label>
+                  <label class="filterBar__choice">
+                    <input type="checkbox" name="location" value="zurich" data-filterlist-facet="location">
+                    Zürich
+                  </label>
+                  <label class="filterBar__choice">
+                    <input type="checkbox" name="location" value="lisbon" data-filterlist-facet="location">
+                    Lisbon
+                  </label>
+                </div>
+              </fieldset>
+
+              <button class="button filterBar__reset" type="button" data-filterlist-reset>Clear</button>
+
+              <p class="filterBar__count" aria-hidden="true" data-filterlist-count></p>
+            </div>
+
+            <ul class="cardGrid" role="list">
+              <li class="card"
+                  data-filterlist-tags="design berlin"
+                  data-filterlist-text="Amelie Roth interface design Berlin"
+                  data-filterlist-item>
+                <h3>Amelie Roth</h3>
+                <p class="card__role">Interface design · Berlin</p>
+                <p class="card__blurb">Holds the contract between the design system and the build.</p>
+              </li>
+              <li class="card"
+                  data-filterlist-tags="engineering lisbon"
+                  data-filterlist-text="Tomás Silva front-end engineering Lisbon"
+                  data-filterlist-item>
+                <h3>Tomás Silva</h3>
+                <p class="card__role">Front-end engineering · Lisbon</p>
+                <p class="card__blurb">Keeps the build honest and the bundles small.</p>
+              </li>
+              <li class="card"
+                  data-filterlist-tags="research zurich"
+                  data-filterlist-text="Nadia Frei research accessibility Zürich"
+                  data-filterlist-item>
+                <h3>Nadia Frei</h3>
+                <p class="card__role">Research · Zürich</p>
+                <p class="card__blurb">Runs the usability sessions and writes them up.</p>
+              </li>
+              <li class="card"
+                  data-filterlist-tags="design zurich"
+                  data-filterlist-text="Léa Bernard interface design Zürich"
+                  data-filterlist-item>
+                <h3>Léa Bernard</h3>
+                <p class="card__role">Interface design · Zürich</p>
+                <p class="card__blurb">Draws the components nobody else wants to draw twice.</p>
+              </li>
+              <li class="card"
+                  data-filterlist-tags="engineering berlin"
+                  data-filterlist-text="Jonas Weber accessibility engineering Berlin"
+                  data-filterlist-item>
+                <h3>Jonas Weber</h3>
+                <p class="card__role">Accessibility · Berlin</p>
+                <p class="card__blurb">Runs the audits and writes most of the test fixtures.</p>
+              </li>
+            </ul>
+
+            <p class="emptyNote" hidden data-filterlist-empty>
+              No colleagues match those filters. Press <strong>Clear</strong> to start again.
+            </p>
+          </section>
+        </section>
+
+        <!-- Example 3: items appended after init() -->
+        <section class="demo__example">
+          <h2>3 — Cards that arrive later</h2>
+
+          <p class="stage__intro">
+            The button under the grid is <strong>this page's own script</strong>
+            appending plain markup — no module involved, nothing
+            re-initialised. A <code>MutationObserver</code> re-indexes the
+            region, so <strong>filter first and then load</strong>: the cards
+            arriving obey the query that is already in the field. Custom
+            wording here too — <code>data-filterlist-count-text</code> for the
+            number you can see.
+          </p>
+
+          <section data-filterlist-count-text="{shown} of {total} downloads"
+                   data-js-behavior="filterList">
+
+            <div class="filterBar" data-filterlist-controls hidden>
+              <div class="filterBar__field">
+                <label class="filterBar__label" for="q3">Filter the downloads</label>
+                <input id="q3" type="search" autocomplete="off" data-filterlist-query>
+              </div>
+
+              <button class="button filterBar__reset" type="button" data-filterlist-reset>Clear</button>
+
+              <p class="filterBar__count" aria-hidden="true" data-filterlist-count></p>
+            </div>
+
+            <ul class="cardGrid" role="list" id="downloadList">
+              <li class="card" data-filterlist-item>
+                <h3>Brand manual</h3>
+                <p class="card__role">PDF · 4.2 MB</p>
+              </li>
+              <li class="card" data-filterlist-item>
+                <h3>Logo pack</h3>
+                <p class="card__role">ZIP · 12 MB</p>
+              </li>
+              <li class="card" data-filterlist-item>
+                <h3>Type specimen</h3>
+                <p class="card__role">PDF · 1.1 MB</p>
+              </li>
+            </ul>
+
+            <p class="emptyNote" hidden data-filterlist-empty>
+              No download matches that.
+            </p>
+
+            <p>
+              <button class="button" type="button" id="loadMore">Load six more</button>
+            </p>
+          </section>
+        </section>
+
+        <!-- Example 4: the bail-out -->
+        <section class="demo__example">
+          <h2>4 — A filter bar you never see</h2>
+
+          <p class="stage__intro">
+            Below this paragraph is a region with a complete filter bar and
+            <strong>no items in it</strong>. The module reported that and left
+            the bar with the <code>hidden</code> attribute it was authored
+            with, so there is nothing on screen and nothing to press. Read the
+            console — and note that this is the same mechanism as the
+            progressive enhancement above, not a second one.
+          </p>
+
+          <section data-js-behavior="filterList">
+
+            <div class="filterBar" data-filterlist-controls hidden>
+              <div class="filterBar__field">
+                <label class="filterBar__label" for="q4">Search</label>
+                <input id="q4" type="search" autocomplete="off" data-filterlist-query>
+              </div>
+
+              <p class="filterBar__count" aria-hidden="true" data-filterlist-count></p>
+            </div>
+
+            <p class="emptyNote">The list this bar would filter is not here yet.</p>
+          </section>
+        </section>
+
+      </div>
+    </section>
+  </main>
+
+  <!--
+      DEMO-ONLY SCRIPT
+      ------------------------------------------------------------------------
+      Example 3's "Load six more": plain markup appended to the list, the way
+      a template render or loadFragment's append lane would do it. Nothing
+      here talks to filterList — the module's own MutationObserver notices
+      the children and re-indexes. The button takes itself out of the page
+      when the batch is spent, so there is never a control that does nothing.
+
+      That last part is the reason for the three lines about the focus. An
+      element REMOVED while it has the focus hands the focus to <body>, so a
+      reader who pressed this button with the keyboard would be dropped at the
+      top of the document (WCAG 2.4.3) — the page's own script, not the
+      component, but the same fault either way. The focus therefore goes to
+      the list that just grew, made focusable with tabindex="-1".
+
+      The list and not the first new card, which is what the usual "load more"
+      pattern says, and the reason is this very component: a filter may be
+      active — this demo tells you to try exactly that — and a card that does
+      not match is `hidden` a frame later, which would lose the focus a second
+      time. The <ul> is never hidden.
+  -->
+  <script>
+    (() => {
+      const list = document.getElementById('downloadList');
+      const button = document.getElementById('loadMore');
+      if (!list || !button) return;
+
+      const batch = [
+        ['Icon set', 'SVG · 240 KB'],
+        ['Presentation template', 'PPTX · 8.4 MB'],
+        ['Photo library', 'ZIP · 96 MB'],
+        ['Colour tokens', 'JSON · 12 KB'],
+        ['Print guidelines', 'PDF · 2.8 MB'],
+        ['Motion principles', 'PDF · 3.6 MB'],
+      ];
+
+      button.addEventListener('click', () => {
+        batch.forEach(([title, meta]) => {
+          const item = document.createElement('li');
+          item.className = 'card';
+          item.setAttribute('data-filterlist-item', '');
+
+          const heading = document.createElement('h3');
+          heading.textContent = title;
+
+          const role = document.createElement('p');
+          role.className = 'card__role';
+          role.textContent = meta;
+
+          item.append(heading, role);
+          list.append(item);
+        });
+
+        // Focus first, remove second — see the comment above.
+        list.tabIndex = -1;
+        list.focus();
+
+        button.remove();
+      });
+    })();
+  </script>
+</body>
+
+</html>

@@ -124,6 +124,7 @@
 import { uniqueId } from './uniqueId.js';
 import { resolveLocale } from './resolveLocale.js';
 import { formatTemplate } from './formatTemplate.js';
+import { foldText } from './foldText.js';
 
 
 
@@ -198,19 +199,6 @@ const labels = {
     invalid: 'Please choose an entry from the list.',
   },
 };
-
-
-
-// Lowercased and stripped of its combining marks, so "zurich" finds "Zürich"
-// and "cafe" finds "Café". A reader looking for a value should not have to
-// know how it is accented, and on a German keyboard the accented key is
-// often not even there.
-//
-// Only ever used for the match TEST — see markRange for why the marking uses
-// a plainer comparison.
-function fold(text) {
-  return text.normalize('NFD').replace(/\p{Mn}/gu, '').toLowerCase();
-}
 
 
 
@@ -414,8 +402,8 @@ class ComboBox {
         return {
           value,
           label,
-          foldedValue: fold(value),
-          foldedLabel: fold(label),
+          foldedValue: foldText(value),
+          foldedLabel: foldText(label),
         };
       });
   };
@@ -582,7 +570,7 @@ class ComboBox {
     const raw = this.query();
     if (this.showAll || !raw) return this.entries;
 
-    const needle = fold(raw);
+    const needle = foldText(raw);
     return this.entries.filter(
       (entry) =>
         matchIndex(entry.foldedValue, needle, this.mode) >= 0 ||
@@ -859,7 +847,7 @@ class ComboBox {
   // reader who typed "zurich" meant "Zürich", and a strict field that
   // rejected it would be rejecting its own matching rule.
   exactEntry = (value) => {
-    const needle = fold(value);
+    const needle = foldText(value);
     return this.entries.find((entry) => entry.foldedValue === needle) ?? null;
   };
 
