@@ -29,13 +29,20 @@
  *   - CSS does the animating, from a transition on the item plus the state
  *     attribute above — including making it instant under
  *     prefers-reduced-motion and lifting it for print.
- *   - A scroll-driven animation (animation-timeline: view()) can express a
- *     similar effect in CSS alone, and where it is enough it is the better
- *     tool. It is a different effect, though: it is SCRUBBED — tied to the
- *     scroll position, so it runs backwards as the reader scrolls back and
- *     has no notion of "revealed once, now done" — and it is not available in
- *     every engine this collection targets. Both are the reason the "has it
- *     entered yet" question is answered by an observer here.
+ *   - A scroll-driven animation (animation-timeline: view()) can express this
+ *     in CSS alone, and where it is enough it is the better tool. Not as a
+ *     scrubber — that one is tied to the scroll position and runs backwards
+ *     as the reader scrolls back — but as a SWITCH: the timeline animates an
+ *     unregistered custom property, which therefore flips discretely, and a
+ *     style query starts an ordinary time-based animation with it. Pausing
+ *     never rewinds currentTime, so a finished reveal stays finished. What
+ *     that lane cannot do is why the question is answered by an observer
+ *     here: it is missing from Firefox stable, it cannot be made fail-safe
+ *     (no feature query exists for a style query, so an engine with the
+ *     timeline and without them would leave an item paused at opacity 0),
+ *     scrolling back mid-animation leaves an item half-revealed, and repeat,
+ *     offset, the focusin reveal and a document-order stagger have no
+ *     equivalent in it. The readme carries the snippet and the measurements.
  *
  * What the script adds
  * --------------------

@@ -131,10 +131,11 @@
     <section class="stage" aria-label="Live demo">
 
       <!--
-          CSS has no selector for "this element is on screen now", and a
-          scroll-driven animation (animation-timeline: view()) answers a
-          different question: it is scrubbed, so it runs backwards with the
-          scroll and never settles. The module boots on a CONTAINER, takes
+          CSS has no selector for "this element is on screen now". A
+          scroll-driven animation (animation-timeline: view()) can stand in
+          where a plain once-and-done fade is all that is wanted — see the
+          readme for that snippet and for why it does not replace this
+          module. The module boots on a CONTAINER, takes
           the items marked with data-reveal-item inside it and writes ONE
           attribute per item:
             [data-reveal-pending] -> this item is still waiting

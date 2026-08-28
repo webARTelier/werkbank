@@ -8,10 +8,12 @@ element is the **container**; the items inside it are marked with
 
 This solves what pure CSS cannot: there is no selector for "this element is on
 screen now". A scroll-driven animation (`animation-timeline: view()`) is the
-lower rung and the better tool where it fits, but it answers a different
-question — it is *scrubbed*, so it runs backwards as the reader scrolls back
-and never settles into "revealed, done" — and it is not available in every
-engine this collection targets.
+lower rung and the better tool where it fits — and it can be built to settle
+into "revealed, done" rather than scrub backwards, so *that* is not the reason
+this module exists. The reasons are that it is not available in every engine
+this collection targets, that it cannot be made fail-safe, and that four of the
+options below have no CSS equivalent. See *Why this exists, when CSS can do the
+trigger on its own* below, with the snippet to use instead where it fits.
 
 The component's one rule about *what* it hides: **only what the reader cannot
 see**, and the browser is what decides that. Two observers watch every item —
@@ -106,6 +108,87 @@ it. The vertical default cannot do this — a page may scroll that way.
   (`.c-reveal:nth-child(2) { --reveal-delay: 80ms; }`).
 
 See `revealOnScroll.html` for a ready-to-copy snippet.
+
+## Why this exists, when CSS can do the trigger on its own
+
+`animation-timeline: view()` is usually reached for as a *scrubber*: the
+animation is tied to the item's passage through the viewport, so it runs
+backwards as the reader scrolls back and has no notion of "revealed once, now
+done". Used as a **switch** instead of as a scrubber, it has that notion. The
+timeline animates nothing but a custom property, and a style query starts an
+ordinary time-based animation with it:
+
+```css
+.item {
+  --in-view: false;
+  animation: item-in-view both;      /* animates the property, nothing else */
+  animation-timeline: view();
+  animation-range: entry 0% entry 40%;
+}
+
+@keyframes item-in-view {
+  from { --in-view: false; }
+  to   { --in-view: true; }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .item .card {
+      animation: card-in 1s both;
+      animation-play-state: paused;  /* held, until the switch flips */
+
+      @container style(--in-view: true) {
+        animation-play-state: running;
+      }
+    }
+  }
+}
+```
+
+Three things carry it. `--in-view` is **not** registered with `@property`, so
+it interpolates discretely and flips at 50% of the range — at `entry 20%` for
+the range above. The reveal itself is not on the timeline at all; the scroll
+position steers nothing but its `animation-play-state`. And pausing never
+rewinds `currentTime`, so once the animation has run, `both` holds the end
+state and scrolling back only pauses something that is already finished.
+Measured in Chrome 151 and WebKit 26.5: back at the starting scroll position
+an item reads `--in-view: false`, `animation-play-state: paused` — and
+`opacity: 1`.
+
+**Where that is enough, use it and load nothing from here.** A few cards that
+fade in once, no repeat, no offset, no stagger: that is the lower rung, it
+costs no JavaScript, and this module has nothing to add to it.
+
+What it cannot do is the rest of this readme:
+
+- **It is not in every engine.** `animation-timeline` is Chrome/Edge 115+ and
+  Safari 26+; Firefox stable does not have it, so the `@supports` guard drops
+  the effect there and the content stands as authored. `animation-trigger` —
+  the spec's own answer to exactly this — is Chrome-only and still accepts no
+  value but `none`.
+- **It cannot be made fail-safe.** An engine with the timeline but without
+  style queries would leave the card paused at `opacity: 0` for good. That gap
+  does not exist today — style queries shipped first in both engines (Chrome
+  111 vs. 115, Safari 18 vs. 26) — but there is no feature query for a style
+  query, so `@supports` can only test the half that is not the dangerous one.
+  Whether content stays hidden is the one question this module does not leave
+  to a coincidence of release order.
+- **Scrolling back mid-animation freezes the item half-way.** Measured with a
+  one-second animation: interrupted after 120ms the card stands at
+  `opacity: 0.17`, after 400ms at `0.70`, and it stays there until it comes
+  back into the range. Never backwards, but half-revealed is a resting state.
+  A shorter duration narrows that window rather than closing it.
+- **The first screen animates.** An item already on screen at load has its
+  `entry` range behind it, so it fades in — which means it stood at
+  `opacity: 0` when the reader arrived. This module does the opposite on
+  purpose (see *Integration*): revealing something the reader can already see
+  means taking it away from them first.
+- **Four of the options above have no equivalent.** `data-reveal-repeat` (the
+  switch is one-way by construction — that is the whole trick),
+  `data-reveal-offset` with its re-check against the viewport height, the
+  immediate reveal on `focusin`, and a stagger in document order: the CSS
+  version counts columns per grid width with a stack of container queries and
+  is tied to that one layout.
 
 ## Accessibility
 **Nothing is hidden from assistive technology.** A waiting item is transparent,
