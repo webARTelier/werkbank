@@ -3,36 +3,28 @@
   ============================================================================
   Copy the block(s) below into your own project.
 
-  1) In <head> (or before </body>): load the shared styles, this component's
-     stylesheet and the boot script. boot.min.js lazily loads the
-     autoGrowTextarea module as soon as it finds
-     data-js-behavior="autoGrowTextarea" in the DOM — you do not import
-     autoGrowTextarea.js yourself. Adjust the paths to where you serve /dist.
+  1) In <head>: load the shared styles and this component's stylesheet.
+     Adjust the paths to where you serve /dist. There is no script: this
+     component is CSS only, so it needs neither boot.min.js nor a
+     data-js-behavior hook.
 
        <link rel="stylesheet" href="/dist/css/shared.min.css" />
        <link rel="stylesheet" href="/dist/css/autoGrowTextarea.min.css" />
-       <script type="module" src="/dist/js/boot.min.js"></script>
 
-  2) Put class="c-autoGrowTextarea" and data-js-behavior="autoGrowTextarea" on
-     EACH <textarea> that should follow its own value. The class carries the
-     component (it is the growing itself, not a look), the data attribute
-     boots the module. There is no wrapper and nothing is injected.
+  2) Put class="c-autoGrowTextarea" on EACH <textarea> that should follow its
+     own value. The class carries the component (it is the growing itself,
+     not a look). There is no wrapper and nothing is injected.
 
   Wiring
-    - Both hooks go on the <textarea> itself, not a container. (Combine with
-      other modules via a comma: data-js-behavior="autoGrowTextarea,
-      inputCharCount".)
-    - Keep a rows attribute matching --autoGrowTextarea-min-rows. It is what
-      an engine without field-sizing shows until the module has measured, and
-      what a reader with scripting off keeps for good.
+    - The class goes on the <textarea> itself, not a container.
+    - Keep a rows attribute matching --autoGrowTextarea-min-rows. An engine
+      without field-sizing keeps the field at that height.
     - Style the field as you style your other fields — border, padding,
       colours, and its own :focus-visible ring. This component ships none of
       that; it ships the box's behaviour (see Styling below).
-    - Code that sets textarea.value programmatically should dispatch an
-      input event afterwards (`field.dispatchEvent(new Event('input'))`) —
-      that is the signal the module listens for. A user's own typing,
-      pasting, cutting and undoing all fire it by themselves, and a form
-      reset is handled without it.
+    - Other modules still combine freely: the class does not care what
+      data-js-behavior the field carries (see the inputCharCount example
+      below).
     - Is the field an address? Then it takes autocomplete="street-address",
       the one autocomplete token that expects a multi-line control — which
       makes it the one case where WCAG 1.3.5 applies to a <textarea>. The
@@ -70,18 +62,14 @@
     the inline form.
 
   Notes / progressive enhancement
-    - Where the engine has field-sizing — all three current ones do (verified
-      in Chromium 151, WebKit 26.5 and Firefox 153) — this component is CSS
-      only: the field grows from the first paint, with scripting on or off,
-      and the module does nothing at all. There is no gap to cover, so there
-      is no pre-enhancement state and nothing can flash.
-    - Where it does not, the module measures the value and hands the height
-      to the stylesheet. Until it arrives — and if the chunk never does —
-      the field is a plain textarea at its rows height with a scrollbar:
-      usable, and with nothing hidden. That is why the resize handle is only
-      dropped once the module is there (data-autogrowtextarea-ready), so a
-      reader is never left with a field that can neither grow nor be dragged
-      open.
+    - The growing is "field-sizing: content", which all three current
+      engines have (Chromium since 123, Safari since 26, Firefox since 137):
+      the field grows from the first paint, with scripting on or off, and
+      there is no gap to cover — so there is no pre-enhancement state and
+      nothing can flash.
+    - An engine without it keeps the field at its rows height, with the
+      minimum and the cap still applied, a scrollbar and its resize handle:
+      a working field that simply does not grow. Nothing is hidden.
     - The two clamps are lengths on the field's whole box, padding and border
       included, so a row count on a padded field is a box that many lines
       tall. State --autoGrowTextarea-box-extra next to your own field styles
@@ -99,12 +87,12 @@
 
   Styling
     - autoGrowTextarea.min.css ships the mechanism only: the two clamps, the
-      scrolling past the cap, field-sizing where the engine has it, the
-      resize handle, and the width (see --autoGrowTextarea-inline-size — an
-      engine that sizes a field to its content sizes it in both directions,
-      so a width has to be stated for the box not to follow the value
-      sideways as well). Everything visible is yours — including the
-      :focus-visible ring. demo.html shows one complete example design.
+      scrolling past the cap, field-sizing, the resize handle, and the width
+      (see --autoGrowTextarea-inline-size — an engine that sizes a field to
+      its content sizes it in both directions, so a width has to be stated
+      for the box not to follow the value sideways as well). Everything
+      visible is yours — including the :focus-visible ring. demo.html shows
+      one complete example design.
 -->
 
 
@@ -116,7 +104,6 @@
   id="agt-message"
   name="message"
   rows="3"
-  data-js-behavior="autoGrowTextarea"
 ></textarea>
 
 
@@ -128,11 +115,10 @@
   name="note"
   rows="2"
   style="--autoGrowTextarea-min-rows: 2; --autoGrowTextarea-max-size: none"
-  data-js-behavior="autoGrowTextarea"
 ></textarea>
 
 
-<!-- Together with the character counter: two modules on one field -->
+<!-- Together with the character counter (needs boot.min.js for that one) -->
 <label class="myLabel" for="agt-summary">Summary</label>
 <textarea
   class="myField c-autoGrowTextarea"
@@ -141,5 +127,5 @@
   rows="3"
   maxlength="280"
   data-icc-countdown
-  data-js-behavior="autoGrowTextarea,inputCharCount"
+  data-js-behavior="inputCharCount"
 ></textarea>

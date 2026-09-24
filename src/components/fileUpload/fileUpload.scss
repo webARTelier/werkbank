@@ -63,12 +63,12 @@
 //   is not the same as the chunk arriving. Keyed the mixin's way, a reader
 //   with scripting off — the one case the mixin deliberately exempts — would
 //   be the one reader shown a zone that can never work. So the zone is off by
-//   default and switched on by the ready attribute, which is the same
-//   reasoning autoGrowTextarea uses for its resize handle, only for a rule
-//   that adds rather than removes. Nothing is hidden by the default state:
-//   the label, the field, its hints and the list are all there, the control
-//   takes a drop on itself without any help, and in the upload lane the field
-//   keeps its name until the module takes over, so the form still posts.
+//   default and switched on by the ready attribute — the same positive
+//   keying dataTable uses for its stacked layout. Nothing is hidden by the
+//   default state: the label, the field, its hints and the list are all
+//   there, the control takes a drop on itself without any help, and in the
+//   upload lane the field keeps its name until the module takes over, so the
+//   form still posts.
 
 @use "focus" as *;
 @use "mediaqueries" as *;

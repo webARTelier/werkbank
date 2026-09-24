@@ -113,10 +113,9 @@ a control that has to exist first:
    with *less* than the platform gave them. Edge is the only current engine
    that offers one.
 
-That is the same positive keying `dataTable`, `autoGrowTextarea` and
-`fileUpload` use — the flag switches the enhanced state **on** rather than
-lifting a pre-state, so `init()` sets it last and a bail-out simply never
-writes it. See [`docs/preEnhancement.md`](../../../docs/preEnhancement.md).
+That is the same positive keying `dataTable` and `fileUpload` use — the flag
+switches the enhanced state **on** rather than lifting a pre-state, so
+`init()` sets it last and a bail-out simply never writes it. See [`docs/preEnhancement.md`](../../../docs/preEnhancement.md).
 
 ## Accessibility
 - **A toggle button with a constant name**, its state in `aria-pressed`

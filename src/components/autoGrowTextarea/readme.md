@@ -3,39 +3,32 @@
 A `<textarea>` that is as tall as what is written in it: no box of empty rows
 kept open for a value nobody has typed yet, and no inner scrollbar until the
 value really is longer than the field may be. It is the platform's
-`field-sizing: content` plus the two clamps that make it a policy — and, for
-the engines that do not have it yet, a module that measures the value and
-hands the height to the stylesheet.
+`field-sizing: content` plus the two clamps that make it a policy — and it is
+**CSS only**: no script, no `data-js-behavior`, nothing to boot.
 
 ## Files needed to copy
 - `autoGrowTextarea.html` – markup
 - `autoGrowTextarea.scss` – styles (source; compiled to `dist/css/autoGrowTextarea.min.css` — this is the component, see *Styling*)
-- `autoGrowTextarea.js` – behavior (the fallback lane only, see *Two lanes*)
-- `src/_shared/js/rafThrottle.js` – bundled utility (imported by the module; the build already bundles it into the component's chunk, only relevant if you paste the source into a plain project)
 
-There is **no vendor dependency**.
+There is **no JavaScript** and **no vendor dependency**.
 
 ## Usage
 
-Put both hooks on the `<textarea>` itself — the class carries the component,
-the data attribute boots the module. There is no wrapper and nothing is
+Put the class on the `<textarea>` itself. There is no wrapper and nothing is
 injected:
 
 ```html
 <label for="message">Your message</label>
-<textarea class="c-autoGrowTextarea" id="message" name="message" rows="3"
-          data-js-behavior="autoGrowTextarea"></textarea>
+<textarea class="c-autoGrowTextarea" id="message" name="message" rows="3"></textarea>
 ```
 
-Keep a `rows` attribute matching `--autoGrowTextarea-min-rows`: it is the
-field until the module has measured, and with scripting off it is the field
-for good.
+Keep a `rows` attribute matching `--autoGrowTextarea-min-rows`: an engine
+without `field-sizing` keeps the field at that height (see *Browser support*).
 
 ### Options (all of them are CSS)
 
 How few lines the field may be, how many it may grow to and what happens past
-that are questions about a box, so they are set in CSS rather than passed to
-JavaScript.
+that are questions about a box, so they are set in CSS.
 
 | Custom property | Default | Effect |
 |---|---|---|
@@ -82,82 +75,60 @@ the inline direction too. Left to itself, a field in normal flow is as wide as
 its longest line and, while it is empty, as wide as the caret — measured at
 19px against the 180px the same field has without the component, in Chromium
 151 and WebKit 26.5 alike; `cols` is ignored along with it. Stating a width is
-what stops that, and stating it in **both** lanes is what keeps them the same
-field: without it an engine that has no `field-sizing` would show the `cols`
-width where the others show this one. It is a default, not a claim on the axis
-— give it a length of your own, or let your own field styles carry the width
-(same cascade rule as above). Two things it inherits from being a percentage:
-it needs a container that has a width of its own (inside a box that is sized
-by its content — a flex or grid item, a float — state a length instead), and
-under `box-sizing: content-box` a field at `100%` overflows its container by
-its padding and border, exactly as `--autoGrowTextarea-box-extra` describes
-for the block axis.
+what stops that, and it is stated outside the `@supports` block, so an engine
+without `field-sizing` shows the same width rather than the `cols` one. It is
+a default, not a claim on the axis — give it a length of your own, or let your
+own field styles carry the width (same cascade rule as above). Two things it
+inherits from being a percentage: it needs a container that has a width of
+its own (inside a box that is sized by its content — a flex or grid item, a
+float — state a length instead), and under `box-sizing: content-box` a field
+at `100%` overflows its container by its padding and border, exactly as
+`--autoGrowTextarea-box-extra` describes for the block axis.
 
-Code that sets `textarea.value` programmatically should dispatch an `input`
-event afterwards (`field.dispatchEvent(new Event('input'))`) — that is the
-signal the module listens for. Everything a user does (typing, pasting,
-cutting, undoing, autofill) fires it by itself, and a form reset is handled
-without it.
+`rows` is not the minimum where the field grows: an engine that sizes a field
+to its content ignores the attribute (a `rows="3"` field is one row tall while
+empty), which is why the minimum is stated in `lh`.
+
+The component combines with any module on the same field — the class does not
+care what `data-js-behavior` the field carries. The demo pairs it with
+`inputCharCount`.
 
 If the field holds an address, give it `autocomplete="street-address"` — the
 one `autocomplete` token that expects a multi-line control, and therefore the
 one case in which WCAG 1.3.5 has something to ask of a `<textarea>`. Every
 other token names a single-line value and does not belong on one.
 
-## Two lanes, one condition
+## Browser support
 
-`@supports (field-sizing: content)` in the stylesheet and
-`CSS.supports('field-sizing', 'content')` in the module are the same question
-asked in both languages; keep the two in sync when touching either file.
+`field-sizing: content` is in all three current engines: Chromium since 123,
+Safari since 26, Firefox since 137 — verified here in Chromium 151, WebKit
+26.5 and Firefox 153, with pixel-identical results. There the field grows at
+the first paint, with scripting on or off, and every value change the field
+can see is covered by the engine itself: typing, pasting, autofill, a script
+setting `value`, a form reset, a width change, web fonts arriving, a reader's
+own stylesheet or text zoom.
 
-1. **The engine sizes the field.** All three current engines do — verified
-   here in Chromium 151, WebKit 26.5 and Firefox 153, with pixel-identical
-   results. Then this component is CSS only: the field grows at the first
-   paint, with scripting on or off, and `autoGrowTextarea.js` sets its ready
-   attribute and returns without registering a single listener. This is the
-   component's main path, not its edge case.
-2. **The engine does not** (older releases of all three). Then the module
-   measures the value and writes its height to the field as
-   `--autoGrowTextarea-content-size`, which the stylesheet applies as a
-   `block-size`. The clamps stay in CSS, so the minimum, the cap and the
-   scrolling past the cap are the same rules in both lanes. It re-measures on
-   `input`, on a width change (`ResizeObserver` on the field, not on the
-   window), once the web fonts have arrived, once the page has loaded, on a
-   form `reset` — the one value change that fires no `input` event — and on
-   `focus`.
+An engine **without** it keeps the field at its `rows` height, with the
+minimum and the cap still applied, an inner scrollbar and its resize handle —
+a working field that simply does not grow, with nothing hidden. That is the
+whole fallback, and it is deliberate.
 
-   `focus` is in that list because the written length **pins** the box, and a
-   pinned box reports no resize: a reader's own stylesheet or text-only zoom
-   changes how tall the lines are without changing the width, and the
-   observer sees that only while the field rests at its minimum. Focusing the
-   field is the occasion that catches the rest, and `input` keeps it right
-   from the first keystroke. A field whose typography changed and that is
-   then never touched keeps a box measured for the old type and scrolls the
-   difference — a scrollbar too early, not a loss. Lane 1 has none of this:
-   the engine re-sizes on its own.
-
-**When lane 2 can go.** It exists for released engines that have no
-`field-sizing`: Safari before 26 and Firefox before 137 (Chromium has had it
-since 123). Once those are outside a project's support window, the whole lane
-can be deleted in one go — `autoGrowTextarea.js`, its entry in
-`build/config.js`, the `@supports not (…)` block in the stylesheet and the
-`data-js-behavior="autoGrowTextarea"` hook in the markup — and the component is
-the class alone, four declarations plus the token block. Nothing else in the
-collection reads any of it. The two lanes are verified to be the same field, so
-the deletion changes no rendering: measured over the demo's six fields in four
-states (empty, 8 lines, 40 lines past the cap, and the column narrowed to
-420px) with the lane forced by stubbing `CSS.supports`, every height came out
-pixel-identical.
+Until 2026-09-24 the component shipped a module for those engines, which
+measured the value and handed the height to the stylesheet. It went because
+the difference it bought was cosmetic, while its cost was a lazy chunk, a
+`ResizeObserver` and a handful of listeners on every page with a textarea on
+it — and a second lane whose every rule had to be kept identical to the first.
+A project that still has to make older Safari or Firefox grow the field can do
+it in a few lines of its own (on `input`, reset the inline height and set it to
+`scrollHeight`); the component no longer carries it.
 
 ## Accessibility
-- **Progressive enhancement.** In lane 1 there is nothing to enhance. In lane
-  2 the field before (or without) the module is a plain textarea at its `rows`
-  height with a scrollbar: usable, with nothing hidden and nothing lost.
-- **The resize handle is only dropped where growth is delivered.** In lane 1
-  unconditionally; in lane 2 only once the module is running
-  (`data-autogrowtextarea-ready`), because until then dragging the field open
-  is the reader's only way out of a value that does not fit — a chunk that
-  never arrives must not take that away. Where growth *is* delivered, keeping
+- **Nothing to enhance.** The field is a native `<textarea>` from the first
+  paint, and the growing is layout, not behaviour.
+- **The resize handle is only dropped where growth is delivered** — inside the
+  same `@supports` block as `field-sizing`. An engine that cannot grow the
+  field keeps the handle, because dragging it open is then the reader's only
+  way out of a value that does not fit. Where growth *is* delivered, keeping
   the handle would offer a way out that does not exist: dragging a field
   writes an inline `height`, and `max-block-size` beats a height whatever the
   specificity — measured in Chromium, `height: 347px` written to the field
@@ -166,8 +137,7 @@ pixel-identical.
   the handle.
 - **Nothing is announced and nothing is claimed.** The value is in the field
   either way and the only thing that changes is the size of the field's own
-  box, so no ARIA is set and no state class is written. Every state the
-  component can be in is one the platform already describes.
+  box, so no ARIA is set and no state class is written.
 - **The cap is a maximum, not a lid.** Past it the field scrolls, so no part
   of a value is ever unreachable — and a field that grew without limit would
   push its own submit button off the screen.
@@ -182,9 +152,8 @@ pixel-identical.
   of paper.
 
 ## Styling
-`autoGrowTextarea.min.css` is the component in lane 1 and the mechanism in
-lane 2 — the two clamps, the scrolling past the cap, `field-sizing` where the
-engine has it, the resize handle and the width (see
+`autoGrowTextarea.min.css` is the component — the two clamps, the scrolling
+past the cap, `field-sizing`, the resize handle and the width (see
 `--autoGrowTextarea-inline-size` above). It ships no colours, no border, no
 radius and no focus ring: style the field the way you style your other
 fields, its `:focus-visible` ring included (focus-ring convention in the
@@ -196,30 +165,10 @@ field needs a `line-height` and a `font` you control (a textarea does not
 inherit the page font on its own; `font: inherit` is the usual line).
 
 ## Integration
-The JS exports `init(el, services)` and does not self-initialize. It is loaded
-on demand by `boot.js` for every `<textarea>` carrying
-`data-js-behavior="autoGrowTextarea"`, and it must be a `<textarea>` — the
-reporter warns and it bails on anything else. It writes no inline styles for
-state: the one length it does write is a measurement (plus two scaffolding
-declarations that live only for the duration of that measurement), for the
-reason `readMore` and `dataTable` write theirs — only a measurement can
-answer how tall a text is at this width in the font that arrived.
-
-In lane 2 `init()` returns a cleanup function, so a host that mounts and
-unmounts the same markup (an SPA route change, a framework re-render — see
-`destroyModulesInScope()` in `boot.js`) gets the field handed back as it was
-authored: the `load` listener, the `reset` listener on the form and the
-observer are taken down, the measured length is dropped because it describes a
-value at a width the next render may not have, and the ready attribute goes
-too — which puts the resize handle back and is exactly the state a second
-`init()` expects to find. In lane 1 there is nothing to clean up and nothing is
-returned — which leaves the ready attribute standing on the field, harmlessly:
-the only rule that reads it is in lane 2's half of the stylesheet, and a second
-`init()` writes it again.
-
-`services.reporter` (dependency injection via `boot.js`) is **optional** — it
-is only used to warn about author mistakes (the module on something that is
-not a `<textarea>`). Without it the module degrades silently.
+There is nothing to integrate: no `init()`, no entry in the loader's registry,
+no ready attribute and no cleanup. A host that mounts and unmounts markup (an
+SPA route change, a framework re-render) gets the component with the class and
+loses it with the node.
 
 ## Demo
 Open `demo.html` in the browser (requires a prior `gulp build`).

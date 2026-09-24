@@ -329,9 +329,9 @@ that state on its own. A drop zone it cannot: scripting being enabled is not
 the same as the chunk arriving, and a box that invites a drop it cannot receive
 hands the file to the browser, which opens it and takes the reader off a
 half-filled form. So the zone is off by default and switched on by the
-attribute — the same reasoning `autoGrowTextarea` uses for its resize handle,
-for a rule that adds instead of removes. Nothing is hidden by the default
-state, so nothing is lost if the chunk never arrives.
+attribute — the same positive keying `dataTable` uses for its stacked layout.
+Nothing is hidden by the default state, so nothing is lost if the chunk never
+arrives.
 
 The edge is *transparent* rather than absent until then, so the box does not
 move by a pixel when the module takes over.

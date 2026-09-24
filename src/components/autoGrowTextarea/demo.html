@@ -19,16 +19,19 @@
       DEMO-ONLY STYLES
       ----------------------------------------------------------------------
       autoGrowTextarea.min.css ships the box's behaviour and nothing else:
-      the two clamps, the scrolling past the cap, field-sizing where the
-      engine has it, the resize handle, and the width — that last one
-      because field-sizing has no way of naming an axis and would make the
-      field as narrow as its value as well. Everything below is what a
-      project brings — the field's border, padding, colours, typography and
-      its focus ring — because a component that grows a field by its line
-      height does not get to decide what that line height is.
+      the two clamps, the scrolling past the cap, field-sizing, the resize
+      handle, and the width — that last one because field-sizing has no way
+      of naming an axis and would make the field as narrow as its value as
+      well. Everything below is what a project brings — the field's border,
+      padding, colours, typography and its focus ring — because a component
+      that grows a field by its line height does not get to decide what that
+      line height is.
 
-      The one exception worth pointing at is .lane: which of the two lanes
-      this browser is in is decided by the same @supports condition the
+      boot.min.js is here for inputCharCount in the last example only; the
+      component itself needs no script.
+
+      The one exception worth pointing at is .support: whether this browser
+      grows the field is decided by the same @supports condition the
       component uses, so the note you read below is the truth about the
       engine you are reading it in.
   -->
@@ -113,15 +116,15 @@
     }
 
     /* A box the reader can drag narrower, to watch the height answer a
-       width change. Not part of the component — it is here to make the
-       ResizeObserver's job visible. */
+       width change. Not part of the component — it is here to make that
+       visible. */
     .squeeze {
       resize: horizontal;
       overflow: auto;
       padding: var(--space-2xs);
 
       /* The reader is asked to drag this box, so its outline is a control
-         boundary too (WCAG 1.4.11) — the .lane note below keeps the quiet
+         boundary too (WCAG 1.4.11) — the .support note below keeps the quiet
          --color-border, because nothing there is operable. */
       border: 1px dashed var(--color-border-control);
       border-radius: var(--borderRadius);
@@ -160,10 +163,10 @@
       outline-offset: var(--outlineOffset);
     }
 
-    /* Which lane is this browser in? Decided by the same @supports
+    /* Does this browser grow the field? Decided by the same @supports
        condition the component asks — the fallback note is the default, and
        an engine with field-sizing swaps the two. */
-    .lane {
+    .support {
       margin: 0 0 var(--space-l);
       padding: var(--space-xs) var(--space-s);
       border: 1px solid var(--color-border);
@@ -173,16 +176,16 @@
       color: var(--color-text-secondary);
     }
 
-    .lane--native {
+    .support--native {
       display: none;
     }
 
     @supports (field-sizing: content) {
-      .lane--native {
+      .support--native {
         display: block;
       }
 
-      .lane--fallback {
+      .support--fallback {
         display: none;
       }
     }
@@ -205,36 +208,29 @@
       <!--
           A field that follows its own value. The platform has one
           declaration for it, and this component is that declaration plus
-          the fallback for the engines without it.
+          the clamps that make it a policy — CSS only.
 
           Wiring
-            - class="c-autoGrowTextarea" carries the component and
-              data-js-behavior="autoGrowTextarea" boots the module — both on
-              the <textarea> itself. No wrapper, nothing injected.
+            - class="c-autoGrowTextarea" on the <textarea> itself carries the
+              whole component. No wrapper, nothing injected, no
+              data-js-behavior.
             - rows in the markup matches --autoGrowTextarea-min-rows: it is
-              the field until the module has measured, and with scripting
-              off it is the field for good.
+              the height an engine without field-sizing keeps.
             - --autoGrowTextarea-min-rows / --autoGrowTextarea-max-rows are
-              the whole configuration, and they are CSS, because how tall a
-              box may be is a question about a box. Set the *-size lengths
-              instead where lines are not the unit you think in ("none" for
-              the cap lets the field grow as far as its value goes).
+              the whole configuration, because how tall a box may be is a
+              question about a box. Set the *-size lengths instead where
+              lines are not the unit you think in ("none" for the cap lets
+              the field grow as far as its value goes).
             - The look — border, padding, colours, focus ring — is the
               project's; see DEMO-ONLY STYLES in the head.
 
           Progressive enhancement
-            - Where the engine has field-sizing, the growing is pure CSS: it
-              works at the first paint and with scripting off, and the
-              module does nothing at all. Nothing can flash, so there is no
+            - The growing is layout, so it works at the first paint and with
+              scripting off. Nothing can flash, so there is no
               pre-enhancement state.
-            - Where it does not, the module measures the value and hands the
-              height over as a length. Until then the field is a plain
-              textarea at its rows height with a scrollbar — usable, with
-              nothing hidden, which is what makes this a pure enhancement.
-            - Which is why the resize handle is only dropped once the module
-              is running (data-autogrowtextarea-ready): a chunk that never
-              arrives must not leave a field that can neither grow nor be
-              dragged open. Turn JavaScript off and try it.
+            - An engine without field-sizing keeps each field at its rows
+              height, with the clamps, a scrollbar and its resize handle —
+              a working field that does not grow. Nothing is hidden.
 
           Accessibility
             - There is nothing to announce and nothing to hide: the value is
@@ -246,21 +242,18 @@
               when the caret arrives.
         -->
 
-      <p class="lane lane--native">
+      <p class="support support--native">
         <strong>This engine sizes the field itself.</strong> It has
-        <code>field-sizing: content</code>, so everything below is CSS —
-        <code>autoGrowTextarea.js</code> sets its ready attribute and returns
-        without registering a single listener. Switch scripting off and
-        nothing changes.
+        <code>field-sizing: content</code>, so every field below follows its
+        value with no script involved. Switch scripting off and nothing
+        changes.
       </p>
 
-      <p class="lane lane--fallback">
-        <strong>This engine needs the module.</strong> It has no
-        <code>field-sizing: content</code>, so
-        <code>autoGrowTextarea.js</code> measures each value and hands the
-        height to the stylesheet as a length. Switch scripting off and the
-        fields stay at their <code>rows</code> height, with a scrollbar and a
-        resize handle.
+      <p class="support support--fallback">
+        <strong>This engine does not grow the field.</strong> It has no
+        <code>field-sizing: content</code>, so the fields below stay at
+        their <code>rows</code> height, with a scrollbar and a resize handle —
+        the component's deliberate fallback.
       </p>
 
       <div class="demo">
@@ -284,7 +277,6 @@
               id="agt-message"
               name="message"
               rows="3"
-              data-js-behavior="autoGrowTextarea"
             ></textarea>
             <p class="field__hint">Three lines to start with, twelve at most.</p>
           </div>
@@ -296,10 +288,9 @@
           <p class="stage__intro">
             The same field, rendered with a value in it — a draft loaded from
             a CMS, a form coming back from a failed validation. It is
-            <strong>the right height on arrival</strong>: in this engine's
-            lane either the stylesheet had it from the first paint, or the
-            module measured it in its constructor, before any frame it could
-            have been seen in.
+            <strong>the right height on arrival</strong>: the engine lays it
+            out at its value's height in the first paint, before any script
+            has run.
           </p>
 
           <div class="field">
@@ -309,7 +300,6 @@
               id="agt-draft"
               name="draft"
               rows="3"
-              data-js-behavior="autoGrowTextarea"
             >The plates were carried down the ridge on foot, because the postal service had twice ruled that the road up to the observatory was not a road. Eleven years of weekly exposures went down that path in a wooden case, and the only complaint anyone recorded about the arrangement was that the case was the wrong shape for a mule.
 
 What the series eventually showed was one faint point of light that moved. Nobody was looking for it, and the man who had ordered the photographs stopped them four years before there was enough of them to prove anything.</textarea>
@@ -337,7 +327,6 @@ What the series eventually showed was one faint point of light that moved. Nobod
               name="comment"
               rows="1"
               style="--autoGrowTextarea-min-rows: 1; --autoGrowTextarea-max-rows: 5"
-              data-js-behavior="autoGrowTextarea"
             ></textarea>
           </div>
         </section>
@@ -350,9 +339,8 @@ What the series eventually showed was one faint point of light that moved. Nobod
             entirely. <strong>Drag the dashed box narrower</strong> by its
             bottom-right corner: the value rewraps into more lines and the
             field gets taller, because how tall a text is was never a
-            property of the text. In the module's lane that is what the
-            <code>ResizeObserver</code> is for — the field's own width is the
-            signal, not the window's.
+            property of the text. The engine re-lays the field out like any
+            other box; nothing has to observe the width.
           </p>
 
           <div class="squeeze">
@@ -364,7 +352,6 @@ What the series eventually showed was one faint point of light that moved. Nobod
                 name="notes"
                 rows="3"
                 style="--autoGrowTextarea-max-size: none"
-                data-js-behavior="autoGrowTextarea"
               >The catalogue was typed in 1962 and photocopied so often that the descenders on the lower half of every page have closed up into a grey line. The digitised version reproduces the grey line faithfully, which nobody has ever explained.</textarea>
             </div>
           </div>
@@ -375,11 +362,11 @@ What the series eventually showed was one faint point of light that moved. Nobod
 
           <p class="stage__intro">
             A form reset puts the authored value back
-            <strong>without firing an input event</strong> — the one value
-            change the module cannot hear. So it listens for
-            <code>reset</code> on the form itself and measures again on the
-            next frame. Type something, then press Reset: the field returns
-            to the draft above <em>and</em> to that draft's height.
+            <strong>without firing an input event</strong> — the value
+            change a script listening for input never hears. The engine does
+            not need to hear it: the size follows the value, however the
+            value changed. Type something, then press Reset: the field
+            returns to the draft above <em>and</em> to that draft's height.
           </p>
 
           <form class="field" action="javascript:;">
@@ -389,7 +376,6 @@ What the series eventually showed was one faint point of light that moved. Nobod
               id="agt-form"
               name="reply"
               rows="3"
-              data-js-behavior="autoGrowTextarea"
             >Two lines of a reply that was already in the form when the page arrived.
 The second one is here to make the reset visible.</textarea>
             <div class="actions">
@@ -399,14 +385,15 @@ The second one is here to make the reset visible.</textarea>
         </section>
 
         <section class="demo__example">
-          <h2>Two modules on one field</h2>
+          <h2>Together with a module</h2>
 
           <p class="stage__intro">
-            <code>data-js-behavior="autoGrowTextarea,inputCharCount"</code> —
-            the loader runs both, in source order, on the same element. The
-            counter counts down from the native <code>maxlength</code>, the
-            box follows the value, and neither knows about the other:
-            <strong>one behaviour per module, composed in the markup</strong>.
+            The class next to <code>data-js-behavior="inputCharCount"</code>
+            on the same field. The counter counts down from the native
+            <code>maxlength</code>, the box follows the value, and neither
+            knows about the other:
+            <strong>the component does not care what else the field
+            carries</strong>.
           </p>
 
           <div class="field">
@@ -418,7 +405,7 @@ The second one is here to make the reset visible.</textarea>
               rows="3"
               maxlength="280"
               data-icc-countdown
-              data-js-behavior="autoGrowTextarea,inputCharCount"
+              data-js-behavior="inputCharCount"
             ></textarea>
           </div>
         </section>

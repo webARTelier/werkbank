@@ -119,7 +119,7 @@
  *    chose and leave a single-file field reading "no file chosen" with no
  *    explanation anywhere near it.
  * 9. The occasion the change event misses: a form reset clears the field
- *    without firing one (the same gap autoGrowTextarea covers).
+ *    without firing one.
  *
  * In the upload lane (an endpoint is configured):
  * 10. The queue — at most "data-fileupload-concurrency" transfers at a time

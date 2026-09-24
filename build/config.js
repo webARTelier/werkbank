@@ -85,7 +85,6 @@ module.exports = {
       // component modules
       accordion: p("src", "components", "accordion", "accordion.js"),
       adaptiveScrollFade: p("src", "components", "adaptiveScrollFade", "adaptiveScrollFade.js"),
-      autoGrowTextarea: p("src", "components", "autoGrowTextarea", "autoGrowTextarea.js"),
       backToTop: p("src", "components", "backToTop", "backToTop.js"),
       comboBox: p("src", "components", "comboBox", "comboBox.js"),
       copyToClipboard: p("src", "components", "copyToClipboard", "copyToClipboard.js"),

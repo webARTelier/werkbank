@@ -230,7 +230,7 @@ of them, and the wrong one for most.
 | `dropdownNav` | full nested list, then a bar with flyouts | documented opt-in | the disclosure buttons are injected by the script; nothing reopens a collapsed submenu without it |
 | `accordion` | none | not needed | `<details>` renders closed either way; its ready attribute only picks the animation |
 | `dataTable` | none | not needed | the table is complete and readable in its scrolling box either way, and the sort controls do not exist until the script builds them out of the header labels — its ready attribute switches the stacked layout *on* (see below) |
-| `autoGrowTextarea` | none | not needed | where the engine has `field-sizing` the growing is CSS from the first paint, so there is no gap at all; where it has not, the field is a plain textarea at its `rows` height with a scrollbar until the module has measured — additive, nothing hidden. Its ready attribute gates the resize handle *off* instead of lifting a pre-state (see below) |
+| `autoGrowTextarea` | none | not needed | CSS only since 2026-09-24 — the growing is `field-sizing`, in force from the first paint, so there is no gap and no ready attribute; an engine without it keeps a plain textarea at its `rows` height, resize handle included |
 | `fileUpload` | none | not needed | the label, the field and its hints are all there, the control takes a drop on itself without help, and in the upload lane the field keeps its `name` until the module runs, so the form still posts; its ready attribute switches the drop *zone* on instead of lifting a pre-state (see below) |
 | `passwordToggle` | none | not needed | the field, its label, its `autocomplete` and the password manager are all there and untouched, and the one control the component owns is injected, so it cannot exist before it works; its ready attribute switches the gutter *on* and Edge's native reveal *off* (see below) |
 | `dialog`, `popover` | none | not needed | closed at rest, and the behaviour is native |
@@ -321,18 +321,6 @@ withholds it on a bail, leaving the scrolling table that needs no script. Same
 attribute, same "only ever written" rule; what differs is which side of the
 condition the enhanced state sits on.
 
-`autoGrowTextarea` is the same inversion on a smaller subject, and it shows
-that the attribute is worth owning even where there is no pre-state to lift.
-Nothing about that component is hidden before `init()`, so it ships no block —
-but its stylesheet takes the field's **resize handle** away only where growth
-is actually being delivered: unconditionally in the lane where CSS does the
-growing (`field-sizing`), and on `[data-autogrowtextarea-ready]` in the lane
-where the module does. Otherwise a chunk that never arrived would leave a
-field that can neither grow nor be dragged open. Like `dataTable` it therefore
-sets the flag where it delivers and withholds it where it does not — its one
-bail-out (the module on something that is not a `<textarea>`) returns before
-the attribute is written.
-
 `fileUpload` is the same inversion again, and it adds the sharpest reason for
 it: what its flag switches on is a **drop zone**, and a box that invites a drop
 nothing is listening for does not merely look wrong — the browser takes the
@@ -395,16 +383,6 @@ token names; what it can do is guarantee the hook and say what it means. So
 here the pattern from §2 runs backwards in a second way: not only is the flag
 keyed positively, the rule keyed off it lives in a stylesheet this repository
 never sees.
-
-`autoGrowTextarea` is also the one component whose flag outlives a teardown,
-and the exception
-is worth stating rather than reading as an oversight: in the `field-sizing`
-lane `init()` returns before it has registered anything, so it returns no
-cleanup function and nothing takes the attribute off again. That is harmless
-here for the same reason the lane needs no cleanup — the only rule that reads
-the flag sits in the *other* lane's half of the stylesheet, and a second
-`init()` simply writes it once more.
-
 
 ## 5. What changed in the loader
 

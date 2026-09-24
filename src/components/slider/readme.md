@@ -163,7 +163,7 @@ does not exist, so the cost of a chunk that never arrives is the transitions
 and the buttons, not the content.
 
 Which is why `data-slider-ready` is read **positively** — the same inversion
-`dataTable`, `autoGrowTextarea`, `fileUpload` and `passwordToggle` use — and
+`dataTable`, `fileUpload` and `passwordToggle` use — and
 why this is the one component in the collection whose conditional rules are
 **not** wrapped in `@media (scripting: enabled)`. The mixin's condition is
 right when the stylesheet can deliver the enhanced state on its own, because
