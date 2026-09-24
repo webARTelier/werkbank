@@ -137,6 +137,9 @@
               name (aria-labelledby -> its title). Inside it, one panel
               holds a header (title + close control carrying
               data-offcanvasnav-close) and a body holding the navigation.
+              tabindex="-1" because Gecko gives every <dialog> a tabindex of
+              0, which in the flow rendering is a tab stop in front of the
+              navigation, on a container that does nothing.
             - The burger is a block of its own (m-offCanvasNavToggle), not
               an element of the drawer: it lives outside the <dialog>, a
               page may carry several of them, and each one names its drawer
@@ -254,6 +257,7 @@
           data-js-behavior="offCanvasNav"
           data-offcanvasnav-always
           aria-labelledby="demoDrawer-title"
+          tabindex="-1"
         >
           <div class="m-offCanvasNav__panel" data-offcanvasnav-panel>
 
@@ -383,6 +387,7 @@
             data-js-behavior="offCanvasNav"
             data-offcanvasnav-side="end"
             aria-labelledby="demoDrawerResponsive-title"
+            tabindex="-1"
           >
             <div class="m-offCanvasNav__panel" data-offcanvasnav-panel>
 
@@ -488,7 +493,8 @@
               </p>
 
               <dialog id='frameDrawer' class='m-offCanvasNav' data-js-behavior='offCanvasNav'
-                      data-offcanvasnav-side='end' aria-labelledby='frameDrawer-title'>
+                      data-offcanvasnav-side='end' aria-labelledby='frameDrawer-title'
+                      tabindex='-1'>
                 <div class='m-offCanvasNav__panel' data-offcanvasnav-panel>
                   <header class='m-offCanvasNav__header'>
                     <h2 class='m-offCanvasNav__title' id='frameDrawer-title'>Menu</h2>
@@ -560,6 +566,7 @@
             id="demoDrawerBase"
             class="m-offCanvasNav"
             aria-labelledby="demoDrawerBase-title"
+            tabindex="-1"
           >
             <div class="m-offCanvasNav__panel" data-offcanvasnav-panel>
 

@@ -451,6 +451,11 @@ class OffCanvasNav {
 
   handleDialogClick = (event) => {
 
+    // Delegated on the document (see startListening), so this sees every
+    // click in the page and has to pick out its own. contains() is true for
+    // the dialog itself, which is the light dismiss below.
+    if (!this.dialog.open || !this.dialog.contains(event.target)) return;
+
     // Delegated, so a close control rendered into the drawer later works
     // without being wired up separately.
     if (event.target.closest(`[${this.params.closeAttr}]`)) {
@@ -593,7 +598,12 @@ class OffCanvasNav {
     document.addEventListener('click', this.handleTriggerClick);
     document.addEventListener('keydown', this.handleTriggerKeydown);
 
-    this.dialog.addEventListener('click', this.handleDialogClick);
+    // On the document as well, and not on the dialog, although every click it
+    // cares about lands inside it: a click listener on an element is what
+    // makes Gecko expose a "click" action on it, and a clickable element no
+    // keyboard can reach is a real fault. In the flow rendering the dialog is
+    // a plain block around the navigation, where that verdict would be right.
+    document.addEventListener('click', this.handleDialogClick);
 
     // Escape is the one dismissal the platform performs by itself. Caught
     // here so it takes the same animated route out as everything else.
@@ -795,7 +805,7 @@ class OffCanvasNav {
 
     document.removeEventListener('click', this.handleTriggerClick);
     document.removeEventListener('keydown', this.handleTriggerKeydown);
-    this.dialog.removeEventListener('click', this.handleDialogClick);
+    document.removeEventListener('click', this.handleDialogClick);
     this.dialog.removeEventListener('cancel', this.handleCancel);
     this.dialog.removeEventListener('close', this.handleClose);
     this.expandedQuery?.removeEventListener('change', this.handleViewportChange);
