@@ -77,7 +77,8 @@ the browser's own message is used. Most specific wins:
 - **Progressive enhancement:** without JavaScript the browser validates the form
   and shows its own bubbles, so the form is never unguarded. The module sets
   `novalidate` only from JS, then replaces the transient bubbles with persistent
-  inline messages.
+  inline messages. Until then a failed field stays marked by `:user-invalid`
+  (see *Styling*), next to the bubble that explains it.
 - **4.1.3 Status Messages (AA) / 2.4.3 Focus Order (A):** on a failed submit an
   **error summary** is injected at the top of the form — a focusable, labelled
   region listing every invalid field as a link that jumps to it — and focus is
@@ -149,6 +150,8 @@ to the shared semantic token `--color-error`, see
 `_shared/scss/_colors_semantic.scss`), exactly:
 
 - the border of `input`/`select`/`textarea` inside `[data-fv-item].is-invalid`,
+- **before and without the script:** the border of any such field matching
+  `:user-invalid` in a form without `data-formvalidation-ready` (see below),
 - the injected `.fv-error` message,
 - the injected error summary's title and links (`.fv-summary__title`,
   `.fv-summary a`).
@@ -161,7 +164,20 @@ summary programmatically on a failed submit, which does not always trigger
 
 Everything else is toggled as hooks your project styles (the JS never reads
 them back): `form.is-submitted`, `[data-fv-item].is-invalid`, `.fv-error`,
-`.fv-summary`.
+`.fv-summary`, and `form[data-formvalidation-ready]` once the module runs.
+
+### Without the script: `:user-invalid`
+Until the module has taken the form over — scripting off, or the chunk not
+(yet) loaded — the browser validates on its own and explains a failure in a
+bubble that vanishes on the next click. The stylesheet keeps the field marked
+after that via the native `:user-invalid`, which matches only once the user
+has interacted with the field or tried to submit. The ready attribute retires
+that rule: with the script running, `:user-invalid` would colour a field after
+its first edit while the module deliberately stays quiet until the first
+submit — a red border with no message and no `aria-invalid`. From then on
+`.is-invalid` is the only source of the invalid look. If your project draws
+radios/checkboxes itself, give them the same two-stage treatment
+(`form:not([data-formvalidation-ready]) …:user-invalid` and `.is-invalid`).
 Also style the field's own `:focus-visible` ring in your project (focus-ring
 convention in the project `CLAUDE.md`).
 

@@ -81,7 +81,9 @@
  * toggles class hooks the consuming project styles: `is-submitted` on the
  * form, `is-invalid` on each field's item container, plus the `fv-error`
  * message element. Restyle freely — the JS only writes these classes, never
- * reads them.
+ * reads them. `data-formvalidation-ready` on the form marks the hand-over:
+ * until it is there, the stylesheet colours a field by the native
+ * `:user-invalid` instead, next to the browser's own bubble.
  * --------------------------------------------------------------------------
  */
 
@@ -109,6 +111,12 @@ const defaults = {
   // field this one must match, e.g. data-fv-equals="#email". Message
   // override: data-fv-equals-message. See syncEqualsValidity.
   equalsAttr: 'data-fv-equals',
+
+  // Set on the form once the module has taken it over, removed on destroy.
+  // Only ever written, never read back: it is what retires the stylesheet's
+  // no-script :user-invalid layer, so the JS classes below are the one
+  // source of the invalid look from here on (see formValidation.scss).
+  readyAttr: 'data-formvalidation-ready',
 
   // State hooks (styling only; the JS writes them, never reads them back).
   formSubmittedClass: 'is-submitted', // on the <form>, after the first submit
@@ -340,6 +348,7 @@ class FormValidation {
     // persistent inline messages can take their place. Set only now, so a
     // no-JS page keeps the browser's own validation (see the file header).
     this.form.setAttribute('novalidate', '');
+    this.form.setAttribute(this.config.readyAttr, '');
 
     this.form.addEventListener('submit', this.handleSubmit);
 
@@ -862,6 +871,7 @@ class FormValidation {
     this.form.removeEventListener('change', this.handleFieldChange);
     this.form.removeEventListener('reset', this.handleReset);
     this.form.removeAttribute('novalidate');
+    this.form.removeAttribute(this.config.readyAttr);
     this.form.classList.remove(this.config.formSubmittedClass);
     this.removeSummary();
 

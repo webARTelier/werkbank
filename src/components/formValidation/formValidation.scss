@@ -15,6 +15,9 @@
 //                                region; announced via the summary, see JS)
 //   - form.is-submitted          on the form after the first submit attempt
 //                                (not styled here; hook for the project)
+//   - form[data-formvalidation-ready]
+//                                on the form once the script has taken it
+//                                over; retires the :user-invalid layer below
 //
 // Style the field's own :focus-visible ring in your project — that part stays
 // out of the component (see the CLAUDE.md focus-ring convention, which is why
@@ -42,6 +45,25 @@
 // re-drawn by the project) are covered by the project's own .is-invalid
 // styling.
 [data-fv-item].is-invalid :is(input, select, textarea) {
+  border-color: var(--fv-error-color);
+}
+
+
+
+// Before and without the script: the browser validates on its own and
+// explains a failed field in a bubble that is gone again on the next click.
+// :user-invalid keeps the field marked after that, and it matches only once
+// the user has interacted with the field or tried to submit, so nothing is
+// flagged before it has been reached. Border and bubble both come from the
+// platform, so they cannot disagree.
+//
+// Retired by the ready attribute: once the script runs, the colour must not
+// run ahead of the message. :user-invalid matches after the first edit and
+// blur, the script stays quiet until the first submit — a red border with
+// no text and no aria-invalid would be colour-only information (1.4.1) that
+// a screen reader never hears of. Not the pre-enhancement() mixin, which is
+// scripting-only: the reader with scripting off is the one this is for.
+form:not([data-formvalidation-ready]) :is(input, select, textarea):user-invalid {
   border-color: var(--fv-error-color);
 }
 

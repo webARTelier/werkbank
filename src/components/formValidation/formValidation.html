@@ -22,7 +22,9 @@
   Wiring
     - The <form> carries data-js-behavior="formValidation". Do NOT add `novalidate`
       yourself — the module sets it from JS so the no-JS path keeps native
-      validation.
+      validation. Once it has taken the form over it sets
+      data-formvalidation-ready on it; until then the stylesheet marks failed
+      fields via the native :user-invalid (next to the browser's bubble).
     - Wrap each control (or each radio/checkbox group) in an element carrying
       data-fv-item. That container gets `is-invalid` while the field is invalid
       and holds the injected .fv-error message. Without it the field still

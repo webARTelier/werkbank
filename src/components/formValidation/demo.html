@@ -450,6 +450,9 @@
             - Without JavaScript the browser validates the form and shows its
               own bubbles. With JS the module suppresses those (novalidate, set
               from JS) and renders persistent, localized inline messages instead.
+            - Until the module has taken the form over (it then sets
+              data-formvalidation-ready), a failed field stays marked by the
+              native :user-invalid after the bubble has gone.
 
           Accessibility
             - Invalid fields get aria-invalid and an aria-describedby link
