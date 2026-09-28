@@ -41,7 +41,7 @@ is stated as an actionable instruction; ✅ / ❌ mark do / don't.
   requirement:
   1. **A native element or attribute** — `<details>`, `<dialog>`,
      `<input type="date">`, native constraint validation, a real `<a href>`,
-     `loading="lazy"`, `popover`. Semantics, keyboard behaviour and the
+     `loading="lazy"`, `popover`. Semantics, keyboard behavior and the
      accessible name come with it.
   2. **CSS** — `:target`, `:has()`, `:focus-within`, `position: sticky`,
      `aspect-ratio`, `scroll-behavior`, `@starting-style`, transitions,
@@ -75,42 +75,28 @@ new IntersectionObserver(([entry]) => {
 }).observe(sentinel);
 ```
 
-- **Moving up a rung needs a reason you can name**: a behaviour the lower rung
+- **Moving up a rung needs a reason you can name**: a behavior the lower rung
   genuinely cannot express (a value that must be computed, a native control
   that cannot be styled to spec, state CSS cannot hold). "It is easier to
   control from JS" and "we use that library anyway" are not reasons.
 - **The ladder ranks power, not cleverness.** A CSS-only trick that fakes
-  behaviour through markup it does not mean — a checkbox standing in for a
+  behavior through markup it does not mean — a checkbox standing in for a
   disclosure button, a label as a tab — is *not* the lower rung; it trades
-  semantics and keyboard behaviour for the appearance of restraint. Prefer
+  semantics and keyboard behavior for the appearance of restraint. Prefer
   honest JavaScript over a semantic lie. Declarative CSS state built on
   markup that is true anyway (`:target` on a real in-page link) is fine, and
   is what the `:target` escapes elsewhere in this guide rely on.
-- This rule is the *why* behind the two that follow: enhancement has a base
-  layer to enhance because the lower rungs came first, and concerns stay
-  separated because each one is answered in its own language.
 
 ### Progressive enhancement
 - Build so the markup is **usable without CSS or JavaScript**. Treat the
   native platform as the source of truth (native elements, native form
   validation, real links) and let script and styles **fill gaps**, not
   replace the base layer.
-- State driven by JS is expressed by toggling a **state class or `data-`
-  attribute** (see the `is-`/`has-` namespace), never by writing inline
-  styles — so appearance stays owned by CSS.
 
 ### Modules & reuse
-- A **module** is *placed*: it brings its own markup, which would have no
-  reason to exist without it, and it occupies a region of the page (the
-  masthead, the main navigation, the footer, an on-page table of contents).
-  A **component** is *attached*: it wraps, annotates or reinforces a host that
-  is complete and usable without it, and it is the shared vocabulary reused
-  across unrelated modules (a button, a link, a dialog, a tooltip). A
-  **function** is neither — it only enhances existing markup with state
-  classes/attributes and owns no vocabulary at all, so it gets no prefix
-  (a sticky-state observer, an input mask, a validation behaviour).
-  Modules **compose** components; the precise decision rule and prefixes live
-  in SASS/CSS › *BEM namespacing*.
+- What a **module** (`m-`), a **component** (`c-`) and a prefixless
+  **function** are, and how to tell them apart, is defined in SASS/CSS ›
+  *BEM namespacing*. Modules **compose** components.
 - A module (and a component) must look **consistent regardless of where it
   sits** in the layout. It therefore owns only its *intrinsic* look, never its
   *position* in a parent. Where it sits — `order`, `flex-basis`, the margins
@@ -118,34 +104,37 @@ new IntersectionObserver(([entry]) => {
 - **Module-in-module (slot rule).** When a module hosts another module, the
   parent does **not** reach into the child to position it. Instead the parent
   provides a dedicated **slot element** (a BEM element of the parent, e.g.
-  `m-topbar__nav`) that carries all the positioning, and the child module lives
-  *inside* that slot untouched. So the child stays layout-agnostic and looks
-  the same wherever it is placed.
+  `m-topbar__navigation`) that carries all the positioning, and the child
+  module lives *inside* that slot untouched. So the child stays
+  layout-agnostic and looks the same wherever it is placed.
 - When an element needs to look different in some context, build it as a
   **modified version** of the same block (a modifier), not a new element.
 
 ### Separation of concerns
-- Keep **structure (HTML)**, **appearance (CSS)** and **behaviour (JS)**
+- Keep **structure (HTML)**, **appearance (CSS)** and **behavior (JS)**
   strictly separated. No inline styles, no inline event handlers, no
   presentational markup driven from JS.
+- State driven by JS is expressed by toggling a **state class or `data-`
+  attribute** (see the `is-`/`has-` namespace), never by writing inline
+  styles — so appearance stays owned by CSS.
 
 ### Semantics
 - Use semantic tags and semantic class names.
-- Prefer **full words over abbreviations** (`button` not `btn`,
-  `navigation` not `nav` in identifiers).
+- Prefer **full words over shortened ones** in identifiers (`button` not
+  `btn`, `navigation` not `nav`). A genuine abbreviation is fine (`toc` for
+  *table of contents*, `SVG`); a word merely cut short is not.
 
 ### Naming scheme
 - Every class name carries a **namespace prefix** (see SASS/CSS › *BEM
   namespacing*) and follows the BEM shape
   `prefix-blockName__elementName--modifierName` (element and modifier are
   optional).
-- Each name **part** is written in **camelCase** for compound words
-  (`m-userCard__avatarImage--large`). This rule fixes only the casing of the
-  parts; the full BEM structure is defined in SASS/CSS › *BEM namespacing*.
-
-### Upper / lower case
-- HTML tags: **lower case**.
-- Compound identifiers: **camelCase**.
+- Compound identifiers are written in **camelCase**: each part of a class
+  name (`m-userCard__avatarImage--large`), JS bindings (see JavaScript ›
+  *Naming*) and file and folder names (see *File & folder names*).
+- HTML tags and attribute names are **lower case**. That includes `data-`
+  attributes, where camelCase does not apply: HTML lowercases attribute names.
+  The doctype keeps its conventional `<!DOCTYPE html>`.
 
 ### Charset
 - Use **UTF-8** everywhere. Declare it with the corresponding meta tag in HTML.
@@ -159,17 +148,47 @@ new IntersectionObserver(([entry]) => {
 - **Wrap comment *text* at 78 characters** per line so it never wraps awkwardly
   in a narrow editor pane. Applies to JS block/line comments, SCSS comments and
   HTML comment banners. The code itself is **not** hard-wrapped.
-- **One blank line before a leading comment inside a block** — the same rule in
-  both languages: see JavaScript › *Comments* and SASS/CSS › *Comments*.
+- **One blank line before a leading comment inside a block.** When a block
+  opens with a comment, separate it from the opening line with a blank line,
+  so the comment reads as its own unit instead of sticking to the selector,
+  `function`, `if` or `catch` line. Where this applies in each language:
+  JavaScript › *Comments* and SASS/CSS › *Comments*.
+
+```js
+// ❌ comment glued to the opening line
+handleInput = (event) => {
+  // Let IME composition finish before we rewrite the value.
+  if (event.isComposing) return;
+};
+
+// ✅ blank line between the opening line and the leading comment
+handleInput = (event) => {
+
+  // Let IME composition finish before we rewrite the value.
+  if (event.isComposing) return;
+};
+```
+
+```scss
+// ❌ comment glued to the selector line
+.m-dropdownNavigation {
+  // Animation maps to the shared animation tokens.
+  --dropdownNavigation-duration: calc(var(--an-duration) / 2);
+}
+
+// ✅ blank line between brace and leading comment
+.m-dropdownNavigation {
+
+  // Animation maps to the shared animation tokens.
+  --dropdownNavigation-duration: calc(var(--an-duration) / 2);
+}
+```
 
 ### Whitespace
 - **One** blank line to separate block elements where it improves readability.
-- **Three** blank lines to separate the named units a file is built from. The
-  wide gap is deliberate: it makes those boundaries obvious at a glance when
-  scrolling a long file, in a way a single blank line does not. Keep it for
-  them only — each language section names the units that earn it (SASS/CSS ›
-  *Formatting rules*). Everything else rides on a single blank line and on the
-  indentation, which already shows what belongs to what.
+- **Three** blank lines separate the blocks an SCSS file is built from, so
+  that each cohesive block can be picked out at a glance when scrolling a long
+  file. Which lines take three, one or none: SASS/CSS › *Formatting rules*.
 
 
 ## HTML
@@ -184,13 +203,12 @@ new IntersectionObserver(([entry]) => {
 ### Data & JS hooks
 - **Use `data-` attributes as JavaScript hooks** — both for selecting elements
   and for passing data (e.g. `data-js-behavior="accordion"`,
-  `data-inputcharcount`). `data-js-behavior` names one or more lazily-loaded
-  behaviours to attach; the word "behaviour" is deliberate so the JS hook never
-  clashes with the semantic meaning of *module* (see SASS/CSS › *BEM
-  namespacing*).
-- **Do not use `js-` prefixed classes as hooks.** Classes are for styling only;
-  keep the JS binding out of the class list.
-- Never bind behaviour to a styling class either — a `data-` attribute and its
+  `data-inputcharactercount`). `data-js-behavior` names one or more
+  lazily-loaded behaviors to attach; the word "behavior" is deliberate so the
+  JS hook never clashes with the semantic meaning of *module* (see SASS/CSS ›
+  *BEM namespacing*).
+- **Classes are for styling only.** No `js-` prefixed hook classes, and no
+  behavior bound to a styling class either: a `data-` attribute and its
   matching style/state class stay independent, so restyling never breaks the
   hook and vice versa.
 
@@ -248,9 +266,8 @@ List attributes in this sequence:
   state or an observer may already carry the requirement (see General › *Rule
   of least power*). What is left after that check is what the module does.
 - Author in modern **ES modules** — one module per file. No code on the global
-  scope and no implicit globals.
-- Load behaviour as `<script type="module">` or with `defer`; never
-  render-blocking, never inline (see General › *Separation of concerns*).
+  scope and no implicit globals. How to load them: Assets & Performance ›
+  *Scripts*.
 
 ### Declarations
 - Use `const` by default, `let` only when a binding is genuinely reassigned.
@@ -262,7 +279,6 @@ List attributes in this sequence:
   component constructors.
 - **Constants use the same `camelCase`** as any other binding — do **not**
   use `UPPER_SNAKE_CASE`.
-- Prefer full words over abbreviations (see General › *Semantics*).
 
 ### Quotes & semicolons
 - Prefer **single quotes** wherever possible; switch quote style only to avoid
@@ -271,28 +287,9 @@ List attributes in this sequence:
 - Terminate statements with a **semicolon**.
 
 ### Comments
-- **One blank line before a leading comment inside a block.** When a block opens
-  with a comment, separate it from the opening line with a blank line, so the
-  comment reads as its own unit instead of sticking to the `function` / `if` /
-  `catch` line. Mirrors SASS/CSS › *Comments*.
-
-```js
-// ❌ comment glued to the opening line
-handleInput = (event) => {
-  // Let IME composition finish before we rewrite the value.
-  if (event.isComposing) return;
-};
-
-// ✅ blank line between the opening line and the leading comment
-handleInput = (event) => {
-
-  // Let IME composition finish before we rewrite the value.
-  if (event.isComposing) return;
-};
-```
-
-- Applies to **every** block that opens with a comment: function, method and
-  class bodies, `if` / `else if` branches, loops, `switch` cases, `try` /
+- The blank line before a leading comment (see General › *Comments*) applies
+  to **every** block that opens with a comment: function, method and
+  class bodies, `if` branches, loops, `switch` cases, `try` /
   `catch` / `finally`, callback bodies and object / array literals.
 - **No exception for a comment-only block.** A block whose entire content is
   the comment — an intentionally empty `catch`, a deliberate no-op branch —
@@ -314,9 +311,9 @@ try {
   unaffected.
 
 ### Control flow
-- **Do not use `else`.** Return early with guard clauses and let the happy
-  path fall through at the top level of the function. This keeps nesting flat
-  and every precondition visible up front.
+- **Do not use `else` or `else if`.** Return early with guard clauses and let
+  the happy path fall through at the top level of the function. This keeps
+  nesting flat and every precondition visible up front.
 
 ```js
 // ✅ guard clauses, no else
@@ -331,22 +328,17 @@ function priceFor(user) {
   `try` / `catch`.
 
 ### Events & the DOM
-- Bind behaviour with `addEventListener`; never inline `on*` handlers in
-  markup, and never drive presentational markup from JS (see General ›
-  *Separation of concerns*).
-- Select elements and read data through **`data-` attributes**, not styling
-  classes (see HTML › *Data & JS hooks*). Express state changes by toggling a
-  state class / `data-` attribute, not by writing inline styles.
+- Bind behavior with `addEventListener`, never with inline `on*` handlers.
+  Which elements a script selects and how it expresses state: HTML › *Data &
+  JS hooks* and General › *Separation of concerns*.
 
 
 ## Accessibility
 
 Accessibility is a baseline requirement, not a per-component afterthought.
 
-- **Semantic HTML first.** Reach for the native element that already carries
-  the role and behaviour (`<button>`, `<a>`, `<nav>`, `<label>`, `<dialog>`)
-  before adding ARIA — native semantics bring keyboard and focus behaviour for
-  free.
+- **Semantic HTML first** (see General › *Rule of least power*): native
+  semantics bring keyboard and focus behavior for free.
 - **ARIA only to fill gaps.** Add `role` / `aria-*` only when no native
   element expresses the semantics, and never duplicate a role the element
   already has (no `<button role="button">`). Follow the ARIA Authoring
@@ -371,8 +363,8 @@ Accessibility is a baseline requirement, not a per-component afterthought.
   `loading="lazy"`, and give every `<img>` intrinsic `width` / `height` (or an
   `aspect-ratio`) so layout space is reserved and nothing shifts.
 - **Scripts.** Load JavaScript as `<script type="module">` or with `defer` —
-  never render-blocking. Prefer one lazily-loaded bundle per feature over a
-  single monolith where the build allows it.
+  never render-blocking, never inline. Prefer one lazily-loaded bundle per
+  feature over a single monolith where the build allows it.
 - **Fonts.** Self-host and subset fonts; set `font-display: swap` (or
   `optional`) so text is never invisible while a font loads, and preload the
   critical font.
@@ -388,11 +380,11 @@ Accessibility is a baseline requirement, not a per-component afterthought.
 - Use **partials** to structure SCSS. Partial names start with an underscore
   (`_buttons.scss`).
 - **One partial per UI component or module.**
-- The **underscore encodes load strategy**, independently of the `m-`/`c-`
-  role: a `_name.scss` **partial** is `@use`d into a bundle (it rides along
-  with whatever includes it — normally the core stylesheet), whereas a
-  non-partial `name.scss` **entry** compiles to its own file for on-demand
-  loading. Both a module and a component may be either.
+- The **underscore encodes load strategy**: a `_name.scss` **partial** is
+  `@use`d into a bundle (it rides along with whatever includes it — normally
+  the core stylesheet), whereas a non-partial `name.scss` **entry** compiles
+  to its own file for on-demand loading. Which one a piece is: *Build /
+  compile pipeline*.
 
 ### ITCSS architecture
 Group partials in this order (increasing specificity / decreasing reach):
@@ -403,12 +395,11 @@ Group partials in this order (increasing specificity / decreasing reach):
 4. `d_base` — bare element styles
 5. `e_objects` — layout objects
 6. `f_components` — reusable UI components (`c-`)
-7. `g_modules` — standalone, once-per-page modules (`m-`)
+7. `g_modules` — standalone modules (`m-`)
 8. `h_utilities` — helpers, overrides
 
 The folder a class lives in mirrors its semantic role (component vs module),
-**not** how it is bundled — bundling is a separate axis, see *Build / compile
-pipeline* below.
+**not** how it is bundled (see *Build / compile pipeline*).
 
 ### BEM namespacing
 Prefix every class by its role:
@@ -416,8 +407,8 @@ Prefix every class by its role:
 | Prefix    | Role       | Notes                                   |
 | --------- | ---------- | --------------------------------------- |
 | `o-`      | object     | abstract, reusable layout               |
-| `m-`      | module     | a *placed* entity that occupies a region and brings its own markup (topbar, navigation, footer, table of contents) |
-| `c-`      | component  | an *attached*, module-independent building block (button, link, dialog, tooltip) |
+| `m-`      | module     | *placed* (see below)                    |
+| `c-`      | component  | *attached* (see below)                  |
 | `u-`      | utility    | one very specific style                 |
 | `v-`      | vendor     | third-party code                        |
 | `is-`/`has-` | state   | conditional styling                     |
@@ -426,16 +417,18 @@ Prefix every class by its role:
 - **`m-` vs `c-` is purely semantic**, and one question settles it: **is there
   a host that is already complete without this thing?**
   - **No → `m-` (module).** It is *placed*. Its markup exists only because it
-    does, and it occupies a region of the page (`m-topbar`, `m-nav`,
+    does, and it occupies a region of the page (`m-topbar`, `m-navigation`,
     `m-footer`, `m-toc`, an accordion, a lightbox).
   - **Yes → `c-` (component).** It is *attached* to that host — a full text it
     cuts down, a plain table it makes sortable, a native field it dresses, a
-    control it explains (`c-button`, `c-link`, `c-dialog`, `c-tooltip`).
+    control it explains (`c-button`, `c-link`, `c-dialog`, `c-tooltip`). It is
+    the shared vocabulary reused across unrelated modules.
   - **Neither, and it owns no vocabulary → no prefix (function).** It writes
     only state classes/attributes onto existing markup and leaves the look to
-    the project. Where such a behaviour ships a ready-made look anyway, that
+    the project (a sticky-state observer, an input mask, a validation
+    behavior). Where such a behavior ships a ready-made look anyway, that
     look is a `c-` component or an `o-` object in its own right — the
-    behaviour neither needs nor reads it.
+    behavior neither needs nor reads it.
 
   Supporting signals: a module usually manages a **collection or a region**
   (n panels, n images, n messages) while a component treats **one** host; and
@@ -443,18 +436,13 @@ Prefix every class by its role:
   **compose** components; a component never depends on a specific module.
   A trigger-invoked overlay with no footprint in the page flow (dialog,
   popover, tooltip) is a **component**, not a module — it occupies no region.
-- **The prefix does not decide bundling, nor how much CSS ships.** Both are
-  **independent** axes. A `m-` module can live in the core bundle (a site-wide
-  one like `m-topbar`) and a `c-` component can compile to its own on-demand
-  file (a page-specific one like `c-dialog`) — see *Build / compile pipeline*.
-  And a module may ship almost no CSS (a widget that leaves every visual to
-  the project) while a component ships hundreds of lines: a component that
-  *leaves* the design to the project is still a component, whereas a function
-  is one that has **no** vocabulary to leave.
+- **The prefix decides neither bundling (see *Build / compile pipeline*) nor
+  how much CSS ships.** A module may ship almost no CSS (a widget that leaves
+  every visual to the project) while a component ships hundreds of lines: a
+  component that *leaves* the design to the project is still a component,
+  whereas a function is one that has **no** vocabulary to leave.
 - **The block, not the folder, carries the prefix.** One delivery unit may
   ship several blocks with different roles.
-- **No `js-` hook classes.** JavaScript binds to `data-` attributes, not to
-  classes (see HTML › *Data & JS hooks*).
 
 ### Paths
 - Always reference the **path variables defined in `_settings.scss`**; never
@@ -467,8 +455,11 @@ Prefix every class by its role:
 ### Media queries
 - Write **mobile first**.
 - Use the predefined **media-query mixins**.
-- Place viewport-dependent styles **directly after** the initial definition of
-  the property they override.
+- Place viewport-dependent styles **inside the selector whose declarations
+  they change**, as their own nested block right after those declarations
+  (see *Element order within a selector*) — never in a separate section at
+  the end of the file or in another file. The override stays next to what it
+  overrides without interrupting it.
 - **Query the capability you actually mean, not a proxy for it.** A
   viewport-size query must not stand in for a device's interaction ability —
   e.g. don't gate hover styles behind a width breakpoint; ask whether the
@@ -479,13 +470,25 @@ Prefix every class by its role:
 ```scss
 // ❌ width is a poor proxy — a large touch screen still gets a
 //    hover style it cannot trigger cleanly
-@media (min-width: 60rem) {
-  .c-card:hover { scale: 1.02; }
+.m-card {
+
+  @include vp-up('large') {
+
+    &:hover {
+      scale: 1.02;
+    }
+  }
 }
 
 // ✅ ask the device whether it can actually hover
-@media (hover: hover) {
-  .c-card:hover { scale: 1.02; }
+.m-card {
+
+  @include input-mouse {
+
+    &:hover {
+      scale: 1.02;
+    }
+  }
 }
 ```
 
@@ -494,10 +497,17 @@ Prefix every class by its role:
   project's `browserslist` targets.
 
 ### Nesting
+- Nesting stays limited so that an element looks the same **in every
+  context**: its state may change its look, its surroundings may not.
 - ❌ Don't nest — **except**:
-  - pseudo-classes / pseudo-elements
-  - styles that react to an `is-`/`has-` state class
+  - pseudo-classes / pseudo-elements, structural ones included
+    (`&:first-child`, `> :first-child`)
+  - styles that react to a state: an `is-`/`has-` class or a state attribute
+    (`&[data-x]`)
   - viewport-dependent styles (media-query mixins)
+  - as a last resort, a **context**: when an element can be styled only
+    through its surroundings because its markup cannot take a modifier, nest
+    the context into the block, preferably as `.contextClass &`
 - ✅ **BEM elements and modifiers are written inside their block** as
   `&__element` / `&--modifier`. That is selector *concatenation*, not
   descendant nesting: it compiles to `.m-block__element`, identical selector
@@ -518,10 +528,7 @@ Prefix every class by its role:
   }
   ```
 
-  Each of those parts carries the same **three-line gap** above it that the
-  block itself gets: `&__element` and `&--modifier` name a part of the system,
-  and the wide gap is how a name announces itself. States, pseudo-elements and
-  media queries keep a single blank line — see *Formatting rules*.
+  The blank lines between those parts: *Formatting rules*.
 
   A selector that is *not* relative to the block (a foreign class, an
   attribute hook on a script-injected node) stays outside it — nested, it
@@ -539,33 +546,12 @@ Prefix every class by its role:
 
 ### Comments
 - In SCSS use **single-line comments only** (`//`).
-- **One blank line before a leading comment inside a block.** When a
-  declaration block opens with a comment, separate it from the opening brace
-  with a blank line, so the comment reads as its own unit instead of sticking
-  to the selector line. The same rule holds in JS (see JavaScript ›
-  *Comments*).
-
-```scss
-// ❌ comment glued to the selector line
-.m-dropdownNav {
-  // Animation maps to the shared animation tokens.
-  --dropdownNav-duration: calc(var(--an-duration) / 2);
-}
-
-// ✅ blank line between brace and leading comment
-.m-dropdownNav {
-
-  // Animation maps to the shared animation tokens.
-  --dropdownNav-duration: calc(var(--an-duration) / 2);
-}
-```
-
-- Applies to **every** block that opens with a comment — nested pseudo-class,
-  state and media-query blocks and `& { … }` wrappers included — and it holds
-  in a **compact selector** too (see *Formatting rules*).
+- The blank line before a leading comment (see General › *Comments*) applies
+  to **every** block that opens with a comment — nested pseudo-class, state
+  and media-query blocks and `& { … }` wrappers included — and it holds in a
+  **compact selector** too (see *Formatting rules*).
 - A comment that sits *between* declarations takes **one blank line** above it
-  as well, compact selector or not. A comment inside a block always has one
-  blank line above it; above a BEM name it rides on the three-line gap.
+  as well, compact selector or not.
 
 ### Formatting rules
 - One selector per line.
@@ -575,50 +561,44 @@ Prefix every class by its role:
 - One space after the colon in a declaration.
 - One space around operators in arithmetic.
 - **Omit units on `0` values** (`margin: 0;` not `0px`).
-- Separate top-level declarations / rules with **three** blank lines.
-- **The wide gap marks a BEM name — a block, an element or a modifier.**
-  Three blank lines always mean the same thing: a new named part starts here.
-  `.m-block` at the top level, `&__element` and `&--modifier` inside it, at
-  whatever depth they sit. The outline of a long stylesheet, and of a long
-  block, can be scanned on that one signal alone. Where such a selector
-  carries a leading comment the gap goes **above the comment**: it introduces
-  the selector and belongs to it.
-- **Everything else keeps one blank line** — `&:hover`, `&::backdrop`,
-  `&[data-x]`, `&[data-x] &__element`, `> :first-child`, a foreign descendant,
-  concern groups, media-query and other at-rule blocks, the `& { … }` wrapper
-  after an `@include`, and a full class selector written inside a mixin or
-  at-rule (`.m-block { … }` under `@include theme-dark`), which re-enters a
-  block named elsewhere instead of introducing a part. None of them names a
-  new part; they are states, details and viewports of the name above them,
-  and the **indentation** already says what they belong to.
+
+**Blank lines.** Three blank lines mark where a new cohesive block starts, so
+the outline of a long stylesheet, and of a long block, can be scanned on that
+one signal alone. Whatever belongs to a block rides on one blank line and on
+the indentation, which already says what it belongs to.
+
+| Blank lines | Above |
+| ----------- | ----- |
+| **3** | a top-level rule that starts a block of its own (`.m-block`, `:root`, a bare element selector, `@mixin`, `@function`, `@font-face`); a top-level at-rule block that holds a selector not written relative to `&` (`.m-other`, `[data-x]`), because it is a section of its own rather than a detail of the block above; a BEM element or modifier (`&__element`, `&--modifier`) at any depth; the first rule of a file |
+| **1** | whatever belongs to the block above it: states and pseudo-selectors (`&:hover`, `&::backdrop`, `&[data-x]`, `> :first-child`), a context (`.contextClass &`), media-query and other at-rule blocks (`@media`, `@supports`, `@container`, `@keyframes`, `@include … { }`) — at the top level too, as long as everything inside is a declaration or written relative to `&` —, the `& { … }` wrapper after an `@include`, a full class selector re-entered inside a mixin or at-rule (`.m-block { … }` under `@include theme-dark`), a concern group, every comment inside a block, and a nested rule that opens its block |
+| **0** | a declaration that opens a block (token lists in `:root` included); the next declaration of the same concern group; every declaration of a compact selector |
+
+- A **leading comment** rides on the gap of the rule it introduces: above a
+  BEM name the three lines go above the comment.
 - **What the selector *starts with* decides**, so a compound splits both
   ways: `&__item::after`, `&--ledger &__term` and `&__entry + &__entry` lead
   with a name and keep the wide gap; `&[data-x] &__element` leads with an
   attribute hook and keeps the single line.
-- The gap always **separates** — it never opens a block. A **nested rule**
-  written as the first thing inside its block — an `&__element`, an
-  `&--modifier`, a state or a media-query block alike, inside a mixin
-  definition too — sits **one blank line** below the opening brace, the same
-  line a leading comment takes (see *Comments*). A **declaration** that opens a block sits directly under the
-  brace; token lists in `:root` are no exception.
-- **Three blank lines below the `@use` header**, between the last `@use` and
-  the first selector. The imports are a named unit of their own, and the first
-  block then starts on the same signal as every block after it.
+- The gap only ever **separates**, it never opens a block: a BEM name written
+  as the first thing inside its block sits one blank line below the brace,
+  like any nested rule, inside a mixin definition too.
+- The `@use` header counts as a block of its own, so the first rule starts on
+  the same signal as every rule after it.
 
 ```scss
 @use '../a_tools/focus' as *;
 
 
 
-.m-offCanvasNav {
-  --offCanvasNav-inline-size: calc(100vw / 1.618);
+.m-offCanvasNavigation {
+  --offCanvasNavigation-inline-size: calc(100vw / 1.618);
 }
 
 
 
 // Three blank lines above, because a new name starts here. The comment rides
 // on the gap it introduces.
-.m-offCanvasNavToggle {
+.m-offCanvasNavigationToggle {
 
   // Includes, wrappers, states and viewports stay one blank line apart,
   // however deep they sit.
@@ -634,23 +614,23 @@ Prefix every class by its role:
 
   // Three blank lines again: `&__burger` names an element of the block.
   &__burger {
-    inline-size: var(--offCanvasNavToggle-bar-inline);
+    inline-size: var(--offCanvasNavigationToggle-bar-inline);
 
     &::before {
-      translate: 0 calc(var(--offCanvasNavToggle-bar-gap) * -1);
+      translate: 0 calc(var(--offCanvasNavigationToggle-bar-gap) * -1);
     }
 
     &::after {
-      translate: 0 var(--offCanvasNavToggle-bar-gap);
+      translate: 0 var(--offCanvasNavigationToggle-bar-gap);
     }
   }
 
-  &[data-offcanvasnav-open] &__burger {
+  &[data-offcanvasnavigation-open] &__burger {
     background-color: transparent;
   }
 
   &:hover {
-    background-color: var(--offCanvasNavToggle-bg-color-hover);
+    background-color: var(--offCanvasNavigationToggle-background-color-hover);
   }
 
 
@@ -680,10 +660,9 @@ Prefix every class by its role:
 
 ### Element order within a selector
 1. `@include`s
-2. layout position
-3. general styles (the detailed sequence is in *Property order within a rule*)
-4. viewport (media-query) styles
-5. pseudo-classes / pseudo-elements
+2. declarations, in *Property order within a rule*
+3. viewport (media-query) blocks
+4. pseudo-classes / pseudo-elements
 
 ### `@include` followed by declarations
 When a selector starts with one or more `@include`s **and** also holds its own
@@ -744,10 +723,11 @@ in**. Separate each concern group below from the next with **one blank line**
    `background` shorthand for a plain colour** — always `background-color`, so
    a colour change can never silently reset an image / gradient / position set
    elsewhere.
-7. **Transforms** — prefer the **modern individual longhands** (`scale: 1.5`,
-   `rotate: 45deg`, `translate: 0 1rem`) over the legacy
-   `transform: scale(…)` shorthand.
-8. **Transition** — `transition` (and any `animation`) last.
+7. **Transition & transforms** — `transition` (and any `animation`) first,
+   because it governs how the transforms after it change, then the transforms
+   directly below it without a blank line. Prefer the **modern individual
+   longhands** (`scale: 1.5`, `rotate: 45deg`, `translate: 0 1rem`) over the
+   legacy `transform: scale(…)` shorthand.
 
 ```scss
 .m-card {
@@ -759,7 +739,7 @@ in**. Separate each concern group below from the next with **one blank line**
 
     cursor: pointer;
 
-    margin-block-end: 1rem;
+    margin-block-end: var(--space-s);
     border: 1px solid $color-border;
     padding: 1rem;
     inline-size: 100%;
@@ -774,8 +754,8 @@ in**. Separate each concern group below from the next with **one blank line**
     color: $color-text;
     background-color: $color-surface;
 
-    scale: 1;
     transition: scale $an-duration $an-ease;
+    scale: 1;
   }
 
   &:hover {
@@ -803,8 +783,8 @@ needed*, which is **independent** of the `m-`/`c-` role. The build emits:
   (`c-dialog`).
 
 Which side a piece lands on is expressed by the partial-vs-entry convention
-(see *Partials & structure*): a `_partial.scss` is `@use`d into the core
-bundle; a non-partial `entry.scss` is registered as its own build entry.
+(see *Partials & structure*); a non-partial entry is registered as its own
+build entry.
 
 Because an on-demand file loads individually, its partial must be
 **self-contained**: it may `@use` the shared tools/settings but must not depend
@@ -822,4 +802,5 @@ File and folder names are **camelCase**:
   — `dateInputFormat`, `stickyObserver`.
 - **Abbreviations are fully uppercased**: `inlineSVG`, `scaleSVG` (not `Svg`).
 - **Prefixes are preserved**, only the part after them is camelCased:
-  `dev_pageInfo.js`, `dev_qrCode.js`; `_shared/` keeps its leading underscore.
+  `dev_pageInformation.js`, `dev_qrCode.js`; `_shared/` keeps its leading
+  underscore.
