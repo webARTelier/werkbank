@@ -5,6 +5,9 @@
 
 const DECLARATION = /^(--[\w-]+|\$[\w-]+|[a-z-]+)\s*:(?!:)/i
 const USE_LINE = /^@(use|forward)\b/
+// Applies styles to the block above it; @mixin, @function and @font-face
+// are blocks of their own.
+const APPLYING_AT_RULE = /^@(media|supports|container|keyframes|include)\b/
 
 // Code with strings, interpolation and comments removed, so braces and
 // parentheses can be counted. `//` after a colon is a url, not a comment.
@@ -125,6 +128,18 @@ function isCompact(info, parent) {
   return lines <= 3
 }
 
+function followsBlock(info, target) {
+  return info.slice(0, target).some((item) => item.kind === "close" && item.depth === 0)
+}
+
+// A selector not written relative to `&` re-enters blocks of its own, which
+// makes the at-rule a section rather than a detail of the block above.
+function reentersBlocks(info, target) {
+  if (info[target].code.startsWith("@keyframes")) return false
+  return info.slice(target + 1, info[target].close)
+    .some((item) => item.ruleStart && !/^[&@]/.test(item.code))
+}
+
 function expectation(info, anchor, target, prev) {
   const above = info[prev]
   const item = info[target]
@@ -139,6 +154,10 @@ function expectation(info, anchor, target, prev) {
     return { allowed: [0], reason: "closing brace" }
   }
   if (item && item.ruleStart) {
+    if (item.depth === 0 && APPLYING_AT_RULE.test(item.code) && followsBlock(info, target) &&
+      !reentersBlocks(info, target)) {
+      return { allowed: [1], reason: `top-level at-rule block "${item.code}"` }
+    }
     if (item.depth === 0) return { allowed: [3], reason: `top-level rule "${item.code}"` }
     return isNamed(item)
       ? { allowed: [3], reason: `BEM name "${item.code}"` }
