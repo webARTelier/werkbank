@@ -172,8 +172,6 @@
     border-color var(--fileUpload-duration) var(--fileUpload-easing),
     background-color var(--fileUpload-duration) var(--fileUpload-easing);
 
-
-
   // The box becomes a zone the moment the module can receive a drop and act on
   // it (see the header) — the edge it invites the drop with, and, further down,
   // the invitation itself.
@@ -181,15 +179,12 @@
     border-color: var(--fileUpload-zone-color);
   }
 
-
-
   // A drag carrying files is over the box. Two changes, not one: the colour
   // alone would be the only signal for a reader who cannot tell these two
   // tones apart, so the edge closes up as well.
   &[data-fileupload-dragging] {
     --fileUpload-zone-style: solid;
     --fileUpload-zone-color: var(--fileUpload-zone-color-dragging);
-
     background-color: var(--fileUpload-bg-dragging);
   }
 
@@ -265,7 +260,6 @@
   &__hint,
   &__dropHint {
     margin: 0;
-
     font-size: var(--fileUpload-hint-size);
     color: var(--fileUpload-hint-color);
   }
@@ -317,6 +311,8 @@
     list-style: none;
   }
 
+
+
   // The module writes [hidden] while nothing is attached, and the display
   // above is an author declaration that beats the user agent's own [hidden]
   // rule whatever the specificity — so it is restored explicitly, the way
@@ -344,6 +340,8 @@
       border-color var(--fileUpload-duration) var(--fileUpload-easing);
   }
 
+
+
   // Only the two states that need acting on colour a row, and only its edge:
   // the row's own background stays, so the name and the size are read at the
   // contrast they were designed for rather than through a tinted panel. A
@@ -365,7 +363,6 @@
   &__name {
     flex: 1 1 auto;
     min-inline-size: 0;
-
     overflow-wrap: anywhere;
   }
 
@@ -406,21 +403,28 @@
     background-color: var(--fileUpload-bar-track);
   }
 
+
+
   &__progress[hidden] {
     display: none;
   }
+
+
 
   &__progress::-webkit-progress-bar {
     border-radius: var(--fileUpload-bar-radius);
     background-color: var(--fileUpload-bar-track);
   }
 
+
+
   &__progress::-webkit-progress-value {
     border-radius: var(--fileUpload-bar-radius);
     background-color: var(--fileUpload-bar-fill);
-
     transition: inline-size var(--fileUpload-duration) linear;
   }
+
+
 
   &__progress::-moz-progress-bar {
     border-radius: var(--fileUpload-bar-radius);
@@ -445,9 +449,13 @@
     color: var(--fileUpload-hint-color);
   }
 
+
+
   &__item[data-fileupload-state="done"] &__state {
     color: var(--fileUpload-done-color);
   }
+
+
 
   &__item[data-fileupload-state="oversize"] &__state,
   &__item[data-fileupload-state="failed"] &__state {
@@ -460,7 +468,6 @@
   // glyph everybody reads the same way, and the row already has one icon
   // control.
   &__retry {
-
     @include focus-ring(light);
 
     & {
@@ -481,9 +488,13 @@
     }
   }
 
+
+
   &__retry[hidden] {
     display: none;
   }
+
+
 
   // The word the control shows. aria-hidden, because the visually-hidden name
   // beside it is what the button is called; nowrap, because a translation of
@@ -511,7 +522,6 @@
   // grew relatively SMALLER the more a reader enlarged the page. The retry
   // control beside it declared the same line all along.
   &__remove {
-
     @include focus-ring(light);
 
     & {
@@ -584,6 +594,8 @@
     color: var(--fileUpload-hint-color);
   }
 
+
+
   &__total[data-fileupload-exceeded] {
     color: var(--fileUpload-error-color);
   }
@@ -605,7 +617,6 @@
   // actually speaks.
   &__notice {
     margin: 0;
-
     font-size: var(--fileUpload-hint-size);
     color: var(--fileUpload-notice-color);
   }
@@ -677,7 +688,6 @@
 
   .c-fileUpload {
     --fileUpload-zone-style: none;
-
     padding: 0;
   }
 

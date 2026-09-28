@@ -184,13 +184,13 @@
   // themselves take theirs back.
   pointer-events: none;
 
-
-
   // ----- placement presets -----
   //
   // Each is the same three or four properties from the token block, set
   // together — a corner is a combination, not a mode, so there is nothing here
   // a project could not have written itself.
+
+
 
   // Top instead of bottom: the anchor flips, and the direction a message
   // travels flips with it, so it still comes out of the edge it is pinned to.
@@ -213,8 +213,6 @@
   &--inlineCenter {
     --toast-inset-inline: 0 0;
   }
-
-
 
   // ----- one message -----
   //
@@ -256,8 +254,6 @@
       opacity var(--toast-duration) var(--toast-easing),
       translate var(--toast-duration) var(--toast-easing);
 
-
-
     // The variant's icon. A pseudo-element, so a message needs no extra node
     // and the icon adds nothing to the accessibility tree — what it shows is
     // in the announcement as a word ("Error: …"), the one place it belongs.
@@ -280,8 +276,6 @@
       mask-size: 100% 100%;
       mask-repeat: no-repeat;
     }
-
-
 
     // ----- the kinds of message -----
     //
@@ -316,8 +310,6 @@
     }
   }
 
-
-
   // On its way out, written by the script. It travels back the way it came
   // and stops being operable at once — a control fading away under a pointer
   // that is already moving towards it is worse than no control.
@@ -332,8 +324,6 @@
       translate var(--toast-duration-exit) var(--toast-easing-exit);
   }
 
-
-
   // The content of a message. Nothing about the box, because it holds whatever
   // the author or the template put there — a sentence, a heading and a line,
   // an "Undo" control.
@@ -345,8 +335,6 @@
     // push the message past the stack's measure.
     overflow-wrap: break-word;
   }
-
-
 
   // The way out, injected per message.
   & [data-toast-dismiss] {
@@ -383,8 +371,6 @@
         background-color var(--toast-duration) var(--toast-easing);
     }
 
-
-
     // The glyph inherits the control's colour via stroke="currentColor", so
     // the hover recolour below reaches it too.
     svg {
@@ -392,15 +378,11 @@
       block-size: var(--toast-dismiss-icon-size);
     }
 
-
-
     &:hover {
       color: var(--toast-dismiss-color-hover);
       background-color: var(--toast-dismiss-bg-color-hover);
     }
   }
-
-
 
   // The name of the dismiss control: a real text node next to an aria-hidden
   // glyph (see the JS), so it is out of the layout but never out of the

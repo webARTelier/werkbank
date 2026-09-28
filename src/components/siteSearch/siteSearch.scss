@@ -119,7 +119,6 @@
 // and the form.
 // -------------------------------------------------------------
 .m-siteSearch {
-
   // No floor of its own, and that is the deliberate part: the
   // "min-inline-size: auto" every flex item starts with already says the
   // right thing in both states, because the automatic minimum is derived from
@@ -152,8 +151,6 @@
 
   font-family: system-ui, sans-serif;
   font-size: var(--siteSearch-font-size);
-
-
 
   // The field unrolls towards the inline-start instead — the layout a header
   // wants when the toggle sits at its far end and the page is on the other
@@ -219,8 +216,6 @@
     }
   }
 
-
-
   // The toggle exists only for as long as there is a script to operate it.
   // Without the module the form is already in the page, so a control that
   // folds it away would do nothing — and fold it away for good if the chunk
@@ -277,8 +272,6 @@
     justify-content: start;
   }
 
-
-
   &[data-sitesearch-side='start'] &__form {
 
     // The field is anchored at the edge facing the toggle, so growing the
@@ -286,6 +279,7 @@
     justify-content: end;
   }
 }
+
 
 
 // Collapsed. The state is aria-expanded on the toggle and the adjacent
@@ -333,6 +327,7 @@
 }
 
 
+
 // The closing direction, and here visibility belongs in the list: it is what
 // holds the field on screen while it rolls up, instead of blanking it on the
 // first frame.
@@ -359,8 +354,6 @@
 
     display: flex;
   }
-
-
 
   &[data-sitesearch-side='start'] &__field {
     margin-inline: 0 var(--siteSearch-gap);
@@ -443,6 +436,7 @@
 // it also beats a transition a project declared itself.
 // -------------------------------------------------------------
 @include reduced-motion {
+
   .m-siteSearch {
 
     &__toggle,

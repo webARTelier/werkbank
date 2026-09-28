@@ -157,6 +157,8 @@
 // place is what keeps those two in step.
 // -------------------------------------------------------------
 
+
+
 // The navigation as a block of the page. No JavaScript needed, nothing hidden
 // — and the layout the wide viewport gets as well.
 @mixin flowRendering {
@@ -180,6 +182,7 @@
   // transparent block inheriting the page's colours.
   color: inherit;
   background-color: transparent;
+
   .m-offCanvasNav {
 
     // The drawer's chrome belongs to the drawer: in the flow the title would
@@ -190,6 +193,7 @@
     }
   }
 }
+
 
 
 // The navigation as a drawer sliding in over the page.
@@ -230,6 +234,7 @@
   &:not([open]) {
     display: none;
   }
+
   .m-offCanvasNav {
 
     // ----- the panel: the visible drawer -----
@@ -288,7 +293,6 @@
     }
   }
 
-
   // A forced-colors context (the Windows contrast themes) drops box shadows
   // and repaints every background in the system Canvas colour — so the panel
   // and the page behind it end up the same colour and the drawer loses its
@@ -297,6 +301,7 @@
   // data-offcanvasnav-side; the other three sit on the viewport edge, where
   // they cost nothing.
   @include forced-colors {
+
     .m-offCanvasNav {
 
       &__panel {
@@ -304,7 +309,6 @@
       }
     }
   }
-
 
   // ----- the exit -----
   //
@@ -328,6 +332,7 @@
       inset-inline-end var(--offCanvasNav-duration-exit)
       var(--offCanvasNav-easing-exit);
   }
+
   .m-offCanvasNav {
 
     // ----- the drawer's own chrome -----
@@ -368,7 +373,6 @@
     }
   }
 
-
   // ----- the backdrop -----
   // Only present for a dialog opened with showModal(). ::backdrop inherits
   // from its originating element, so the tokens still reach it. Same split as
@@ -396,7 +400,6 @@
 
   &[open][data-offcanvasnav-closing]::backdrop {
     opacity: 0;
-
     transition:
       opacity var(--offCanvasNav-duration-exit) var(--offCanvasNav-easing-exit);
   }
@@ -413,8 +416,6 @@
   // The default: the navigation is part of the page (see the mixin).
   @include flowRendering;
 
-
-
   // The drawer, once the script has taken over — below the navigation
   // breakpoint, where the page has no room for the full navigation.
   &[data-offcanvasnav-ready] {
@@ -424,16 +425,12 @@
     }
   }
 
-
-
   // Opted in with data-offcanvasnav-always: the drawer is the navigation at
   // every viewport width. Higher specificity than the block above, so its
   // rules also win where that one does not apply.
   &[data-offcanvasnav-ready][data-offcanvasnav-always] {
     @include drawerRendering;
   }
-
-
 
   // -------------------------------------------------------------
   // The pre-enhancement state (see
@@ -482,8 +479,6 @@
       }
     }
   }
-
-
 
   &[id][data-offcanvasnav-always] {
 
@@ -602,8 +597,6 @@
     background-color: transparent;
   }
 
-
-
   &:hover {
     background-color: var(--offCanvasNavToggle-bg-color-hover);
   }
@@ -676,8 +669,6 @@
     }
   }
 
-
-
   // Open: the outer bars meet in the middle and cross, the middle one fades
   // out from under them. The script clears the attribute as soon as the
   // drawer starts leaving, so the cross unfolds while the panel slides out
@@ -706,6 +697,7 @@
 // CanvasText is the system's own foreground colour, so the bars come back in
 // the user's chosen palette.
 @include forced-colors {
+
   .m-offCanvasNavToggle {
 
     &__burger {

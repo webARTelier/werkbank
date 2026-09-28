@@ -53,6 +53,7 @@
   // Error text and invalid-field borders (e.g. formValidation). Picked light
   // enough to keep AA contrast on the dark surfaces above.
   --color-error: var(--c-red-400);
+
   // The other two outcomes a message can report (e.g. toast). Same lightness
   // band as the error tone, so the three read as one set.
   //

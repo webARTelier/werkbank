@@ -173,8 +173,6 @@
     font-variant-numeric: var(--dataTable-numeric);
   }
 
-
-
   // The table fills the box and only overflows it once its columns cannot get
   // any narrower (see --dataTable-cell-min-inline-size) — the point at which
   // scrolling sideways beats squeezing.
@@ -188,8 +186,6 @@
     border-spacing: 0;
   }
 
-
-
   // The caption names the table for everyone, and the module borrows it to
   // name the scroll region for the keyboard (see dataTable.js) — so it is
   // read first here too, above the table rather than under it.
@@ -200,8 +196,6 @@
     text-align: start;
     color: var(--dataTable-muted-color);
   }
-
-
 
   & th,
   & td {
@@ -216,16 +210,12 @@
     border-block-end: var(--dataTable-border-width) solid var(--dataTable-border-color);
   }
 
-
-
   // The colour sits on the ROW, not the cells: --stickyColumn inherits it
   // onto the frozen cell, and a colour declared per cell could not be
   // inherited.
   & thead tr {
     background-color: var(--dataTable-head-bg-color);
   }
-
-
 
   & thead th {
     color: var(--dataTable-head-text-color);
@@ -235,8 +225,6 @@
     white-space: var(--dataTable-head-white-space);
   }
 
-
-
   // A header holding a sort control hands its padding to that control (see
   // the block below). The cell keeps the same box — the padding only changes
   // owner — but the control grows from a line of text to the full cell: the
@@ -245,8 +233,6 @@
   & thead th:has([data-datatable-sortbutton]) {
     padding: 0;
   }
-
-
 
   & tbody tr {
     background-color: var(--dataTable-row-bg-color);
@@ -263,8 +249,6 @@
     }
   }
 
-
-
   // A row header is the name of its row, so it carries the weight the reader
   // needs to find it again after a sort moved it.
   & tbody th {
@@ -272,16 +256,12 @@
     font-weight: 600;
   }
 
-
-
   // The last row needs no rule of its own — the box's border is right
   // underneath it. Scoped to a tbody that is the table's last child, so a
   // <tfoot> below keeps the line separating it.
   & tbody:last-child tr:last-child :is(th, td) {
     border-block-end-width: 0;
   }
-
-
 
   // ----- the sort control -----
   //
@@ -328,8 +308,6 @@
       transition: color var(--dataTable-duration) var(--dataTable-easing);
     }
 
-
-
     // The direction indicator. A pseudo-element, so it adds nothing to the
     // accessibility tree — what it shows is in aria-sort on the header, where
     // assistive tech reads it.
@@ -349,8 +327,6 @@
       transition: background-color var(--dataTable-duration) var(--dataTable-easing);
     }
 
-
-
     &:hover {
       color: var(--dataTable-text-color);
 
@@ -359,8 +335,6 @@
       }
     }
   }
-
-
 
   // The sorted column, in three of its own properties. aria-sort is both
   // state and hook, so the indicator cannot disagree with what a screen
@@ -378,19 +352,13 @@
     }
   }
 
-
-
   & th[aria-sort='ascending'] {
     --dataTable-sort-icon: var(--dataTable-sort-icon-ascending);
   }
 
-
-
   & th[aria-sort='descending'] {
     --dataTable-sort-icon: var(--dataTable-sort-icon-descending);
   }
-
-
 
   // ----- the sort announcement -----
   //
@@ -481,8 +449,6 @@
       z-index: 3;
     }
   }
-
-
 
   // ----- the stacked layout -----
   //

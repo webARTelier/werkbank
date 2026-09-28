@@ -61,6 +61,8 @@
 // --lightbox-duration).
 // -------------------------------------------------------------
 
+
+
 // ----- the authored gallery -----
 .m-lightbox {
 
@@ -95,6 +97,7 @@
   --lightbox-thumb-bg-color: var(--color-bg-surface);
   --lightbox-thumb-caption-color: var(--color-text-muted);
 }
+
 
 
 // ----- the generated viewer -----
@@ -285,7 +288,6 @@
   &__caption {
     font-size: var(--lightbox-thumb-caption-font-size);
     line-height: 1.4;
-
     color: var(--lightbox-thumb-caption-color);
   }
 }
@@ -337,8 +339,6 @@
     overlay var(--lightbox-duration-exit) allow-discrete,
     display var(--lightbox-duration-exit) allow-discrete;
 
-
-
   &[open] {
     opacity: 1;
     scale: 1;
@@ -361,8 +361,6 @@
     }
   }
 
-
-
   // The backdrop. Same split as the viewer itself: this rule is the exit, the
   // [open] one below the entrance.
   &::backdrop {
@@ -382,8 +380,6 @@
       display var(--lightbox-duration-exit) allow-discrete;
   }
 
-
-
   &[open]::backdrop {
     opacity: 1;
 
@@ -394,6 +390,7 @@
   }
 
   @starting-style {
+
     &[open]::backdrop {
       opacity: 0;
     }
@@ -486,7 +483,6 @@
 [data-lightbox-ui='caption'] {
   font-size: var(--lightbox-caption-font-size);
   line-height: 1.5;
-
   color: var(--lightbox-caption-color);
 }
 
@@ -546,16 +542,12 @@
     backdrop-filter: blur(4px);
   }
 
-
-
   // The glyph inherits the button's colour via stroke="currentColor", so the
   // hover recolour below reaches it too.
   svg {
     inline-size: var(--lightbox-icon-size);
     block-size: var(--lightbox-icon-size);
   }
-
-
 
   // The disc deepens rather than brightening: over a light photograph a
   // brightening overlay walks towards the picture instead of away, and the
@@ -564,15 +556,12 @@
     background-color: var(--lightbox-control-bg-color-hover);
   }
 
-
-
   // An end of a non-looping gallery. The control keeps its place, its name
   // and its tab stop — only the pointer and the colour say that pressing it
   // leads nowhere (see the JS for why this is aria-disabled and not
   // [disabled]). The ring dims with the glyph on its own, being currentColor.
   &[aria-disabled='true'] {
     cursor: default;
-
     color: var(--lightbox-control-color-disabled);
 
     &:hover {
@@ -582,10 +571,12 @@
 }
 
 
+
 [data-lightbox-ui='close'] {
   inset-block-start: var(--lightbox-control-inset);
   inset-inline-end: var(--lightbox-control-inset);
 }
+
 
 
 // Centred on the viewport rather than the picture: the picture changes size
@@ -593,14 +584,15 @@
 [data-lightbox-ui='prev'],
 [data-lightbox-ui='next'] {
   inset-block-start: 50%;
-
   translate: 0 -50%;
 }
+
 
 
 [data-lightbox-ui='prev'] {
   inset-inline-start: var(--lightbox-control-inset);
 }
+
 
 
 [data-lightbox-ui='next'] {
@@ -639,8 +631,6 @@
     opacity: 0;
   }
 
-
-
   [data-lightbox-ui='stage']::after {
     content: '';
 
@@ -658,6 +648,7 @@
     animation: m-lightbox-spin var(--lightbox-spinner-duration) linear infinite;
   }
 }
+
 
 
 @keyframes m-lightbox-spin {
@@ -704,6 +695,7 @@ body.is-scrollLocked {
   [data-lightbox-ui='next'] {
     transition-duration: 0.01ms !important;
   }
+
   .m-lightbox {
 
     &__link:hover &__thumb {

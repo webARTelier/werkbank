@@ -177,8 +177,6 @@
   // region are both out of flow and cannot.
   display: grid;
 
-
-
   // The JS swaps the facade in and out via the `hidden` attribute. Author
   // styles override the user-agent's `[hidden] { display: none }`, so the
   // display declarations below would silently defeat it — restore its
@@ -410,8 +408,6 @@
     }
   }
 
-
-
   // The injected iframe, filling the same box the facade did. object-fit is
   // inert on an iframe (see the header) and is therefore not stated here.
   & [data-embedconsent-embed] {
@@ -423,8 +419,6 @@
     block-size: 100%;
   }
 
-
-
   // The live region the module announces the two unasked-for changes
   // through. Spoken only: both of them are plain to see.
   & [data-embedconsent-status] {
@@ -435,6 +429,7 @@
 
 
 @include reduced-motion {
+
   .c-embedConsent {
 
     &__toggle,
@@ -466,14 +461,19 @@
 // images, and hiding one would remove content rather than recolour it. With
 // an opaque panel over it there is nothing left to fix.
 @include forced-colors {
+
   .c-embedConsent {
     --embedConsent-panel-bg-color: Canvas;
     --embedConsent-panel-color: CanvasText;
     --embedConsent-revoke-bg-color-hover: Canvas;
 
+
+
     &__panel {
       border: 1px solid CanvasText;
     }
+
+
 
     &__toggle,
     &__revoke {

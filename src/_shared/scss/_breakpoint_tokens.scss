@@ -5,7 +5,10 @@
 
 @use "breakpoints" as *;
 
+
+
 :root {
+
   @each $key, $value in $viewportScales {
     --bp-#{$key}: #{$value};
   }

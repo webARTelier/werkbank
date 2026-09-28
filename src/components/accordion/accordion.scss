@@ -186,8 +186,6 @@
     }
   }
 
-
-
   // Fully closed (the JS has removed 'open', no 'data-closing'): take the
   // clipped content out of the tab order and the accessibility tree. The
   // "display: grid" wrapper overrides the native "a closed <details> hides
@@ -198,13 +196,9 @@
     visibility: hidden;
   }
 
-
-
   &[open]>[data-accordion-wrapper] {
     grid-template-rows: 1fr;
   }
-
-
 
   // Closing state set by accordion.js: forces the row back to 0fr while
   // 'open' is still present, so the collapse can animate. Outranks the
@@ -221,6 +215,7 @@
 // only where the JS did not take over, i.e. no "data-accordion-ready".
 // -------------------------------------------------------------
 @supports (interpolate-size: allow-keywords) {
+
   .m-accordion {
 
     &:not([data-accordion-ready]) {

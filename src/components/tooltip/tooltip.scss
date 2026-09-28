@@ -60,6 +60,7 @@
 @use "mediaqueries" as *;
 
 
+
 // Registering the offset as a real <length> makes its computed value always
 // resolve to px — whatever unit it was authored in — so tooltip.js can read
 // it back as one number instead of parsing arbitrary units (see readOffset).
@@ -92,6 +93,8 @@
 // where the bounds would otherwise cross and push a perfectly centred arrow
 // off centre.
 
+
+
 @mixin place-top {
   --tooltip-bubble-inset-block: auto calc(100% + var(--tooltip-offset));
   --tooltip-bubble-inset-inline: 50% auto;
@@ -106,6 +109,8 @@
   --tooltip-arrow-translate: -50% 0;
   --tooltip-arrow-shape: polygon(0 0, 100% 0, 50% 100%);
 }
+
+
 
 @mixin place-bottom {
   --tooltip-bubble-inset-block: calc(100% + var(--tooltip-offset)) auto;
@@ -122,6 +127,8 @@
   --tooltip-arrow-shape: polygon(50% 0, 100% 100%, 0 100%);
 }
 
+
+
 @mixin place-left {
   --tooltip-bubble-inset-block: 50% auto;
   --tooltip-bubble-inset-inline: auto calc(100% + var(--tooltip-offset));
@@ -136,6 +143,8 @@
   --tooltip-arrow-translate: 0 -50%;
   --tooltip-arrow-shape: polygon(0 0, 100% 50%, 0 100%);
 }
+
+
 
 @mixin place-right {
   --tooltip-bubble-inset-block: 50% auto;
@@ -181,6 +190,7 @@
   --tooltip-max-inline: 18rem;
   --tooltip-radius: var(--borderRadius);
   --tooltip-arrow-size: 0.5rem;
+
   // How close the arrow's middle may come to a corner of the bubble. The
   // arrow is centred on its position, so half of it plus the corner's own
   // radius is exactly the point at which it stops overlapping the curve.
@@ -223,25 +233,17 @@
   // it are the alternatives.
   @include place-top;
 
-
-
   &[data-tooltip-position='bottom'] {
     @include place-bottom;
   }
-
-
 
   &[data-tooltip-position='left'] {
     @include place-left;
   }
 
-
-
   &[data-tooltip-position='right'] {
     @include place-right;
   }
-
-
 
   // tooltip.js writes data-tooltip-flipped when the preferred side ran out of
   // room; each case then renders as its opposite. Every selector here is one
@@ -253,19 +255,13 @@
     @include place-bottom;
   }
 
-
-
   &[data-tooltip-position='bottom'][data-tooltip-flipped] {
     @include place-top;
   }
 
-
-
   &[data-tooltip-position='left'][data-tooltip-flipped] {
     @include place-right;
   }
-
-
 
   &[data-tooltip-position='right'][data-tooltip-flipped] {
     @include place-left;
@@ -352,8 +348,6 @@
     }
   }
 
-
-
   // The two ways a hint is asked for. Both are guarded against
   // data-tooltip-dismissed, which is how Escape takes the hint away without
   // the reader having to move the pointer or the focus first (WCAG 1.4.13,
@@ -367,8 +361,6 @@
     opacity: 1;
     transition-delay: var(--tooltip-delay);
   }
-
-
 
   &:not([data-tooltip-dismissed]):has([data-tooltip-trigger]:focus-visible)
     &__bubble {

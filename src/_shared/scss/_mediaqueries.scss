@@ -74,6 +74,7 @@
     }
 
     @else {
+
       @media (width >=#{$min}) {
         @content;
       }

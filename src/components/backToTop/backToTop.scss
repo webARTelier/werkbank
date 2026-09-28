@@ -92,6 +92,7 @@
     --backToTop-text-color: var(--color-text);
     --backToTop-bg-color: var(--color-bg-elevated);
     --backToTop-bg-color-hover: var(--color-bg-surface-strong);
+
     // Unlike components on a known surface, this one floats over whatever the
     // page scrolls past, so its outline is the only thing separating it from
     // that content — the control-boundary case of WCAG 1.4.11, which is what
@@ -146,14 +147,10 @@
       background-color var(--backToTop-duration) var(--backToTop-ease);
   }
 
-
-
   &:hover {
     border-color: var(--backToTop-border-color-hover);
     background-color: var(--backToTop-bg-color-hover);
   }
-
-
 
   // State written by the script while the page is scrolled less than the
   // threshold — everything about "not on screen" keys off it. The
@@ -237,8 +234,6 @@
 
   .m-backToTop {
     --backToTop-padding: var(--space-xs);
-
-
 
     & &__label {
       @include visually-hidden;

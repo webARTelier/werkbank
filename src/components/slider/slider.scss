@@ -128,6 +128,7 @@
   --slider-border-color-hover: var(--color-border-control-strong);
   --slider-bullet-color: var(--color-border-control);
   --slider-bullet-color-current: var(--color-accent-secondary);
+
   // --overlay only: the plate the controls sit on. Behind them is whatever the
   // current slide shows, so the surface has to come from the component rather
   // than be hoped for — 75% of the page colour is dark enough to hold light
@@ -195,8 +196,6 @@
     inline-size: var(--slider-slide-size);
   }
 
-
-
   // ----- before the handover: a carousel made of CSS -----
   //
   // Not wrapped in "scripting: enabled" (see the header): this is the
@@ -214,8 +213,6 @@
     scroll-snap-type: inline mandatory;
   }
 
-
-
   // A slide refuses to shrink below its width, so the snap points are one
   // slide apart. `flex-basis: auto` is what hands the sizing to
   // --slider-slide-size above rather than restating it — and a flex-basis with
@@ -224,7 +221,6 @@
   // breaking every preset that shows more than one slide at a time.
   &:not([data-slider-ready]) &__slide {
     flex: 0 0 auto;
-
     scroll-snap-align: start;
   }
 
@@ -364,7 +360,6 @@
   // itself is the hit area around it, which is why the two sizes are separate
   // tokens.
   &__bullet {
-
     @include focus-ring(light);
 
     & {
@@ -446,7 +441,6 @@
   &--overlay &__button {
     border-color: transparent;
     background-color: var(--slider-overlay-bg-color);
-
     backdrop-filter: blur(4px);
   }
 
@@ -454,7 +448,6 @@
 
   &--overlay &__bullet {
     background-color: var(--slider-overlay-bg-color);
-
     backdrop-filter: blur(4px);
   }
 }

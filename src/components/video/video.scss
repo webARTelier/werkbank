@@ -63,8 +63,6 @@
   inline-size: 100%;
   block-size: 100%;
 
-
-
   // The JS swaps the toggle in and out via the `hidden` attribute. Author
   // styles override the user-agent's `[hidden] { display: none }`, so the
   // display declarations below would silently defeat it — restore its
@@ -131,13 +129,9 @@
     block-size: 100%;
   }
 
-
-
   &.is-playing &__icon--play {
     display: none;
   }
-
-
 
   &:not(.is-playing) &__icon--pause {
     display: none;
@@ -161,6 +155,7 @@
 
 
 @include reduced-motion {
+
   .m-video {
 
     &__toggle {

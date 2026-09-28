@@ -94,8 +94,6 @@
 
   position: relative;
 
-
-
   // A request is running. Both parts of this block are about not taking
   // anything away: the box keeps its content, and it keeps a minimum height
   // so an empty one does not collapse under the indicator.
@@ -160,8 +158,6 @@
     }
   }
 
-
-
   // The last load failed and nothing was replaced: the box still holds what
   // it held, and the link still points at the page. The outline is what says
   // that to whoever can see it; the sentence below is what says it at all —
@@ -177,7 +173,6 @@
     // then there is no gap to hold open either.
     > [data-fragment-status]:not(:empty) {
       margin-block-start: var(--fragment-status-gap);
-
       color: var(--fragment-error-color);
     }
 
@@ -185,8 +180,6 @@
       --fragment-error-color: CanvasText;
     }
   }
-
-
 
   // The box is not a tab stop and it is focused exactly once: when the focus
   // stood INSIDE it and the exchange destroyed the element holding it, the
@@ -199,8 +192,6 @@
   // container for the same reason: an element that can hold the focus shows
   // it.
   @include focus-ring(light);
-
-
 
   // Restated inside the error state, because an attribute selector costs as
   // much specificity as a class does: [data-fragment-state="error"] above

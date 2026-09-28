@@ -92,13 +92,9 @@
   background-color: var(--popover-bg-color);
   box-shadow: var(--popover-shadow);
 
-
-
   > :first-child {
     margin-block-start: 0;
   }
-
-
 
   > :last-child {
     margin-block-end: 0;
@@ -128,20 +124,14 @@
     // popover to the opposite side — re-evaluated on scroll and resize.
     position-try-fallbacks: flip-block;
 
-
-
     &[data-popover-position='top'] {
       position-area: top;
     }
-
-
 
     &[data-popover-position='right'] {
       position-area: right;
       position-try-fallbacks: flip-inline;
     }
-
-
 
     &[data-popover-position='left'] {
       position-area: left;
@@ -158,6 +148,7 @@
 // into the actual fixed position. Until the class is there (or without JS at
 // all) the UA's centered default keeps the popover perfectly usable.
 @supports not ((anchor-name: --a) and (position-area: bottom)) {
+
   .c-popover {
 
     &.is-jsAnchored {
@@ -194,8 +185,6 @@
       // snapping away.
       overlay var(--popover-duration) allow-discrete,
       display var(--popover-duration) allow-discrete;
-
-
 
     &:popover-open {
       opacity: 1;

@@ -83,8 +83,6 @@
     translate var(--reveal-duration) var(--reveal-ease) var(--reveal-delay),
     scale var(--reveal-duration) var(--reveal-ease) var(--reveal-delay);
 
-
-
   // The waiting state, written by revealOnScroll.js and removed again when
   // the item crosses the trigger line. Everything about "not yet here" keys
   // off this attribute — restyle it to taste.
@@ -93,8 +91,6 @@
     translate: var(--reveal-translate);
     scale: var(--reveal-scale);
   }
-
-
 
   // Focus does not wait. revealOnScroll.js takes the pending attribute off
   // the moment the keyboard reaches an item, but the transition would still

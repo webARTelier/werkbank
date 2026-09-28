@@ -241,8 +241,6 @@
     background-color: transparent;
   }
 
-
-
   // The chevron. Purely decorative: the button's accessible name comes from
   // the wrapped label or the visually hidden text below.
   &::after {
@@ -258,8 +256,6 @@
     rotate: 45deg;
     transition: rotate var(--dropdownNav-duration) var(--dropdownNav-easing);
   }
-
-
 
   &:hover {
     background-color: var(--dropdownNav-bg-color-hover);

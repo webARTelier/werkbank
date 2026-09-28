@@ -38,7 +38,9 @@
 
 
 @mixin pre-enhancement($ready-attr) {
+
   @include scripting-enabled {
+
     &:not([#{$ready-attr}]) {
       @content;
     }

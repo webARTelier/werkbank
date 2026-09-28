@@ -158,11 +158,8 @@
   &__body {
     overflow: hidden;
     max-block-size: var(--readMore-content-size, max-content);
-
     transition: max-block-size var(--readMore-duration) var(--readMore-easing);
   }
-
-
 
   // The cut: in force whenever the region is closed. Harmless on a text that
   // does not reach it — a max-block-size above the content height paints
@@ -262,8 +259,6 @@
       transition: color var(--readMore-duration) var(--readMore-easing);
     }
 
-
-
     // The chevron. A pseudo-element, so it adds nothing to the accessibility
     // tree — what it shows is aria-expanded on this very control, where
     // assistive tech reads it.
@@ -284,8 +279,6 @@
 
       transition: rotate var(--readMore-duration) var(--readMore-easing);
     }
-
-
 
     &:hover {
       color: var(--readMore-toggle-color-hover);

@@ -107,8 +107,6 @@
     overlay var(--dialog-duration-exit) allow-discrete,
     display var(--dialog-duration-exit) allow-discrete;
 
-
-
   &[open] {
     opacity: 1;
     transform: translateY(0);
@@ -132,8 +130,6 @@
     }
   }
 
-
-
   // Backdrop (only present for a modal dialog opened via showModal()). Same
   // split as the panel: this rule is the exit, &[open]::backdrop the
   // entrance.
@@ -150,8 +146,6 @@
     backdrop-filter: blur(2px);
   }
 
-
-
   &[open]::backdrop {
     opacity: 1;
 
@@ -162,6 +156,7 @@
   }
 
   @starting-style {
+
     &[open]::backdrop {
       opacity: 0;
     }
@@ -303,6 +298,7 @@ body.is-scrollLocked {
 // than zeroed duration tokens, so it also beats the transition declared on
 // the higher-specificity [open] rules above.
 @include reduced-motion {
+
   .c-dialog {
 
     &,

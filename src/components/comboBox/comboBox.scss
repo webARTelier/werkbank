@@ -80,6 +80,7 @@
   --comboBox-radius: var(--borderRadius);
   --comboBox-toggle-size: 2rem; // hit area of the chevron button
   --comboBox-toggle-icon-size: 0.45em; // the rotated square inside it
+
   // Then the list scrolls. Capped against the viewport as well, because
   // 16rem is 16rem of the READER's root font: at 200% zoom (WCAG 1.4.4) the
   // popup would be 512px tall in a viewport 450px high, and its last options
@@ -158,7 +159,6 @@
   // the listbox in here, as the input's last sibling.
   &__field {
     position: relative;
-
     display: flex;
   }
 
@@ -201,7 +201,6 @@
   // the header), and out of the tab order in the markup: the arrow keys are
   // the keyboard's way into the list.
   &__toggle {
-
     @include focus-ring(light);
 
     & {
@@ -275,16 +274,12 @@
     translate: 0 0.1em;
   }
 
-
-
   // Both of these hand something to a control that has to exist first, so
   // both wait for the module: the button itself, and the gutter it stands
   // in. Without the second one the toggle would sit on top of a long value.
   &[data-combobox-ready] &__toggle {
     display: flex;
   }
-
-
 
   &[data-combobox-ready] &__field:has(.c-comboBox__toggle) &__control {
     padding-inline-end: var(--comboBox-control-gutter);
@@ -300,8 +295,6 @@
     line-height: 1.4;
     color: var(--comboBox-hint-color);
   }
-
-
 
   // ----- the injected listbox (see the contract at the top) -----
   //
@@ -348,7 +341,6 @@
 
     &[hidden] {
       display: none;
-
       opacity: 0;
       translate: 0 calc(var(--comboBox-list-enter-shift) * -1);
     }
@@ -357,8 +349,6 @@
       transition: none;
     }
   }
-
-
 
   & [data-combobox-option] {
     cursor: pointer;
@@ -380,8 +370,6 @@
     }
   }
 
-
-
   // The current option — the one aria-activedescendant points at. Drawn from
   // the ARIA state, so what the eye follows and what a screen reader reads
   // are the same thing.
@@ -390,24 +378,17 @@
     background-color: var(--comboBox-option-bg-color-active);
   }
 
-
-
   // The option's secondary text, where the author gave the <option> a label
   // that differs from its value ("DE" / "Deutschland").
   & [data-combobox-label] {
     flex-shrink: 0;
-
     font-size: var(--comboBox-option-label-fontSize);
     color: var(--comboBox-option-label-color);
   }
 
-
-
   & [data-combobox-option][aria-selected='true'] [data-combobox-label] {
     color: inherit;
   }
-
-
 
   // The part of the option the reader has typed. A plain span in the markup,
   // never a <mark>: that element means "relevant to the current context" and
@@ -418,13 +399,9 @@
     color: var(--comboBox-mark-color);
   }
 
-
-
   & [data-combobox-option][aria-selected='true'] [data-combobox-mark] {
     color: inherit;
   }
-
-
 
   // The injected live region (see the contract at the top). It exists only
   // to be read out, so it leaves the visual layout — but is not hidden:
@@ -435,8 +412,6 @@
   & [data-combobox-status] {
     @include visually-hidden;
   }
-
-
 
   // A forced-colors palette drops every background this file declares, and
   // with it the only thing telling the current option from the rest. The
