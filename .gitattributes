@@ -1,0 +1,21 @@
+# Line endings: LF in the repository AND in the working copy, whatever the
+# platform. The sources are authored with LF, and letting Git rewrite them to
+# CRLF on Windows would show every file as modified after a fresh checkout.
+* text=auto eol=lf
+
+# Binary assets Git must never touch or try to diff as text.
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.ico    binary
+*.woff   binary
+*.woff2  binary
+*.ttf    binary
+*.otf    binary
+*.mp4    binary
+*.webm   binary
+*.mp3    binary
+
+# SVG is text and benefits from being diffable.
+*.svg    text eol=lf
