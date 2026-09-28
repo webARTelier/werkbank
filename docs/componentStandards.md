@@ -287,22 +287,19 @@ Boot (`_shared/js/boot.js`) lazily imports the module when it sees
 
     &--wide &__panel { … }
 
-
-
     & [hidden] { … }
   }
   ```
 
-  **Every selector block on this first level opens on three blank lines** — the
-  same wide gap that separates top-level rules, because each is a part of the
-  component in its own right and the gaps are what make the outline scannable.
-  A leading comment belongs to its block, so the gap goes above the comment.
-  Everything **deeper** stays at one blank line (concern groups, `&:hover` /
-  `&::before`, state and media-query blocks inside a part), and three things on
-  the first level do too: a block that is the **first** thing in its parent, the
-  `& { … }` wrapper holding the component's own declarations after an
-  `@include`, and at-rule blocks (`@media`, the viewport mixins,
-  `@starting-style`).
+  **Three blank lines mark a BEM name** — a top-level block, and every
+  `&__element` / `&--modifier` at whatever depth it sits; a leading comment
+  belongs to its selector, so the gap goes above the comment. **Everything
+  else keeps one blank line**: states (`&:hover`, `&[data-x]`), pseudo-elements,
+  `& [hidden]`, media-query and other at-rule blocks, the `& { … }` wrapper,
+  every comment, and a nested rule that is the first thing in its parent. A
+  selector with no more than three declaration lines keeps them without blank
+  lines between them. The full rules are in the code-style-guide skill
+  (SASS/CSS › *Formatting rules*); `npm run verify:scss` checks them.
 
   This is concatenation, not descendant nesting: `&__panel` compiles to
   `.c-dialog__panel`, so the emitted selector and its specificity are exactly

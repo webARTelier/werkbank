@@ -62,7 +62,7 @@ function postProcess(css, entry, { dev, inputSourceMap }) {
   }
 }
 
-async function compileEntry(entry, { dev }) {
+async function compileEntry(entry, { dev, outDir }) {
   const result = await sass.compileAsync(entry, {
     style: dev ? "expanded" : "compressed",
     // node_modules is the third load path so a component can pull a vendor
@@ -88,8 +88,8 @@ async function compileEntry(entry, { dev }) {
     inputSourceMap: result.sourceMap ? JSON.stringify(result.sourceMap) : undefined,
   })
 
-  await fsp.mkdir(config.scss.outDir, { recursive: true })
-  const outFile = path.join(config.scss.outDir, outNameFor(entry))
+  await fsp.mkdir(outDir, { recursive: true })
+  const outFile = path.join(outDir, outNameFor(entry))
 
   let css = processed.code.toString()
   if (dev && processed.map) {
@@ -102,12 +102,12 @@ async function compileEntry(entry, { dev }) {
   return outNameFor(entry)
 }
 
-async function buildScss({ dev = false } = {}) {
+async function buildScss({ dev = false, outDir = config.scss.outDir } = {}) {
   const written = []
   for (const entry of config.scss.entries) {
     if (!fs.existsSync(entry)) continue
     try {
-      written.push(await compileEntry(entry, { dev }))
+      written.push(await compileEntry(entry, { dev, outDir }))
     } catch (err) {
       printScssError(err, config.root)
       const fail = new Error("SCSS build failed")

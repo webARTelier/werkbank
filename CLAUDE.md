@@ -8,6 +8,21 @@ progressive enhancement, accessibility and the demo/readme/snippet structure
 (derived from the already-reworked components). Note in particular: code comment
 text is wrapped at **78 characters**.
 
+Before touching HTML, SCSS or JS, load the `code-style-guide` skill. To roll a
+rule out over many SCSS files use the `scss-refactor` skill; its gate is
+`npm run verify:scss` (`-- --baseline` first): byte-identical build plus a lint
+of the blank-line rules. All text files are UTF-8 with LF (`.gitattributes`).
+
+## Comments are documentation here
+
+Developers copy code out of this collection without knowing it, so the
+comments are its documentation: file headers, rationale, the platform
+behaviour a component relies on, the gaps it closes. Keep them as extensive as
+they are now, and write new ones to the same depth. This overrides the
+code-style-guide rule to comment only what the code cannot express; the
+`comment-discipline` skill does not apply to this project. Formatting rules
+(78-character wrap, blank line above a comment) still apply.
+
 ## Naming convention: files & folders
 
 Folder and file names are written in **camelCase**.

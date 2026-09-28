@@ -7,6 +7,7 @@
     "build": "gulp build",
     "dev": "gulp dev",
     "clean": "gulp clean",
+    "verify:scss": "node build/verifyScss.js",
     "demo:upload": "node dev/uploadServer.js"
   },
   "browserslist": [

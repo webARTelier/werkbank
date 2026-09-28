@@ -164,9 +164,12 @@ new IntersectionObserver(([entry]) => {
 
 ### Whitespace
 - **One** blank line to separate block elements where it improves readability.
-- **Three** blank lines to separate larger, logically distinct blocks. The
-  wide gap is deliberate: it makes top-level section boundaries obvious at a
-  glance when scrolling a long file, in a way a single blank line does not.
+- **Three** blank lines to separate the named units a file is built from. The
+  wide gap is deliberate: it makes those boundaries obvious at a glance when
+  scrolling a long file, in a way a single blank line does not. Keep it for
+  them only — each language section names the units that earn it (SASS/CSS ›
+  *Formatting rules*). Everything else rides on a single blank line and on the
+  indentation, which already shows what belongs to what.
 
 
 ## HTML
@@ -515,8 +518,10 @@ Prefix every class by its role:
   }
   ```
 
-  Every block on this level sits three blank lines below whatever precedes it —
-  see *Formatting rules*.
+  Each of those parts carries the same **three-line gap** above it that the
+  block itself gets: `&__element` and `&--modifier` name a part of the system,
+  and the wide gap is how a name announces itself. States, pseudo-elements and
+  media queries keep a single blank line — see *Formatting rules*.
 
   A selector that is *not* relative to the block (a foreign class, an
   attribute hook on a script-injected node) stays outside it — nested, it
@@ -556,10 +561,11 @@ Prefix every class by its role:
 ```
 
 - Applies to **every** block that opens with a comment — nested pseudo-class,
-  state and media-query blocks and `& { … }` wrappers included — and it is the
-  one blank line a **compact selector** keeps (see *Formatting rules*).
-- A comment that sits *between* declarations needs no extra line: it belongs to
-  the concern group it introduces and rides on that group's blank line.
+  state and media-query blocks and `& { … }` wrappers included — and it holds
+  in a **compact selector** too (see *Formatting rules*).
+- A comment that sits *between* declarations takes **one blank line** above it
+  as well, compact selector or not. A comment inside a block always has one
+  blank line above it; above a BEM name it rides on the three-line gap.
 
 ### Formatting rules
 - One selector per line.
@@ -570,36 +576,55 @@ Prefix every class by its role:
 - One space around operators in arithmetic.
 - **Omit units on `0` values** (`margin: 0;` not `0px`).
 - Separate top-level declarations / rules with **three** blank lines.
-- **Every selector block on the first level inside a top-level selector gets
-  three blank lines** before it. Not just BEM elements — `&__element`,
-  `&--modifier`, `&:hover`, `&::backdrop`, `&[data-x]`, `&[data-x] &__element`,
-  `> :first-child`, a foreign descendant: they are all parts of the block in
-  their own right, the same kind of boundary a top-level rule marks, so they
-  read at the wide gap (see General › *Whitespace*). That is what makes a long
-  stylesheet's outline scannable. Where the block carries a leading comment the
-  gap goes **above the comment**: it introduces the block and belongs to it.
-- **Deeper than the first level, everything keeps one blank line** — concern
-  groups, and the pseudo-class / pseudo-element / state / media-query blocks
-  nested inside a first-level block. The wide gap marks where a part of the
-  block starts, never anything within it.
-- Three things on the first level stay at **one** blank line:
-  - **A block that is the first thing in its parent**, right after the opening
-    brace — there is nothing to separate it from, and a wide gap would only push
-    it away from the selector it belongs to. (It is the same single line a
-    leading comment gets anyway, see *Comments*.)
-  - **The `& { … }` wrapper** that holds the parent's own declarations after an
-    `@include` (see *`@include` followed by declarations*). It is the block's
-    body, not a part of it.
-  - **At-rule blocks** — `@media`, the media-query mixins, `@starting-style`.
-    They are conditions wrapped around the block, not parts of it.
+- **The wide gap marks a BEM name — a block, an element or a modifier.**
+  Three blank lines always mean the same thing: a new named part starts here.
+  `.m-block` at the top level, `&__element` and `&--modifier` inside it, at
+  whatever depth they sit. The outline of a long stylesheet, and of a long
+  block, can be scanned on that one signal alone. Where such a selector
+  carries a leading comment the gap goes **above the comment**: it introduces
+  the selector and belongs to it.
+- **Everything else keeps one blank line** — `&:hover`, `&::backdrop`,
+  `&[data-x]`, `&[data-x] &__element`, `> :first-child`, a foreign descendant,
+  concern groups, media-query and other at-rule blocks, the `& { … }` wrapper
+  after an `@include`, and a full class selector written inside a mixin or
+  at-rule (`.m-block { … }` under `@include theme-dark`), which re-enters a
+  block named elsewhere instead of introducing a part. None of them names a
+  new part; they are states, details and viewports of the name above them,
+  and the **indentation** already says what they belong to.
+- **What the selector *starts with* decides**, so a compound splits both
+  ways: `&__item::after`, `&--ledger &__term` and `&__entry + &__entry` lead
+  with a name and keep the wide gap; `&[data-x] &__element` leads with an
+  attribute hook and keeps the single line.
+- The gap always **separates** — it never opens a block. A **nested rule**
+  written as the first thing inside its block — an `&__element`, an
+  `&--modifier`, a state or a media-query block alike, inside a mixin
+  definition too — sits **one blank line** below the opening brace, the same
+  line a leading comment takes (see *Comments*). A **declaration** that opens a block sits directly under the
+  brace; token lists in `:root` are no exception.
+- **Three blank lines below the `@use` header**, between the last `@use` and
+  the first selector. The imports are a named unit of their own, and the first
+  block then starts on the same signal as every block after it.
 
 ```scss
+@use '../a_tools/focus' as *;
+
+
+
+.m-offCanvasNav {
+  --offCanvasNav-inline-size: calc(100vw / 1.618);
+}
+
+
+
+// Three blank lines above, because a new name starts here. The comment rides
+// on the gap it introduces.
 .m-offCanvasNavToggle {
 
-  // First in the block — one blank line, no wide gap.
+  // Includes, wrappers, states and viewports stay one blank line apart,
+  // however deep they sit.
   @include focus-ring(light);
 
-  // The block's own declarations — the wrapper stays close too.
+  // The block's own declarations, wrapped after the @include.
   & {
     cursor: pointer;
     display: inline-flex;
@@ -607,11 +632,10 @@ Prefix every class by its role:
 
 
 
-  // Every part that follows opens on three, its comment included.
+  // Three blank lines again: `&__burger` names an element of the block.
   &__burger {
     inline-size: var(--offCanvasNavToggle-bar-inline);
 
-    // Nested one level deeper: back to a single blank line.
     &::before {
       translate: 0 calc(var(--offCanvasNavToggle-bar-gap) * -1);
     }
@@ -621,26 +645,30 @@ Prefix every class by its role:
     }
   }
 
-
-
   &[data-offcanvasnav-open] &__burger {
     background-color: transparent;
   }
 
-
-
   &:hover {
     background-color: var(--offCanvasNavToggle-bg-color-hover);
+  }
+
+
+
+  &--flush {
+    padding: 0;
   }
 }
 ```
 
-- **Compact selectors:** when a selector holds no more than three
-  `property: value` declarations, drop all blank lines inside it so the
-  declarations sit directly one after another. The single exception is the
-  blank line before a leading comment (see *Comments*). This governs the space
-  *inside* a selector — the three lines before a `&__elementName` are unaffected
-  by how short that element's block is.
+- **Compact selectors:** when a selector holds no more than **three lines of
+  `property: value` declarations** (a multi-line value counts every line),
+  drop the blank lines between those declarations so they sit directly one
+  after another — concern groups included. Everything else inside the
+  selector keeps its usual blank line: a nested rule, a media query, an
+  `@include` block and every comment (see *Comments*). This governs the space
+  *inside* a selector — the blank line above it is set by where it sits, not by
+  how short it is.
 
 ```scss
 .c-badge {
