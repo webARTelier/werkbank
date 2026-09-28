@@ -145,12 +145,7 @@ function expectation(info, anchor, target, prev) {
       : { allowed: [1], reason: `nested rule "${item.code}"` }
   }
   if (USE_LINE.test(above.code) && !(item && USE_LINE.test(item.code))) {
-
-    // A file note directly under the imports takes one line and the three-line
-    // gap follows it; a section banner takes the gap itself.
-    return item.kind === "comment" && anchor === target
-      ? { allowed: [1, 3], reason: "file note or section banner under the @use header" }
-      : { allowed: [3], reason: "end of the @use header" }
+    return { allowed: [3], reason: "end of the @use header" }
   }
   if (item && item.depth > 0) {
     if (anchor !== target || info[anchor].kind === "comment") {
