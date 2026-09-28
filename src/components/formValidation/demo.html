@@ -368,6 +368,68 @@
     }
 
     /*
+      The same look before and without the script. Until the module marks the
+      form with data-formvalidation-ready, the browser validates on its own and
+      its bubble is gone on the next click; the component's stylesheet keeps
+      the border red via :user-invalid, and a project extends that to what it
+      draws itself — otherwise the hidden radio/checkbox inputs take the red
+      border and nobody sees it, and the warning icon never stands beside the
+      colour (WCAG 1.4.1). Separate rules rather than one selector list with
+      the .is-invalid ones: an engine without :user-invalid drops the whole
+      list, and would take the scripted state down with it.
+    */
+    form:not([data-formvalidation-ready]) :is(.c-input, .c-select__control, .c-textarea):user-invalid {
+      background-color: color-mix(in srgb, var(--color-error) 8%, var(--color-bg-surface));
+    }
+
+    form:not([data-formvalidation-ready]) .c-radio:user-invalid + .c-radio__label .c-radio__box,
+    form:not([data-formvalidation-ready]) .c-checkbox:user-invalid + .c-checkbox__label .c-checkbox__box {
+      border-color: var(--color-error);
+      background-color: color-mix(in srgb, var(--color-error) 8%, var(--color-bg-surface));
+    }
+
+    form:not([data-formvalidation-ready]) .c-select:has(:user-invalid) {
+      color: var(--color-error);
+    }
+
+    form:not([data-formvalidation-ready]) .c-field:has(:user-invalid)::after,
+    form:not([data-formvalidation-ready]) .c-select:has(:user-invalid)::before,
+    form:not([data-formvalidation-ready]) .c-unit:has(:user-invalid)::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      right: var(--space-xs);
+      width: 1.1em;
+      height: 1.1em;
+      translate: 0 -50%;
+      pointer-events: none;
+
+      background-color: var(--color-error);
+      mask: var(--fv-icon-warning) no-repeat center / contain;
+    }
+
+    form:not([data-formvalidation-ready]) .c-field:has(.c-textarea:user-invalid)::after {
+      top: 0.85em;
+      translate: 0 0;
+    }
+
+    form:not([data-formvalidation-ready]) .c-select:has(:user-invalid)::before {
+      right: 2.5em;
+    }
+
+    form:not([data-formvalidation-ready]) .c-select__control:user-invalid {
+      padding-right: 3.7em;
+    }
+
+    form:not([data-formvalidation-ready]) .c-unit--euro:has(:user-invalid)::before {
+      right: 3em;
+    }
+
+    form:not([data-formvalidation-ready]) .c-unit--euro .c-input:user-invalid {
+      padding-right: 4.2em;
+    }
+
+    /*
       Injected error summary. The component ships only its error-tone color
       (title + links); the box, spacing and the focusable container's focus
       outline are the project's design. Note :focus (not only :focus-visible):
