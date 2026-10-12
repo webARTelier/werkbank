@@ -2,7 +2,7 @@
 
 **Live demos: <https://webartelier.codeberg.page/werkbank/>**
 
-[![Five of the 37 components in action, one after another: comboBox narrows a list of cities as you type, dataTable sorts a column both ways, tooltip appears on hover, dialog opens and closes as a native modal, lightbox opens a photo and steps to the next](docs/media/componentReel.webp)](https://webartelier.codeberg.page/werkbank/)
+[![Six of the 37 components as overlapping screenshots: comboBox with a filtered list of cities, dataTable sorted by a column, tooltip over a button, dialog open as a native modal, lightbox showing a photo, embedConsent holding a YouTube video behind a privacy notice](docs/media/componentCollage.png)](https://webartelier.codeberg.page/werkbank/)
 
 A collection of small, self-contained, framework-free UI components built on
 modern web platform features. Each component is plain JavaScript (ES modules)
