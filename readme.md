@@ -2,6 +2,10 @@
 
 **Live demos: <https://webartelier.codeberg.page/werkbank/>**
 
+Developed on [Codeberg](https://codeberg.org/webARTelier/werkbank);
+[GitHub](https://github.com/webARTelier/werkbank) is a read-only mirror.
+Please open issues and pull requests on Codeberg.
+
 [![Six of the 37 components as overlapping screenshots: comboBox with a filtered list of cities, dataTable sorted by a column, tooltip over a button, dialog open as a native modal, lightbox showing a photo, embedConsent holding a YouTube video behind a privacy notice](docs/media/componentCollage.png)](https://webartelier.codeberg.page/werkbank/)
 
 A collection of small, self-contained, framework-free UI components built on
