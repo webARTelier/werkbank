@@ -1,5 +1,7 @@
 # werkbank
 
+**Live demos: <https://webartelier.codeberg.page/werkbank/>**
+
 A collection of small, self-contained, framework-free UI components built on
 modern web platform features. Each component is plain JavaScript (ES modules)
 plus SCSS, wired to the page through a tiny loader — no framework, and one
@@ -9,7 +11,8 @@ fetched from a CDN at runtime).
 
 The collection is both a **component library to copy from** and a **workbench**:
 every component ships with a live demo, a copy-paste snippet and its own
-readme, and `index.html` at the project root is a gallery linking to all demos.
+readme, and `index.html` at the project root is a gallery linking to all demos
+— the same gallery that is online at the link above.
 
 ## Who it's for
 
