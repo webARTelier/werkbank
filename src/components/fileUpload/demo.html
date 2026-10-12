@@ -400,13 +400,15 @@
 
           <p class="demo__needsServer">
             <strong>These examples need a server that accepts a POST</strong>,
-            which no static file server does — including VS Code's Live Server.
-            Open this page from the one that ships with the project:
+            which no static host does — neither VS Code's Live Server nor the
+            online demo on Codeberg Pages. To see the bars move, clone the
+            project and open this page from the server that ships with it:
             <code>npm run demo:upload</code>, then
             <code>http://127.0.0.1:8123/src/components/fileUpload/demo.html</code>.
-            Otherwise every row below turns red and says <em>failed</em> — the
-            file <em>was</em> picked, queued and sent, and the server answered
-            <code>405 Method Not Allowed</code>. The component reports the
+            Anywhere else every row below turns red and says
+            <em>failed</em> — the file <em>was</em> picked, queued and sent,
+            and the server turned it away (a plain static server answers
+            <code>405 Method Not Allowed</code>). The component reports the
             status it got; look in the console.
           </p>
         </section>
