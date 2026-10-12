@@ -2,7 +2,7 @@
 
 **Live demos: <https://webartelier.codeberg.page/werkbank/>**
 
-[![comboBox in action: typing "b" narrows a list of cities, "be" leaves Berlin and Bern, the arrow keys walk the list and Enter takes Bern](docs/media/comboBox.gif)](https://webartelier.codeberg.page/werkbank/src/components/comboBox/demo.html)
+[![Five of the 37 components in action, one after another: comboBox narrows a list of cities as you type, dataTable sorts a column both ways, tooltip appears on hover, dialog opens and closes as a native modal, lightbox opens a photo and steps to the next](docs/media/componentReel.webp)](https://webartelier.codeberg.page/werkbank/)
 
 A collection of small, self-contained, framework-free UI components built on
 modern web platform features. Each component is plain JavaScript (ES modules)
