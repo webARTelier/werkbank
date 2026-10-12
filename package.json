@@ -1,5 +1,5 @@
 {
-  "name": "ui-components",
+  "name": "werkbank",
   "version": "1.0.0",
   "private": true,
   "description": "Reproducible Gulp + Rollup build for the UI components (migrated from PrePros).",

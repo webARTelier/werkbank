@@ -1,4 +1,4 @@
-# UI Components
+# werkbank
 
 A collection of small, self-contained, framework-free UI components built on
 modern web platform features. Each component is plain JavaScript (ES modules)
