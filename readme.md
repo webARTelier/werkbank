@@ -2,6 +2,8 @@
 
 **Live demos: <https://webartelier.codeberg.page/werkbank/>**
 
+[![The werkbank gallery: 37 components in six categories, each linking to its live demo](docs/media/gallery.png)](https://webartelier.codeberg.page/werkbank/)
+
 A collection of small, self-contained, framework-free UI components built on
 modern web platform features. Each component is plain JavaScript (ES modules)
 plus SCSS, wired to the page through a tiny loader — no framework, and one
@@ -13,6 +15,18 @@ The collection is both a **component library to copy from** and a **workbench**:
 every component ships with a live demo, a copy-paste snippet and its own
 readme, and `index.html` at the project root is a gallery linking to all demos
 — the same gallery that is online at the link above.
+
+## Quick start
+
+- **Look first:** every component runs in the
+  [online gallery](https://webartelier.codeberg.page/werkbank/).
+- **Use one:** add `shared.min.css`, the component's stylesheet and
+  `boot.min.js` to your page, then paste the markup from the component's
+  snippet — see [Using a component](#using-a-component-in-your-own-project).
+- **Run it locally:** `git clone https://codeberg.org/webARTelier/werkbank.git`,
+  serve the folder with any static server and open `index.html` — see
+  [Demos](#demos). `dist/` is committed, so no build is needed until you
+  change a source file.
 
 ## Who it's for
 
@@ -271,9 +285,16 @@ across the viewport range. It has a
 
 ## Demos
 
-Run `npm run build` once, then open `index.html` (the component gallery) or
-any `demo.html` in the browser. A tool demo needs a **local server** rather
-than `file://`.
+The gallery links every component's `demo.html` — online at
+<https://webartelier.codeberg.page/werkbank/>, and as `index.html` in the
+project root.
+
+Locally the pages need a **static server**: opened from `file://`, the browser
+blocks the ES modules and no component ever starts. Any server will do —
+`npx http-server . -p 8123`, VS Code's Live Server, or `npm run demo:upload`,
+the one that ships with the project and also answers the upload examples in
+`fileUpload`. `dist/` is committed, so `npm run build` is only needed after
+you change a source file.
 
 ## Further reading
 
