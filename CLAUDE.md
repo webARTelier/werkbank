@@ -117,7 +117,7 @@ component here is reusable and most can appear several times).
 - **Function (no prefix of its own) — it *enhances*.** It brings no
   vocabulary at all: it writes state classes/attributes onto markup that is
   already there, and the look belongs to the consuming project.
-  `copyToClipboard`, `filterList`, `formValidation`, `inlineSVG`,
+  `conditionalFields`, `copyToClipboard`, `filterList`, `formValidation`, `inlineSVG`,
   `inputCharCount`, `scaleSVG`, `scrollSpy`, `stickyObserver`, and the
   scripts behind `adaptiveScrollFade`, `dateInputFormat`,
   `flexNeighborMarker`, `loadFragment`, `numberInputFormat`,

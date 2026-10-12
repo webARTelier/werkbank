@@ -47,6 +47,24 @@ field still validates, but the message falls back to the field's parent element.
 Do **not** add `novalidate` yourself — the module sets it from JavaScript, so the
 no-JS path keeps native validation (see *Accessibility*).
 
+Fields that drop out of validation are respected. A disabled field — directly,
+or inside a `<fieldset disabled>`, which is how
+[`conditionalFields`](../conditionalFields/readme.md) closes a group — reports
+`willValidate === false` and is skipped. After the first submit attempt the
+module also re-syncs this on every change: a field that stops counting loses
+its message and `aria-invalid`, and a field that starts counting (a group that
+opens) is checked at once, so the summary never lists a field that shows no
+error.
+
+Fields **outside the `<form>` that join it through `form="…"`** — a field in a
+sidebar or a page header — are validated like any other: the module reads the
+form's fields from `form.elements`, which the platform resolves by owner, not
+by position. For the same reason the live re-validation listens on the
+**document** and keeps only this form's fields (an event from such a field
+never passes through the form), a `data-fv-equals` selector is matched among
+the form's fields wherever they sit, and the summary names the field through
+its own `<label>` (`field.labels`), which sits outside the form along with it.
+
 ### Custom messages
 All optional. When you set nothing, a localized default (see *Localization*) or
 the browser's own message is used. Most specific wins:
@@ -211,6 +229,10 @@ one controller instance per form.
 only used to warn about author mistakes (module on a non-`<form>` element, a
 malformed `data-fv-messages` JSON block, a `data-fv-equals` selector that
 matches nothing). Without it the module degrades silently.
+
+`init` returns a cleanup function. The `input`/`change` listeners sit on the
+`document`, so they do not go away with a removed form: a host that unmounts
+forms should call `destroyModulesInScope()` (boot.js), which removes them.
 
 ## Demo
 Open `demo.html` in the browser (requires a prior `gulp build`).

@@ -32,8 +32,12 @@
     - Declare the rules with native attributes: required, type="email"/"url",
       minlength/maxlength, pattern (+ title as the format hint), min/max/step.
     - One extra rule for confirmation fields: data-fv-equals="#otherField"
-      (selector, scoped to the form). Do not combine it with your own
+      (selector, matched among the form's fields — those outside it that
+      join through form="…" included). Do not combine it with your own
       setCustomValidity on the same field.
+    - A field outside the <form> that joins it through form="…" is
+      validated like any other, live re-validation included: the module
+      listens on the document and keeps only this form's fields.
     - Give every control a <label for> (or aria-label) and a stable id/name — the
       message is linked back to the control via aria-describedby, and the label
       (or a radio group's <legend>) names the field in the error summary.

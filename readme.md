@@ -89,6 +89,7 @@ reads it. The full decision rule is in [`CLAUDE.md`](CLAUDE.md).
 | `autoGrowTextarea`   | component                     | A `<textarea>` as tall as its value — CSS only, on `field-sizing`. |
 | `backToTop`          | module                        | Jump back to the top, shown once the page is scrolled far enough.   |
 | `comboBox`           | component                     | Typeahead listbox on a native `<input list>` + `<datalist>`.        |
+| `conditionalFields`  | function                      | Opens a `<fieldset>` only while another field asks for it — out of the submit while closed. |
 | `copyToClipboard`    | function                      | One press puts a string into the clipboard — announced, not only drawn. |
 | `countdown`          | module                        | Live countdown to a target date/time.                               |
 | `dataTable`          | component                     | Sortable columns on a plain `<table>`, scrolling or stacked.        |

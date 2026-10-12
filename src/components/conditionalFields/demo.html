@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>conditionalFields – Demo</title>
+  <link rel="icon" href="../../../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../../../dist/css/shared.min.css">
+  <link rel="stylesheet" href="../../../dist/css/conditionalFields.min.css">
+  <link rel="stylesheet" href="../../../dist/css/formValidation.min.css">
+
+  <script type="module" src="../../../dist/js/boot.min.js"></script>
+
+  <!-- for development only -->
+  <script src="../../tools/dev_dashboard/dev_dashboard.js"></script>
+  <!-- end for development only -->
+
+  <!--
+      DEMO-ONLY STYLES
+      ----------------------------------------------------------------------
+      conditionalFields.min.css ships ONE rule — the one that keeps `hidden`
+      hiding. Everything you can see below is this page playing the
+      project: the fields, the groups, the panel that shows what a submit
+      would send. formValidation.min.css is loaded because example 1 runs
+      both modules on one form; its styles are the invalid border and the
+      inline message, nothing more.
+
+      Note the ".group { display: grid }" below. That is the `display` the
+      component's rule has to hold `hidden` against — without it, every
+      closed group on this page would stay on screen as a block of
+      greyed-out fields. Comment the rule out in conditionalFields.scss and
+      reload to watch it happen.
+  -->
+
+  <style>
+    .demo {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2xl);
+    }
+
+    .demo__example {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-s);
+    }
+
+    .demo__example h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      color: var(--color-text);
+    }
+
+    /* ----- the project's form ----- */
+
+    .form {
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--borderRadius);
+      padding: var(--space-m);
+      max-inline-size: 36rem;
+
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-s);
+
+      background-color: var(--color-bg-surface);
+    }
+
+    .form__item {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3xs);
+    }
+
+    /* A plain fieldset that only groups a set of radios — no frame. */
+    fieldset.form__item {
+      margin: 0;
+      border: 0;
+      padding: 0;
+    }
+
+    fieldset.form__item legend {
+      padding: 0;
+    }
+
+    .form__label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    .form__choice {
+      cursor: pointer;
+
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2xs);
+
+      font-size: 0.95rem;
+
+      color: var(--color-text-secondary);
+    }
+
+    .form__choices {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-s);
+    }
+
+    .form input[type="text"],
+    .form input[type="email"],
+    .form input[type="tel"],
+    .form select {
+      border: 1px solid var(--color-border-control);
+      border-radius: var(--borderRadius);
+      padding: var(--space-2xs) var(--space-xs);
+
+      font: inherit;
+      font-size: 0.95rem;
+
+      color: var(--color-text);
+      background-color: var(--color-bg-elevated);
+    }
+
+    .form input:focus-visible,
+    .form select:focus-visible,
+    .button:focus-visible {
+      outline: 2px solid var(--color-focus-ring-light);
+      outline-offset: var(--outlineOffset);
+    }
+
+    /* A dependent group. This is the `display` the component's own
+       stylesheet has to hold `hidden` against — a plain grid, the first
+       thing anybody writes for a group of fields. */
+    .group {
+      margin: 0;
+      border: 1px solid var(--color-border-subtle);
+      border-inline-start: 3px solid var(--color-border-focus);
+      border-radius: var(--borderRadius);
+      padding: var(--space-s);
+
+      display: grid;
+      gap: var(--space-s);
+
+      background-color: var(--color-bg-elevated);
+    }
+
+    .group legend {
+      padding: 0 var(--space-3xs);
+
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+
+      color: var(--color-text-muted);
+    }
+
+    /* A group the author shipped `disabled`: the module shows and hides it,
+       but never enables it. */
+    .group:disabled {
+      opacity: 0.6;
+    }
+
+    .button {
+      cursor: pointer;
+
+      border: 1px solid var(--color-border-control);
+      border-radius: var(--borderRadius);
+      padding: var(--space-2xs) var(--space-s);
+
+      font: inherit;
+      font-size: 0.95rem;
+
+      color: var(--color-text);
+      background-color: var(--color-bg-elevated);
+    }
+
+    .button:hover {
+      border-color: var(--color-border-control-strong);
+      background-color: var(--color-bg-surface-strong);
+    }
+
+    .form__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-xs);
+    }
+
+    /* What a submit would send — this page's own script, not the
+       component. */
+    .sent {
+      margin: 0;
+      border: 1px dashed var(--color-border);
+      border-radius: var(--borderRadius);
+      padding: var(--space-s);
+      max-inline-size: 36rem;
+
+      font-family: ui-monospace, monospace;
+      font-size: 0.85rem;
+      white-space: pre-wrap;
+
+      color: var(--color-text-secondary);
+    }
+
+    /* The inline message and summary formValidation injects — the demo's
+       own look for them, as in formValidation's demo. */
+    .fv-summary {
+      border: 1px solid var(--color-error);
+      border-radius: var(--borderRadius);
+      padding: var(--space-s);
+    }
+
+    .fv-summary__title {
+      margin: 0 0 var(--space-2xs);
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    .fv-summary__list {
+      margin: 0;
+      padding-inline-start: var(--space-m);
+    }
+
+    .fv-summary a {
+      color: var(--color-text);
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="shell">
+
+    <section class="hero">
+      <a class="back" href="../../../index.html">← Overview</a>
+      <h1>conditionalFields</h1>
+      <p>Shows a group of fields only while another field asks for it — and takes it out of the submit and the validation while it is closed.</p>
+    </section>
+
+    <section class="stage" aria-label="Live demo">
+
+      <!--
+          A group that is only hidden is still part of the form: a required
+          field in it blocks the submit with an error nobody can see, and
+          its values are still sent. This component closes a group with
+          `hidden` AND `disabled` on the <fieldset>, so its fields are
+          neither shown, reached, validated nor submitted — and keep their
+          values for when the group opens again.
+
+          The module boots on the <form> and writes:
+            [hidden]    on a closed group
+            [disabled]  on the same group, which the platform passes on to
+                        every field in it
+          Every look on this page is the demo's own CSS (see the DEMO-ONLY
+          STYLES comment) — the component's stylesheet is one rule, and it
+          is not a look.
+
+          Wiring — five examples
+            - Example 1: a checkbox opens a group of required fields, with
+              formValidation on the same form. They are marked
+              data-conditional-required, so they are only mandatory once the
+              module runs. Press "Send" with the box
+              unticked: the form goes through, and the panel below shows
+              that no delivery field was sent. Tick it, press "Send" with
+              the fields empty: now they are required. Untick it again —
+              the messages go with the group.
+            - Example 2: one <select> and one radio group, each opening a
+              group by VALUE — "contactBy=phone|sms" is OR, and
+              "newsletter!=none" is a negation.
+            - Example 3: AND and chains. The VAT field is nested in the
+              company group, so it needs both boxes. The invoice-email
+              group depends on a field INSIDE the company group, so closing
+              the company group closes it too, although it sits outside.
+              The last group ships `disabled`: it is shown and hidden, never
+              enabled.
+            - Example 4: two bail-outs and a misplaced group. A condition
+              naming a field that does not exist, and the attribute on a
+              <div>: both groups stay visible, and the console says why. A
+              group above its switch works, and is reported as well.
+            - Example 5: the switch sits outside the <form> and joins it
+              through form="d5-form". Its events never pass through the
+              form, which is why the module listens on the document.
+
+          Progressive enhancement
+            - Turn JavaScript off and reload: every group is there, enabled,
+              and posts everything. The legends say when a group applies,
+              and the group fields are optional, so the form can be sent.
+            - With it on, the closed groups go when the chunk arrives — the
+              form gets shorter once. No pre-enhancement rule ships, because
+              a group hidden before the script exists stays hidden for good
+              if the chunk never arrives (see the snippet for the opt-in).
+
+          Accessibility
+            - Every group sits directly after the field it depends on, so a
+              reader meets the new fields as what comes next — except the
+              one in example 4, which is there to be reported.
+            - A group that holds the focus when the script arrives stays
+              open until the focus leaves it.
+            - Nothing is announced, and there is no aria-expanded on a
+              checkbox — it is not allowed there.
+            - Closed groups are out of the accessibility tree, the tab order
+              and the validation at once.
+            - The focus is moved in one case only: when the group holding it
+              closes. Try it in example 3 — tick both boxes, press the
+              button below the form, and move into the invoice-email field
+              within three seconds. The script unticks "company"; the
+              invoice group closes under the focus with its switch, and
+              the focus follows the chain up to the company box instead of
+              falling to <body>.
+
+          Try it
+            - Watch the inspector: `hidden` and `disabled` appear and go on
+              the <fieldset>s, and nothing else changes.
+            - Type an address in example 1, untick, tick again: it is still
+              there. Press "Send" while unticked: it is not in the panel.
+            - Press "Reset" in example 2 after changing something: the
+              groups follow the restored defaults, although a reset fires no
+              input event.
+            - Read the console for example 4's warnings.
+      -->
+
+      <p class="stage__intro">
+        Five forms, one component. Each group is a plain
+        <code>&lt;fieldset&gt;</code> with one attribute,
+        <code>data-conditional-when</code>. While it is closed it is
+        <code>hidden</code> <strong>and</strong> <code>disabled</code> — so the
+        fields in it are not only out of sight, they are out of the submit and
+        out of the validation.
+      </p>
+
+      <div class="demo">
+
+        <!-- Example 1: checkbox + required fields + formValidation -->
+        <section class="demo__example">
+          <h2>1 — A checkbox, required fields, and formValidation</h2>
+
+          <p class="stage__intro">
+            The delivery fields carry <code>data-conditional-required</code>,
+            which the module turns into <code>required</code> — so without
+            the script they are optional, and the full form can still be
+            sent. Closed, they do not count: send the form with the box
+            unticked and it goes through. The panel below shows what a submit
+            would send.
+          </p>
+
+          <form class="form" action="javascript:;" method="post" data-js-behavior="conditionalFields,formValidation" data-demo-sent="sent1">
+
+            <div class="form__item" data-fv-item>
+              <label class="form__label" for="d1-name">Name</label>
+              <input id="d1-name" name="name" type="text" autocomplete="name" required>
+            </div>
+
+            <label class="form__choice">
+              <input name="deliverElsewhere" type="checkbox">
+              Deliver to a different address
+            </label>
+
+            <fieldset class="group" data-conditional-when="deliverElsewhere">
+              <legend>Delivery address — only if different</legend>
+
+              <div class="form__item" data-fv-item>
+                <label class="form__label" for="d1-street">Street and number</label>
+                <input id="d1-street" name="deliveryStreet" type="text" autocomplete="shipping street-address" data-conditional-required>
+              </div>
+
+              <div class="form__item" data-fv-item>
+                <label class="form__label" for="d1-city">Postcode and city</label>
+                <input id="d1-city" name="deliveryCity" type="text" autocomplete="shipping address-level2" data-conditional-required>
+              </div>
+            </fieldset>
+
+            <div class="form__actions">
+              <button class="button" type="submit">Send</button>
+            </div>
+          </form>
+
+          <pre class="sent" id="sent1">Nothing sent yet.</pre>
+        </section>
+
+        <!-- Example 2: select and radio, by value -->
+        <section class="demo__example">
+          <h2>2 — By value: a select and a radio group</h2>
+
+          <p class="stage__intro">
+            <code>contactBy=phone|sms</code> opens on either value;
+            <code>newsletter!=none</code> opens on anything but “none”. Change
+            something, then press <strong>Reset</strong>: the groups follow the
+            restored defaults, although a reset fires no <code>input</code>.
+            The select is here to show that it works; in a real form prefer
+            radios, because on Windows the arrow keys change a closed select
+            — and its groups — with every press.
+          </p>
+
+          <form class="form" action="javascript:;" method="post" data-js-behavior="conditionalFields" data-demo-sent="sent2">
+
+            <div class="form__item">
+              <label class="form__label" for="d2-contact">How should we contact you?</label>
+              <select id="d2-contact" name="contactBy">
+                <option value="">Please choose</option>
+                <option value="email">Email</option>
+                <option value="phone">Phone</option>
+                <option value="sms">Text message</option>
+              </select>
+            </div>
+
+            <fieldset class="group" data-conditional-when="contactBy=phone|sms">
+              <legend>Phone — only for a call or a text message</legend>
+
+              <div class="form__item">
+                <label class="form__label" for="d2-phone">Phone number</label>
+                <input id="d2-phone" name="contactPhone" type="tel" autocomplete="tel" data-conditional-required>
+              </div>
+            </fieldset>
+
+            <fieldset class="group" data-conditional-when="contactBy=email">
+              <legend>Email — only for a reply by email</legend>
+
+              <div class="form__item">
+                <label class="form__label" for="d2-email">Email address</label>
+                <input id="d2-email" name="contactEmail" type="email" autocomplete="email" data-conditional-required>
+              </div>
+            </fieldset>
+
+            <fieldset class="form__item">
+              <legend class="form__label">Newsletter</legend>
+
+              <div class="form__choices">
+                <label class="form__choice"><input name="newsletter" type="radio" value="none" checked> None</label>
+                <label class="form__choice"><input name="newsletter" type="radio" value="weekly"> Weekly</label>
+                <label class="form__choice"><input name="newsletter" type="radio" value="monthly"> Monthly</label>
+              </div>
+            </fieldset>
+
+            <fieldset class="group" data-conditional-when="newsletter!=none">
+              <legend>Newsletter topics — only with a newsletter</legend>
+
+              <div class="form__choices">
+                <label class="form__choice"><input name="topics" type="checkbox" value="design"> Design</label>
+                <label class="form__choice"><input name="topics" type="checkbox" value="code"> Code</label>
+                <label class="form__choice"><input name="topics" type="checkbox" value="events"> Events</label>
+              </div>
+            </fieldset>
+
+            <div class="form__actions">
+              <button class="button" type="submit">Send</button>
+              <button class="button" type="reset">Reset</button>
+            </div>
+          </form>
+
+          <pre class="sent" id="sent2">Nothing sent yet.</pre>
+        </section>
+
+        <!-- Example 3: AND by nesting, a chain, an authored disabled -->
+        <section class="demo__example">
+          <h2>3 — AND, chains, and an authored <code>disabled</code></h2>
+
+          <p class="stage__intro">
+            The VAT field is <strong>nested</strong> in the company group, so
+            it needs both boxes. The invoice-email group depends on a field
+            <strong>inside</strong> the company group: untick “company” and it
+            closes too, although it sits outside. The last group ships
+            <code>disabled</code> — shown and hidden, never enabled.
+          </p>
+
+          <form class="form" action="javascript:;" method="post" data-js-behavior="conditionalFields" data-demo-sent="sent3">
+
+            <label class="form__choice">
+              <input id="d3-company" name="company" type="checkbox">
+              I am ordering for a company
+            </label>
+
+            <fieldset class="group" data-conditional-when="company">
+              <legend>Company — only for a company order</legend>
+
+              <div class="form__item">
+                <label class="form__label" for="d3-companyName">Company name</label>
+                <input id="d3-companyName" name="companyName" type="text" autocomplete="organization" data-conditional-required>
+              </div>
+
+              <label class="form__choice">
+                <input name="euCompany" type="checkbox">
+                Registered in another EU country
+              </label>
+
+              <fieldset class="group" data-conditional-when="euCompany">
+                <legend>VAT — only for a company in another EU country</legend>
+
+                <div class="form__item">
+                  <label class="form__label" for="d3-vat">VAT ID</label>
+                  <input id="d3-vat" name="vatId" type="text" data-conditional-required>
+                </div>
+              </fieldset>
+
+              <label class="form__choice">
+                <input name="invoiceElsewhere" type="checkbox">
+                Send the invoice to a different email address
+              </label>
+            </fieldset>
+
+            <fieldset class="group" data-conditional-when="invoiceElsewhere">
+              <legend>Invoice email — only if different</legend>
+
+              <div class="form__item">
+                <label class="form__label" for="d3-invoiceEmail">Invoice email</label>
+                <input id="d3-invoiceEmail" name="invoiceEmail" type="email" data-conditional-required>
+              </div>
+            </fieldset>
+
+            <fieldset class="group" disabled data-conditional-when="company">
+              <legend>Framework contract — not available online yet</legend>
+
+              <div class="form__item">
+                <label class="form__label" for="d3-contract">Contract number</label>
+                <input id="d3-contract" name="contractNumber" type="text">
+              </div>
+            </fieldset>
+
+            <div class="form__actions">
+              <button class="button" type="submit">Send</button>
+              <button class="button" type="button" id="d3-untick">Untick “company” in 3 seconds</button>
+            </div>
+          </form>
+
+          <pre class="sent" id="sent3">Nothing sent yet.</pre>
+        </section>
+
+        <!-- Example 4: bail-outs -->
+        <section class="demo__example">
+          <h2>4 — Three mistakes you can read in the console</h2>
+
+          <p class="stage__intro">
+            A condition naming a field this form does not have, and the
+            attribute on a <code>&lt;div&gt;</code>, which cannot disable what it
+            holds. Both groups stay visible — a group shown by mistake costs a
+            glance, one hidden by mistake costs the fields in it. The third
+            group works, but sits <strong>above</strong> its switch, where a
+            reader who ticks the box will not meet it: that is reported too.
+          </p>
+
+          <form class="form" action="javascript:;" method="post" data-js-behavior="conditionalFields">
+
+            <fieldset class="group" data-conditional-when="receipt">
+              <legend>Receipt — placed above its switch</legend>
+
+              <div class="form__item">
+                <label class="form__label" for="d4-receiptEmail">Receipt email</label>
+                <input id="d4-receiptEmail" name="receiptEmail" type="email">
+              </div>
+            </fieldset>
+
+            <label class="form__choice">
+              <input name="receipt" type="checkbox">
+              Send a receipt
+            </label>
+
+            <label class="form__choice">
+              <input name="giftWrap" type="checkbox">
+              Gift-wrap the order
+            </label>
+
+            <fieldset class="group" data-conditional-when="giftWarp">
+              <legend>Gift message — the condition has a typo</legend>
+
+              <div class="form__item">
+                <label class="form__label" for="d4-message">Message</label>
+                <input id="d4-message" name="giftMessage" type="text">
+              </div>
+            </fieldset>
+
+            <div class="group" data-conditional-when="giftWrap">
+              <div class="form__item">
+                <label class="form__label" for="d4-from">From — on a &lt;div&gt;, so ignored</label>
+                <input id="d4-from" name="giftFrom" type="text">
+              </div>
+            </div>
+          </form>
+        </section>
+
+        <!-- Example 5: a switch outside the form, joined through form="…" -->
+        <section class="demo__example">
+          <h2>5 — A switch outside the form</h2>
+
+          <p class="stage__intro">
+            The checkbox sits <strong>outside</strong> the
+            <code>&lt;form&gt;</code> and joins it through
+            <code>form="d5-form"</code> — a layout that puts a field in a
+            sidebar or a page header does that. The group still follows it,
+            and the panel shows it is sent with the form.
+          </p>
+
+          <label class="form__choice">
+            <input name="gift" type="checkbox" form="d5-form">
+            This order is a gift
+          </label>
+
+          <form id="d5-form" class="form" action="javascript:;" method="post" data-js-behavior="conditionalFields" data-demo-sent="sent5">
+
+            <fieldset class="group" data-conditional-when="gift">
+              <legend>Gift message — only for a gift</legend>
+
+              <div class="form__item">
+                <label class="form__label" for="d5-message">Message on the card</label>
+                <input id="d5-message" name="giftMessage" type="text" data-conditional-required>
+              </div>
+            </fieldset>
+
+            <div class="form__actions">
+              <button class="button" type="submit">Send</button>
+            </div>
+          </form>
+
+          <pre class="sent" id="sent5">Nothing sent yet.</pre>
+        </section>
+
+      </div>
+    </section>
+  </main>
+
+  <!--
+      DEMO-ONLY SCRIPT
+      ----------------------------------------------------------------------
+      Two things this page does that the component does not.
+
+      The "what would be sent" panel: a submit listener on the document, so
+      it runs after every listener on the form itself — formValidation's
+      included — and only reports a submit nobody prevented. It reads the
+      form through FormData, which is exactly what a real submit would
+      send: the fields of a closed group are not in it, because the
+      platform skips disabled controls.
+
+      The "untick in three seconds" button in example 3: it changes the
+      value and then fires `change`, as the platform would for a reader —
+      the way the readme asks a script to do it. The delay is the time to
+      move into the invoice-email field first: its group closes under the
+      focus, the box it depends on closes with the company group, and the
+      module follows the chain up to the company box rather than letting
+      the focus fall to <body>.
+  -->
+  <script>
+    (() => {
+      document.addEventListener('submit', (event) => {
+        const form = event.target;
+        const panel = document.getElementById(form.dataset.demoSent || '');
+        if (!panel) return;
+
+        // Read BEFORE this page prevents the submit itself: a submit that
+        // formValidation already stopped sent nothing.
+        const blocked = event.defaultPrevented;
+        event.preventDefault();
+        if (blocked) return;
+
+        const lines = Array.from(new FormData(form), ([key, value]) => `${key}: ${value}`);
+        panel.textContent = lines.length ? lines.join('\n') : '(no fields sent)';
+      });
+
+      const untick = document.getElementById('d3-untick');
+      const company = document.getElementById('d3-company');
+      if (!untick || !company) return;
+
+      // Three seconds, so there is time to move the focus into the
+      // invoice-email field — with the keyboard as well as the mouse.
+      untick.addEventListener('click', () => {
+        setTimeout(() => {
+          company.checked = false;
+          company.dispatchEvent(new Event('change', { bubbles: true }));
+        }, 3000);
+      });
+    })();
+  </script>
+</body>
+
+</html>

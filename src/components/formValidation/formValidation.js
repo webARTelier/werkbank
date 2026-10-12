@@ -65,7 +65,10 @@
  *    re-validated as it changes, so a message clears the instant the value
  *    becomes valid instead of only on the next submit. Before that first
  *    attempt everything stays quiet, so a user is never nagged about a field
- *    they have not reached yet.
+ *    they have not reached yet. A field that drops out of validation after
+ *    that attempt (disabled, e.g. inside a group conditionalFields closed)
+ *    loses its message, and one that joins it is checked at once — see
+ *    syncCandidates.
  * 6. One cross-field rule: `data-fv-equals="#otherField"` (e.g. an email or
  *    password confirmation). The platform has no native constraint for "must
  *    match that field", so this is the single rule added here — but fed
@@ -304,6 +307,19 @@ const buttonTypes = ['submit', 'reset', 'button', 'image'];
 
 
 
+// Is this event target one of this form's fields? `form` is the owner the
+// platform resolved — the ancestor form, or the one `form="…"` names — so a
+// field outside the form that joins it counts, and one inside it that joins
+// another form does not. A target with no form owner of its own (a
+// contenteditable region, say) counts where it sits.
+function belongsTo(form, target) {
+  if (!(target instanceof Element)) return false;
+  if ('form' in target) return target.form === form;
+  return form.contains(target);
+}
+
+
+
 // Distinguishes multiple forms on one page, so their generated
 // message-element ids never collide (a form without its own id still gets a
 // unique scope).
@@ -332,6 +348,11 @@ class FormValidation {
     // The injected summary element while it exists (null otherwise).
     this.summary = null;
 
+    // The fields that were candidates for validation at the last sync (see
+    // syncCandidates). Empty until the first submit attempt, because nothing
+    // is validated live before it.
+    this.candidates = new Set();
+
     // Per-form id scope + fallback counter for controls without name/id, so
     // message-element ids stay unique within and across forms.
     this.scopeId = form.id ? safeIdPart(form.id) : `fvForm${++instanceCount}`;
@@ -352,12 +373,17 @@ class FormValidation {
 
     this.form.addEventListener('submit', this.handleSubmit);
 
-    // Live correction feedback after the first submit attempt. Delegated to
-    // the form so dynamically added fields are covered too; "input" catches
-    // typing, "change" the selects/checkboxes/radios that fire only on
-    // commit.
-    this.form.addEventListener('input', this.handleFieldChange);
-    this.form.addEventListener('change', this.handleFieldChange);
+    // Live correction feedback after the first submit attempt. Delegated, so
+    // dynamically added fields are covered too; "input" catches typing,
+    // "change" the selects/checkboxes/radios that fire only on commit.
+    //
+    // Delegated to the DOCUMENT, not to the form. An event travels through
+    // the ancestors of the field it starts on, and a field that joins the
+    // form through `form="…"` from a sidebar or a page header has the form
+    // as its owner but not as an ancestor — a listener on the form would
+    // never hear it. handleFieldChange keeps only this form's fields.
+    document.addEventListener('input', this.handleFieldChange);
+    document.addEventListener('change', this.handleFieldChange);
 
     // A native reset returns every field to a valid resting value, so all
     // error UI goes and the form is quiet again until the next submit
@@ -403,7 +429,9 @@ class FormValidation {
   validateAll = () => {
     const invalid = [];
     const seen = new Set();
-    for (const field of this.getFields()) {
+    const fields = this.getFields();
+    this.candidates = new Set(fields);
+    for (const field of fields) {
       if (this.validateField(field)) continue;
       const id = this.errorIdFor(field);
       if (seen.has(id)) continue;
@@ -416,24 +444,68 @@ class FormValidation {
 
 
   // Only acts once the user has tried to submit; then it keeps the changed
-  // field's message in sync, so a fixed field clears immediately.
+  // field's message in sync, so a fixed field clears immediately. A change
+  // may also have switched OTHER fields in or out of validation (a box that
+  // opens or closes a group of fields), so the candidates are re-synced on
+  // every change, whether the changed control is a candidate itself or not.
   handleFieldChange = (event) => {
     if (!this.submitted) return;
+    if (!belongsTo(this.form, event.target)) return;
     const field = event.target;
     if (field && field.willValidate && !buttonTypes.includes(field.type)) {
       this.validateField(field);
       this.revalidateEqualsDependents(field);
-      this.refreshSummary();
     }
+    this.syncCandidates();
+    this.refreshSummary();
+  };
+
+
+
+  // Keeps the field UI in step with which fields the platform validates at
+  // all. `willValidate` turns false the moment a field is disabled — by a
+  // <fieldset disabled> around it as well, which is how conditionalFields
+  // closes a group — and a field that stops counting must not go on showing
+  // a message and aria-invalid from the last attempt: hidden, it would carry
+  // a stale error back on screen the next time the group opens. So a field
+  // that left the candidates is cleared.
+  //
+  // In the other direction, a field that became a candidate after the first
+  // attempt is validated straight away. The summary is rebuilt from every
+  // candidate anyway (collectInvalid), so a newly revealed required field
+  // lands in it at once; validating it here gives it the inline message to
+  // match, so the summary never lists a field that shows no error.
+  //
+  // Source-agnostic on purpose: whatever disabled or enabled the field — a
+  // module, the project's own script, a later render — is noticed here on
+  // the next change, without this module knowing who did it.
+  syncCandidates = () => {
+    const current = new Set(this.getFields());
+
+    for (const field of this.candidates) {
+      if (!current.has(field)) this.clearFieldError(field, this.itemOf(field));
+    }
+
+    for (const field of current) {
+      if (!this.candidates.has(field)) this.validateField(field);
+    }
+
+    this.candidates = current;
   };
 
 
 
   // When a field changes, every field whose data-fv-equals points at it is
   // re-checked too — editing "Email" has to clear (or raise) the error on
-  // "Repeat email", not just the other way around.
+  // "Repeat email", not just the other way around. Looked for among the
+  // form's own fields, so a dependent outside the form that joins it
+  // through `form="…"` is found too.
   revalidateEqualsDependents = (source) => {
-    for (const dependent of this.form.querySelectorAll(`[${this.config.equalsAttr}]`)) {
+    const dependents = [...this.form.elements].filter(
+      (el) => el.hasAttribute(this.config.equalsAttr)
+    );
+
+    for (const dependent of dependents) {
       if (dependent === source) continue;
       if (this.equalsTargetOf(dependent) === source) this.validateField(dependent);
     }
@@ -453,6 +525,7 @@ class FormValidation {
     this.removeSummary();
     this.form.classList.remove(this.config.formSubmittedClass);
     this.submitted = false;
+    this.candidates = new Set();
   };
 
 
@@ -494,15 +567,18 @@ class FormValidation {
 
   // --- data-fv-equals: the one rule the platform has no constraint for -----
 
-  // The field this one must match, scoped to the form. An invalid or
-  // unresolvable selector yields null (reported once per validation, so a
-  // typo does not silently disable the rule).
+  // The field this one must match, scoped to the form: the first of the
+  // form's own fields the selector matches. form.elements rather than a
+  // descendant query, so a field outside the form that joins it through
+  // `form="…"` is found as well, and one inside it that belongs to another
+  // form is not. An invalid or unresolvable selector yields null (reported
+  // once per validation, so a typo does not silently disable the rule).
   equalsTargetOf = (field) => {
     const selector = field.getAttribute(this.config.equalsAttr);
     if (!selector) return null;
 
     try {
-      return this.form.querySelector(selector);
+      return [...this.form.elements].find((el) => el.matches(selector)) || null;
     } catch (error) {
       return null;
     }
@@ -831,10 +907,13 @@ class FormValidation {
       if (legend) return this.collapse(legend.textContent);
     }
 
-    if (field.id) {
-      const explicit = this.form.querySelector(`label[for="${CSS.escape(field.id)}"]`);
-      if (explicit) return this.collapse(explicit.textContent);
-    }
+    // Asked of field.labels, the platform's own association, rather than of
+    // the form: a field joining the form through `form="…"` has its label
+    // outside the form as well.
+    const explicit = [...(field.labels || [])].find(
+      (label) => field.id && label.htmlFor === field.id
+    );
+    if (explicit) return this.collapse(explicit.textContent);
 
     const wrapping = field.closest('label');
     if (wrapping) return this.collapse(wrapping.textContent);
@@ -861,14 +940,15 @@ class FormValidation {
 
 
   // Optional teardown for hosts that mount/unmount this subtree repeatedly —
-  // see destroyModulesInScope() in boot.js. Every listener here is bound to
-  // the form and dies with it; this is for the host that keeps the same
-  // <form> node and wants it back in its pre-init state (e.g. before
-  // re-initializing it).
+  // see destroyModulesInScope() in boot.js. The input/change listeners sit
+  // on the document (see setup), so they do NOT die with the form: a host
+  // that removes the form without calling this leaves them behind, holding
+  // the instance. It is also for the host that keeps the same <form> node
+  // and wants it back in its pre-init state (e.g. before re-initializing it).
   destroy = () => {
     this.form.removeEventListener('submit', this.handleSubmit);
-    this.form.removeEventListener('input', this.handleFieldChange);
-    this.form.removeEventListener('change', this.handleFieldChange);
+    document.removeEventListener('input', this.handleFieldChange);
+    document.removeEventListener('change', this.handleFieldChange);
     this.form.removeEventListener('reset', this.handleReset);
     this.form.removeAttribute('novalidate');
     this.form.removeAttribute(this.config.readyAttr);

@@ -4,6 +4,7 @@ export const registry = {
   adaptiveScrollFade: () => import('./modules/adaptiveScrollFade.min.js'),
   backToTop: () => import('./modules/backToTop.min.js'),
   comboBox: () => import('./modules/comboBox.min.js'),
+  conditionalFields: () => import('./modules/conditionalFields.min.js'),
   copyToClipboard: () => import('./modules/copyToClipboard.min.js'),
   countdown: () => import('./modules/countdown.min.js'),
   dataTable: () => import('./modules/dataTable.min.js'),

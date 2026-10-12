@@ -1,0 +1,158 @@
+<!--
+  conditionalFields — copy-paste snippet
+  ============================================================================
+  Copy the block(s) below into your own project.
+
+  1) In <head>: load the shared styles, this component's one rule and the
+     boot script. boot.min.js lazily loads the conditionalFields module as
+     soon as it finds data-js-behavior="conditionalFields" in the DOM — you
+     do not import conditionalFields.js yourself. Adjust the paths to where
+     you serve /dist.
+
+       <link rel="stylesheet" href="/dist/css/shared.min.css">
+       <link rel="stylesheet" href="/dist/css/conditionalFields.min.css">
+       <script type="module" src="/dist/js/boot.min.js"></script>
+
+  2) Put data-js-behavior="conditionalFields" on the <form>, wrap every group
+     that depends on another field in a <fieldset>, and give that fieldset
+     data-conditional-when naming the field and, optionally, the values.
+
+  Wiring
+    - The module element is the <form>: conditions are resolved through
+      form.elements, so a field outside the form that joins it through
+      form="…" is found as well — and heard, because the module listens on
+      the document and keeps the events of this form's fields.
+    - The dependent group MUST be a <fieldset>. Only a fieldset passes
+      `disabled` on to every control in it, and `disabled` is the point: a
+      closed group's fields are neither submitted nor validated, so a
+      required field in it cannot block the submit. Anything else carrying
+      the attribute is reported and ignored. A fieldset for a single field
+      is fine — give it `border: 0; padding: 0; margin: 0` and a <legend>,
+      or label the field itself.
+    - Place the group directly AFTER the field it depends on, so a reader
+      meets the new fields as what comes next (WCAG 1.3.2 / 3.2.2). A group
+      above its switch, or with other fields in between, is reported in
+      the console.
+    - Mark a mandatory field inside a group data-conditional-required, NOT
+      required. The module writes `required` when it runs; an authored one
+      would block a no-script submit with a field the reader never needed.
+    - Prefer radios to a <select> where a choice opens a group: on Windows
+      the arrow keys change a closed select with every press, so the groups
+      behind it open and close while a reader only browses.
+    - Together with formValidation, put both on the form in any order:
+        data-js-behavior="conditionalFields,formValidation"
+      conditionalFields listens in the capture phase, so its pass has
+      settled before formValidation re-validates on the same event.
+
+  The condition (data-conditional-when)
+      name           the field is filled: a ticked checkbox or radio, a
+                     selected option with a non-empty value, non-empty text
+      !name          the field is empty — the opposite
+      name=a         its value is "a"
+      name=a|b       its value is "a" OR "b"
+      name!=a|b      its value is neither "a" nor "b"
+    - Values are compared exactly, case included. A checkbox's value is its
+      `value` attribute, "on" where it has none.
+    - AND is nesting: a fieldset inside a closed fieldset is closed too,
+      whatever its own condition says.
+    - A field in a closed group counts as empty, so chains settle — closing
+      an outer group closes everything that hangs off its fields.
+    - A name that matches no field, or a field inside its own group, leaves
+      the group VISIBLE and says why in the console.
+
+  Notes
+    - Values are KEPT. A closed group's fields keep what was typed into them,
+      so reopening it brings the input back — and the server still receives
+      only what was on screen, because disabled fields are not submitted.
+      Validate on the server anyway: a request is not a form.
+    - The module owns `hidden` and `disabled` on these fieldsets, and
+      `required` on the fields marked data-conditional-required. Do not
+      author them for state. A fieldset you ship `disabled` stays disabled:
+      it is shown and hidden by its condition, never enabled.
+    - A group the reader is typing in when the script arrives is not
+      closed under them: it closes once the focus leaves it, its switch is
+      changed or the form is reset.
+    - The stylesheet is one rule — "[data-conditional-when][hidden]
+      { display: none !important }" — and it is not optional: the UA rule
+      behind `hidden` loses to any `display` your project gives a fieldset.
+    - "conditionalfields:changed" bubbles off a fieldset whenever its state
+      flips after load, with detail { active }. Not fired for the first
+      pass.
+    - Re-evaluated on input/change of a named field, after a form reset, on
+      `pageshow` (back/forward cache, browser-restored values) and when a
+      later render adds fieldsets or fields to the form, or a field joining
+      it through form="…" anywhere in the page. A script that sets a value
+      should fire an `input` or `change` event on the field, as the platform
+      would.
+
+  Progressive enhancement
+    - Without the script every group is visible and enabled: the form is
+      complete and posts everything. Say in the <legend> when a group
+      applies ("Delivery address — only if different").
+    - Its group fields are optional then, because `required` is written by
+      the module: the form can be sent without a delivery address nobody
+      wanted, and the server decides what an order needs.
+    - The first paint is that full form; the closed groups go when the
+      chunk arrives, and the form gets shorter once. No pre-enhancement rule
+      ships, because a group hidden before the script exists stays hidden
+      for good if the chunk never arrives.
+    - Opt-in, where a group starts closed on every page load and the jump
+      matters more than that risk — the module writes
+      data-conditionalfields-ready after its first pass and on every
+      bail-out, so the rule lifts as soon as the module has run:
+
+        @media (scripting: enabled) {
+          .myForm:not([data-conditionalfields-ready]) .myForm__delivery {
+            display: none;
+          }
+        }
+
+      The trade: if the chunk fails to load, that group cannot be opened.
+      Its fields are not disabled by CSS, so a plain `required` in it would
+      block the submit for good — data-conditional-required does not.
+-->
+
+
+
+<form action="/order" method="post" data-js-behavior="conditionalFields">
+
+  <p>
+    <label>
+      <input name="deliverElsewhere" type="checkbox">
+      Deliver to a different address
+    </label>
+  </p>
+
+  <fieldset data-conditional-when="deliverElsewhere">
+    <legend>Delivery address — only if different</legend>
+
+    <p>
+      <label for="deliveryStreet">Street and number</label>
+      <input id="deliveryStreet" name="deliveryStreet" type="text" autocomplete="shipping street-address" data-conditional-required>
+    </p>
+
+    <p>
+      <label for="deliveryCity">Postcode and city</label>
+      <input id="deliveryCity" name="deliveryCity" type="text" autocomplete="shipping address-level2" data-conditional-required>
+    </p>
+  </fieldset>
+
+  <fieldset>
+    <legend>How should we contact you?</legend>
+
+    <label><input name="contactBy" value="email" type="radio" checked> Email</label>
+    <label><input name="contactBy" value="phone" type="radio"> Phone</label>
+    <label><input name="contactBy" value="sms" type="radio"> Text message</label>
+  </fieldset>
+
+  <fieldset data-conditional-when="contactBy=phone|sms">
+    <legend>Phone — only for a call or a text message</legend>
+
+    <p>
+      <label for="contactPhone">Phone number</label>
+      <input id="contactPhone" name="contactPhone" type="tel" autocomplete="tel" data-conditional-required>
+    </p>
+  </fieldset>
+
+  <button type="submit">Send order</button>
+</form>

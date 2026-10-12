@@ -1,0 +1,56 @@
+// =============================================================
+// conditionalFields — the one style the component must own
+// =============================================================
+//
+// conditionalFields is a function: it owns no vocabulary and ships no look.
+// The groups it opens and closes are the project's own fieldsets, in the
+// project's own form design, and a block shipped from here would be
+// something to override rather than something to use.
+//
+// So this file ships one rule, and it is not a look. It keeps the `hidden`
+// attribute the module writes actually hiding a closed group — see the note
+// on it below, because it is the trap a hand-written version of this
+// component walks every project into.
+//
+// Contract with the JS (conditionalFields.js) — every hook is only ever
+// WRITTEN, never read back, so restyling cannot break the behaviour:
+//
+//   fieldset[data-conditional-when][hidden]
+//                                a closed group (and `disabled` with it,
+//                                which is what keeps its fields out of the
+//                                submit and the validation)
+//   form[data-conditionalfields-ready]
+//                                the module has read the form; for the
+//                                opt-in rule documented in the snippet
+//
+// A group that opens is not animated, and cannot be from here: `display:
+// none` has nothing to transition from, and the rule below is !important on
+// top of that. A project that wants the group to arrive gently can give it
+// an @starting-style of its own — the arrival, not the removal, because a
+// closing group is one whose fields are already disabled and out of reach.
+
+
+
+// `hidden` is not a strong promise: its effect is a UA rule,
+// "[hidden] { display: none }", specificity (0,0,0) — so the moment a project
+// writes ".formGroup { display: grid }" or ".c-fieldset { display: flex }",
+// every closed group is back on screen. Its fields would stay disabled, so
+// nothing wrong would be submitted — but a reader would be looking at a
+// group of greyed-out fields with no way to fill them in, which is worse
+// than the form this component started from.
+//
+// Hence this rule, and hence the !important — the same reason the
+// reduced-motion blocks in this collection carry one, and the same rule
+// copyToClipboard and filterList ship (see docs/preEnhancement.md §4). There
+// is no reading of the markup in which an author wants a layout rule to
+// resurrect a group the condition has closed, and a specificity safe against
+// ".c-form .formGroup" in a stylesheet loaded after this one cannot be
+// written without a hack. The scope is as narrow as the guarantee needs: an
+// element carrying this component's own attribute, and `hidden`.
+//
+// It is permanent machinery, not a pre-enhancement guard. The module writes
+// and removes `hidden` for as long as it runs, so commenting this rule out
+// does not restore a look — it stops the component hiding anything.
+[data-conditional-when][hidden] {
+  display: none !important;
+}
